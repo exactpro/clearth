@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <commonFieldsGroupDesc name="modificationInfoFields">
+        <fieldDesc name="modificationDate"/>
+        <fieldDesc name="modificationTime"/>
+    </commonFieldsGroupDesc>
+    
+    <commonFieldDesc repeat="true" source="price" name="price">
+        <fieldDesc name="value"/>
+        <fieldDesc name="qty"/>
+        <fieldDesc reference="modificationInfoFields"/>
+    </commonFieldDesc>
+    <commonFieldDesc repeat="true" source="instrument" name="instrument">
+        <fieldDesc name="name"/>
+        <fieldDesc name="id"/>
+        <fieldDesc reference="modificationInfoFields"/>
+    </commonFieldDesc>
+    
+    <commonFieldsGroupDesc name="objects">
+        <fieldDesc reference="price"/>
+        <fieldDesc reference="instrument"/>
+        <fieldDesc reference="modificationInfoFields"/>
+    </commonFieldsGroupDesc>
+    
+    <messageDesc type="A">
+        <fieldDesc reference="objects"/>
+    </messageDesc>
+</XmlDictionaryDesc>

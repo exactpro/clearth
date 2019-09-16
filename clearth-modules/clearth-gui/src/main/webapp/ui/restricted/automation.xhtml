@@ -1,0 +1,1584 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+				xmlns:ui="http://java.sun.com/jsf/facelets"
+				xmlns:h="http://java.sun.com/jsf/html"
+				xmlns:f="http://java.sun.com/jsf/core"
+				xmlns:p="http://primefaces.org/ui"
+				template="../../templates/restricted.xhtml"
+				xmlns:c="http://java.sun.com/jsp/jstl/core"
+				xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+
+	<ui:define name="title">Automation</ui:define>
+
+	<ui:define name="content">
+		<script>
+			function checkboxChanged(checkBox)
+			{
+				autoScrolling = checkBox.checked;
+				saveAutoScrollEnabledState();
+				$(".autoScrollChkBox").each(function() {
+					if (autoScrolling) {
+						$(this).find('.ui-chkbox-box').addClass('ui-state-active');
+						$(this).find('.ui-chkbox-box').children('span').addClass('ui-icon ui-icon-check');
+					} else {
+						$(this).find('.ui-chkbox-box').removeClass('ui-state-active');
+						$(this).find('.ui-chkbox-box').children('span').removeClass('ui-icon ui-icon-check');
+					}
+				});
+			}
+			
+			var matricesToUpload = 0;
+			
+			function getNumberOfFilesToUpload(dialogName)
+			{
+				var filesLeft = $("#" + dialogName + ' .ui-fileupload-files>div').length;
+				return filesLeft;
+			}
+			
+			function closeUploadDialogIfDone(dialogName, filesLeft)
+			{
+				if (filesLeft == 0)
+				{
+					PF(dialogName).hide();
+					return true;
+				}
+				return false;
+			}
+			
+			function disableChoosing(dialogName) {
+				$("#"+dialogName+" .ui-fileupload-choose").css("display", "none");
+			}
+			
+			function enableChoosing(dialogName) {
+				$("#"+dialogName+" .ui-fileupload-choose").css("display", "");
+			}
+		</script>
+
+		<script type="text/javascript" src="#{request.contextPath}/js/calendarutils.js"></script>
+		<script type="text/javascript" src="#{request.contextPath}/js/cookieutils.js?version=1.0"></script>
+		<label class="pageTitle">Automation</label>
+		<br />
+		<!-- Scheduler to use -->
+		<div class="upperRightContainer">
+			<h:form id="SchedulersMenu" style="float: left;">
+				<div style="float: left; margin: 6px 10px;">Scheduler to use:</div>
+				<p:selectOneMenu value="#{automationBean.scheduler}" style="width:125px" appendTo="@this">
+					<p:ajax update=":Container :AutomationMenu"/>
+					<f:selectItems value="#{automationBean.schedulersMenu}"/>
+				</p:selectOneMenu>
+			</h:form>
+			<h:form id="NewSchedulerForm" style="float: right; margin-left: 1em;">
+				<p:commandButton value="New scheduler" icon="ui-icon-plusthick" rendered="#{automationBean.ableToCreateNewScheduler}"
+								 action="#{automationBean.createNewScheduler}" update=":NewSchedulerDialog" oncomplete="PF('newSchedulerDialog').show();" />
+			</h:form>
+		</div>
+		<!-- Automation menu -->
+		<h:form id="AutomationMenu">
+			<p:selectOneButton value="#{automationBean.activeTab}">
+				<p:ajax update=":Container :AutomationMenu" />
+				<f:selectItem itemLabel="Scheduler" itemValue="0" />
+				<f:selectItem itemLabel="History of launches" itemValue="1" />
+				<f:selectItem itemLabel="Configuration" itemValue="2" />
+				<f:selectItem itemLabel="Matrices" itemValue="3" />
+				<c:if test="#{automationStateBean.stateInfo!=null}">
+					<f:selectItem itemLabel="Saved state" itemValue="4" />
+				</c:if>
+			</p:selectOneButton>
+			<br />
+		</h:form>
+		<br />
+		<p:outputPanel id="Container">
+			<!-- Scheduler -->
+			<p:outputPanel rendered="#{automationBean.activeTab==0}">
+				<h:outputText value="Business day: " />
+				<h:outputText value="#{automationSchedulerBean.schedulerBusinessDay}">
+					<f:convertDateTime pattern="dd.MM.yyyy"/>
+				</h:outputText>
+				&#160;
+				<h:outputText value="Base time: " rendered="#{automationSchedulerBean.schedulerBaseTime != null}" />
+				<h:outputText value="#{automationSchedulerBean.schedulerBaseTime}" rendered="#{automationSchedulerBean.schedulerBaseTime != null}">
+					<f:convertDateTime pattern="HH:mm:ss"/>
+				</h:outputText>
+				<br />
+				<div class="upperContainer controlButtons">
+					<div class="upperLeftContainer">
+						<h:form id="Start" style="float: left;">
+							<p:outputPanel rendered="#{automationSchedulerBean.interrupted}">
+								<p:commandButton value="Start" ajax="false" actionListener="#{automationSchedulerBean.start}" action="automation?faces-redirect=true" icon="ui-icon-play" />
+								&#160;
+								<p:commandButton value="Start sequential run" ajax="false" actionListener="#{automationSchedulerBean.startSequential}" action="automation?faces-redirect=true" icon="ui-icon-arrowthickstop-1-e" />
+								<c:if test="${automationStateBean.stateSaved}">
+									&#160;
+									<p:commandButton value="Restore state" ajax="false" actionListener="#{automationStateBean.restoreState}" action="automation?faces-redirect=true" icon="ui-icon-arrowreturnthick-1-w" />
+								</c:if>
+							</p:outputPanel>
+						</h:form>
+						<h:form id="Stop" style="float: left;">
+							<c:if test="#{automationSchedulerBean.running}">
+								<input type="hidden" id="schedulerRunning" value="true" />
+								<c:if test="#{automationSchedulerBean.sequentialRun}">
+									<c:choose>
+										<c:when test="#{automationSchedulerBean.currentMatrix!=null}">
+											<h:outputText value="Current matrix: #{automationSchedulerBean.currentMatrix}" />
+										</c:when>
+										<c:otherwise>
+											<h:outputText value="Pause before next matrix start..." />
+										</c:otherwise>
+									</c:choose>
+									<br />
+								</c:if>
+							</c:if>
+							<p:outputPanel rendered="#{!automationSchedulerBean.interrupted}">
+								<p:commandButton value="Stop" oncomplete="PF('stopSchedulerDialog').show();" icon="ui-icon-stop"/>
+							</p:outputPanel>
+						</h:form>
+						<h:form id="Pause" style="float: left;">
+							<p:outputPanel rendered="#{!automationSchedulerBean.interrupted}">
+								&#160;
+								<p:commandButton value="Pause" ajax="false" actionListener="#{automationSchedulerBean.pause}" action="automation?faces-redirect=true" icon="ui-icon-pause" />
+								&#160;
+								<p:commandButton value="Skip waiting" ajax="false" actionListener="#{automationSchedulerBean.skipStepWaiting}" action="automation?faces-redirect=true" icon="ui-icon-clock" rendered="#{automationSchedulerBean.waitingForStep}"/>
+							</p:outputPanel>
+						</h:form>
+						<h:form id="Realtime" style="float: left;">
+							<p:outputPanel rendered="#{automationSchedulerBean.running}">
+								&#160;
+								&#160;
+								<p:commandButton value="Real-time reports" update=":Realtime :rtReportsDlgForm" icon="ui-icon-note"
+												 oncomplete="PF('rtReportsDialog').show();">
+									<f:setPropertyActionListener target="#{automationSchedulerBean.showReportsDialog}" value="true" />
+								</p:commandButton>
+							</p:outputPanel>
+						</h:form>
+						<h:form id="AutoScr" style="float: left; margin-top: 4px;">
+							&#160;
+							<h:outputText value="Autoscroll: " />
+							<p:selectBooleanCheckbox styleClass="autoScrollChkBox" onchange="checkboxChanged(this);" widgetVar="autoScrCB" value="false"/>
+						</h:form>
+					</div>
+					<div class="upperRightContainer">
+						<p:commandButton value="Export scheduler info" actionListener="#{automationSchedulerBean.exportSchedulerInfo}" update=":Growl" icon="ui-icon-arrowthickstop-1-s" />
+					</div>
+				</div>
+
+				<div id="SchedulerStatusDiv">
+					<h:form id="SchedulerStatus">
+						<p:outputPanel rendered="#{!automationSchedulerBean.statusEmpty}">
+							<p:commandLink value="Matrices contain errors" update=":MatricesErrorsDialog" oncomplete="PF('merrorsDialog').show();" actionListener="#{automationBean.matrixChecker.prepareIssues}"
+										   style="color: #d74242; font-size: medium; text-decoration: none; border-bottom: 1px dashed;" rendered="#{automationBean.matrixChecker.matricesHaveErrors}" />
+							<div class="tableContainer" style="max-height: 500px; margin-left: -10px;">
+								<p:dataList var="statusLine" value="#{automationSchedulerBean.status}" itemType="none" styleClass="schedulerStatus">
+									<p:column>
+										<ui:fragment rendered="#{statusLine=='Reports made' and automationReportsBean.getLastLaunch()!=null}">
+											<ui:fragment rendered="#{automationReportsBean.getLastLaunch().matricesInfo.size()==1}">
+												<a href="#{automationReportsBean.lastLaunchReportUrl}" target="_blank"><h:outputText value="#{statusLine}" style="text-decoration: underline" /></a>
+												<br/>
+												<a href="#{automationReportsBean.lastLaunchJsonReportUrl}" target="_blank"><h:outputText value="JSON Report" style="text-decoration: underline" /></a>
+												<br/>
+												<p:commandLink value="Logs by run" ajax="false" actionListener="#{automationReportsBean.extractReportsInfo(automationReportsBean.getLastLaunch())}" style="text-decoration: underline" >
+													<p:fileDownload value="#{automationReportsBean.logsBySelectedRun}" />
+												</p:commandLink>
+											</ui:fragment>
+											<ui:fragment rendered="#{automationReportsBean.getLastLaunch().matricesInfo.size()>1}">
+												<p:commandLink value="#{statusLine}" actionListener="#{automationReportsBean.extractReportsInfo(automationReportsBean.getLastLaunch())}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" style="text-decoration: underline" />
+											</ui:fragment>
+										</ui:fragment>
+
+										<h:outputText rendered="#{statusLine!='Reports made' or automationReportsBean.getLastLaunch()==null}" value="#{statusLine}"/>
+									</p:column>
+								</p:dataList>
+							</div>
+						</p:outputPanel>
+					</h:form>
+				</div>
+				<div class="tableContainer fullWidth" id="ExecutionSchedule">
+					<h:form id="SchedulerSteps" prependId="false">
+						<p:dataTable id="schedulerStepsTable" var="step" value="#{automationConfigBean.steps.schedulerSteps}" styleClass="responsiveTable toBottom"
+									 rowStyleClass="#{step==automationConfigBean.steps.currentSchedulerStep ? (automationConfigBean.steps.currentStepIdle ? 'ui-state-hover' : 'ui-state-highlight') : ''}"
+									 scrollable="true" scrollHeight="7" resizableColumns="true" liveResize="true">
+							<p:ajax event="colResize" oncomplete="saveColumnsWidths('schedulerStepsTable')" />
+							<p:column headerText="Name" priority="1" style="width: 30%">
+								<h:outputText value="#{step.name}" />&#160;&#160;
+								<h:graphicImage rendered="#{!step.comment.isEmpty()}" value="/images/help-icon.png" alt="Comment" style="vertical-align: middle; opacity: 1"
+												title="#{step.comment}"/>
+							</p:column>
+							<p:column headerText="Kind" priority="1" style="width: 20%">
+								<h:outputText value="#{step.kind}" />
+								<br />
+								<h:outputText value="(#{step.parameter})" rendered="#{!empty step.parameter}" />
+							</p:column>
+							<p:column headerText="Start&#160;at" priority="2">
+								<h:outputText value="#{step.startAt}" />
+								<h:outputText value="&lt;br /&gt;(#{step.startAtTypeString})" rendered="#{!empty step.startAt &amp;&amp; fn:startsWith(step.startAt,'+')}" escape = "false"/>
+								<h:outputText value="&lt;br /&gt;(Wait next day if necessary)" rendered="#{!empty step.startAt &amp;&amp; step.waitNextDay}" escape = "false" />
+							</p:column>
+							<p:column headerText="Wait&#160;for&#160;start" priority="2">
+								<p:commandButton title="Click to skip waiting for step start" value="#{automationSchedulerBean.startTime}" ajax="false" actionListener="#{automationSchedulerBean.skipStepWaiting}" action="automation?faces-redirect=true" icon="ui-icon-clock" rendered="#{automationSchedulerBean.waitingForStep and automationSchedulerBean.isRunning(step)}"/>
+							</p:column>
+							<p:column headerText="Ask&#160;for&#160;continue" priority="2">
+								<h:outputText value="#{step.askForContinue}" />
+							</p:column>
+							<p:column headerText="Ask&#160;if&#160;failed" priority="2">
+								<h:outputText value="#{step.askIfFailed}" />
+							</p:column>
+							<p:column headerText="Execute" priority="2">
+								<h:outputText value="#{step.execute}" />
+							</p:column>
+							<p:column headerText="Started" priority="4">
+								<h:outputText value="#{step.started}" rendered="#{step.execute}">
+									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+								</h:outputText>
+								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.started != null}" />
+							</p:column>
+							<p:column headerText="Actions&#160;successful" priority="3">
+								<h:outputText value="#{step.actionsSuccessful} / #{step.actionsDone}" />
+							</p:column>
+							<p:column headerText="Finished" priority="4">
+								<h:outputText value="#{step.finished}" rendered="#{step.execute}">
+									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+								</h:outputText>
+								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.finished != null}"/>
+							</p:column>
+						</p:dataTable>
+						<script>
+							restoreColumnsWidths('schedulerStepsTable');
+							ajax_handle_toBottom();
+						</script>
+					</h:form>
+				</div>
+			</p:outputPanel>
+
+			<!-- History of launches -->
+			<h:form id="History" rendered="#{automationBean.activeTab==1}">
+				<div class="upperContainer">
+					<div class="upperRightContainer">
+						<p:commandButton value="Clean" oncomplete="PF('clearHistoryConfirmDialog').show();" icon="ui-icon ui-icon-closethick" />
+					</div>
+				</div>
+				<br />
+				<br />
+				<div class="fullWidth">
+					<p:dataTable var="launchInfo" value="#{automationReportsBean.launches}" styleClass="responsiveTable toBottom"
+								 paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
+								 scrollable="true" scrollHeight="7">
+						<p:column headerText="Started" priority="2">
+							<h:outputText value="#{launchInfo.started}">
+								<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Finished" priority="2">
+							<h:outputText value="#{launchInfo.finished}">
+								<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Interrupted" priority="3">
+							<h:outputText value="#{launchInfo.interrupted ? 'True' : 'False'}" />
+						</p:column>
+
+						<p:column headerText="Reports" style="text-align: left;" priority="1">
+							<ui:fragment rendered="#{launchInfo.matricesInfo!=null and launchInfo.matricesInfo.size()==1}">
+								<a href="#{automationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.html" target="_blank"><h:outputText value="#{launchInfo.matricesInfo.get(0).name}" style="#{!launchInfo.matricesInfo.get(0).successful ? 'color: red;' : ''}" /></a>
+								&#160;
+								<a href="#{automationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report_failed.html" target="_blank">(only failed)</a>
+								&#160;
+								<a href="#{automationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/#{launchInfo.matricesInfo.get(0).name}.json" target="_blank">JSON report</a>
+							</ui:fragment>
+							<ui:fragment rendered="#{launchInfo.matricesInfo==null or launchInfo.matricesInfo.size()!=1}">
+								<p:commandLink value="Show reports" actionListener="#{automationReportsBean.extractReportsInfo(launchInfo)}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" rendered="#{launchInfo.reportsPath!=null}" />
+							</ui:fragment>
+						</p:column>
+					</p:dataTable>
+					<script>ajax_handle_toBottom();</script>
+				</div>
+			</h:form>
+
+			<!-- Scheduler configuration -->
+			<p:outputPanel rendered="#{automationBean.activeTab==2}">
+				<div class="upperContainer">
+					<div class="upperRightContainer" style="margin-left; 0px;">
+						<h:form>
+							<p:fileUpload fileUploadListener="#{automationConfigBean.uploadSchedulerSettings}" allowTypes="/(\.|\/)(zip)$/" label="Upload configuration"
+										  mode="advanced" auto="true" showButtons="false" multiple="false"
+										  update=":BusinessDay :WeekendIsHoliday :ConfigFile :Steps :Growl" styleClass="simple">
+							</p:fileUpload>
+							&#160;&#160;
+							<p:commandButton value="Download configuration" ajax="false" actionListener="#{automationConfigBean.downloadSchedulerSettings}" action="automation?faces-redirect=true"/>
+						</h:form>
+					</div>
+					<div class="upperLeftContainer" style="min-width: 640px; margin-right: 0px;">
+						<h:form id="BusinessDay" style="display: inline-block;">
+							<table>
+								<tr>
+									<td><h:outputText value="Business day: " /></td>
+									<td>
+										<p:calendar value="#{automationConfigBean.businessDay}" showOn="button" pattern="dd.MM.yyyy" locale="en_US" size="10">
+											<p:ajax event="dateSelect" />
+										</p:calendar>
+									</td>
+									<td>
+										&#160;
+										<p:selectBooleanCheckbox value="#{automationConfigBean.currentDate}" itemLabel="Use current date" style="top: -3px; position: relative;">
+											<p:ajax listener="#{automationConfigBean.useCurrentDateChanged}" update=":BusinessDay" />
+										</p:selectBooleanCheckbox>
+									</td>
+								</tr>
+								<tr>
+									<td><h:outputText value="Base time: " /></td>
+									<td>
+										<p:calendar value="#{automationConfigBean.baseTime}" pattern="HH:mm:ss" timeOnly="true" locale="en_US" size="12">
+											<p:ajax event="dateSelect" />
+										</p:calendar>
+									</td>
+									<td>
+										&#160;
+										<p:selectBooleanCheckbox value="#{automationConfigBean.currentTime}" itemLabel="Use current time" style="top: -3px; position: relative;">
+											<p:ajax listener="#{automationConfigBean.useCurrentDateChanged}" update=":BusinessDay" />
+										</p:selectBooleanCheckbox>
+									</td>
+								</tr>
+							</table>
+						</h:form>
+
+						<h:form id="WeekendIsHoliday">
+							<p:selectBooleanCheckbox value="#{automationConfigBean.weekendHoliday}" itemLabel="Weekend is holiday" style="margin-top: 2px;">
+								<p:ajax listener="#{automationConfigBean.weekendHolidayChanged}"/>
+							</p:selectBooleanCheckbox>
+							&#160;
+							<p:commandButton value="Holidays setup" update=":HolidaysDialog" oncomplete="PF('holidaysDialog').show();" style="vertical-align: top;" />
+						</h:form>
+					</div>
+				</div>
+				<h:form id="ConfigFile" style="vertical-align:bottom;">
+					<label class="pageTitle" style="margin-right:5px;">Steps</label>
+					<h:outputText value="Config file for scheduler: " style="color:#b0cce0;" />
+					<h:outputText value="#{automationConfigBean.configFileName}" style="#{automationConfigBean.configChanged ? 'color: #d74242' : ''}" />
+				</h:form>
+
+				<h:form id="Steps">
+					<div class="upperContainer">
+						<div class="upperLeftContainer">
+							<p:commandButton value="New step" actionListener="#{automationConfigBean.steps.newStep}" update=":StepDlg" oncomplete="PF('stepDialog').show();" icon="ui-icon-plusthick"/>
+							&#160;&#160;
+							<p:fileUpload fileUploadListener="#{automationConfigBean.steps.uploadSteps}" label="Upload steps"
+										  mode="advanced" auto="true" showButtons="false" multiple="false" update=":SchedulerSteps :Steps :ConfigFile :Growl" styleClass="simple">
+							</p:fileUpload>
+							<p:selectBooleanCheckbox value="#{automationConfigBean.steps.appendSteps}" itemLabel="Append steps" style="top: -3px; position: relative;">
+								<p:ajax />
+							</p:selectBooleanCheckbox>
+							&#160;&#160;
+							<h:outputLink value="#{request.contextPath}/download?file=#{automationConfigBean.pathToConfig}"
+										  class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left"
+										  style="border: none; height: 28px">
+								<span class="ui-button-icon-left ui-icon ui-c ui-icon-arrowthickstop-1-s"></span>
+								<span class="ui-button-text ui-c">Download steps</span>
+							</h:outputLink>
+						</div>
+
+						<div class="upperRightContainer">
+							<p:selectBooleanButton value="#{automationConfigBean.steps.stepsReordering}"
+												   onLabel="Reordering" offLabel="Reordering" onIcon="ui-icon-check" offIcon="ui-icon-close">
+								<p:ajax update=":Steps" />
+							</p:selectBooleanButton>
+							<p:outputPanel id="StepOperations" layout="inline">
+								<c:if test="#{!automationConfigBean.steps.selectedSteps.isEmpty()}">
+									&#160;&#160;
+									<p:commandLink title="Edit selected step(s)" update=":StepDlg" oncomplete="PF('stepDialog').show();">
+										<h:graphicImage value="/images/edit.png" alt="Edit selected step(s)" style="vertical-align: middle" />
+									</p:commandLink>
+									&#160;
+									<p:commandLink title="Remove selected step(s)" update=":RemoveStepsConfirmDlg" oncomplete="PF('removeStepsConfirmDialog').show();">
+										<h:graphicImage value="/images/delete-icon.png" alt="Remove selected step(s)" style="vertical-align: middle" />
+									</p:commandLink>
+								</c:if>
+							</p:outputPanel>
+							&#160;&#160;
+							<p:commandButton value="Remove all" oncomplete="PF('clearConfirmDialog').show();" icon="ui-icon-trash" />
+						</div>
+					</div>
+
+					<div class="tableContainer fullWidth" id="SchedulerConfig">
+						<p:dataTable id="schedulerConfigStepsTable" var="step" value="#{automationConfigBean.steps.steps}" styleClass="responsiveTable toBottom"
+									 selectionMode="multiple" selection="#{automationConfigBean.steps.selectedSteps}" rowKey="#{step.name}"
+									 draggableRows="#{automationConfigBean.steps.stepsReordering}" scrollable="true" scrollHeight="7"
+									 resizableColumns="true" liveResize="true">
+							<p:ajax event="rowReorder" listener="#{automationConfigBean.steps.saveStepsPositions()}" update=":Steps"
+									onstart="saveConfigScrollPos();" oncomplete="restoreConfigScrollPos();" />
+							<p:ajax event="rowSelect" update=":Steps:StepOperations"/>
+							<p:ajax event="rowUnselect" update=":Steps:StepOperations"/>
+							<p:ajax event="rowDblselect" update=":StepDlg" oncomplete="PF('stepDialog').show();" />
+							<p:ajax event="colResize" oncomplete="saveColumnsWidths('Steps:schedulerConfigStepsTable')" />
+							<p:column style="width: 30%">
+								<f:facet name="header">Name</f:facet>
+								<h:outputText value="#{step.name}" />&#160;&#160;
+								<h:graphicImage rendered="#{!step.comment.isEmpty()}" value="/images/help-icon.png" alt="Comment" style="vertical-align: middle; opacity: 1" title="#{step.comment}"/>
+							</p:column>
+							<p:column style="width: 20%;">
+								<f:facet name="header">Kind</f:facet>
+								<h:outputText value="#{step.kind}" />
+								<br />
+								<h:outputText value="(#{step.parameter})" rendered="#{!empty step.parameter}" />
+							</p:column>
+							<p:column>
+								<f:facet name="header">Start at</f:facet>
+								<h:outputText value="#{step.startAt}" />
+								<h:outputText value="&lt;br /&gt;(#{step.startAtTypeString})" rendered="#{!empty step.startAt &amp;&amp; fn:startsWith(step.startAt,'+')}" escape = "false"/>
+								<h:outputText value="&lt;br /&gt;(Wait next day if necessary)" rendered="#{!empty step.startAt &amp;&amp; step.waitNextDay}" escape = "false" />
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<p:commandLink title="Toggle" action="#{automationConfigBean.steps.toggleAllAskForContinue}" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+												   onstart="saveConfigScrollPos();" oncomplete="restoreConfigScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationConfigBean.steps.askForContinueAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationConfigBean.steps.askForContinueAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Ask for continue</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+
+								<p:commandLink title="Toggle" action="#{automationConfigBean.steps.toggleAskForContinue}" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+											   onstart="saveConfigScrollPos();" oncomplete="restoreConfigScrollPos();">
+									<div class="ui-chkbox ui-widget">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default#{step.askForContinue ? ' ui-state-active' : ''}">
+											<span class="ui-chkbox-icon#{step.askForContinue ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+									<f:setPropertyActionListener value="#{step}" target="#{automationConfigBean.steps.oneSelectedStep}" />
+								</p:commandLink>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<p:commandLink title="Toggle" action="#{automationConfigBean.steps.toggleAllAskIfFailed}" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+												   onstart="saveConfigScrollPos();" oncomplete="restoreConfigScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationConfigBean.steps.askIfFailedAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationConfigBean.steps.askIfFailedAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Ask if failed</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+
+								<p:commandLink title="Toggle" action="#{automationConfigBean.steps.toggleAskIfFailed}" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+											   onstart="saveConfigScrollPos();" oncomplete="restoreConfigScrollPos();">
+									<div class="ui-chkbox ui-widget">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default#{step.askIfFailed ? ' ui-state-active' : ''}">
+											<span class="ui-chkbox-icon#{step.askIfFailed ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+									<f:setPropertyActionListener value="#{step}" target="#{automationConfigBean.steps.oneSelectedStep}" />
+								</p:commandLink>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<p:commandLink title="Toggle" action="#{automationConfigBean.steps.toggleAllExecute}" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+												   onstart="saveConfigScrollPos();" oncomplete="restoreConfigScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationConfigBean.steps.executeAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationConfigBean.steps.executeAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Execute</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+
+								<p:commandLink title="Toggle" action="#{automationConfigBean.steps.toggleExecute}" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+											   onstart="saveConfigScrollPos();" oncomplete="restoreConfigScrollPos();">
+									<div class="ui-chkbox ui-widget">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default#{step.execute ? ' ui-state-active' : ''}">
+											<span class="ui-chkbox-icon#{step.execute ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+									<f:setPropertyActionListener value="#{step}" target="#{automationConfigBean.steps.oneSelectedStep}" />
+								</p:commandLink>
+							</p:column>
+						</p:dataTable>
+						<script>
+							restoreColumnsWidths('Steps:schedulerConfigStepsTable');
+							ajax_handle_toBottom();
+						</script>
+					</div>
+				</h:form>
+			</p:outputPanel>
+
+			<!-- Matrices configuration -->
+			<p:outputPanel rendered="#{automationBean.activeTab==3}">
+				<h:form id="Matrices">
+
+					<div class="upperContainer">
+						<div class="upperLeftContainer">
+							<p:commandButton value="Upload" type="button" onclick="PF('uploadMatrixDialog').show();" icon="ui-icon-arrowthickstop-1-n" />
+							<p:commandButton value="Add linked matrix" action="#{automationMatricesBean.createLinkedMatrix}"
+											 update=":LinkedMatrixDialog :Growl" oncomplete="PF('linkedMatrixDialog').show();" icon="ui-icon-link" />
+							<p:commandButton value="Check matrices" ajax="true" actionListener="#{automationBean.matrixChecker.checkMatrices}" action="#{automationBean.matrixChecker.prepareIssues}"
+											 update=":Matrices :MatricesErrorsDialog :Growl" oncomplete="PF('merrorsDialog').show();" icon="ui-icon-check"/>
+						</div>
+						<div class="upperRightContainer">
+							<p:outputPanel id="MatrixOperations" layout="inline">
+								<c:if test="#{!automationMatricesBean.selectedMatrices.isEmpty()}">
+									<c:if test="#{automationMatricesBean.oneMatrixSelected}">
+										<p:commandButton value="Make steps and apply" actionListener="#{automationMatricesBean.makeStepsAndApply}" update=":Growl" icon="ui-icon-gear"/>
+										&#160;
+										<p:commandButton title="Edit matrix" actionListener="#{automationMatricesBean.editLinkedMatrix(automationMatricesBean.oneSelectedMatrix)}"
+														 update=":LinkedMatrixDialog" oncomplete="PF('linkedMatrixDialog').show();"
+														 rendered="#{automationMatricesBean.oneSelectedMatrix.linked}" icon="ui-icon-pencil"/>
+										<p:commandButton title="Reload matrix" actionListener="#{automationMatricesBean.reloadLinkedMatrix(automationMatricesBean.oneSelectedMatrix)}"
+														 update=":Matrices :Growl" rendered="#{automationMatricesBean.oneSelectedMatrix.linked}"
+														 disabled="#{automationMatricesBean.oneSelectedMatrix.autoReload}" icon="ui-icon-arrowrefresh-1-e"/>
+									</c:if>
+									&#160;
+									<p:commandLink title="Remove selected" update="RemoveMatricesConfirmDlg" oncomplete="PF('removeMatricesConfirmDialog').show();">
+										<h:graphicImage value="/images/delete-icon.png" alt="Remove selected" style="vertical-align: middle; margin-bottom: 3px;"/>
+									</p:commandLink>
+								</c:if>
+							</p:outputPanel>
+							&#160;&#160;
+							<p:commandButton value="Remove all" oncomplete="PF('clearMatricesConfirmDialog').show();" icon="ui-icon-trash" />
+						</div>
+					</div>
+
+					<div class="tableContainer fullWidth" id="MatricesConfig">
+						<p:dataTable id="matricesTable" var="matrix" value="#{automationMatricesBean.matrices}" styleClass="responsiveTable toBottom"
+									 selectionMode="multiple" selection="#{automationMatricesBean.selectedMatrices}" rowKey="#{matrix.hashCode()}"
+									 draggableRows="true" scrollable="true" scrollHeight="7" resizableColumns="true" liveResize="true">
+							<p:ajax event="rowReorder" listener="#{automationMatricesBean.saveMatricesPositions()}" update=":Matrices"
+									onstart="saveMatricesScrollPos();" oncomplete="restoreMatricesScrollPos();"/>
+							<p:ajax event="rowSelect" update=":Matrices:MatrixOperations" />
+							<p:ajax event="rowUnselect" update=":Matrices:MatrixOperations" />
+							<p:ajax event="colResize" oncomplete="saveColumnsWidths('Matrices:matricesTable')" />
+							<p:column style="width: 50%;">
+								<f:facet name="header">Matrix</f:facet>
+								<h:graphicImage rendered="#{not matrix.linked and matrix.csv == true}" value="/images/matrix-default.png" alt="Local Linked Matrix" style="vertical-align: middle;width:20px;" />
+								<h:graphicImage rendered="#{not matrix.linked and matrix.xls == true}" value="/images/matrix-default-xls.png" alt="Local Linked Matrix" style="vertical-align: middle;width:20px;" />
+								<h:graphicImage rendered="#{not matrix.linked and matrix.xlsx == true}" value="/images/matrix-default-xlsx.png" alt="Local Linked Matrix" style="vertical-align: middle;width:20px;" />
+								<h:graphicImage rendered="#{matrix.type eq 'Local'}" value="/images/matrix-linked-local.png" alt="Local Linked Matrix" style="vertical-align: middle;width:20px;" />
+								<h:graphicImage rendered="#{matrix.type eq 'GoogleSpreadsheets'}" value="/images/matrix-linked-google-spreadsheets.png" alt="Google Spreadsheets Linked Matrix" style="vertical-align: middle;width:20px;" />
+								<h:graphicImage rendered="#{matrix.type eq 'Remote'}" value="/images/matrix-linked-remote.png" alt="Remote Linked Matrix" style="vertical-align: middle;width:20px;" />
+								&#160;
+								<h:outputLink value="#{request.contextPath}/download?file=#{automationMatricesBean.pathToMatrices}#{automationBean.safeFileName(matrix.file.name)}">#{matrix.name}</h:outputLink>
+							</p:column>
+							<p:column style="width: 20%;">
+								<f:facet name="header">Uploaded</f:facet>
+								<h:outputText value="#{matrix.uploadDate}">
+									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+								</h:outputText>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<p:commandLink title="Toggle all" action="#{automationMatricesBean.toggleAllMatricesTrim}" update=":Matrices :Growl"
+												   onstart="saveMatricesScrollPos();" oncomplete="restoreMatricesScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationMatricesBean.matricesTrimAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationMatricesBean.matricesTrimAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Trim spaces</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+								<p:commandLink title="Toggle" action="#{automationMatricesBean.toggleMatrixTrim(matrix)}" update=":Matrices :Growl"
+											   onstart="saveMatricesScrollPos();" oncomplete="restoreMatricesScrollPos();">
+									<div class="ui-chkbox ui-widget" style="width: 100%">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{matrix.trim ? 'ui-state-active' : ''}" style="float: left;">
+											<span class="ui-chkbox-icon#{matrix.trim ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+								</p:commandLink>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<p:commandLink title="Toggle all" action="#{automationMatricesBean.toggleAllMatricesExecute}" update=":Matrices :Growl"
+												   onstart="saveMatricesScrollPos();" oncomplete="restoreMatricesScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationMatricesBean.matricesExecuteAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationMatricesBean.matricesExecuteAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Execute</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+								<p:commandLink title="Toggle" action="#{automationMatricesBean.toggleMatrixExecute(matrix)}" update=":Matrices :Growl"
+											   onstart="saveMatricesScrollPos();" oncomplete="restoreMatricesScrollPos();">
+									<div class="ui-chkbox ui-widget" style="width: 100%">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{matrix.execute ? 'ui-state-active' : ''}" style="float: left;">
+											<span class="ui-chkbox-icon#{matrix.execute ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+								</p:commandLink>
+							</p:column>
+						</p:dataTable>
+						<script>
+							restoreColumnsWidths('Matrices:matricesTable');
+							ajax_handle_toBottom();
+						</script>
+					</div>
+				</h:form>
+			</p:outputPanel>
+
+			<!-- Saved state -->
+			<p:outputPanel rendered="#{automationBean.activeTab==4&amp;&amp;automationStateBean.stateInfo!=null}">
+				<h:form id="SavedStateInfo">
+
+					<h:outputText value="Scheduler started by: #{automationStateBean.stateInfo.startedByUser}" />
+					&#160;&#160;
+					<h:outputText value="Execution started: " />
+					<h:outputText value="#{automationStateBean.stateInfo.started}">
+						<f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+					</h:outputText>
+					<br />
+					<h:outputText value="Business day: " />
+					<h:outputText value="#{automationStateBean.stateInfo.businessDay}">
+						<f:convertDateTime pattern="dd.MM.yyyy"/>
+					</h:outputText>
+					<br />
+					<br />
+					<div class="upperContainer">
+						<div class="upperRightContainer">
+							<p:commandButton value="Remove saved state" title="Remove" oncomplete="PF('removeSavedStateDialog').show();" icon="ui-icon-trash"/>
+						</div>
+						<div class="upperLeftContainer">
+							<p:commandButton value="Reports" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" icon="ui-icon-note">
+								<f:setPropertyActionListener value="#{automationStateBean.stateInfo.reportsInfo}" target="#{automationReportsBean.selectedReportsInfo}" />
+							</p:commandButton>
+							<p:commandButton value="Matrices" update=":StateMatricesDialog" oncomplete="PF('stateMatricesDialog').show();">
+								<f:setPropertyActionListener value="#{automationStateBean.stateInfo.reportsInfo}" target="#{automationReportsBean.selectedReportsInfo}" />
+							</p:commandButton>
+						</div>
+					</div>
+
+					<div class="upperContainer">
+						<div class="upperRightContainer">
+							<p:outputPanel id="StepStateOperations" layout="inline">
+								<c:if test="#{automationStateBean.selectedStepState != null}">
+									<p:commandLink title="Edit selected step" update=":StepStateDialog" oncomplete="PF('stepStateDialog').show();">
+										<h:graphicImage value="/images/edit.png" alt="Edit selected step" style="vertical-align: middle" />
+									</p:commandLink>
+								</c:if>
+							</p:outputPanel>
+						</div>
+						<div class="upperLeftContainer">
+							<label class="pageTitle">Steps</label>
+						</div>
+					</div>
+
+					<div class="tableContainer fullWidth" id="SavedStateSteps">
+						<p:dataTable id="stepsTable" var="step" value="#{automationStateBean.stateInfo.steps}" styleClass="responsiveTable toBottom"
+									 selectionMode="single" selection="#{automationStateBean.selectedStepState}" rowKey="#{step.name}"
+									 draggableRows="false" scrollable="true" scrollHeight="7" resizableColumns="true" liveResize="true">
+							<p:ajax event="rowSelect" update=":SavedStateInfo:StepStateOperations" />
+							<p:ajax event="rowUnselect" update=":SavedStateInfo:StepStateOperations" />
+							<p:ajax event="rowDblselect" update=":StepStateDialog" oncomplete="PF('stepStateDialog').show();" />
+							<p:ajax event="colResize" oncomplete="saveColumnsWidths('SavedStateInfo:stepsTable')" />
+
+							<p:column headerText="Name" priority="1" style="width: 30%">
+								<h:outputText value="#{step.name}" />
+							</p:column>
+							<p:column headerText="Kind" priority="1" style="width: 20%">
+								<h:outputText value="#{step.kind}" />
+								<br />
+								<h:outputText value="(#{step.parameter})" rendered="#{!empty step.parameter}" />
+							</p:column>
+							<p:column headerText="Start&#160;at" priority="2">
+								<h:outputText value="#{step.startAt}" />
+								<br />
+								<h:outputText value="(#{step.startAtTypeString})" rendered="#{!empty step.startAt &amp;&amp; fn:startsWith(step.startAt,'+')}" />
+							</p:column>
+
+							<p:column style="width: 130px;">
+								<f:facet name="header">
+									<p:commandLink title="Toggle" action="#{automationStateBean.toggleAllStateAskForContinue}" update=":SavedStateInfo :Growl"
+												   onstart="saveStateStepsScrollPos();" oncomplete="restoreStateStepsScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationStateBean.stateAskForContinueAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationStateBean.stateAskForContinueAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Ask for continue</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+								<p:commandLink title="Toggle" action="#{automationStateBean.toggleStateAskForContinue}" update=":SavedStateInfo :Growl" rendered="#{step.finished==null}"
+											   onstart="saveStateStepsScrollPos();" oncomplete="restoreStateStepsScrollPos();">
+									<div class="ui-chkbox ui-widget">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default#{step.askForContinue ? ' ui-state-active' : ''}">
+											<span class="ui-chkbox-icon#{step.askForContinue ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+									<f:setPropertyActionListener value="#{step}" target="#{automationStateBean.selectedStepState}" />
+								</p:commandLink>
+							</p:column>
+
+							<p:column style="width: 130px;">
+								<f:facet name="header">
+									<p:commandLink title="Toggle" action="#{automationStateBean.toggleAllStateAskIfFailed}" update=":SavedStateInfo :Growl"
+												   onstart="saveStateStepsScrollPos();" oncomplete="restoreStateStepsScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationStateBean.stateAskIfFailedAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationStateBean.stateAskIfFailedAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Ask if failed</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+								<p:commandLink title="Toggle" action="#{automationStateBean.toggleStateAskIfFailed}" update=":SavedStateInfo :Growl" rendered="#{step.finished==null}"
+											   onstart="saveStateStepsScrollPos();" oncomplete="restoreStateStepsScrollPos();">
+									<div class="ui-chkbox ui-widget">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default#{step.askIfFailed ? ' ui-state-active' : ''}">
+											<span class="ui-chkbox-icon#{step.askIfFailed ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+									<f:setPropertyActionListener value="#{step}" target="#{automationStateBean.selectedStepState}" />
+								</p:commandLink>
+							</p:column>
+
+							<p:column style="width: 80px;">
+								<f:facet name="header">
+									<p:commandLink title="Toggle" action="#{automationStateBean.toggleAllStateExecute}" update=":SavedStateInfo :Growl"
+												   onstart="saveStateStepsScrollPos();" oncomplete="restoreStateStepsScrollPos();">
+										<div class="ui-chkbox ui-widget" style="width: 100%">
+											<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default #{automationStateBean.stateExecuteAll ? 'ui-state-active' : ''}" style="float: left;">
+												<span class="ui-chkbox-icon#{automationStateBean.stateExecuteAll ? ' ui-icon ui-icon-check' : ''}"></span>
+											</div>
+											<span class="ui-chkbox-label" style="margin-top: 0;">Execute</span>
+										</div>
+									</p:commandLink>
+								</f:facet>
+								<p:commandLink title="Toggle" action="#{automationStateBean.toggleStateExecute}" update=":SavedStateInfo :Growl" rendered="#{step.finished==null}"
+											   onstart="saveStateStepsScrollPos();" oncomplete="restoreStateStepsScrollPos();">
+									<div class="ui-chkbox ui-widget">
+										<div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default#{step.execute ? ' ui-state-active' : ''}">
+											<span class="ui-chkbox-icon#{step.execute ? ' ui-icon ui-icon-check' : ''}"></span>
+										</div>
+									</div>
+									<f:setPropertyActionListener value="#{step}" target="#{automationStateBean.selectedStepState}" />
+								</p:commandLink>
+							</p:column>
+
+							<p:column headerText="Started" priority="4">
+								<h:outputText value="#{step.started}" rendered="#{step.execute}">
+									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+								</h:outputText>
+								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.started != null}" />
+							</p:column>
+							<p:column headerText="Actions&#160;successful" priority="3">
+								<h:outputText value="#{step.actionsSuccessful} / #{step.actionsDone}" />
+							</p:column>
+							<p:column headerText="Finished" priority="4">
+								<h:outputText value="#{step.finished}" rendered="#{step.execute}">
+									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+								</h:outputText>
+								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.finished != null}"/>
+							</p:column>
+						</p:dataTable>
+						<script>
+							restoreColumnsWidths('SavedStateInfo:stepsTable');
+							ajax_handle_toBottom();
+						</script>
+					</div>
+				</h:form>
+			</p:outputPanel>
+		</p:outputPanel>
+
+		<!-- New scheduler properties dialog -->
+		<p:dialog header="New #{automationBean.userSchedulersAllowed ? (userBean.powerUser ? 'personal ' : '') : 'common '}scheduler properties"
+				  widgetVar="newSchedulerDialog" resizable="false" id="newSchedulerDlg" closeOnEscape="true" modal="true">
+			<h:form id="NewSchedulerDialog">
+				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin: 0 auto;">
+					<h:outputText value="Is common:" rendered="#{userBean.admin and automationBean.userSchedulersAllowed}" />
+					<p:selectBooleanCheckbox value="#{automationBean.newSchedulerEntry.common}" rendered="#{userBean.admin and automationBean.userSchedulersAllowed}">
+						<p:ajax update="display"/>
+					</p:selectBooleanCheckbox>
+					<h:outputText value="Select user:" rendered="#{!automationBean.newSchedulerEntry.common and userBean.admin and automationBean.userSchedulersAllowed}" />
+					<p:selectOneMenu value="#{automationBean.newSchedulerEntry.forUser}" style="width:125px" rendered="#{!automationBean.newSchedulerEntry.common and userBean.admin and automationBean.userSchedulersAllowed}">
+						<f:selectItems value="#{userManagementBean.usersList}"/>
+					</p:selectOneMenu>
+					<h:outputText value="Name*:" />
+					<p:inputText value="#{automationBean.newSchedulerEntry.name}" />
+
+					<f:facet name="footer">
+						<p:outputPanel layout="block" style="text-align:right">
+							<p:commandButton value="Create" update=":SchedulersMenu :Growl"
+											 actionListener="#{automationBean.saveNewScheduler}"
+											 oncomplete="if (args.canClose) PF('newSchedulerDialog').hide();"
+											 icon="ui-icon ui-icon-check" />
+							<p:commandButton value="Cancel" onclick="PF('newSchedulerDialog').hide();" icon="ui-icon ui-icon-close" type="button" />
+						</p:outputPanel>
+					</f:facet>
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<!-- Step properties dialog -->
+		<p:dialog header="Step properties" widgetVar="stepDialog" id="StepDlg"
+				  width="#{automationConfigBean.steps.oneStepSelected ? 350 : 375}" resizable="false" closeOnEscape="true" modal="true">
+			<h:form id="StepDialog">
+				<h:panelGrid id="display" columns="#{automationConfigBean.steps.oneStepSelected ? 2 : 3}" cellpadding="4" style="margin: 0 auto;">
+					<h:outputText value="You'll never catch me!" rendered="false" /><ui:remove><!-- This is added for correct three-column view and shouldn't be ever seen in GUI. --></ui:remove>
+					<h:outputText value="Name:" rendered="#{automationConfigBean.steps.oneStepSelected}" />
+					<p:inputText value="#{automationConfigBean.steps.oneSelectedStep.name}" label="Name" style="width: 190px" rendered="#{automationConfigBean.steps.oneStepSelected}" />
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.kind}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Step kind:" />
+					<p:selectOneMenu value="#{automationConfigBean.steps.oneSelectedStep.kind}" style="width: 200px;">
+						<p:ajax update="parameter" />
+						<f:selectItem itemLabel="Default" itemValue="Default" />
+						<f:selectItem itemLabel="Sleep" itemValue="Sleep" />
+						<f:selectItem itemLabel="Ask for continue" itemValue="Ask for continue" />
+					</p:selectOneMenu>
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.startAt}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Start at:" />
+					<p:inputText value="#{automationConfigBean.steps.oneSelectedStep.startAt}" label="Start at" id="startat"
+								 title="Time of day to start this step at.&#10;Must be in format hh:mm:ss.&#10;For relative time use format +hh:mm:ss" style="width: 190px">
+						<p:tooltip for="startat" showEvent="focus" hideEvent="blur" />
+					</p:inputText>
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.startAtType}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Start at after:" />
+					<p:selectOneMenu value="#{automationConfigBean.steps.oneSelectedStep.startAtTypeString}" style="width: 200px;">
+						<f:selectItems value="#{automationBean.startAtTypes}" var="type"
+									   itemLabel="#{type}" itemValue="#{type}"/>
+					</p:selectOneMenu>
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.waitNextDay}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Wait next day:" />
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.oneSelectedStep.waitNextDay}" />
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.parameter}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Parameter:" />
+					<p:inputText value="#{automationConfigBean.steps.oneSelectedStep.parameter}" label="Parameter" id="parameter"
+								 title="#{automationConfigBean.steps.paramsDescription}" style="width: 190px">
+						<p:tooltip for="parameter" showEvent="focus" hideEvent="blur" />
+					</p:inputText>
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.askForContinue}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Ask for continue:" />
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.oneSelectedStep.askForContinue}" />
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.askIfFailed}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Ask if failed:" />
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.oneSelectedStep.askIfFailed}" />
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.execute}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Execute:" />
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.oneSelectedStep.execute}" />
+
+					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.comment}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
+					<h:outputText value="Comment:" />
+					<p:inputTextarea rows="3" value="#{automationConfigBean.steps.oneSelectedStep.comment}" label="Comment" style="width: 190px;" onkeypress="if (event.keyCode == 13) return false;"/>
+
+					<f:facet name="footer">
+						<p:outputPanel layout="block" style="text-align:right">
+							<p:commandButton value="OK" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+											 actionListener="#{automationConfigBean.steps.saveSteps}"
+											 onstart="saveConfigScrollPos();"
+											 oncomplete="restoreConfigScrollPos(); if (args.canClose) PF('stepDialog').hide();"
+											 icon="ui-icon ui-icon-check" />
+							<p:commandButton value="Cancel"
+											 onclick="PF('stepDialog').hide();"
+											 icon="ui-icon ui-icon-close"
+											 type="button" />
+						</p:outputPanel>
+					</f:facet>
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<!-- Remove steps confirm dialog -->
+		<p:confirmDialog id="RemoveStepsConfirmDlg" header="#{automationConfigBean.steps.oneStepSelected ? 'Step removal' : 'Steps removal'}"
+						 message="Are you sure you want to remove #{automationConfigBean.steps.oneStepSelected ? 'this step' : 'selected steps'}?"
+						 width="350"	severity="alert" widgetVar="removeStepsConfirmDialog" closeOnEscape="true" modal="true">
+			<h:form id="RemoveStepsConfirmDialog">
+				<p:commandButton value="Yes" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+								 actionListener="#{automationConfigBean.steps.removeSteps}"
+								 onstart="saveConfigScrollPos();"
+								 oncomplete="PF('removeStepsConfirmDialog').hide(); restoreConfigScrollPos();" />
+				<p:commandButton value="No"
+								 onclick="PF('removeStepsConfirmDialog').hide();"
+								 type="button" />
+			</h:form>
+		</p:confirmDialog>
+		<!-- Remove all steps dialog -->
+		<p:confirmDialog header="Steps removal" message="Are you sure you want to remove ALL steps from this scheduler?"
+						 width="450"	severity="alert" widgetVar="clearConfirmDialog" closeOnEscape="true" modal="true">
+			<h:form id="ClearConfirmDialog">
+				<p:commandButton value="Yes" update=":SchedulerSteps :Steps :ConfigFile :Growl"
+								 actionListener="#{automationConfigBean.steps.clearSteps}"
+								 oncomplete="PF('clearConfirmDialog').hide();" />
+				<p:commandButton value="No"
+								 onclick="PF('clearConfirmDialog').hide();"
+								 type="button" />
+			</h:form>
+		</p:confirmDialog>
+
+		<!-- Upload matrices dialog -->
+		<p:dialog header="Upload matrix" id="uploadMatrixDialog" widgetVar="uploadMatrixDialog" resizable="false" width="600" closeOnEscape="true" modal="true">
+			<h:form enctype="multipart/form-data">
+				<p:fileUpload fileUploadListener="#{automationMatricesBean.uploadMatrix}" allowTypes="/(\.|\/)(csv|zip|xls|xlsx|CSV|ZIP|XLS|XLSX)$/" mode="advanced" multiple="true"
+							  onstart="matricesToUpload = getNumberOfFilesToUpload('uploadMatrixDialog'); disableChoosing('uploadMatrixDialog');"
+							  oncomplete="matricesToUpload--; if (closeUploadDialogIfDone('uploadMatrixDialog', matricesToUpload)) { enableChoosing('uploadMatrixDialog'); }"
+							  update=":Matrices :Growl" />
+			</h:form>
+		</p:dialog>
+		<!-- Linked matrix properties dialog -->
+		<p:dialog header="Linked Matrix Properties" widgetVar="linkedMatrixDialog"
+				  resizable="false" id="linkedMatrixDlg" closeOnEscape="true" modal="true">
+			<h:form id="LinkedMatrixDialog">
+				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin:0 auto;">
+					<h:outputText value="Type:" />
+					<p:selectOneMenu value="#{automationMatricesBean.selectedLinkedMatrix.type}" style="width: 440px;">
+						<p:ajax update="display"/>
+						<f:selectItem itemLabel="Local" itemValue="Local" />
+						<!--<f:selectItem itemLabel="FTP" itemValue="FTP" />-->
+						<c:if test="#{automationMatricesBean.googleSpreadsheetsAvailable}">
+							<f:selectItem itemLabel="Google Spreadsheets" itemValue="GoogleSpreadsheets"/>
+						</c:if>
+						<f:selectItem itemLabel="Remote" itemValue="Remote" />
+					</p:selectOneMenu>
+
+					<h:outputText value="Link:" />
+					<p:inputText value="#{automationMatricesBean.selectedLinkedMatrix.link}" label="Link" style="width: 440px" />
+
+					<h:outputText/>
+					<h:panelGroup id="help">
+						<h:outputText value="#{automationMatricesBean.googleSpreadsheetsHelp}" rendered="#{automationMatricesBean.selectedLinkedMatrix.type eq 'GoogleSpreadsheets'}" style="white-space: pre-wrap"/>
+						<p:outputPanel rendered="#{automationMatricesBean.selectedLinkedMatrix.type eq 'Remote'}">
+							<div>Link example:</div>
+							<div>http://<b>127.0.0.1</b>:<b>4443</b>/directory/<b>folder</b>/file?path=<b>matrix.csv</b></div>
+						</p:outputPanel>
+					</h:panelGroup>
+
+					<h:outputText value="Auto reload:" style="white-space: nowrap"/>
+					<p:selectBooleanCheckbox value="#{automationMatricesBean.selectedLinkedMatrix.autoReload}" />
+
+					<f:facet name="footer">
+						<p:outputPanel layout="block" style="text-align:right">
+							<p:commandButton value="OK" update=":Matrices :Growl"
+											 actionListener="#{automationMatricesBean.saveLinkedMatrix}"
+											 oncomplete="if (args.canClose) PF('linkedMatrixDialog').hide();"
+											 icon="ui-icon ui-icon-check" />
+							<p:commandButton value="Cancel"
+											 onclick="PF('linkedMatrixDialog').hide();"
+											 icon="ui-icon ui-icon-close"
+											 type="button" />
+						</p:outputPanel>
+					</f:facet>
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<!-- Remove matrices confirm dialog -->
+		<p:confirmDialog id="RemoveMatricesConfirmDlg" header="#{automationMatricesBean.oneMatrixSelected ? 'Matrix removal' : 'Matrices removal'}"
+						 message="Are you sure you want to remove #{automationMatricesBean.oneMatrixSelected ? 'this matrix' : 'selected matrices'}?"
+						 width="350" severity="alert" widgetVar="removeMatricesConfirmDialog" closeOnEscape="true" modal="true">
+			<h:form id="RemoveMatricesConfirmDialog">
+				<p:commandButton value="Yes" update=":Matrices"
+								 actionListener="#{automationMatricesBean.removeMatrices}"
+								 onstart="saveMatricesScrollPos();"
+								 oncomplete="PF('removeMatricesConfirmDialog').hide(); restoreMatricesScrollPos();" />
+				<p:commandButton value="No"
+								 onclick="PF('removeMatricesConfirmDialog').hide();"
+								 type="button" />
+			</h:form>
+		</p:confirmDialog>
+
+		<!-- Remove all matrices dialog -->
+		<p:confirmDialog header="Matrices removal" message="Are you sure you want to remove ALL matrices from this scheduler?"
+						 width="450"	severity="alert" widgetVar="clearMatricesConfirmDialog" closeOnEscape="true" modal="true">
+			<h:form id="ClearMatricesConfirmDialog">
+				<p:commandButton value="Yes" update=":Matrices :Growl"
+								 actionListener="#{automationMatricesBean.removeAllMatrices}"
+								 oncomplete="PF('clearMatricesConfirmDialog').hide();" />
+				<p:commandButton value="No"
+								 onclick="PF('clearMatricesConfirmDialog').hide();"
+								 type="button" />
+			</h:form>
+		</p:confirmDialog>
+		<!-- Remove saved state dialog -->
+		<p:confirmDialog header="Saved state removal" message="Are you sure you want to remove saved state?"
+						 width="320" severity="alert" widgetVar="removeSavedStateDialog" closeOnEscape="true" modal="true">
+			<h:form id="RemoveSavedStateDialog">
+				<p:commandButton value="Yes" update=":AutomationMenu :Container"
+								 actionListener="#{automationStateBean.removeSavedState}"
+								 oncomplete="PF('removeSavedStateDialog').hide();" >
+					<f:setPropertyActionListener value="0" target="#{automationBean.activeTab}" />
+				</p:commandButton>
+				<p:commandButton value="No"
+								 onclick="PF('removeSavedStateDialog').hide();"
+								 type="button" />
+			</h:form>
+		</p:confirmDialog>
+		<!-- Clear history of launches dialog -->
+		<p:confirmDialog header="History clearing" message="Are you sure you want to clear history of launches?"
+						 width="400"	severity="alert" widgetVar="clearHistoryConfirmDialog" closeOnEscape="true" modal="true">
+			<h:form id="ClearHistoryConfirmDialog">
+				<p:commandButton value="Yes" update=":History"
+								 actionListener="#{automationReportsBean.clearHistory(true)}"
+								 oncomplete="PF('clearHistoryConfirmDialog').hide();" />
+				<p:commandButton value="No"
+								 onclick="PF('clearHistoryConfirmDialog').hide();"
+								 type="button" />
+				<p:commandButton value="Yes, but keep todays launches" update=":History"
+								 actionListener="#{automationReportsBean.clearHistory(false)}"
+								 oncomplete="PF('clearHistoryConfirmDialog').hide();" />
+			</h:form>
+		</p:confirmDialog>
+		<!-- Reports by matrix dialog -->
+		<p:dialog header="Reports by matrix" widgetVar="reportsDialog"
+				  resizable="false" id="reportsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="true">
+			<h:form id="ReportsDialog">
+				<p:remoteCommand name="resetReportsTable" update="ReportsDialog:reps" >
+					<p:resetInput target="ReportsDialog:reps" />
+				</p:remoteCommand>
+				<p:dataTable id="reps" widgetVar="reportsTable" rendered="#{automationReportsBean.selectedReportsInfo!=null}"
+							 var="matrixInfo" value="#{automationReportsBean.selectedReportsInfo.matrices}" filteredValue="#{automationReportsBean.filteredReportsInfo}"
+							 paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
+							 emptyMessage="No reports found with given criteria">
+					<p:column headerText="Matrix" filterBy="#{matrixInfo.fileName}" filterFunction="#{automationReportsBean.reportFilters.filterReportsInfoByRegEx}"
+							  style="width: 70%; #{width lt 700 ? 'white-space: nowrap;' : 'width: 700px'}">
+						<f:facet name="filter">
+							<p:inputText onkeyup="PF('reportsTable').filter();" style="width: 670px;" placeholder="Search by RegEx"/>
+						</f:facet>
+						<a href="#{automationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report.html" target="_blank"><h:outputText value="#{matrixInfo.name}" style="#{!matrixInfo.successful ? 'color: red;' : ''}" /></a>
+						&#160;
+						<a href="#{automationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report_failed.html" target="_blank">(only failed)</a>
+						&#160;
+						<a href="#{automationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/#{matrixInfo.name}.json" target="_blank">JSON report</a>
+					</p:column>
+					<p:column headerText="Actions done" filterBy="#{matrixInfo}" filterFunction="#{automationReportsBean.reportFilters.filterReportsInfoByState}">
+						<f:facet name="filter">
+							<p:selectOneMenu id="console" onchange="PF('reportsTable').filter();">
+								<f:converter converterId="javax.faces.Integer"/>
+								<f:selectItem itemLabel="All" itemValue="#{null}"/>
+								<f:selectItem itemLabel="Started" itemValue="1"/>
+								<f:selectItem itemLabel="Failed" itemValue="2"/>
+								<f:selectItem itemLabel="Started and failed" itemValue="3"/>
+							</p:selectOneMenu>
+						</f:facet>
+						<h:outputText value="#{matrixInfo.actionsDone}" style="#{!matrixInfo.successful ? 'color: red;' : ''}" />
+					</p:column>
+				</p:dataTable>
+				<script>
+					pf = PF('reportsTable');
+					if (typeof(pf) != "undefined") {
+						resetReportsTable();
+						pf.filter();
+					}
+				</script>
+				<br />
+				<p:panelGrid columns="4" style="float: right">
+					<style>
+						.ui-widget-content {
+							border: none;
+						}
+					</style>
+					<p:commandButton style="margin-right:10px;" value="Download reports"
+									 ajax="false"
+									 icon="ui-icon-arrowthick-1-s">
+						<p:fileDownload value="#{automationReportsBean.zipSelectedReports}" />
+					</p:commandButton>
+					<p:commandButton value="Download reports with logs"
+									 ajax="false"
+									 icon="ui-icon-arrowthick-1-s">
+						<p:fileDownload value="#{automationReportsBean.zipSelectedReportsWithLogs}" />
+					</p:commandButton>
+					<p:commandButton value="Close"
+									 onclick="PF('reportsDialog').hide();"
+									 icon="ui-icon ui-icon-close"
+									 type="button" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		<!-- Real-time reports dialog -->
+		<p:dialog visible="#{automationSchedulerBean.showReportsDialog}"
+				  header="Real-time reports by matrix"
+				  widgetVar="rtReportsDialog"
+				  resizable="true"
+				  id="rtReportsDlg"
+				  width="840" minWidth="840"
+				  height="560" minHeight="560"
+				  modal="true" onHide="hideDialog()"
+				  appendTo="@(body)">
+			<h:form id="rtReportsDlgForm" style="height:100%; width:100%;">
+				<p:remoteCommand name="updateDialog" update="rtReportsDlgForm:dataTable" />
+				<p:remoteCommand name="resetDataTable" update="rtReportsDlgForm:dataTable" >
+					<p:resetInput target="rtReportsDlgForm:dataTable" />
+				</p:remoteCommand>
+				<p:remoteCommand name="resetStepsTable" update="rtReportsDlgForm:stepsTable" >
+					<p:resetInput target="rtReportsDlgForm:stepsTable" />
+				</p:remoteCommand>
+				<div id="rtReportsContainer" style="display:flex; height:75%; width:100%;">
+					<p:panel id="sPanel"
+							 style="height:100%; width:40%; padding:none; margin:none; 
+									border: none; border-radius:0px; border-right: 1px solid #e0edf6;"
+							 styleClass="tableScrollFix">
+						<p:dataTable id="stepsTable"
+									 widgetVar="rtStepsTable"
+									 value="#{automationSchedulerBean.realTimeSteps}"
+									 var="step"
+									 filteredValue="#{automationReportsBean.filteredRTSteps}"
+									 selection="#{automationReportsBean.rtSelectedSteps}"
+									 rowKey="#{step.name}"
+									 styleClass="table-no-select-all"
+									 scrollable="true" style="height:100%; max-height:100%">
+							<p:ajax event="rowSelectCheckbox"
+									oncomplete="PF('rtMatricesTable').filter();"
+									update = "rtReportsDlgForm:dataTable"/>
+							<p:ajax event="rowUnselectCheckbox"
+									oncomplete="PF('rtMatricesTable').filter();"
+									update = "rtReportsDlgForm:dataTable"/>
+							<p:column headerText="Steps"
+									  filterBy="#{step.name}"
+									  filterFunction="#{automationReportsBean.reportFilters.filterRTStepByRegEx}"
+									  selectionMode="multiple">
+								<f:facet name="filter">
+									<p:inputText onkeyup="PF('rtStepsTable').filter();" style="width:80%;" placeholder="Search by RegEx"/>
+								</f:facet>
+								<h:outputText value="#{step.name}" style="margin-left:4px"/>
+							</p:column>
+						</p:dataTable>
+					</p:panel>
+					<p:resizable for="sPanel" handles="e" minWidth="300"/>
+					<p:panel style="width: 73%; height:100%; padding:none; margin:none; border:none;" styleClass="tableScrollFix">
+						<p:dataTable id="dataTable"
+									 widgetVar="rtMatricesTable"
+									 value="#{automationReportsBean.rtMatrices}"
+									 var="matrix"
+									 filteredValue="#{automationReportsBean.filteredRTMatrices}"
+									 emptyMessage="No reports found with given criteria"
+									 scrollable="true"
+									 style="height:100%; max-height:100%%">
+							<p:column headerText="Matrix"
+									  filterBy="#{matrix.name}"
+									  filterFunction="#{automationReportsBean.reportFilters.filterReportsInfoByRegEx}">
+								<f:facet name="filter">
+									<p:inputText onkeyup="PF('rtMatricesTable').filter();" style="width:80%;" placeholder="Search by RegEx"/>
+								</f:facet>
+								<h:outputLink id="reportLink" value="realtime/realtime_report.jsf" target="_blank"
+											  style="#{matrix.started == null? '' : !matrix.successful ? 'color: red;' : 'color: green;'}">
+									<f:param name="matrixName" value="#{matrix.name}" />
+									<f:param name="schedulerName" value="#{automationBean.selectedScheduler.name}" />
+									<h:outputText value="#{matrix.name}" />
+								</h:outputLink>
+								&#160;
+								<h:outputText rendered="#{matrix.started==null}" value="(not running)" />
+							</p:column>
+							<p:column headerText="Status" style="text-align: center; width:20%;"
+									  filterBy="#{matrix}" filterFunction="#{automationReportsBean.reportFilters.filterRTMatricesByState}">
+								<f:facet name="filter">
+									<p:selectOneMenu id="console" onchange="PF('rtMatricesTable').filter();" style="width:60px;">
+										<f:converter converterId="javax.faces.Integer"/>
+										<f:selectItem itemLabel="All" itemValue="#{null}"/>
+										<f:selectItem itemLabel="Passed" itemValue="1"/>
+										<f:selectItem itemLabel="Started" itemValue="2"/>
+										<f:selectItem itemLabel="Failed" itemValue="3"/>
+										<f:selectItem itemLabel="Started and failed" itemValue="4"/>
+									</p:selectOneMenu>
+								</f:facet>
+								<h:outputText value="#{matrix.actionsSuccess} / #{matrix.actionsDone}" />
+							</p:column>
+						</p:dataTable>
+					</p:panel>
+				</div>
+				<script>
+					pf1 = PF('rtMatricesTable');
+					if (typeof(pf1) != "undefined"){
+						resetDataTable();
+						pf1.filter();
+					}
+					pf2 = PF('rtStepsTable');
+					if (typeof(pf2) != "undefined"){
+						resetStepsTable();
+						pf2.filter();
+					}
+				</script>
+				<p:remoteCommand name="hideDialog" update=":Realtime" >
+					<f:setPropertyActionListener target="#{automationSchedulerBean.showReportsDialog}" value="false" />
+				</p:remoteCommand>
+				<br />
+				<p:commandButton style="margin-right:10px;float: right; top:80px" value="Download current reports"
+								 ajax="false"
+								 icon="ui-icon-arrowthick-1-s">
+					<p:fileDownload value="#{automationReportsBean.zipCurrentReports}" />
+				</p:commandButton>
+				<p:commandButton style="margin-right:10px;float: right; top:80px"
+								 value="Refresh"
+								 icon="ui-icon-refresh"
+								 type="button"
+								 onclick="PF('rtMatricesTable').filter(); PF('rtStepsTable').filter();" />
+			</h:form>
+		</p:dialog>
+		<!-- Execution suspended dialog -->
+		<p:dialog header="Execution suspended" widgetVar="suspendedDialog"
+				  resizable="false" id="suspendedDlg" width="380" modal="false" visible="#{automationSchedulerBean.suspended}" closable="false">
+			<h:outputText value="Scripts execution suspended in this scheduler." />
+			<br />
+			<p:outputPanel rendered="#{!automationConfigBean.steps.currentSchedulerStep.actionPause}">
+				<h:outputText value="Last executed step: " style="font-weight: 700;"/>
+				<h:outputText value="#{automationConfigBean.steps.currentSchedulerStep.name}" />
+				<br />
+				<h:outputText rendered="#{!automationConfigBean.steps.currentSchedulerStep.comment.isEmpty()}" value="Comment: " style="font-weight: 700;"/>
+				<h:outputText value="#{automationConfigBean.steps.currentSchedulerStep.comment}" />
+			</p:outputPanel>
+
+			<p:outputPanel rendered="#{automationConfigBean.steps.currentSchedulerStep.actionPause}">
+				<h:outputText value="Current step: " style="font-weight: 700;"/>
+				<h:outputText value="#{automationConfigBean.steps.currentSchedulerStep.name}" />
+				<br />
+				<h:outputText rendered="#{!automationConfigBean.steps.currentSchedulerStep.actionPauseDescription.isEmpty()}" value="Pause description: " style="font-weight: 700;"/>
+				<h:outputText value="#{automationConfigBean.steps.currentSchedulerStep.actionPauseDescription}" />
+			</p:outputPanel>
+			<br />
+			<h:form id="CurrentReports">
+				<h:outputText value="You can examine reports of already finished steps" />
+				<p:commandButton value="Make and show reports" action="#{automationReportsBean.makeReports}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" />
+			</h:form>
+			<br />
+			<h:form id="CurrentState">
+				<h:outputText value="You can save current state of scheduler to restore it later" />
+				<br />
+				<p:commandButton value="Save current state" action="#{automationStateBean.saveState}" update=":AutomationMenu :Growl" />
+			</h:form>
+			<br />
+			<h:form id="Suspended">
+				<p:outputPanel rendered="#{automationSchedulerBean.replayEnabled}">
+					<h:outputText value="You can replay failed replayable actions from last step" />
+					<br />
+					<p:commandButton value="Replay step" update=":SchedulerSteps"
+									 actionListener="#{automationSchedulerBean.replayStep}"
+									 onstart="saveExecScrollPos();"
+									 oncomplete="restoreExecScrollPos(); PF('suspendedDialog').hide();"
+									 icon="ui-icon ui-icon-check" />
+					<br />
+					<br />
+				</p:outputPanel>
+				<h:outputText value="Click Continue to resume execution, Stop to cancel it" />
+				<br />
+				<p:commandButton value="Continue" update=":SchedulerSteps :ExecutionTimer :Start :Pause"
+								 actionListener="#{automationSchedulerBean.continueExecution}"
+								 onstart="saveExecScrollPos();"
+								 oncomplete="restoreExecScrollPos(); PF('suspendedDialog').hide();"
+								 icon="ui-icon ui-icon-check" />
+				<p:commandButton value="Stop" update=":SchedulerSteps :History :ExecutionTimer :Start :Stop"
+								 actionListener="#{automationSchedulerBean.stop}"
+								 onstart="saveExecScrollPos();"
+								 oncomplete="restoreExecScrollPos(); PF('suspendedDialog').hide();"
+								 icon="ui-icon ui-icon-close" />
+			</h:form>
+		</p:dialog>
+		<!-- Failover dialog -->
+		<p:dialog header="Connection failed" widgetVar="failoverDialog"
+				  resizable="false" id="failoverDlg" width="500" modal="false" visible="#{automationSchedulerBean.failover}" closable="false">
+			<h:outputText value="#{automationSchedulerBean.failoverReasonString}. Scripts execution suspended in this scheduler." />
+			<br />
+			<h:form id="Failover">
+				<h:outputText value="Select what to do now: try to reconnect or to interrupt scheduler execution" />
+				<br />
+				<p:commandButton value="Try to reconnect" update=":SchedulerSteps"
+								 actionListener="#{automationSchedulerBean.tryAgainMain}"
+								 oncomplete="saveExecScrollPos(); PF('failoverDialog').hide();"
+								 icon="ui-icon ui-icon-check" />
+				<p:commandButton value="Try with alternative" update=":SchedulerSteps"
+								 actionListener="#{automationSchedulerBean.tryAgainAlt}"
+								 oncomplete="saveExecScrollPos(); PF('failoverDialog').hide();"
+								 icon="ui-icon ui-icon-check" />
+				<p:commandButton value="Stop scheduler" update=":SchedulerSteps :History"
+								 actionListener="#{automationSchedulerBean.stop}"
+								 oncomplete="PF('failoverDialog').hide();"
+								 icon="ui-icon ui-icon-close" />
+			</h:form>
+		</p:dialog>
+		<!-- Matrices errors dialog -->
+		<p:dialog header="Matrices errors" widgetVar="merrorsDialog"
+				  resizable="false" id="merrorsDlg" width="1000" closeOnEscape="true" modal="true">
+			<h:form id="MatricesErrorsDialog">
+				<div style="margin-bottom: 10px;">
+					<p:outputPanel id="ErrorPanel" style="width: 750px; max-height: 400px; overflow-x: hidden; overflow-y: auto; display: inline-block">
+						<p:dataList var="issue"
+									value="#{automationBean.matrixChecker.checkedMatricesIssues}" type="none" style="display: inline">
+							<h:outputLabel value="#{issue.value}" style="#{issue.matrixName ? 'font-size: 120%; font-weight: bold' :
+									issue.messageType ? 'font-weight: bold; padding-left: 2em' :
+									issue.messageKind ? 'font-weight: bold; padding-left: 4em' :
+									'padding-left: 6em'}" />
+							<br />
+						</p:dataList>
+					</p:outputPanel>
+					<div style="width: 200px; display: inline-block; vertical-align: top">
+						<h:outputText value="Error filter:" style="font-size: 130%" />
+						<br />
+						<p:selectManyCheckbox value="#{automationBean.matrixChecker.issuesFilter}" layout="pageDirection"
+											  valueChangeListener="#{automationBean.matrixChecker.checkMatrices}">
+							<f:selectItems value="#{automationBean.matrixChecker.issuesKinds}" var="kind"
+										   itemLabel="#{kind.description}" itemValue="#{kind}" />
+							<p:ajax update="ErrorPanel" listener="#{automationBean.matrixChecker.prepareIssues}" />
+						</p:selectManyCheckbox>
+					</div>
+				</div>
+				<div style="float: right">
+					<p:commandButton value="Close"
+									 onclick="PF('merrorsDialog').hide();"
+									 icon="ui-icon ui-icon-close"
+									 type="button" />
+				</div>
+			</h:form>
+		</p:dialog>
+		<!-- Holidays dialog -->
+		<p:dialog header="Holidays" widgetVar="holidaysDialog"
+				  resizable="false" id="holidaysDlg" width="256" closeOnEscape="true" modal="true">
+			<h:form id="HolidaysDialog">
+				<script type="text/javascript">
+					function checkSchedulerHoliday(date)
+					{
+						return checkHoliday(date, [#{automationConfigBean.holidaysAsString}]);
+					}
+				</script>
+				<p:calendar mode="inline" value="#{automationConfigBean.holidayDate}" beforeShowDay="checkSchedulerHoliday" navigator="true" locale="en_US">
+					<p:ajax event="dateSelect" listener="#{automationConfigBean.toggleHoliday}" update=":Growl :HolidaysDialog" />
+				</p:calendar>
+				<br />
+				<p:outputPanel>
+					<div>
+						<h:outputText value="X" styleClass="highlight-calendar-true" /><h:outputText value=" - defined as a holiday" /><br />
+						<h:outputText value="Y" styleClass="highlight-calendar-false" /><h:outputText value=" - defined as NOT a holiday" /><br />
+						<h:outputText value="Z" /><h:outputText value=" - use default behavior: weekends are holidays if 'Weekend is holiday' is checked, all other days are not" /><br />
+					</div>
+				</p:outputPanel>
+				<br />
+				<div style="float: right">
+					<p:commandButton value="Close"
+									 onclick="PF('holidaysDialog').hide();"
+									 icon="ui-icon ui-icon-close"
+									 type="button" />
+				</div>
+			</h:form>
+		</p:dialog>
+		<!-- Matrices dialog for Saved State -->
+		<p:dialog header="Matrices" widgetVar="stateMatricesDialog"
+				  resizable="false" id="stateMatricesDlg" width="400" closeOnEscape="true" modal="true">
+			<h:form id="StateMatricesDialog">
+				<p:dataList var="matrix" value="#{automationStateBean.stateInfo.matrices}" itemType="none">
+					<p:column>
+						<h:outputText value="#{matrix}" />
+					</p:column>
+				</p:dataList>
+				<br />
+				<div style="float: right">
+					<p:commandButton value="Close"
+									 onclick="PF('stateMatricesDialog').hide();"
+									 icon="ui-icon ui-icon-close"
+									 type="button" />
+				</div>
+			</h:form>
+		</p:dialog>
+		<!-- Step properties dialog of Step State -->
+		<p:dialog header="Step properties" widgetVar="stepStateDialog"
+				  resizable="false" id="stepStateDlg" width="350" closeOnEscape="true" modal="true">
+			<h:form id="StepStateDialog">
+				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin:0 auto;">
+					<h:outputText value="Name:" />
+					<h:outputText value="#{automationStateBean.selectedStepState.name}" />
+
+					<h:outputText value="Step kind:" />
+					<h:outputText value="#{automationStateBean.selectedStepState.kind}" />
+
+					<h:outputText value="Start at:" />
+					<p:inputText value="#{automationStateBean.selectedStepState.startAt}" label="Start at" id="startat"
+								 title="Time of day to start this step at.&#10;Must be in format hh:mm:ss.&#10;For relative time use format +hh:mm:ss" style="width: 190px">
+						<p:tooltip for="startat" showEvent="focus" hideEvent="blur" />
+					</p:inputText>
+
+					<h:outputText value="Start at after:" />
+					<p:selectOneMenu value="#{automationStateBean.selectedStepState.startAtTypeString}" style="width: 200px;">
+						<f:selectItems value="#{automationBean.startAtTypes}" var="type"
+									   itemLabel="#{type}" itemValue="#{type}"/>
+					</p:selectOneMenu>
+
+					<h:outputText value="Parameter:" />
+					<h:outputText value="#{automationStateBean.selectedStepState.parameter}" />
+
+					<h:outputText value="Ask for continue:" />
+					<p:selectBooleanCheckbox value="#{automationStateBean.selectedStepState.askForContinue}" />
+
+					<h:outputText value="Ask if failed:" />
+					<p:selectBooleanCheckbox value="#{automationStateBean.selectedStepState.askIfFailed}" />
+
+					<h:outputText value="Execute:" />
+					<p:selectBooleanCheckbox value="#{automationStateBean.selectedStepState.execute}" />
+
+					<f:facet name="footer">
+						<p:outputPanel layout="block" style="text-align:right">
+							<p:commandButton value="OK" update=":SavedStateInfo :Growl"
+											 actionListener="#{automationStateBean.saveStepState}"
+											 onstart="saveStateStepsScrollPos();"
+											 oncomplete="restoreStateStepsScrollPos(); PF('stepStateDialog').hide();"
+											 icon="ui-icon ui-icon-check" />
+							<p:commandButton value="Cancel"
+											 onclick="PF('stepStateDialog').hide();"
+											 icon="ui-icon ui-icon-close"
+											 type="button" />
+						</p:outputPanel>
+					</f:facet>
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog widgetVar="lostLogsDlg" resizable="false" closeOnEscape="true" modal="true" >
+			<h:form id="LostExecLogsDialog">
+				<h:outputText value="Sorry, but logs by selected execution were lost." />
+				<br/>
+				<h:outputText value="Do you want to download reports only?" />
+				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin:0 auto;">
+					<p:commandButton value="OK"
+									 ajax="false"
+									 oncomplete="PF('lostLogsDlg').hide()"
+									 icon="ui-icon-arrowthick-1-s">
+						<p:fileDownload value="#{automationReportsBean.zipSelectedReports}" />
+					</p:commandButton>
+					<p:commandButton value="Cancel"
+									 onclick="PF('lostLogsDlg').hide()"
+									 icon="ui-icon ui-icon-close"
+									 type="button" >
+					</p:commandButton>
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+		<!-- Stop scheduler dialog -->
+		<p:confirmDialog header="Stop execution" message="Are sure you wish to stop scheduler execution?"
+						 width="340" severity="alert" widgetVar="stopSchedulerDialog" closeOnEscape="true" modal="true" >
+			<h:form id="StopSchedulerDialog">
+				<p:commandButton value="Yes"
+								 update=":SchedulerSteps :Growl"
+								 actionListener="#{automationSchedulerBean.stop}"
+								 oncomplete="PF('stopSchedulerDialog').hide();"
+								 ajax="true"/>
+				<p:commandButton value="No"
+								 onclick="PF('stopSchedulerDialog').hide();"
+								 type="button"/>
+			</h:form>
+		</p:confirmDialog>
+
+		<!-- Timer -->
+		<h:form id="ExecutionTimer">
+			<p:poll interval="1" update=":Start :Stop :Pause :SchedulerStatus :SchedulerSteps :History :Suspended :suspendedDlg :Failover :failoverDlg :Realtime :ReportsDialog"
+					widgetVar="schedulerPoll"
+					autoStart="#{automationSchedulerBean.running}"
+					listener="#{automationBean.onTimer}" stop="#{!automationSchedulerBean.running or automationSchedulerBean.suspended or automationSchedulerBean.failover}"
+					onstart="saveExecScrollPos();"
+					oncomplete="setExecutionScheduleOverflow(); checkPosition();" />
+		</h:form>
+
+		<script>
+			function saveAutoScrollEnabledState() {
+				var a = PF('autoScrCB');
+				if (typeof a != 'undefined') {
+					jQuery.cookie("autoscrollEnabled", a.isChecked());
+				}
+			}
+			
+			
+			
+			function saveExecScrollPos()
+			{
+				saveScrollPos('execScrollTop', 'ExecutionSchedule');
+			}
+			
+			function saveConfigScrollPos()
+			{
+				saveScrollPos('configScrollTop', 'SchedulerConfig');
+			}
+			
+			function saveMatricesScrollPos()
+			{
+				saveScrollPos('matricesScrollTop', 'MatricesConfig');
+			}
+			
+			function saveStateStepsScrollPos()
+			{
+				saveScrollPos('stateStepsScrollTop', 'SavedStateSteps');
+			}
+			
+			
+			function restoreExecScrollPos()
+			{
+				scrollPos = jQuery.cookie("execScrollTop");
+				if (scrollPos) {
+					autoScrollRequested = true;
+					jQuery("#ExecutionSchedule .ui-datatable-scrollable-body").scrollTop(scrollPos);
+				}
+			}
+			
+			function restoreConfigScrollPos()
+			{
+				restoreScrollPos('configScrollTop', 'SchedulerConfig');
+			}
+			
+			function restoreMatricesScrollPos()
+			{
+				restoreScrollPos('matricesScrollTop', 'MatricesConfig');
+			}
+			
+			function restoreStateStepsScrollPos()
+			{
+				restoreScrollPos('stateStepsScrollTop', 'SavedStateSteps');
+			}
+			
+			jQuery(document).ready(function() {
+				changeAutoScrollCB(jQuery.cookie("autoscrollEnabled") === 'true');
+				running = jQuery("#schedulerRunning");
+				if ((running) &amp;&amp; (running.val()))
+					restoreExecScrollPos();
+				else
+					jQuery.cookie("execScrollTop", 0);
+			});
+		</script>
+
+		<script>
+			function changeAutoScrollCB(value) {
+				var a = PF('autoScrCB');
+				if (typeof a != 'undefined' &amp;&amp; value != a.isChecked()) {
+					a.toggle();
+				} 
+			}
+			
+			function setExecutionScheduleOverflow() {
+				var body = jQuery('#ExecutionSchedule .ui-datatable-scrollable-body');
+				body.css('overflow', 'auto');
+				body.scroll(function() {
+					if (autoScrollRequested) {
+						autoScrollRequested = false;
+					} else if (autoScrolling &amp;&amp; (running) &amp;&amp; (running.val())) {
+						autoScrolling  = false;
+						changeAutoScrollCB(false);
+					}
+				});
+			}
+			
+			jQuery(document).ready(function($) {
+				autoScrollRequested = true;
+				setExecutionScheduleOverflow();
+			});
+		</script>
+
+		<script>
+			var oldTop = 0;
+			var windowHeightOffset = $(window).height() / 2;
+			autoScrolling = false;
+			//changeAutoScrollCB(true);
+			autoScrollRequested = false;
+			function checkPosition()
+			{
+				if (autoScrolling) {
+					var nodes = jQuery("#SchedulerSteps .ui-state-highlight");
+					if ( nodes.length > 0) {
+						var tmpTop = nodes.offset().top;
+						if (oldTop &lt;= tmpTop) {
+							oldTop = tmpTop;
+							autoScrollRequested = true;
+							jQuery("#ExecutionSchedule .ui-datatable-scrollable-body").scrollTop(oldTop - windowHeightOffset);
+						}
+					}
+				}
+				else
+					restoreExecScrollPos();
+			}
+		</script>
+	</ui:define>
+</ui:composition>

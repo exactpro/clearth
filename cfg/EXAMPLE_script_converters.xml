@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ScriptConverterConfigs>
+	<ScriptConverterConfig>
+		<Name>ScriptConverter1</Name>
+		<Codec>Xml</Codec>
+		<ClearThMessageClass>com.exactprosystems.clearth.connectivity.xml.ClearThXmlMessage</ClearThMessageClass>
+		<MessageFillerClass>com.exactprosystems.clearth.converters.MessageFiller</MessageFillerClass>
+		<SendSubMessageAction>AddRepeatingGroup</SendSubMessageAction>
+		<ReceiveSubMessageAction>AddRepeatingGroup</ReceiveSubMessageAction>
+	</ScriptConverterConfig>
+</ScriptConverterConfigs>

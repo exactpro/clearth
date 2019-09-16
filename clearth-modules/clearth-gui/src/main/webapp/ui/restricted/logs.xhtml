@@ -1,0 +1,128 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui"
+		xmlns:c="http://java.sun.com/jsp/jstl/core"
+		template="../../templates/restricted.xhtml">
+	
+	<ui:define name="title">ClearTH logs</ui:define>
+
+	<ui:define name="content">
+		<label class="pageTitle">ClearTH logs</label>
+		<div class="entry">
+			<h:form id="Logs">
+				<table width="100%"><tr valign="top">
+					<td width="400">
+                        Here you can manipulate ClearTH logs.
+						<br />
+						<br />
+						<p:selectManyCheckbox id="logsList" value="#{logsBean.selectedLogsList}" layout="grid" columns="2">
+							<f:selectItems value="#{logsBean.allLogsList}" />
+							<p:ajax update="Logs"/>
+						</p:selectManyCheckbox>
+						<br />
+						<p:commandButton id="downloadLogs" value="Download" ajax="false"
+										 icon="ui-icon-arrowthickstop-1-s">
+							<p:fileDownload value="#{logsBean.logsZip}" update=":Logs" />
+						</p:commandButton>
+						&#160;
+                        <c:if test="${userBean.admin}">
+                            <p:commandButton value="Clear" onclick="PF('logsClearingDlg').show();" icon="ui-icon-trash" 
+                            		rendered="#{!logsBean.selectedLogsList.isEmpty()}" />
+
+                            <p:confirmDialog widgetVar="logsClearingDlg" closeOnEscape="true" modal="true"
+                                             width="400"
+                                             header="Logs clearing confirmation" message="Are you sure you want to clear contents of selected log files?">
+                                <p:commandButton value="Yes" actionListener="#{logsBean.clearLogs}" update="Logs :Growl"
+                                                 onclick="PF('logsClearingDlg').hide();"/>
+                                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no"
+                                                 onclick="PF('logsClearingDlg').hide();" />
+                            </p:confirmDialog>
+                        </c:if>
+					</td>
+					<td>
+						Information about logs contents:
+						<ul>
+							<li><b>all.log</b> - complete log of ClearTH and Jetty server.</li>
+							<li><b>automation.log</b> - info and error log of Automation part of ClearTH.</li>
+							<li><b>connectivity.log</b> - info and error log of Connectivity part of ClearTH.</li>
+							<li><b>user_activity.log</b> - info and error log of ClearTH user activities.</li>
+							<li><b>jetty.log</b> - Jetty server log.</li>
+							<li><b>clearth.log</b> - complete log of all ClearTH parts.</li>
+							<li><b>clearth.err</b> - error log of all ClearTH parts.</li>
+						</ul>
+						Note: list of logs may contain log files with indexes like "automation.log.1". 
+						It means backed up logs. 
+						The lower the index, the newer the backup. Log file with no index is the newest log file.
+					</td>
+				</tr></table>
+			</h:form>
+			
+			<c:if test="${userBean.admin || userBean.powerUser}">
+				<br />
+				<hr class="fullWidth" />
+				<br />
+				<h:form id="LoggingLevel">
+					Here you can set logging level for ClearTH logs.
+					<br />
+					Levels of logging have the following hierarchy, from the lowest to highest: <b>Trace</b> &lt; <b>Debug</b> &lt; <b>Info</b> &lt; <b>Warn</b> &lt; <b>Error</b>
+					<br />
+					<br />
+					<p:panelGrid columns="3">
+						<p:selectOneMenu id="currentLogger" value="#{logsBean.currentLogger}"
+										 style="width:300px;" appendTo="@this">
+							<f:selectItem itemLabel="&lt;Choose a logger to manipulate&gt;" itemValue="#{null}" />
+							<f:selectItems value="#{logsBean.getLoggers(userBean.admin)}" var="lg" itemLabel="#{lg}" itemValue="#{lg}" />
+							<p:ajax event="change" update="LogLevel TestLogger :Growl" process="@this" />
+						</p:selectOneMenu>
+						<h:outputText id="LogLevel" value="#{logsBean.loggingLevel}" />
+					</p:panelGrid>
+					<br />
+					<h:outputText value="Change logging level: " />
+					<p:commandButton value="Trace"   		actionListener="#{logsBean.setLoggingLevel('TRACE')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Debug"   		actionListener="#{logsBean.setLoggingLevel('DEBUG')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Info"    		actionListener="#{logsBean.setLoggingLevel('INFO')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Warn"    		actionListener="#{logsBean.setLoggingLevel('WARN')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Error"   		actionListener="#{logsBean.setLoggingLevel('ERROR')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="No logging"     actionListener="#{logsBean.setLoggingLevel('OFF')}"   update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton id="TestLogger" value="Test logger" actionListener="#{logsBean.testLogging}" update="LogLevel"
+									 style="margin-left:20px;" disabled="#{logsBean.currentLogger == 'None'}" />
+					<br />
+					<br />
+					<br />
+					<h:outputText value="Current logging level for all loggers: " />
+					<h:outputText id="AllLogLevel" value="#{logsBean.allLoggingLevel}" />
+					<br />
+					<br />
+					<h:outputText value="Change logging level for all loggers: " />
+					<p:commandButton value="Trace"   		actionListener="#{logsBean.setAllLoggingLevels('TRACE')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Debug"   		actionListener="#{logsBean.setAllLoggingLevels('DEBUG')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Info"    		actionListener="#{logsBean.setAllLoggingLevels('INFO')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Warn"    		actionListener="#{logsBean.setAllLoggingLevels('WARN')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Error"   		actionListener="#{logsBean.setAllLoggingLevels('ERROR')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="No logging"     actionListener="#{logsBean.setAllLoggingLevels('OFF')}"   update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<br />
+					<br />
+					<br />
+					<p:commandButton value="Reset all loggers to defaults" actionListener="#{logsBean.resetLoggingLevel}" update="LogLevel AllLogLevel" />
+				</h:form>
+				<br />
+				<hr class="fullWidth" />
+				<br />
+				<h:form id="ThreadDumps">
+					Here you can download ClearTH thread dumps.
+					<br />
+					<br />
+					<p:commandButton id="downloadThreadDumps" value="Download thread dumps" ajax="false"
+									 icon="ui-icon-arrowthickstop-1-s">
+						<p:fileDownload value="#{logsBean.threadDumps}" update=":ThreadDumps" />
+					</p:commandButton>
+					<br />
+					<br />
+					<br />
+				</h:form>
+			</c:if>
+		</div>
+	</ui:define>
+</ui:composition>

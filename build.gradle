@@ -1,0 +1,251 @@
+ext {
+	sharedDir = file('shared')
+	coreXsdDir = file('clearth-core/xsd')
+	version = file('version').text.trim()
+	if (!project.hasProperty('newProjectDir')) {
+		newProjectDir = 'undef'
+	}
+	jettyVersion = '9.4.19.v20190610'
+	jettyDistName = "jetty-distribution-${jettyVersion}"
+}
+
+buildscript {
+	repositories {
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
+	}
+	dependencies {
+		classpath "org.jfrog.buildinfo:build-info-extractor-gradle:2.2.5"
+	}
+}
+
+subprojects {
+
+	repositories {
+//		mavenLocal()
+		maven {
+			name 'MavenLocal' // for local builds only
+			url sharedDir
+		}
+		jcenter()
+	}
+	
+	apply plugin: 'java'
+	apply plugin: 'maven'
+	apply plugin: 'com.jfrog.artifactory'
+	apply plugin: 'maven-publish'
+
+	defaultTasks 'build'
+
+	sourceCompatibility = 1.8 //Java version compatibility to use when compiling Java source.
+	targetCompatibility = 1.8 //Java version to generate classes for.
+	compileJava.options.debugOptions.debugLevel = 'source,lines,vars' // Include debug information
+	
+	ext {
+		xsdDir		  = file('xsd')
+		genDir		  = file("${buildDir}/generated-src")
+		genJavaDir	  = file("${genDir}/java")
+		genJaxbDir	  = file("${genDir}/jaxb")
+		
+		if (!project.hasProperty('versionMark')) {
+			versionMark = ''
+		}
+	}
+	
+	version	 = rootProject.ext.version
+	group	 = 'com.exactprosystems.clearth'
+
+	sourceSets {
+		main {
+			java {
+				srcDir genJavaDir
+			}
+		}
+	}
+	
+	configurations {
+		all {
+			transitive = true
+			resolutionStrategy {
+				// fail eagerly on version conflict (includes transitive dependencies)
+				// e.g. multiple different versions of the same dependency (group and name are equal)
+				failOnVersionConflict()
+
+				// prefer modules that are part of this build (multi-project or composite build) over external modules
+//				preferProjectModules()
+				
+				force   'commons-logging:commons-logging:1.1.1',
+						'com.fasterxml.jackson.core:jackson-core:2.4.2',
+						'commons-io:commons-io:2.5',
+						'javax.xml.bind:jaxb-api:2.2',
+						'commons-codec:commons-codec:1.10',
+						'junit:junit:4.10',
+						'org.hamcrest:hamcrest-core:1.3',
+						'org.slf4j:slf4j-api:1.7.13',
+						'org.apache.httpcomponents:httpclient:4.5.5'
+	
+				// don't cache changing modules at all
+				cacheChangingModulesFor 0, 'seconds'
+			}
+		}
+		compile.exclude module: 'guava-jdk5'
+		jaxb
+	}
+
+	test {
+		ignoreFailures = Boolean.getBoolean("test.ignoreFailures")
+	}
+
+	task testNg(type: Test) {
+		ignoreFailures = Boolean.getBoolean("test.ignoreFailures")
+		useTestNG()
+	}
+
+	check {
+		dependsOn.add("testNg")
+	}
+	
+
+	dependencies {
+		jaxb 'com.sun.xml.bind:jaxb-xjc:2.1.3'
+		jaxb 'com.sun.xml.bind:jaxb-impl:2.1.3'
+		jaxb 'javax.xml.bind:jaxb-api:2.1'
+		jaxb 'javax.xml:jsr173:1.0'
+
+		testCompile 'junit:junit:4.10'
+		testCompile 'org.mockito:mockito-all:1.9.5'
+		testCompile 'org.testng:testng:6.14.3'
+		
+		if (project.getParent().getName() == 'clearth-modules')
+			compile project(':clearth-core')
+	}
+
+	task createDir {
+		doLast {
+			genJavaDir.mkdirs()
+			genJaxbDir.mkdirs()
+		}
+	}
+
+	task generateJavaFromXsd(dependsOn: 'createDir', group: 'generation')
+
+	compileJava {
+		dependsOn.add('generateJavaFromXsd')
+	}
+
+	jar {
+		manifest {
+			attributes('Created-By': System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')')
+			attributes('Specification-Title': '')
+			attributes('Specification-Vendor': 'Exactpro Systems LLC')
+			attributes('Implementation-Title': "${project.name}")
+			attributes('Implementation-Vendor': 'Exactpro Systems LLC')
+			attributes('Implementation-Vendor-Id': 'com.exactprosystems')
+			attributes('Implementation-Version': "${version}")
+			if (versionMark != '')
+				attributes('Implementation-Version-Mark': "${versionMark}")
+			attributes('Implementation-Version-Date': getDate())
+		}
+	}
+
+	publishing {
+		repositories {
+			maven {
+				name 'sharedDir'
+				url sharedDir
+			}
+		}
+	}
+}
+
+static def getDate() {
+	def date = new Date()
+	def formattedDate = date.format('ddMMyyyy-HH:mm:ss.SSS')
+	return formattedDate
+}
+
+task buildCoreArchieves(type: GradleBuild) {
+	tasks = ['clearth-core:build', 'clearth-core:uploadArchives',
+			 'clearth-modules:clearth-rhdata:build', 'clearth-modules:clearth-rhdata:uploadArchives']
+}
+
+project(':clearth-modules') {
+	artifactoryPublish.skip = true
+}
+
+task assembleAll(group: 'build', description: 'Assembles all ClearTH components, i.e. Core and all of its modules', dependsOn: subprojects*.assemble)
+task buildAll(group: 'build', description: 'Builds and tests all ClearTH components, i.e. Core and all of its modules', dependsOn: subprojects*.build)
+task publishAll(group: 'publishing', description: 'Publishes all ClearTH components, i.e. Core and all of its modules', dependsOn: subprojects*.publish)
+
+task downloadJetty() {
+	def f = new File("${projectDir}/jetty/")
+	def jettyDistZip = new File(f, "${jettyDistName}.zip")
+	
+	outputs.upToDateWhen { jettyDistZip.exists() }
+	
+	doLast {
+		copy {
+			def url = new URL("https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/${jettyVersion}/${jettyDistName}.zip")
+			f.mkdirs()
+			println 'Downloading Jetty: ' + url
+			url.withInputStream { i -> jettyDistZip.withOutputStream { it << i } }
+			println 'Unpacking Jetty'
+			from zipTree(jettyDistZip)
+			into f
+			
+			def unzipped = new File(f, jettyDistName)
+			
+			def work = new File(unzipped, 'work')
+			println 'Creating directory ' + work
+			work.mkdirs()
+		}
+	}
+}
+
+task createProject(type: Copy, 
+		group: 'ClearTH', 
+		description: 'Creates directory with new ClearTH-based project', 
+		dependsOn: 'downloadJetty') {
+	
+	onlyIf {
+		if (newProjectDir == 'undef') {
+			println 'You must set "newProjectDir" property via "-PnewProjectDir=<path_to_new_project>" key'
+			false
+		} else {
+			true
+		}
+	}
+	
+	outputs.upToDateWhen { false }
+
+	from ("${projectDir}/for_new_project") {
+		exclude "build.gradle"
+		exclude "gradle.properties"
+	}
+	from ("${projectDir}/for_new_project") {
+		include "build.gradle"
+		include "gradle.properties"
+		filter( org.apache.tools.ant.filters.ReplaceTokens, tokens: ["JETTY_VERSION": jettyVersion.toString(),
+																	 "CORE_SHARED_DIR": sharedDir.toString().replace('\\', '/'),
+																	 "CORE_VERSION": rootProject.ext.version.toString()] )
+	}
+	from (new File("${projectDir}/cfg/")) {
+		into "cfg/"
+	}
+	from (new File("${projectDir}/clearth-modules/clearth-gui/src/main/webapp/")) {
+		exclude 'WEB-INF/faces-config.xml'
+		into "src/main/webapp/"
+	}
+	from (new File(projectDir,"jetty/jetty-distribution-${jettyVersion}")) {
+		exclude 'demo-base'
+		into "jetty"
+	}
+	from (new File("${projectDir}")) {
+		include 'gradle/'
+		include 'gradlew.bat'
+		include 'gradlew'
+	}	
+	
+	into newProjectDir
+}

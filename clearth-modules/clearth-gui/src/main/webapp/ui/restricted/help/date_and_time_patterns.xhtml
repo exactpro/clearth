@@ -1,0 +1,144 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui">
+
+
+	<h3>Pattern syntax:</h3>
+	<table>
+		<tr>
+			<td>G - era designator (before Christ, after Christ)</td>
+		</tr>
+		<tr>
+			<td>Y - year (e.g. 12 or 2012). Use either yy or yyyy</td>
+		</tr>
+		<tr>
+			<td>M - month in year. Number of M's determine length of format (e.g. MM, MMM or MMMMM)</td>
+		</tr>
+		<tr>
+			<td>D - day in month. Number of d's determine length of format (e.g. d or dd)</td>
+		</tr>
+		<tr>
+			<td>h - hour of day, 1-12 (AM / PM) (normally hh)</td>
+		</tr>
+		<tr>
+			<td>H - hour of day, 0-23 (normally HH)</td>
+		</tr>
+		<tr>
+			<td>k - hour in day (1-24)</td>
+		</tr>
+		<tr>
+			<td>K - hour in am/pm (0-11)</td>
+		</tr>
+		<tr>
+			<td>m - minute in hour, 0-59 (normally mm)</td>
+		</tr>
+		<tr>
+			<td>s - second in minute, 0-59 (normally ss)</td>
+		</tr>
+		<tr>
+			<td>S - millisecond in second, 0-999 (normally SSS)</td>
+		</tr>
+		<tr>
+			<td>E - day in week (e.g Monday, Tuesday etc.)</td>
+		</tr>
+		<tr>
+			<td>D - day in year (1-366)</td>
+		</tr>
+		<tr>
+			<td>F - day of week in month (e.g. 1st Thursday of December)</td>
+		</tr>
+		<tr>
+			<td>w - week in year (1-53)</td>
+		</tr>
+		<tr>
+			<td>W - week in month (0-5)</td>
+		</tr>
+		<tr>
+			<td>a - am/pm marker(PM)</td>
+		</tr>
+		<tr>
+			<td>u - day number of week (1 = Monday, ..., 7 = Sunday)</td>
+		</tr>
+		<tr>
+			<td>z - time zone (Pacific Standard Time; PST; GMT-08:00)</td>
+		</tr>
+		<tr>
+			<td>Z - RFC 822 time zone (-0800)</td>
+		</tr>
+		<tr>
+			<td>X - ISO 8601 time zone (-08; -0800; -08:00)</td>
+		</tr>
+	</table>
+	<p>
+		The letters are usually repetitive because their number in a pattern represents 
+		the size of part of a date/time string.
+	</p>
+	<h3>General time zone</h3>
+	<p>
+		If time zone have name than it is interpreted as text. 
+		But if you use GMT time zone there is special syntax for it.
+	</p>
+	<p>
+		<div style="margin-left:15px; display:flex; flex-direction:column;">
+			<span style="margin-left:-15px;">GMTOffsetTimeZone:</span>
+			<span style="margin-left:15px;">GMT Sign Hours : Minutes</span>
+			<span>Sign: one of</span>
+			<span style="margin-left:15px;">+ -</span>
+			<span>Hours:</span>
+			<span style="margin-left:15px;">Digit</span>
+			<span style="margin-left:15px;">Digit Digit</span>
+			<span>Minutes:</span>
+			<span style="margin-left:15px;">Digit Digit</span>
+			<span>Digit: one of</span>
+			<span style="margin-left:15px;">0 1 2 3 4 5 6 7 8 9</span>
+		</div>
+	</p>
+	
+	<h3>Examples</h3>
+	<p>
+		Given date/time: 2001-07-04 12:08:56 local time in the U.S. Pacific Time time zone:
+	</p>
+	<table style="border-spacing:5px;">
+		<th>Pattern</th>
+		<th>String</th>
+		<tr>
+			<td>
+				EEE, MMM d, yy  
+			</td>
+			<td>
+				Wed, Jul 4, 01
+			</td>
+		</tr>
+		<tr>
+			<td>
+				h:mm aa
+			</td>
+			<td>
+				12:08 PM
+			</td>
+		</tr><tr>
+			<td>
+				yyMMddHHmmssZ
+			</td>
+			<td>
+				010704120856-0700
+			</td>
+		</tr><tr>
+			<td>
+				yyyy-MM-dd'T'HH:mm:ss.SSSXXX
+			</td>
+			<td>
+				2001-07-04T12:08:56.235-07:00
+			</td>
+		</tr><tr>
+			<td>
+				yyyy-MM-dd HH:mm:ss.SSSZ
+			</td>
+			<td>
+				2001-07-04 12:08:56.235-0700
+			</td>
+		</tr>
+	</table>
+</ui:composition>

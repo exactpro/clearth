@@ -1,0 +1,95 @@
+generateJavaFromXsd {
+	inputs.file file("${xsdDir}/clearth.xsd")
+	inputs.file file("${xsdDir}/clearth.xjb")
+	inputs.file file("${xsdDir}/flatdictionary.xsd")
+
+	outputs.files fileTree("${genJavaDir}/com/exactprosystems/clearth/xmldata").include('*.java')
+	outputs.files fileTree("${genJavaDir}/com/exactprosystems/clearth/connectivity/flat").include('*.java')
+
+	doLast {
+		ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
+
+	ant.xjc(schema: "${xsdDir}/clearth.xsd", binding: "${xsdDir}/clearth.xjb",
+				destdir: "${genJavaDir}", package: 'com.exactprosystems.clearth.xmldata',
+				removeOldOutput: 'yes')
+		{
+			produces(dir: "${genJavaDir}/com/exactprosystems/clearth/xmldata", includes: '*')
+		}
+
+	ant.xjc(schema: "${xsdDir}/message.xsd", binding: "${xsdDir}/message.xjb",
+			destdir: "${genJavaDir}", package: 'com.exactprosystems.clearth.connectivity.message',
+			removeOldOutput: 'yes')
+		{
+			arg(value: "-episode")
+			arg(value: "${genDir}/message.episode")
+			produces(dir: "${genJavaDir}/com/exactprosystems/clearth/connectivity/message", includes: '*')
+		}
+
+		ant.xjc(schema: "${xsdDir}/flatdictionary.xsd",
+				destdir: "${genJavaDir}", package: 'com.exactprosystems.clearth.connectivity.flat',
+				removeOldOutput: 'yes', extension: true)
+		{
+			arg(value: "-catalog")
+			arg(value: "${coreXsdDir}/message.cat")
+			arg(value: "-b")
+			arg(value: "${genDir}/message.episode")
+			produces(dir: "${genJavaDir}/com/exactprosystems/clearth/connectivity/flat", includes: '*')
+		}
+	}
+}
+
+dependencies {
+	// IBM MQ
+	compile "com.ibm.mq:com.ibm.mq.allclient:9.0.5.0"
+
+	compile "commons-beanutils:commons-beanutils:1.9.3"
+	compile "commons-codec:commons-codec:1.10"
+	compile "org.apache.commons:commons-collections4:4.1"
+	compile "org.apache.commons:commons-configuration2:2.2"
+	compile "org.apache.commons:commons-csv:1.5"
+	compile "org.apache.commons:commons-exec:1.3"
+	compile "commons-fileupload:commons-fileupload:1.3.3"
+	compile "commons-io:commons-io:2.5"
+	compile "commons-lang:commons-lang:2.6"
+	compile "commons-logging:commons-logging:1.2"
+	compile "org.freemarker:freemarker:2.3.23"
+	compile "com.google.api-client:google-api-client:1.19.0"
+	compile "com.google.apis:google-api-services-drive:v2-rev149-1.19.0"
+
+	compile "net.sourceforge.javacsv:javacsv:2.0"
+	compile "com.fasterxml.jackson.core:jackson-databind:2.4.2"
+	compile "javax.servlet:javax.servlet-api:3.0.1"
+	compile "javax.xml.bind:jaxb-api:2.2"
+	compile "com.sun.xml.bind:jaxb-impl:2.1.12"
+	compile "com.sun.faces:jsf-api:2.1.7"
+	compile "com.sun.faces:jsf-impl:2.1.7"
+	compile "org.mvel:mvel2:2.4.0.Final"
+	compile "org.apache.poi:poi:3.16"
+	compile "org.apache.poi:poi-ooxml:3.16"
+	compile "org.apache.poi:poi-ooxml-schemas:3.16"
+	compile "org.slf4j:slf4j-api:1.7.13"
+	compile "org.slf4j:slf4j-log4j12:1.7.13"
+	compile "org.apache.xmlbeans:xmlbeans:2.6.0"
+	compile "org.xmlunit:xmlunit-core:2.5.1"
+	compile "org.xmlunit:xmlunit-legacy:2.5.1"
+	compile "org.xmlunit:xmlunit-matchers:2.5.1"
+	compile "com.thoughtworks.xstream:xstream:1.4.2"
+}
+
+jar {
+	manifest {
+		attributes("Specification-Title": "ClearTH Core")
+	}
+}
+
+publishing {
+	publications {
+		core(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-core'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}

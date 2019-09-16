@@ -1,0 +1,371 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui"
+		xmlns:c="http://java.sun.com/jsp/jstl/core"
+		template="../templates/ui.xhtml">
+	
+	<ui:define name="page">
+		<div id="menu" class="#{guiBean.menuExpanded ? 'expanded' : ''}">
+			<div class="menuShadow" />
+			<div id="menuHeader">
+				<a href="#{request.contextPath}/ui/restricted/home.jsf">
+					<div id="smallMenuHeader">
+						<div id="#{!userBean.newYear ? 'smallCTHLogo' : 'smallCTHLogoNY'}" />
+					</div><div id="bigMenuHeader">
+						<c:if test="#{!userBean.newYear}">
+						<div id="bigCTHLogo" /><span id="versionNumber">v.2.0</span>
+						</c:if>
+						<c:if test="#{userBean.newYear}">
+						<div id="bigCTHLogoNY" />
+						</c:if>
+					</div>
+				</a>
+			</div>
+			
+			<div id="menuBody">
+				<ul>
+					<a href="#{request.contextPath}/ui/restricted/automation.jsf">
+						<li id="mainMenuItem1" class="#{(guiBean.pageName == 'automation.xhtml') ? 'activeMenu' : ''}">
+							<div class="menuIcon" id="automationIcon" />
+							<span>Automation</span>
+						</li>
+					</a>
+					<c:if test="${userBean.admin || userBean.powerUser}">
+						<a href="#{request.contextPath}/ui/restricted/connectivity.jsf">
+							<li id="mainMenuItem2" class="#{(guiBean.pageName == 'connectivity.xhtml') ? 'activeMenu' : ''}">
+								<div class="menuIcon" id="connectivityIcon" />
+								<span>Connectivity</span>
+							</li>
+						</a>
+					</c:if>
+					<a href="#{request.contextPath}/ui/restricted/logs.jsf">
+						<li id="mainMenuItem4" class="#{(guiBean.pageName == 'logs.xhtml') ? 'activeMenu' : ''}">
+							<div class="menuIcon" id="logsIcon" />
+							<span>ClearTH logs</span>
+						</li>
+					</a>
+					<a href="#{request.contextPath}/ui/restricted/tools.jsf">
+						<li  id="mainMenuItem5" class="#{(guiBean.pageName == 'tools.xhtml') ? 'activeMenu' : ''}">
+							<div class="menuIcon" id="toolsIcon" />
+							<span>Tools</span>
+						</li>
+					</a>
+					<c:if test="${userBean.admin || userBean.powerUser}">
+						<a href="#{request.contextPath}/ui/restricted/user_management.jsf">
+							<li id="mainMenuItem6" class="#{(guiBean.pageName == 'user_management.xhtml') ? 'activeMenu' : ''}">
+								<div class="menuIcon" id="userManIcon" />
+								<span>User management</span>
+							</li>
+						</a>
+					</c:if>
+				</ul>
+			</div>
+			
+			<div id="menuFooter">
+				<h:form id="PopupsForm">
+					<p:commandButton id="recentPopups" value="Recent pop-ups" update=":PopupsDialog" oncomplete="PF('popupsDialog').show();" />
+				</h:form>
+				<br />
+				<br />
+				<h:form id="currentDT">
+					<div id="collapsedDT">
+						<h:outputText id="collapsedDTValue" value="#{dateTimeBean.currentTime}">
+							<f:convertDateTime pattern="HH:mm"/>
+						</h:outputText>
+					</div><div id="expandedDT">
+						<h:outputText id="expandedDTValue" value="#{dateTimeBean.currentTime}">
+							<f:convertDateTime pattern="dd.MM.yyyy &nbsp; HH:mm"/>
+						</h:outputText>
+					</div>
+					<p:poll interval="10" update="collapsedDTValue expandedDTValue" autoStart="true" />
+				</h:form>
+				<button id="menuResize" onClick="resizeMenu();">
+					<div class="#{guiBean.menuExpanded ? 'collapseMenuIcon' : 'expandMenuIcon'}" id="menuResizeIcon" />
+					<span>Roll up</span>
+				</button>
+				<div id="userContainer">
+					<div id="userNameContainer">
+						<div class="userIcon" id="menuUserIcon" />
+						<h:outputText value="#{userBean.userName}" class="userName" title="#{userBean.userName}"/>
+					</div>
+					<h:form>
+						<p:commandLink title="Sign out" styleClass="signOutIcon" oncomplete="PF('logoutConfirmDialog').show();"/>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			function ajax_handle_toBottom()
+			{
+				if (typeof pageLoaded !== 'undefined')
+				{
+					resizePageContainer();
+					handle_toBottom();
+				}
+			}
+		</script>
+		
+		<p:outputPanel id="pageContainer">
+			<h:form>
+				<p:remoteCommand name="updatePageContainer" update="pageContainer" />
+			</h:form>
+			<div id="page">
+				<ui:insert name="content">...</ui:insert>
+			</div>
+			<div id="pageFooter">
+				<h:form>
+					<h:panelGroup id="memorySpaceInfo" style="float: left; margin-left: 10px;">
+						<span style="position: absolute; left: 240px; font-size: 12px;">
+							<h:outputText value="Used memory: " />
+							<h:outputText id="usedMemoryInfo"
+									value="#{ApplicationBean.getUsedMemoryInfo()}"
+									style="#{ApplicationBean.isMemoryBreachesLimit() ? 'color: red;' : ''}"/>
+
+							<h:outputText value="/" />
+							<h:outputText id="maxMemoryInfo" value="#{ApplicationBean.getMaxMemoryInfo()}" />
+
+							<h:outputText value=" Mb | Used space: " />
+							<h:outputText id="usedSpaceInfo" value="#{ApplicationBean.getUsedSpaceInfo()}" />
+							<h:outputText value="/" />
+							<h:outputText id="totalSpaceInfo" value="#{ApplicationBean.getTotalSpaceInfo()}" />
+							<h:outputText value=" Gb" />
+						</span>
+					</h:panelGroup>
+					<p:poll interval="5" update="memorySpaceInfo" global="false"/>
+				</h:form>
+				<span id="footerBuild"><h:outputText value="#{ApplicationBean.svnRevisionInfo}" /></span>
+				<span id="footerCopyright" style="margin-top: 0px">&copy; 2011-2019 Exactpro Systems, LLC</span>
+			</div>
+		</p:outputPanel>
+		
+		<h:form>
+			<p:remoteCommand name="collapseMenu" actionListener="#{guiBean.setMenuExpanded(false)}" />
+			<p:remoteCommand name="expandMenu" actionListener="#{guiBean.setMenuExpanded(true)}" />
+		</h:form>
+		
+		<p:confirmDialog message="Are you sure you want to end your session?" width="450" header="Logout"
+				severity="alert" widgetVar="logoutConfirmDialog" closeOnEscape="true" modal="true">
+			<h:form id="LogoutConfirmDialog">
+				<p:commandButton value="Yes" ajax="false"
+						actionListener="#{authBean.logout}" />
+				<p:commandButton value="No" 
+						onclick="PF('logoutConfirmDialog').hide();"
+						type="button" />
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:dialog header="Recent pop-up messages" widgetVar="popupsDialog" modal="true" resizable="false" closeOnEscape="true" style=" max-width: 95%;">
+			<h:form id="PopupsDialog">
+				<p:scrollPanel mode="native" id="messagesPanel" style="min-height: 200px; min-width: 300px; max-height: 500px;">
+					<ui:repeat id="messageList" value="#{popUpMsgsBean.messages}" var="msg">
+						<p:panelGrid styleClass="popUpMessagesTable" style="table-layout:auto; width: 100%;">
+							<p:row>
+								<p:column style="width: 32px">
+									<h:outputText styleClass="ui-growl-image ui-growl-image-error" rendered="#{msg.severity == 'ERROR'}" />
+									<h:outputText styleClass="ui-growl-image ui-growl-image-warn" rendered="#{msg.severity == 'WARN'}" />
+									<h:outputText styleClass="ui-growl-image ui-growl-image-info" rendered="#{msg.severity == 'INFO'}" />
+								</p:column>
+								<p:column style="word-break: break-all;">
+									<h:outputLabel style="font-weight: bold;" value="#{msg.summary}" />
+									<br/>
+									<h:outputLabel value="#{msg.detail}" />
+								</p:column>
+								<p:column style="width: 55px; text-align: center;">
+									<h:outputLabel value="#{msg.creationTime}" />
+									<br/>
+									<p:commandLink update=":PopupsDialog" action="#{popUpMsgsBean.removeSelectedMessage}">
+										<f:setPropertyActionListener value="#{msg}" target="#{popUpMsgsBean.selectedMessage}" />
+										<p:graphicImage value="/images/delete.png" style="padding-top: 10px" />
+									</p:commandLink>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</ui:repeat>
+				</p:scrollPanel>
+				
+				<p:outputPanel layout="block" style="text-align:right;">
+					<p:commandButton value="Clean"
+							icon="ui-icon ui-icon-trash"
+							update=":PopupsDialog"
+							actionListener="#{popUpMsgsBean.clear}"
+							style="margin-top:0.7em;margin-left:0.5em;"/>
+					<p:commandButton value="Close"
+							onclick="PF('popupsDialog').hide();"
+							icon="ui-icon ui-icon-close"
+							type="button" />
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+		
+		<script>
+			var menuState;
+			var pageLoaded;
+			
+			$("#page").responsiveTables();
+			
+			$(document).ready(function ()
+			{
+				pageLoaded = true;
+				
+				if("#{guiBean.menuExpanded}" == 'true')
+					menuState = "expanded";
+				else
+					menuState = "collapsed";
+				$.cookie("menuState", menuState);
+				resizePageContainer();
+				handle_toBottom();
+			});
+			
+			$(window).resize(function()
+			{
+				adjustTableHeaders();
+				resizePageContainer();
+				handle_toBottom();
+			});
+			
+			function resizePageContainer()
+			{
+				$('#pageContainer').height($('#menu').height() - $('#pageFooter').outerHeight());
+			}
+			
+			function refreshMenu()
+			{
+				if(menuState != "collapsed")
+				{
+					<!-- Menu header -->
+					$("#menuHeader").animate({ marginLeft: "-52px" }, "normal", "easeOutExpo");
+					$("#bigMenuHeader").animate({ opacity: "1" }, "normal", "easeInSine");
+					$("#smallMenuHeader").animate({ opacity: "0" }, "fast", "easeOutExpo");
+					<!-- Menu body -->
+					$("#menu").animate({ width: "180px" }, "normal", "easeOutExpo", afterResizeAnimation);
+					$("#menuBody span").animate({ opacity: "1" }, "normal", "easeInSine");
+					<!-- Recent popups -->
+					$("#PopupsForm\\:recentPopups").animate({ width: "140px", marginLeft: "20px" }, "normal", "easeOutExpo");
+					$("#PopupsForm\\:recentPopups span").animate({ opacity: "1" }, "fast", "easeInSine");
+					<!-- Date/Time -->
+					$("#collapsedDT").animate({ opacity: "0" }, "normal", "easeOutExpo");
+					$("#expandedDT").animate({ opacity: "1" }, "normal", "easeOutExpo");
+					<!-- Roll up -->
+					$("#menuResize").animate({ width: "140px", marginLeft: "20px" }, "normal", "easeOutExpo");
+					$("#menuResize span").animate({ opacity: "1" }, "fast", "easeInSine");
+					$("#menuResizeIcon").removeClass("expandMenuIcon").addClass("collapseMenuIcon");
+					<!-- User -->
+					$("#userNameContainer").animate({ opacity: "1" }, "normal", "easeInSine");
+				}
+				else
+				{
+					<!-- Menu header -->
+					$("#menuHeader").animate({ marginLeft: "0px" }, "normal", "easeOutExpo");
+					$("#bigMenuHeader").animate({ opacity: "0" }, "normal", "easeOutExpo");
+					$("#smallMenuHeader").animate({ opacity: "1" }, "normal", "easeInSine");
+					<!-- Menu body -->
+					$("#menu").animate({ width: "52px" }, "normal", "easeOutExpo", afterResizeAnimation);
+					$("#menuBody span").animate({ opacity: "0" }, "normal", "easeOutExpo");
+					<!-- Recent popups -->
+					$("#PopupsForm\\:recentPopups").animate({ width: "32px", marginLeft: "10px" }, "normal", "easeOutExpo");
+					$("#PopupsForm\\:recentPopups span").animate({ opacity: "0" }, "fast", "easeOutExpo");
+					<!-- Date/Time -->
+					$("#collapsedDT").animate({ opacity: "1" }, "normal", "easeOutExpo");
+					$("#expandedDT").animate({ opacity: "0" }, "normal", "easeOutExpo");
+					<!-- Roll up -->
+					$("#menuResize").animate({ width: "32px", marginLeft: "10px" }, "normal", "easeOutExpo");
+					$("#menuResize span").animate({ opacity: "0" }, "fast", "easeOutExpo");
+					$("#menuResizeIcon").removeClass("collapseMenuIcon").addClass("expandMenuIcon");
+					<!-- User -->
+					$("#userNameContainer").animate({ opacity: "0" }, "normal", "easeOutExpo");
+				}
+			}
+			
+			function afterResizeAnimation()
+			{
+				$(this).responsiveTables("resizeAllTable");
+			}
+			
+			function resizeMenu()
+			{
+				menuState = menuState == "expanded" ? "collapsed" : "expanded";
+				$.cookie("menuState", menuState);
+				if(menuState == "collapsed")
+					collapseMenu(); // PF remote command
+				else
+					expandMenu(); // PF remote command
+				refreshMenu();
+				updatePageContainer();
+				adjustTableHeaders();
+				resizePageContainer();
+				handle_toBottom();
+			}
+			
+			function adjustTableHeaders()
+			{
+				$(".ui-datatable-scrollable").each(function(){
+					headerCols = $($(this).find(".ui-datatable-scrollable-header-box tr")[0]).find("th"),
+							bodyCols = $($(this).find(".ui-datatable-scrollable-body tr")[1]).find("td");
+					$(headerCols).each(function(){
+						$(this).width($(bodyCols[$(this).index()]).width());
+					});
+				});
+			}
+			
+			function handle_toBottom()
+			{
+				var toBtm = $(".toBottom.ui-datatable-scrollable .ui-datatable-scrollable-body");
+				if ($(toBtm).offset())
+				{
+					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
+					return;
+				}
+
+				toBtm = $(".toBottom .ui-datagrid-data");
+				if ($(toBtm).offset())
+				{
+					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
+					return;
+				}
+
+				toBtm = $(".toBottom");
+				if ($(toBtm).offset())
+				{
+					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top);
+					return;
+				}
+
+				var toBtm = $(".toBottom.ui-datatable-scrollable .ui-datatable-scrollable-body");
+				if ($(toBtm).offset())
+				{
+					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
+					return;
+				}
+
+				toBtm = $(".toBottom .ui-datagrid-data");
+				if ($(toBtm).offset())
+				{
+					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
+					return;
+				}
+
+				toBtm = $(".toBottom");
+				if ($(toBtm).offset())
+				{
+					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top);
+					return;
+				}
+			}
+		</script>
+	</ui:define>
+	
+	<ui:define name="status">
+		<p:ajaxStatus style="width:120px; height:40px; display:block; position:fixed; right:0; top:0;">
+			<f:facet name="start">
+				<p:graphicImage value="/images/loading.gif" />
+			</f:facet>
+			<f:facet name="complete">
+				<h:outputText value="" />
+			</f:facet>
+		</p:ajaxStatus>
+	</ui:define>
+</ui:composition>

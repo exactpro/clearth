@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<jxb:bindings version="2.0"
+		xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+ 		xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+ 		jxb:extensionBindingPrefixes="xjc" >
+ 	<jxb:globalBindings localScoping="toplevel">
+ 		<jxb:serializable uid="1" />
+ 		
+ 		 <jxb:javaType name="java.util.Date" xmlType="xsd:dateTime"
+                    parseMethod="com.exactprosystems.clearth.utils.XSDateCustomBinder.parseDate"
+                    printMethod="com.exactprosystems.clearth.utils.XSDateCustomBinder.printDate"
+          />
+ 		
+ 	</jxb:globalBindings>
+	<jxb:bindings schemaLocation="clearth.xsd" node="/xsd:schema">
+		<jxb:schemaBindings>
+			<jxb:nameXmlTransform>
+				<jxb:typeName prefix="Xml" />
+				<jxb:elementName prefix="Xml" />
+				<jxb:anonymousTypeName prefix="Xml" />
+			</jxb:nameXmlTransform>
+		</jxb:schemaBindings>
+		
+		<jxb:bindings
+				node="./xsd:element[@name='Users']//xsd:element[@name='User']">
+			<jxb:property name="users" />
+		</jxb:bindings>
+		
+		<jxb:bindings
+				node="./xsd:complexType[@name='SchedulerLaunchInfo']//xsd:element[@name='MatrixInfo']">
+			<jxb:property name="matricesInfo" />
+		</jxb:bindings>
+		
+		<jxb:bindings
+				node="./xsd:element[@name='SchedulerLaunches']//xsd:element[@name='LaunchInfo']">
+			<jxb:property name="launchesInfo" />
+		</jxb:bindings>
+
+		<jxb:bindings
+				node="./xsd:element[@name='CodecConfigs']//xsd:element[@name='CodecConfig']">
+			<jxb:property name="codecConfigs" />
+		</jxb:bindings>
+		<jxb:bindings
+				node="./xsd:element[@name='MessageConverterConfigs']//xsd:element[@name='MessageConverterConfig']">
+			<jxb:property name="messageConverterConfigs" />
+		</jxb:bindings>
+		<jxb:bindings
+				node="./xsd:element[@name='ScriptConverterConfigs']//xsd:element[@name='ScriptConverterConfig']">
+			<jxb:property name="scriptConverterConfigs" />
+		</jxb:bindings>
+	</jxb:bindings>
+</jxb:bindings>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MessageConverterConfigs>
+	<MessageConverterConfig>
+		<Name>MessageConverter1</Name>
+		<Codec>Xml</Codec>
+		<SendSubMessageAction>AddRepeatingGroup</SendSubMessageAction>
+		<ReceiveSubMessageAction>AddRepeatingGroup</ReceiveSubMessageAction>
+		<ScriptHeaderStrings>#id,#GlobalStep,#Action,#Execute,#timeout,#Comment</ScriptHeaderStrings>
+		<ScriptValueStrings>#id,,#action,y,0,</ScriptValueStrings>
+		<EmptyValue>empty</EmptyValue>
+		<TrimMessage>true</TrimMessage>
+		<ExcludedParamsList>
+			<ToExclude>Param1</ToExclude>
+			<ToExclude>Param2</ToExclude>
+			<ToExclude>Param3</ToExclude>
+		</ExcludedParamsList>
+	</MessageConverterConfig>
+</MessageConverterConfigs>

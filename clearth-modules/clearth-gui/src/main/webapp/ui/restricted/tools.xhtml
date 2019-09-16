@@ -1,0 +1,660 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui"
+		template="../../templates/restricted.xhtml"
+		xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+	<ui:define name="title">Tools</ui:define>
+	
+	<ui:define name="content">
+		<script>
+			function resetFilters()
+			{
+				cols = PF('msgHelperCols');
+				if (cols)
+					cols.clearFilters();
+			}
+		</script>
+		
+		<!-- Add ?tool={number} to URL (tools.jsf?tool=0) for load page with suitable tool -->
+		<f:metadata>
+			<f:viewParam id="toolGet" name="tool" value="#{toolsBean.activeTab}" />
+		</f:metadata>
+		
+		
+		<label class="pageTitle">Tools</label>
+		<br />
+		<div class="marg-bot-15">Here you can find some helpful tools to make your work easier.</div>
+		<h:form id="OperationsMenu">
+			<div class="upperContainer controlButtons">
+				<div class="upperLeftContainer">
+					Favorite tools:
+					<br />
+					<h:outputText rendered="#{toolsBean.favoriteTools.size() == 0}" 
+							value="No favorite tools. You can choose some in the drop-down list on the right." 
+							style="display: table-cell; height: 30px; vertical-align: middle;" />
+					<p:selectOneButton rendered="#{toolsBean.favoriteTools.size() > 0}" value="#{toolsBean.favoriteActiveTab}">
+						<f:selectItems value="#{toolsBean.favoriteTools}" var="ft"
+							itemValue="#{ft}" itemLabel="#{toolsBean.getToolName(ft)}"/>
+				<p:ajax update=":Container :OperationsMenu" />
+			</p:selectOneButton>
+				</div>
+				<div class="upperRightContainer">
+					All tools: 
+					<br />
+					<p:selectOneMenu id="currentTool" value="#{toolsBean.activeTab}" appendTo="@this">
+						<f:selectItems value="#{toolsBean.allTools.tools}" var="tool"
+							itemValue="#{tool.id}" itemLabel="#{tool.name}"/>
+						<p:ajax update=":Container :OperationsMenu" />
+					</p:selectOneMenu>
+				</div>
+			</div>
+		</h:form>
+		<br />
+		
+		<p:outputPanel id="Container">
+			<h:form id="Stars">
+				<div style="display:flex; align-items:center;">
+					<p:commandLink title="Favorite" update=":OperationsMenu :Stars"
+							action="#{toolsBean.unfavorite(toolsBean.activeTab)}" rendered="#{toolsBean.isFavorite(toolsBean.activeTab)}">
+						<h:graphicImage value="/images/star.png" alt="Favorite" style="vertical-align: middle" />
+					</p:commandLink>
+					<p:commandLink title="Unfavorite" update=":OperationsMenu :Stars"
+							action="#{toolsBean.favorite(toolsBean.activeTab)}" rendered="#{!toolsBean.isFavorite(toolsBean.activeTab)}">
+						<h:graphicImage value="/images/star_silver.png" alt="Unfavorite" style="vertical-align: middle" />
+					</p:commandLink>
+					<h:outputText id="chosenTool" value=" #{toolsBean.getToolName(toolsBean.activeTab)}" style="font-weight: bold; margin: 2px 4px;" />
+				</div>
+			</h:form>
+<!-- Message parser -->
+			<p:outputPanel rendered="#{toolsBean.activeTab == 0 and messageParserToolBean.codecsAvailable eq false}">
+				<h:form id="EmptyMessageParser">
+					<label class="noneContentText">No codecs available</label>
+				</h:form>
+			</p:outputPanel>
+			<p:outputPanel rendered="#{toolsBean.activeTab==0 and messageParserToolBean.codecsAvailable}">
+				<h:form id="MessageParser">
+					Paste message text to see how ClearTH parses it.
+					<br />
+					<h:outputText value="Format: " />
+					<c:if test="#{messageParserToolBean.codecConfigs.size()==1}">
+						<h:outputText value="#{messageParserToolBean.textToParseFormatDefault}" />
+					</c:if>
+					<c:if test="#{messageParserToolBean.codecConfigs.size() lt 5}">
+						<p:selectOneRadio id="ConverterType" value="#{messageParserToolBean.textToParseFormat}">
+							<f:selectItem itemLabel="Auto" itemValue="auto"/>
+							<f:selectItems value="#{messageParserToolBean.codecs}" />
+						</p:selectOneRadio>
+					</c:if>
+					<c:if test="#{messageParserToolBean.codecConfigs.size() ge 5}">
+						<div>
+							<p:selectOneMenu id="ConverterType" value="#{messageParserToolBean.textToParseFormat}" effectSpeed="fast">
+								<f:selectItem itemLabel="Auto" itemValue="auto"/>
+								<f:selectItems value="#{messageParserToolBean.codecs}"/>
+								<f:ajax update="ConverterType" />
+							</p:selectOneMenu>
+						</div>
+					</c:if>
+					<div class="ui-grid ui-grid-responsive" >
+						<div class="ui-grid-row">
+							<div class="ui-grid-col-6">
+								<h:outputText value="Text to parse:" />
+								<br />
+								<p:inputTextarea id="msgParseInput" value="#{messageParserToolBean.textToParse}" autoResize="false" rows="22" style="resize: none; width: 95%; margin-bottom: 5px;" />
+								<br />
+								<p:commandButton value="Parse" ajax="true" actionListener="#{messageParserToolBean.parseText}" update=":MessageParser :Growl" style="width: 100px; float: right; right: 5%; margin-right: -10px;" />
+							</div>
+							<div class="ui-grid-col-6">
+								<h:outputText value="Parsed message as text:" />
+								<br />
+								<p:inputTextarea id="msgParseOutput" value="#{messageParserToolBean.parsedText}" autoResize="false" rows="22" style="resize: none; width: 100%; padding-right: 0;" readonly="true" />
+							</div>
+						</div>
+					</div>
+					<br />
+					<p:outputPanel>
+						<h:outputText value="Parsed message as tree:" />
+						<p:treeTable value="#{messageParserToolBean.parsedTree}" var="treeNode">
+							<p:column style="width: 30%; min-width: 30%">
+								<f:facet name="header">Name</f:facet>
+								<h:outputText value="#{treeNode.name}" />
+							</p:column>
+							<p:column>
+								<f:facet name="header">Value</f:facet>
+								<h:outputText value="#{treeNode.value}" />
+							</p:column>
+						</p:treeTable>
+					</p:outputPanel>
+				</h:form>
+			</p:outputPanel>
+<!-- Message to script -->
+			<p:outputPanel rendered="#{toolsBean.activeTab == 3 and messageToScriptToolBean.messageConvertersAvailable eq false}">
+				<h:form id="EmptyMessageConverters">
+					<label class="noneContentText">No message converters available</label>
+				</h:form>
+			</p:outputPanel>
+			<p:outputPanel rendered="#{toolsBean.activeTab==3 and messageToScriptToolBean.messageConvertersAvailable}">
+				<h:form id="MessageConverter">
+					Paste message text to convert it to script header and values. Multiple messages can be converted.
+					<br />
+					<h:outputText value="Converter: " />
+					<c:if test="#{messageToScriptToolBean.messageConverterConfigs.size()==1}">
+						<h:outputText value="#{messageToScriptToolBean.messageConvertFormatDefault}" />
+					</c:if>
+					<c:if test="#{messageToScriptToolBean.messageConverterConfigs.size() lt 5}">
+						<br />
+						<p:selectOneRadio id="ConverterType" value="#{messageToScriptToolBean.messageConvertFormat}">
+							<f:selectItem itemLabel="Auto" itemValue="auto" />
+							<f:selectItems value="#{messageToScriptToolBean.messageConverters}" />
+						</p:selectOneRadio>
+					</c:if>
+					<c:if test="#{messageToScriptToolBean.messageConverterConfigs.size() ge 5}">
+						<div>
+							<p:selectOneMenu id="ConverterType" value="#{messageToScriptToolBean.messageConvertFormat}" effectSpeed="fast">
+								<f:selectItem itemLabel="Auto" itemValue="auto"/>
+								<f:selectItems value="#{messageToScriptToolBean.messageConverters}"/>
+								<f:ajax update="ConverterType" />
+							</p:selectOneMenu>
+						</div>
+					</c:if>
+					
+					<div class="ui-grid-row">
+						<div class="ui-grid-col-6">
+							<h:outputText value="Text to convert:" />
+							<br />
+							<p:inputTextarea id="msgToScriptInput" value="#{messageToScriptToolBean.messageToConvert}" autoResize="false" rows="22" style="resize: none; width: 95%; margin-bottom: 5px;" />
+							<br />
+							<p:commandButton value="Convert" ajax="true" actionListener="#{messageToScriptToolBean.convertMessage}" update=":MessageConverter :Growl" style="width: 100px; float: right; right: 5%; margin-right: -10px;" />
+						</div>
+						<div class="ui-grid-col-6">
+							<h:outputText value="Script for message:" />
+							<br />
+							<p:inputTextarea id="msgToScriptOutput" value="#{messageToScriptToolBean.convertedMessage}" autoResize="false" rows="22" style="resize: none; width: 100%; padding-right: 0;" readonly="true" />
+						</div>
+					</div>
+				</h:form>
+			</p:outputPanel>
+<!-- Script to message -->
+			<p:outputPanel rendered="#{toolsBean.activeTab == 6 and scriptToMessageToolBean.scriptConvertersAvailable eq false}">
+				<h:form id="EmptyScriptConverters">
+					<label class="noneContentText">No script converters available</label>
+				</h:form>
+			</p:outputPanel>
+			<p:outputPanel rendered="#{toolsBean.activeTab==6 and scriptToMessageToolBean.scriptConvertersAvailable}">
+				<h:form id="ScriptConverter">
+					<p:focus context="ScriptConverter"/>
+					Paste header and values strings from matrix to see what message ClearTH will process for it.<br />
+					Please note, that function calls (start with '@') are not supported and will be shown in result as is.
+					<br />
+					<br />
+					<div class="ui-grid-row">
+						<div class="ui-grid-col-6">
+							<h:outputText value="Text to convert:" />
+							<br />
+							<p:inputTextarea id="scriptToMsgInput" value="#{scriptToMessageToolBean.scriptToConvert}" autoResize="false" rows="22" style="resize: none; width: 95%; margin-bottom: 5px;" />
+							<br />
+							<p:commandButton value="Convert" ajax="true" actionListener="#{scriptToMessageToolBean.convertScript}" update=":ScriptConverter :Growl" style="width: 100px; float: right; right: 5%; margin-right: -10px;" />
+						</div>
+						<div class="ui-grid-col-6">
+							<h:outputText value="Message for script:" />
+							<br />
+							<p:inputTextarea id="scriptToMsgOutput" value="#{scriptToMessageToolBean.convertedScript}" autoResize="false" rows="22" style="resize: none; width: 100%; padding-right: 0;" readonly="true" />
+						</div>
+					</div>
+				</h:form>
+			</p:outputPanel>
+<!-- Collector scanner -->
+			<p:outputPanel rendered="#{toolsBean.activeTab==10}">
+				<h:form id="CollectorScanner">
+					<ol>
+						<li>Choose an active connection which contains the collector you need.</li>
+						<li>Navigate through its messages using the buttons below.</li>
+						<li>You may copy any message if you need.</li>
+					</ol>
+					<b>Connection to browse:</b>
+					<br/>
+					<p:selectOneMenu id="currentConnection" value="#{collectorScannerToolBean.selectedConnection}"
+							style="width:300px;" appendTo="@this">
+						<f:selectItem itemLabel="&lt;Choose connection&gt;" itemValue="#{null}" />
+						<f:selectItems value="#{collectorScannerToolBean.collectingConnections}" var="connection" />
+						<f:ajax update=":CollectorMessagesForm" render=":CollectorMessagesForm" />
+					</p:selectOneMenu>
+				</h:form>
+				<br/>
+				<h:form id="collectorFilterForm">
+					<b>Filter</b>
+					<br/>
+					<p:inputText id="collectorFilter" value="#{collectorScannerToolBean.collectorFilter}"  style="width:300px;"/>
+					&#160;
+					<p:commandButton value="Apply" ajax="true" update=":CollectorMessagesForm collectorFilterForm" icon="ui-icon-check">
+					</p:commandButton>
+					&#160;
+					<p:commandButton value="Reset" ajax="true" update=":CollectorMessagesForm collectorFilterForm" icon="ui-icon-close">
+						<f:setPropertyActionListener value="" target="#{collectorScannerToolBean.collectorFilter}" />
+					</p:commandButton>
+				</h:form>
+				<br/>
+				<br/>
+				
+				<h:form id="CollectorMessagesForm">
+					<p:remoteCommand name="loadAllMessages" autoRun="true" update="csm cmsButtons" action="#{collectorScannerToolBean.loadAllMessages}" />
+					<script>
+						loadAllMessages();
+					</script>
+					<h:panelGrid columns="2" columnClasses="VerticalAlign,VerticalAlign" rendered="false">
+						<p:selectBooleanCheckbox id="vertAlign" ajax="true" value="#{collectorScannerToolBean.collectorVerticalAlignment}" immediate="true" update=":CollectorScanner">
+							<p:ajax update=":CollectorMessagesForm" />
+						</p:selectBooleanCheckbox>
+						<h:outputText value="Vertical flow" />
+					</h:panelGrid>
+					<p:selectOneButton id="cmsButtons" value="#{collectorScannerToolBean.collectorScannerMessagesTab}">
+						<p:ajax listener="#{collectorScannerToolBean.loadMessages}" update="csm cmsButtons"/>
+						<f:selectItem itemLabel="Correct messages" itemValue="0" />
+						<f:selectItem itemLabel="Failed messages" itemValue="1" itemDisabled="#{collectorScannerToolBean.collectorMessagesFailed==null}"/>
+					</p:selectOneButton>
+					<br/>
+					<p:outputPanel id="csm" style="margin-top:10px;">
+						<p:outputPanel style="line-height: 120%;" rendered="#{collectorScannerToolBean.collectorScannerMessagesTab==0}">
+							<p:selectOneButton value="#{toolsBean.collectorScannerTab}">
+								<p:ajax update="CollectorMessages" />
+								<f:selectItem itemLabel="Message" itemValue="0" />
+								<f:selectItem itemLabel="Parse" itemValue="1" />
+							</p:selectOneButton>
+							<br/>
+							<br/>
+							<p:dataGrid id="CollectorMessages" styleClass="fullWidth toBottom" var="msg" value="#{collectorScannerToolBean.collectorMessages}" columns="1" rows="1" paginator="true"
+									paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+									paginatorPosition="top">
+								<script>ajax_handle_toBottom();</script>
+								<h:outputText value="Received at : " rendered="#{not (msg.getTimestamp() eq null)}"/>
+								<h:outputText value="#{msg.getTimestamp()}">
+									<f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss.SSS"/>
+								</h:outputText>
+								<p:inputTextarea value="#{toolsBean.collectorScannerTab == 1 ? msg.getParsedMessage() : msg.getMessage()}" autoResize="false" readonly="true" style="resize: none; font-family: Lucida Console, Courier New, monotype; width: 100%; min-height:200px; height: 95%; padding: 0;" />
+							</p:dataGrid>
+						</p:outputPanel>
+						<p:outputPanel style="line-height: 120%;" rendered="#{collectorScannerToolBean.collectorScannerMessagesTab==1}">
+							<p:dataGrid id="CollectorMessagesFailed" styleClass="fullWidth toBottom" var="msgFailed" value="#{collectorScannerToolBean.collectorMessagesFailed}" columns="1" rows="1" paginator="true"
+									paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+									paginatorPosition="top" >
+								<script>ajax_handle_toBottom();</script>
+								<h:outputText value="Received at : " />
+								<h:outputText value="#{msgFailed.getTimestamp()}">
+									<f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss.SSS"/>
+								</h:outputText>
+								<p:inputTextarea value="#{msgFailed.getMessage()}" autoResize="false" readonly="true" style="resize: none; font-family: Lucida Console, Courier New, monotype; width: 100%; min-height:200px; height: 95%; padding: 0;" />
+							</p:dataGrid>
+						</p:outputPanel>
+					</p:outputPanel>
+				</h:form>
+			</p:outputPanel>
+<!-- Config maker -->
+			<p:outputPanel rendered="#{toolsBean.activeTab==20}">
+				<h:form id="ConfigMaker" enctype="multipart/form-data">
+					Upload a script file (matrix) to make scheduler config file for it.
+					<br />
+					<p:fileUpload value="#{configMakerToolBean.file}" mode="simple" skinSimple="true" /><br />
+					<br />
+					<p:selectOneMenu id="configMakerSchedulerCB" value="#{configMakerToolBean.selectedScheduler}" style="vertical-align: bottom">
+						<f:selectItem itemLabel="Select a scheduler" itemValue="" noSelectionOption="false"/>
+						<f:selectItems value="#{toolsBean.schedulers}"/>
+					</p:selectOneMenu>
+					&#160;
+					<p:commandButton value="Make config and apply" ajax="false" actionListener="#{configMakerToolBean.makeConfigAndApply}" action="tools?faces-redirect=true" />
+					&#160;OR&#160;
+					<p:commandButton value="Make config and download" ajax="false" actionListener="#{configMakerToolBean.makeConfigAndDownload}" action="tools?faces-redirect=true" />
+				</h:form>
+			</p:outputPanel>
+<!-- Matrix from report -->
+			<p:outputPanel rendered="#{toolsBean.activeTab==30}">
+				<h:form id="MatrixFromReport" enctype="multipart/form-data">
+					Upload a report to make a script file (matrix) for it.
+					<br />
+					<p:fileUpload value="#{matrixFromReportToolBean.file}" mode="simple" skinSimple="true" /><br />
+					<br />
+					<p:commandButton value="Make matrix" ajax="false" actionListener="#{matrixFromReportToolBean.makeMatrix}" action="tools?faces-redirect=true" />
+				</h:form>
+			</p:outputPanel>
+<!-- Message helper -->
+			<p:outputPanel rendered="#{toolsBean.activeTab==40}">
+				<h:form id="MessageHelp">
+					<h:outputText value="Format: " />
+					<c:if test="#{messageHelperToolBean.messageHelpers.size()==1}">
+						<h:outputText value="#{messageHelperToolBean.currentMessageHelpFormat}" />
+					</c:if>
+					<c:if test="#{messageHelperToolBean.messageHelpers.size() lt 5}">
+						<br />
+						<p:selectOneRadio id="currentMessageHelpFormat" value="#{messageHelperToolBean.currentMessageHelpFormat}" style="width:125px">
+							<f:selectItems value="#{messageHelperToolBean.messageHelpers}" />
+							<p:ajax event="change" update=":MessageHelp :Growl" process="@this" oncomplete="resetFilters();" />
+						</p:selectOneRadio>
+					</c:if>
+					<c:if test="#{messageHelperToolBean.messageHelpers.size() ge 5}">
+						<div>
+							<p:selectOneMenu id="currentMessageHelpFormat" value="#{messageHelperToolBean.currentMessageHelpFormat}" effectSpeed="fast" style="width:200px">
+								<f:selectItem itemLabel="&lt;Choose a format&gt;" itemValue="#{null}"/>
+								<f:selectItems value="#{messageHelperToolBean.messageHelpers}"/>
+								<p:ajax event="change" update=":MessageHelp" />
+							</p:selectOneMenu>
+						</div>
+					</c:if>
+					
+					<c:if test="#{messageHelperToolBean.currentMessageHelpFormat != null &amp;&amp; !messageHelperToolBean.currentMessageHelpFormat.isEmpty()}">
+						<p:selectOneMenu id="currentMessageHelperType" value="#{messageHelperToolBean.currentMessageHelperType}"
+								style="width:200px;" height="#{messageHelperToolBean.messageHelperTypes.size() > 15 ? 400 : (messageHelperToolBean.messageHelperTypes.size()+1)*27}">
+							<f:selectItem itemLabel="&lt;Choose a message type&gt;" itemValue="#{null}" />
+							<f:selectItems value="#{messageHelperToolBean.messageHelperTypes}" var="msg" />
+							<p:ajax event="change" update=":MessageHelp :Growl" process="@this" oncomplete="resetFilters();" />
+						</p:selectOneMenu>
+						
+						<c:if test="#{messageHelperToolBean.currentMessageHelperType != null &amp;&amp; !messageHelperToolBean.currentMessageHelperType.isEmpty()}">
+							<br />
+							<h:outputText value="Message direction: #{messageHelperToolBean.messageDirection}" rendered="#{messageHelperToolBean.messageDirection != null}" style="font-weight: bold" />
+							<br />
+							<p:outputPanel rendered="#{messageHelperToolBean.messageTypeKeysDesc != null &amp;&amp; !messageHelperToolBean.messageTypeKeysDesc.isEmpty()}"
+										   style="width: 50%;">
+								<h:outputText value="Message keys:" />
+								<br />
+								<p:dataList var="key" value="#{messageHelperToolBean.messageTypeKeysDesc}" itemType="none">
+									<p:column style="width: 100px;">
+										<h:outputText value="#{key}" escape="false" style="font-family: monospace; color: blue; font-weight: bold;" />
+									</p:column>
+								</p:dataList>
+								<br />
+							</p:outputPanel>
+							<h:outputText value="Message columns:" />
+							<br />
+							<h:outputText value="Key fields are highlighted in blue." style="font-size: smaller" />
+							<br />
+							<p:dataTable widgetVar="msgHelperCols" id="MessageColumns" value="#{messageHelperToolBean.messageHelperData}" var="row"
+										 filteredValue="#{messageHelperToolBean.filteredMessageHelperData}">
+								<p:column headerText="#{messageHelperToolBean.messageHelperColumns.get(0)}" style="width: 50en"
+										filterMatchMode="contains" filterBy="#{row.name}" filterStyle="width: 90%;">
+									<h:outputText value="#{row.name}" escape="false" style="font-family: monospace; #{row.key ? 'color: blue;' : ''}"/>
+								</p:column>
+								<p:column headerText="#{messageHelperToolBean.messageHelperColumns.get(1)}"
+										filterMatchMode="contains" filterBy="#{row.mandatoryText}"
+										filterOptions="#{messageHelperToolBean.messageHelperMandatoryOptions}" filterStyle="width: 90%;">
+									<h:outputText value="#{row.mandatoryText}" />
+								</p:column>
+								<p:column headerText="#{messageHelperToolBean.messageHelperColumns.get(2)}" style="width: 10en"
+										filterMatchMode="contains" filterBy="#{row.repetitiveText}"
+										filterOptions="#{messageHelperToolBean.messageHelperRepetitiveOptions}" filterStyle="width: 90%;">
+									<h:outputText value="#{row.repetitiveText}" />
+								</p:column>
+								<p:column headerText="#{messageHelperToolBean.messageHelperColumns.get(3)}"
+										filterMatchMode="contains" filterBy="#{row.description}" filterStyle="width: 90%;">
+									<h:outputText value="#{row.description}" escape="false" style="font-family: monospace" />
+								</p:column>
+							</p:dataTable>
+						</c:if>
+					</c:if>
+				</h:form>
+			</p:outputPanel>
+<!-- Expression calculator -->
+			<p:outputPanel rendered="#{toolsBean.activeTab==50}">
+				<h:form id="ExpCalc">
+					Paste expression from matrix to check the value it returns.<br />
+					Tool compares expression result with the value from "Value to compare with" field, if defined.<br />
+					To use variables in expressions add their values to "Variables" table.<br />
+					Select scheduler for get scheduler-dependent parameters like business day or holidays settings.
+					<br />
+					<br />
+					<div style="display: flex; justify-content:space-between;">
+						<div style="width:60%">
+							<div style="font-weight: bold">Expression input</div>
+							<div style = "display:flex">
+								<p:inputText id="inputExpr_textArea" value="#{ecToolBean.expression}" style="width: 98%; font-family: monospace;" />
+								<p:watermark for="inputExpr_textArea" value="Input your @{expression} here and click 'Calculate'" />
+								<p:focus context="ExpCalc" />
+								<p:commandButton type="button" style="margin-left:10px" icon="fa fa-fw fa-info" onclick="PF('dlgHelp').show();"/>
+								<p:dialog header="Expressions help" widgetVar="dlgHelp" 
+										height="360" minHeight="360" width="980" minWidth="980" resizable="true" style="border:none;">
+									<ui:include src="mvel_helper.xhtml"/>
+								</p:dialog>
+							</div>
+							<div class="upperContainer controlButtons">
+								<div class="upperLeftContainer" style="width: 60%;">
+									<div style="font-weight: bold">Value to compare with:</div>
+									<p:inputText id="inputExpr_panel_testValue" value="#{ecToolBean.toCompare}" 
+											title="Calculation result will be compared to this value" style="width: 100%;" />
+								</div>
+								<div class="upperRightContainer" style="width: 30%;">
+									<div style="font-weight: bold; width: 100%">Scheduler:</div>
+									<p:selectOneMenu id="inputExpr_panel_scheduler" value="#{ecToolBean.selectedScheduler}" 
+											title="Applies scheduler-specific settings for this calculation" style="width: 99%;">
+										<f:selectItem itemLabel="&lt;Select a scheduler&gt;" itemValue="" noSelectionOption="false" />
+										<f:selectItems value="#{toolsBean.schedulers}" />
+									</p:selectOneMenu>
+								</div>
+							</div>
+							<div class="upperContainer controlButtons">
+								<div class="upperRightContainer">
+									<p:commandButton value="Calculate" type="submit" update="ExpCalc :Growl ExpCalc:historyPanel"
+											actionListener="#{ecToolBean.calculateAndCompare}" icon="ui-icon-calculator" />
+								</div>
+								<div class="upperLeftContainer">
+									<p:commandButton id="clearInputButton" value="Clear input" actionListener="#{ecToolBean.clearInput}"
+											update="ExpCalc" icon="ui-icon-trash" />
+								</div>
+							</div>
+							<br />
+							<div style="font-weight: bold">Results</div>
+							<h:panelGrid id="calcRes_panel" style="width: 100%;">
+								<h:panelGrid columns="2" cellpadding="5" rendered="#{ecToolBean.hasResults}">
+									<h:outputLabel id="calcRes_panel_exprValue_label" for="calcRes_panel_exprValue" value="Expression&#160;result:" >
+										<p:tooltip for="calcRes_panel_exprValue_label" value="Expression result after calculation" trackMouse="true" />
+									</h:outputLabel>
+									<h:outputText rendered="#{ecToolBean.result != null}" id="calcRes_panel_exprValue" 
+											value="#{ecToolBean.result}" style="font-family: monospace;" />
+									<h:outputLabel rendered="#{ecToolBean.comparisonResult != null}" id="exprTestStatus_label" for="exprTestStatus" value="Comparison:" >
+										<p:tooltip for="exprTestStatus_label" value="Result of comparison between expression value and expected value" trackMouse="true" />
+									</h:outputLabel>
+									<h:outputText rendered="#{ecToolBean.comparisonResult != null}" id="exprTestStatus" 
+											value="#{ecToolBean.comparisonResult}" style="font-family: monospace;" />
+								</h:panelGrid>
+								<h:outputText value="none" rendered="#{!ecToolBean.hasResults}" />
+							</h:panelGrid>
+						</div>
+						
+						<div style="width: 38%;">
+							<div style="font-weight: bold">Variables</div>
+							<div class="upperContainer controlButtons" style="margin-top: 0;">
+								<div class="upperLeftContainer">
+									<p:splitButton value="New variable" type="button" icon="ui-icon-plus" 
+											actionListener="#{ecToolBean.generateNewVar}" update="ExpCalc:varsContainer :Growl">
+										<p:menuitem value="Add 2 new variables" actionListener="#{ecToolBean.generateNewVar(2)}" 
+												update="ExpCalc:varsContainer :Growl" icon="ui-icon-plus" />
+										<p:menuitem value="Add 3 new variables" actionListener="#{ecToolBean.generateNewVar(3)}" 
+												update="ExpCalc:varsContainer :Growl" icon="ui-icon-plus" />
+										<p:menuitem value="Add 5 new variables" actionListener="#{ecToolBean.generateNewVar(5)}" 
+												update="ExpCalc:varsContainer :Growl" icon="ui-icon-plus" />
+									</p:splitButton>
+								</div>
+								<div class="upperRightContainer">
+									<p:commandButton value="Delete all" icon="ui-icon-trash" actionListener="#{ecToolBean.clearVars}" 
+											update="ExpCalc:varsContainer" />
+								</div>
+							</div>
+							<p:outputPanel id="varsContainer" style="background-color: #F0F0F0;">
+								<p:dataTable id="varsTable" var="var" value="#{ecToolBean.vars}" 
+										editable="true" editMode="cell" selection="#{ecToolBean.selectedVar}" selectionMode="single"
+										rowKey="#{var}" rowStyleClass="#{var.valid ? 'null' : 'wrongContentBG'}" 
+										scrollable="true" scrollHeight="150">
+									<p:column id="name" style="width: 140px;">
+										<f:facet name="header">
+											<div style="display: inline-block; width: 100%">
+												<p:commandLink id="tableHelp" styleClass="linkButton"  style="float: left;">
+													<h:graphicImage value="/images/help-icon.png" alt="Info" style="vertical-align: text-top;" />
+												</p:commandLink>
+												<span>Name</span>
+											</div>
+										</f:facet>
+										<p:cellEditor>
+											<f:facet name="output">
+												<h:outputText id="varNameOutput" value="#{var.name}" style="font-family: monospace;" />
+												<p:tooltip id="varStatusTooltip" for="varNameOutput" value="#{var.status}" trackMouse="true" />
+											</f:facet>
+											
+											<f:facet name="input">
+												<p:inputText id="varNameInput" value="#{var.name}" style="font-family: monospace;" label="Name" ajax="false">
+													<p:ajax event="change" listener="#{ecToolBean.verifyVars}" update="ExpCalc:varsContainer :Growl" />
+												</p:inputText>
+											</f:facet>
+										</p:cellEditor>
+									</p:column>
+									<p:column headerText="Value">
+										<p:cellEditor>
+											<f:facet name="output">
+												<h:outputText rendered="#{var.value != null}" id="varValueOutput" value="#{var.value}" />
+												<h:outputText rendered="#{var.value == null}" id="varValueOutputNull" value="Undefined" styleClass="serviceMark" />
+											</f:facet>
+											<f:facet name="input">
+												<p:inputText id="varValueInput" value="#{var.value}" style="width: 95%; font-family: monospace;" label="Value"/>
+											</f:facet>
+										</p:cellEditor>
+									</p:column>
+								</p:dataTable>
+								<script>
+									ajax_handle_toBottom();
+								</script>
+								
+								<p:overlayPanel for="varsTable:tableHelp">
+									<h:outputText value="Right mouse button" class="importantContent" />
+									<h:outputText value=" - Context menu" />
+								</p:overlayPanel>
+								<p:contextMenu id="contextMenu" for="varsTable">
+									<p:menuitem value="Undefine" update="varsContainer" icon="ui-icon-close" actionListener="#{ecToolBean.undefineSelectedVar}"/>
+									<p:separator />
+									<p:menuitem value="Delete" update="varsContainer" icon="ui-icon-trash" actionListener="#{ecToolBean.deleteSelectedVar}"/>
+								</p:contextMenu>
+							</p:outputPanel>
+							<br />
+							<p:outputPanel id="historyPanel">
+								<div class="marg-bot-15" style="font-weight: bold; display: #{ecToolBean.history.size() > 0 ? '' : 'none'}">History</div>
+								<p:outputPanel id="historyContainer" rendered="#{ecToolBean.history.size() > 0}" style="background-color: #F0F0F0;">
+									<p:dataTable id="historyTable" var="row" value="#{ecToolBean.history}" 
+											selection="#{ecToolBean.selectedHistoryRow}" selectionMode="single"
+											rowKey="#{row}" scrollable="true" scrollHeight="150">
+										<p:ajax event="rowDblselect" listener="#{ecToolBean.restoreFromHistory}" update="ExpCalc:inputExpr_textArea" />
+										<p:column headerText="Expression">
+											<f:facet name="header">
+												<div style="display: inline-block; width: 100%">
+													<p:commandLink id="tableHelp" styleClass="linkButton"  style="float: left;">
+														<h:graphicImage value="/images/help-icon.png" alt="Info" style="vertical-align: text-top;" />
+													</p:commandLink>
+													<span>Expression</span>
+												</div>
+											</f:facet>
+										
+											<h:outputText value="#{row.expression}" style="font-family: monospace;" />
+										</p:column>
+										<p:column headerText="Result" style="width: 30%;">
+											<h:outputText value="#{row.result}" style="font-family: monospace;" />
+										</p:column>
+									</p:dataTable>
+								</p:outputPanel>
+								
+								<p:overlayPanel for="historyTable:tableHelp">
+									<h:outputText value="Double click" class="importantContent" />
+									<h:outputText value=" to restore expression from history" />
+								</p:overlayPanel>
+							</p:outputPanel>
+						</div>
+					</div>
+				</h:form>
+			</p:outputPanel>
+<!-- Dictionary validator -->
+			<p:outputPanel rendered="#{toolsBean.activeTab == 70 and dictionaryValidatorToolBean.codecsAvailable eq false}">
+				<h:form id="EmptyDictionaryValidator">
+					<label class="noneContentText">No codecs available</label>
+				</h:form>
+			</p:outputPanel>
+			<p:outputPanel rendered="#{toolsBean.activeTab==70 and dictionaryValidatorToolBean.codecsAvailable}">
+				<h:form id="DictionaryValidator">
+					Paste message text to see if message dictionary corresponds to it.
+					<br />
+					<h:outputText value="Format: " />
+					<c:if test="#{dictionaryValidatorToolBean.codecConfigs.size() == 1}">
+						<h:outputText value="#{dictionaryValidatorToolBean.codecDefault}" />
+					</c:if>
+					<c:if test="#{dictionaryValidatorToolBean.codecConfigs.size() lt 5}">
+						<br />
+						<p:selectOneRadio id="ConverterType" value="#{dictionaryValidatorToolBean.textToParseFormat}">
+							<f:selectItem itemLabel="Auto" itemValue="auto" />
+							<f:selectItems value="#{dictionaryValidatorToolBean.codecs}" />
+						</p:selectOneRadio>
+					</c:if>
+					<c:if test="#{messageParserToolBean.codecConfigs.size() ge 5}">
+						<div>
+							<p:selectOneMenu id="ConverterType" value="#{dictionaryValidatorToolBean.textToParseFormat}" effectSpeed="fast">
+								<f:selectItem itemLabel="Auto" itemValue="auto"/>
+								<f:selectItems value="#{dictionaryValidatorToolBean.codecs}"/>
+								<f:ajax update="ConverterType" />
+							</p:selectOneMenu>
+						</div>
+					</c:if>
+					<br />
+					<h:outputText value="Validation config: " />
+					<c:if test="#{dictionaryValidatorToolBean.validationConfigs.size()==1}">
+						<h:outputText value="#{dictionaryValidatorToolBean.validationConfigDefault}" />
+					</c:if>
+					<c:if test="#{dictionaryValidatorToolBean.validationConfigs.size() > 1}">
+						<br />
+						<p:selectOneRadio id="ValidationType" value="#{dictionaryValidatorToolBean.validationConfig}">
+							<f:selectItem itemLabel="#{dictionaryValidatorToolBean.validationConfigDefault}" itemValue="#{dictionaryValidatorToolBean.validationConfigDefault}" />
+							<f:selectItems value="#{dictionaryValidatorToolBean.validationConfigs}" />
+						</p:selectOneRadio>
+					</c:if>
+					<br />
+					<div class="ui-grid ui-grid-responsive" >
+						<div class="ui-grid-row">
+							<div class="ui-grid-col-6">
+								<h:outputText value="Original message text:" />
+								<br />
+								<p:inputTextarea id="msgParseInput" value="#{dictionaryValidatorToolBean.textToParse}" autoResize="false" rows="11" style="resize: none; width: 95%; margin-bottom: 5px;" />
+								<br />
+								<p:commandButton value="Validate" ajax="true" actionListener="#{dictionaryValidatorToolBean.validateDictionary}" update=":DictionaryValidator :Growl" style="width: 100px; float: right; right: 5%; margin-right: -10px;" />
+							</div>
+							<div class="ui-grid-col-6">
+								<h:outputText value="Encoded message text:" />
+								<br />
+								<p:inputTextarea id="msgEncodeOutput" value="#{dictionaryValidatorToolBean.encodedText}" autoResize="false" rows="11" style="resize: none; width: 95%; padding-right: 0;" readonly="true" />
+							</div>
+						</div>
+					</div>
+					<br />
+					<div>
+						<h:outputText value="Validation result: " />
+						<h:outputText style="color:#{dictionaryValidatorToolBean.validationColor};" value="#{dictionaryValidatorToolBean.validationMessage}" />
+					</div>
+					<br />
+					<c:if test="#{dictionaryValidatorToolBean.comparationTreeAvaliable}">
+						<div class="ui-grid-row">
+							<h:outputText value="Messages comparation table:" />
+							<p:treeTable value="#{dictionaryValidatorToolBean.comparationTree}" var="treeNode">
+								<p:column headerText="Original message" style="width: 50%; min-width: 50%;">
+									<h:outputText value="#{treeNode.value1}" style="background-color:#{treeNode.equal ? '' : 'LightCoral'}; white-space: normal; word-wrap: break-word;"/>
+								</p:column>
+								<p:column headerText="Encoded message">
+									<h:outputText value="#{treeNode.value2}" style="background-color:#{treeNode.equal ? '' : 'LightCoral'}; white-space: normal; word-wrap: break-word;"/>
+								</p:column>
+							</p:treeTable>
+						</div>
+					</c:if>
+					<c:if test="#{!dictionaryValidatorToolBean.comparationTreeAvaliable}">
+						<h:outputText value="#{dictionaryValidatorToolBean.validationDetails}" style="white-space: pre-line" />
+					</c:if>
+				</h:form>
+			</p:outputPanel>
+				
+<!-- Matrix updater -->
+			<p:outputPanel rendered="#{toolsBean.activeTab == 80}">
+				<ui:include src="tools/matrixUpdater.xhtml"/>
+			</p:outputPanel>
+			
+		</p:outputPanel>
+	</ui:define>
+</ui:composition>

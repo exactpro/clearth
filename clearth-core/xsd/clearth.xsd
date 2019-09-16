@@ -1,0 +1,128 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" >
+	<xsd:complexType name="User" >
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="Password" type="xsd:string" maxOccurs="1" />
+			<xsd:element name="Role" type="xsd:string" maxOccurs="1" minOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:element name="Users" >
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="User" type="User" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType> 
+	</xsd:element>
+
+	<xsd:complexType name="CodecConfig" >
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="AltName" type="xsd:string" maxOccurs="1" minOccurs="0" />
+			<xsd:element name="DictionaryFile" type="xsd:string" maxOccurs="1" />
+			<xsd:element name="Dictionary" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="Codec" type="xsd:string" maxOccurs="1" minOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="CodecConfigs" >
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="CodecConfig" type="CodecConfig" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType> 
+	</xsd:element>
+
+	<xsd:complexType name="ExcludedParamsList" >
+		<xsd:sequence>
+			<xsd:element name="ToExclude" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="MessageConverterConfig" >
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="Codec" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="SendSubMessageAction" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="ReceiveSubMessageAction" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="ScriptHeaderStrings" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="ScriptValueStrings" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="EmptyValue" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="TrimMessage" type="xsd:boolean" default="true" />
+			<xsd:element name="ExcludedParamsList" type="ExcludedParamsList" maxOccurs="1" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="MessageConverterConfigs" >
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="MessageConverterConfig" type="MessageConverterConfig" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType> 
+	</xsd:element>
+	
+	<xsd:complexType name="ScriptConverterConfig" >
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="Codec" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="ClearThMessageClass" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="MessageFillerClass" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="SendSubMessageAction" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+			<xsd:element name="ReceiveSubMessageAction" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:element name="ScriptConverterConfigs" >
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="ScriptConverterConfig" type="ScriptConverterConfig" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType> 
+	</xsd:element>
+	
+	<xsd:complexType name="MatrixInfo" >
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" maxOccurs="1" />
+			<xsd:element name="FileName" type="xsd:string" maxOccurs="1" />
+			<xsd:element name="ActionsDone" type="xsd:int" maxOccurs="1" />
+			<xsd:element name="Successful" type="xsd:boolean" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="SchedulerLaunchInfo" >
+		<xsd:sequence>
+			<xsd:element name="Started" type="xsd:dateTime" maxOccurs="1" />
+			<xsd:element name="Finished" type="xsd:dateTime" maxOccurs="1" />
+			<xsd:element name="Interrupted" type="xsd:boolean" maxOccurs="1" />
+			<xsd:element name="Success" type="xsd:boolean" maxOccurs="1" />
+			<xsd:element name="ReportsPath" type="xsd:string" maxOccurs="1" />
+			<xsd:sequence>
+				<xsd:element name="MatrixInfo" type="MatrixInfo" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:element name="SchedulerLaunches" >
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="LaunchInfo" type="SchedulerLaunchInfo" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType> 
+	</xsd:element>
+
+	<xsd:complexType name="MessageHelperConfig">
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="MessageHelper" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="DictionaryFile" type="xsd:string" maxOccurs="1" minOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:element name="MessageHelperConfigs" >
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="MessageHelperConfig" type="MessageHelperConfig" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

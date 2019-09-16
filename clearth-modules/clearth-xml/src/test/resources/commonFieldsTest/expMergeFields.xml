@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <messageDesc type="C">
+        <fieldDesc repeat="true" source="price" name="commonRg">
+            <fieldDesc name="id"/>
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+    </messageDesc>
+    <messageDesc type="B">
+        <fieldDesc repeat="true" source="price" name="commonRg">
+            <fieldDesc source="origVal" name="originalValue"/>
+            <fieldDesc source="origQty" name="originalQuantity"/>
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+    </messageDesc>
+    <messageDesc type="A">
+        <fieldDesc repeat="true" source="price" name="commonRg">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+    </messageDesc>
+</XmlDictionaryDesc>

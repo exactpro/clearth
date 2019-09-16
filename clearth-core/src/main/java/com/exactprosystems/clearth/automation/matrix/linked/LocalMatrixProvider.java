@@ -1,0 +1,63 @@
+/******************************************************************************
+ * Copyright 2009-2019 Exactpro Systems Limited
+ * https://www.exactpro.com
+ * Build Software to Test Software
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.exactprosystems.clearth.automation.matrix.linked;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+
+import com.exactprosystems.clearth.ClearThCore;
+
+public class LocalMatrixProvider implements MatrixProvider
+{
+	public static final String TYPE = "Local";
+	private String name;
+	private String link;
+	private InputStream inputStream;
+
+	public LocalMatrixProvider(String link)
+	{
+		this.link = link;
+	}
+
+	@Override
+	public InputStream getMatrix() throws Exception
+	{
+		if (inputStream == null)
+		{
+			File file = new File(ClearThCore.rootRelative(link));
+			if (!file.exists())
+				throw new FileNotFoundException(String.format("File '%s' isn't found on the local machine", file.getAbsolutePath()));
+			name = file.getName();
+			inputStream = new FileInputStream(file);
+		}
+		return inputStream;
+	}
+
+	@Override
+	public String getName() throws Exception
+	{
+		if (name == null)
+		{
+			getMatrix();
+		}
+		return name;
+	}
+}

@@ -1,0 +1,41 @@
+generateJavaFromXsd {
+	inputs.file file("${xsdDir}/xml.xsd")
+
+	outputs.files fileTree("${genJavaDir}/com/exactprosystems/clearth/connectivity/xml").include('*.java')
+
+	doLast {
+		ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
+
+		ant.xjc(schema: "${coreXsdDir}/message.xsd", binding: "${coreXsdDir}/message.xjb",
+				destdir: "${genJaxbDir}", package: 'com.exactprosystems.clearth.connectivity.message',
+				removeOldOutput: 'yes')
+				{
+					arg(value: "-episode")
+					arg(value: "${genDir}/message.episode")
+					produces(dir: "${genJaxbDir}/com/exactprosystems/clearth/connectivity/message", includes: '*')
+				}
+
+		ant.xjc(schema: "${xsdDir}/xml.xsd",
+				destdir: "${genJavaDir}", package: 'com.exactprosystems.clearth.connectivity.xml',
+				removeOldOutput: 'yes', extension: true)
+				{
+					arg(value: "-catalog")
+					arg(value: "${coreXsdDir}/message.cat")
+					arg(value: "-b")
+					arg(value: "${genDir}/message.episode")
+					produces(dir: "${genJavaDir}/com/exactprosystems/clearth/connectivity/xml", includes: '*')
+				}
+	}
+}
+
+publishing {
+	publications {
+		xml(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-xml'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}

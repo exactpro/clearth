@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <commonFieldDesc repeat="true" mandatory="true" source="price" name="commonRG">
+        <fieldDesc source="val" name="value"/>
+        <fieldDesc source="qty" name="quantity"/>
+    </commonFieldDesc>
+    <messageDesc type="A">
+        <fieldDesc repeat="false" name="nowItIsNotRG" reference="commonRG"/>
+        <fieldDesc mandatory="false" name="optionalRg" reference="commonRG"/>
+        <fieldDesc source="originalPrice" name="rgWithCustomSource" reference="commonRG"/>
+        <fieldDesc name="renamedRg" reference="commonRG"/>
+        <fieldDesc reference="commonRG"/>
+    </messageDesc>
+    <commonFieldDesc name="complexField">
+        <fieldDesc source="val" name="value"/>
+        <fieldDesc source="qty" name="quantity"/>
+    </commonFieldDesc>
+    <messageDesc type="B">
+        <fieldDesc repeat="true" mandatory="true" name="mandatoryRG" reference="complexField"/>
+        <fieldDesc reference="complexField"/>
+    </messageDesc>
+</XmlDictionaryDesc>

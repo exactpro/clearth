@@ -1,0 +1,160 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui"
+		template="../../templates/restricted.xhtml"
+		xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+	<ui:define name="title">User Management</ui:define>
+
+	<ui:define name="content">
+		<script type="text/javascript" src="#{request.contextPath}/js/cookieutils.js?version=1.0"></script>
+		
+		<label class="pageTitle">User Management</label>
+		<h:form id="Users">
+			<div class="upperContainer">
+				<div class="upperLeftContainer">
+					<c:if test="${userBean.admin}">
+					<p:commandButton value="New user" actionListener="#{userManagementBean.newUser}" icon="ui-icon-plusthick"
+							update=":UserDlg" oncomplete="PF('userDialog').show()" rendered="#{userBean.admin}" />
+					&#160;&#160;
+					<p:fileUpload fileUploadListener="#{userManagementBean.uploadConfiguration}" allowTypes="/(\.|\/)(xml)$/" label="Upload configuration"
+							mode="advanced" auto="true" showButtons="false" multiple="false" update=":Users :Growl" styleClass="simple" />
+					<h:outputLink value="#{request.contextPath}/download?file=#{userManagementBean.pathToConfig}" 
+							class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left"
+							style="border: none; height: 28px;">
+						<span class="ui-button-icon-left ui-icon ui-c ui-icon-arrowthickstop-1-s"></span>
+						<span class="ui-button-text" style="margin-top: 1px;">Download configuration</span>
+					</h:outputLink>
+					</c:if>
+				</div>
+				<div class="upperRightContainer">
+					<p:outputPanel id="UserOperations" layout="inline">
+						<c:if test="${!userManagementBean.selectedUsers.isEmpty() and userBean.admin}">
+						<p:commandLink title="Edit selected user(s)" update=":UserDlg" oncomplete="PF('userDialog').show()">
+							<h:graphicImage value="/images/edit.png" alt="Edit selected user(s)" style="vertical-align: middle" />
+						</p:commandLink>
+						<h:outputText value="&#160;&#160;&#160;" />
+						<p:commandLink title="Remove selected user(s)" update=":RemoveUserConfirmDlg" oncomplete="PF('removeUserConfirmDialog').show()">
+							<h:graphicImage value="/images/delete-icon.png" alt="Remove selected user(s)" style="vertical-align: middle" />
+						</p:commandLink>
+						<h:outputText value="&#160;&#160;&#160;" />
+						<p:commandLink title="Kill activities" update=":KillUserConfirmDlg" oncomplete="PF('killConfirmationDlg').show();"
+								rendered="#{userManagementBean.activeUsersSelected}">
+							<h:graphicImage value="/images/kill.png" alt="Kill activities" style="vertical-align: middle" />
+						</p:commandLink>
+						</c:if>
+					</p:outputPanel>
+				</div>
+			</div>
+				
+			<div class="tableContainer fullWidth" id="UsersList">
+				<script>ajax_handle_toBottom();</script>
+				<p:dataTable var="user" value="#{userManagementBean.users}" styleClass="toBottom"
+						selectionMode="multiple" selection="#{userManagementBean.selectedUsers}" rowKey="#{user.name}"
+						scrollable="true" scrollHeight="7">
+					<p:ajax event="rowSelect" update=":Users:UserOperations"/>
+					<p:ajax event="rowUnselect" update=":Users:UserOperations"/>
+					<p:ajax event="rowDblselect" update=":UserDialog" oncomplete="PF('userDialog').show()" /> 
+					<p:column headerText="Login name">
+						<h:outputText value="#{user.name}" />
+					</p:column>
+					<p:column headerText="Role">
+						<h:outputText value="#{user.role}" />
+					</p:column>
+					<p:column headerText="Status" style="width: 80px;" rendered="true">
+						<h:outputText value="#{user.active ? 'Active' : ''}" />
+						<h:outputText value=" (#{user.sessionCount} sessions)" style="#{user.sessionCount &gt; 1 ? '' : 'display: none'}" />
+					</p:column>
+					<p:column headerText="Default scheduler" style="width: 130px;" rendered="#{automationBean.userSchedulersAllowed}">
+						<h:outputText value="#{user.defaultUserSchedulerStatus}" />
+					</p:column>
+				</p:dataTable>
+			</div>
+		</h:form>
+		
+		<p:dialog header="User settings" widgetVar="userDialog"
+				id="UserDlg" resizable="false" closeOnEscape="true" modal="true">
+			<h:form id="UserDialog" width="400">
+				<h:panelGrid id="display" columns="#{userManagementBean.oneUserSelected ? 2 : 3}" cellpadding="4" style="margin: 0 auto;">
+					<h:outputText value="You'll never catch me!" rendered="false" /><ui:remove><!-- This is added for correct three-column view and shouldn't be ever seen in GUI. --></ui:remove>
+					<h:outputText value="Login name*:" rendered="#{userManagementBean.oneUserSelected}" />
+					<p:inputText value="#{userManagementBean.oneSelectedUser.name}" label="Name" rendered="#{userManagementBean.oneUserSelected}" />
+					
+					<p:selectBooleanCheckbox value="#{userManagementBean.userProps.password}" rendered="#{!userManagementBean.oneUserSelected}" />
+					<h:outputText value="Password:" />
+					<p:password value="#{userManagementBean.oneSelectedUser.passwordText}" label="Password" />
+					
+					<p:selectBooleanCheckbox value="#{userManagementBean.userProps.role}" rendered="#{!userManagementBean.oneUserSelected}" />
+					<h:outputText value="Role:" />
+					<p:selectOneMenu value="#{userManagementBean.oneSelectedUser.role}"
+							style="width:100px" >
+						<f:selectItem itemLabel="user" itemValue="user"/>
+						<f:selectItem itemLabel="poweruser" itemValue="poweruser"/>
+						<f:selectItem itemLabel="admin" itemValue="admin"/>
+					</p:selectOneMenu>
+					
+					<f:facet name="footer">
+						<p:outputPanel layout="block" style="text-align:right">
+							<p:commandButton value="Save" update=":Users :Growl"
+									actionListener="#{userManagementBean.saveUsers}"
+									onstart="saveUsersScrollPos();"
+									oncomplete="restoreUsersScrollPos(); if (args.canClose) PF('userDialog').hide();"
+									icon="ui-icon ui-icon-check" />
+							<p:commandButton value="Cancel"
+									onclick="PF('userDialog').hide()"
+									icon="ui-icon ui-icon-close" />
+						</p:outputPanel>
+					</f:facet>
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<p:confirmDialog id="RemoveUserConfirmDlg" header="#{userManagementBean.oneUserSelected ? 'User removal' : 'Users removal'}" 
+				message="Are you sure you want to remove #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
+				width="380" severity="alert" widgetVar="removeUserConfirmDialog" closeOnEscape="true" modal="true">
+			<h:form id="RemoveUserConfimDialog" >
+				<p:commandButton value="Yes" update=":Users :Growl"
+					actionListener="#{userManagementBean.removeUsers}"
+					onstart="saveUsersScrollPos();"
+					oncomplete="restoreUsersScrollPos(); PF('removeUserConfirmDialog').hide()" />
+				<p:commandButton value="No" update=":Users :Growl"
+					onclick="PF('removeUserConfirmDialog').hide()" type="button" />
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:confirmDialog id="KillUserConfirmDlg" header="#{userManagementBean.oneUserSelected ? 'Killing user' : 'Killing users'}" 
+				message="Are you sure use want to kill activities of #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
+				severity="alert" widgetVar="killConfirmationDlg" closeOnEscape="true" modal="true">
+			<h:form id="KillConfimationDialog" width="200">
+				<p:commandButton value="Yes" update=":Users :Growl"
+					actionListener="#{userManagementBean.killUsers}"
+					onstart="saveUsersScrollPos();"
+					oncomplete="restoreUsersScrollPos(); PF('killConfirmationDlg').hide()" />
+				<p:commandButton value="No"
+					onclick="PF('killConfirmationDlg').hide()" type="button" />
+			</h:form>
+		</p:confirmDialog>
+		
+		<h:form>
+			<p:poll interval="3" update=":Users"
+					autoStart="true" 
+					onstart="saveUsersScrollPos();"
+					oncomplete="restoreUsersScrollPos();" />
+		</h:form>
+		
+		<script>
+			function saveUsersScrollPos()
+			{
+				saveScrollPos('usersScrollTop', 'UsersList');
+			}
+			
+			
+			function restoreUsersScrollPos()
+			{
+				restoreScrollPos('usersScrollTop', 'UsersList');
+			}
+		</script>
+	</ui:define>
+</ui:composition>

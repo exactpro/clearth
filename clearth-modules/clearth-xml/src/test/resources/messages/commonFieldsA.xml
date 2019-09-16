@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<commonFieldsA>
+    <f>123</f>
+    <abc>
+        <ab>
+            <a>345</a>
+            <b>678</b>
+        </ab>
+        <c>90</c>
+    </abc>
+</commonFieldsA>

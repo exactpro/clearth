@@ -1,0 +1,67 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+			xmlns:msg="http://exactpro.com/clearth/message"
+			jaxb:version="2.1">
+	<xsd:import schemaLocation="http://exactpro.com/clearth/message/message.xsd" namespace="http://exactpro.com/clearth/message"/>
+
+	<xsd:complexType name="SwiftFieldDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageFieldDesc">
+				<xsd:sequence>
+					<xsd:element name="fieldDesc" type="SwiftFieldDesc" minOccurs="0" maxOccurs="unbounded" />
+				</xsd:sequence>
+				<xsd:attribute name="name" type="xsd:string"  />
+				<xsd:attribute name="tag" type="xsd:string" />  <!-- Tag name for simple (non-container) field. If not set, a field is treated as container, which can be repetitive -->
+				<xsd:attribute name="sequenceType" type="xsd:string" /> <!-- Type of sequence denoted by 16R..16S -->
+				<xsd:attribute name="mandatory" type="xsd:boolean" default="false" />
+				<xsd:attribute name="repeat" type="xsd:boolean" default="false" /> <!-- applicable for container (tag is not set) fields only. If repeat=true - parsed message will have contents of this field in submessages -->
+				<xsd:attribute name="qualifier" type="xsd:string" />
+				<xsd:attribute name="separator" type="xsd:string" />
+				<xsd:attribute name="default" type="xsd:string" />
+				<xsd:attribute name="subvalue" type="xsd:string" /> <!-- if tag has multi-line value, lines from 2nd to the last one can be named here; separate names with "|" -->
+				<xsd:attribute name="subqualifier" type="xsd:string" /> <!-- if tag has multi-line value, qualifiers for lines from 2nd to the last one can be set here; separate qualifiers with "|" -->
+				<xsd:attribute name="divideSubvalueBy" type="xsd:int" default="0" /> <!-- makes sense only for encoding -->
+				<xsd:attribute name="generate" type="xsd:int" />
+				<xsd:attribute name="getFirst" type="xsd:int" />
+				<xsd:attribute name="divideBy" type="xsd:string" />
+				<xsd:attribute name="fullValue" type="xsd:boolean" default="false" />
+				<xsd:attribute name="valuePrefix" type="xsd:string" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="SwiftKeyDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageKeyDesc">
+				<xsd:attribute name="mandatory" type="xsd:boolean" default="true" />
+				<xsd:attribute name="subMsg" type="xsd:string" />
+				<xsd:attribute name="superKey" type="xsd:boolean" default="false" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="SwiftMessageDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageDesc">
+				<xsd:sequence>
+					<xsd:element name="key" type="SwiftKeyDesc" minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="fieldDesc" type="SwiftFieldDesc" minOccurs="1" maxOccurs="unbounded" />
+				</xsd:sequence>
+				<xsd:attribute name="name" type="xsd:string" />
+				<xsd:attribute name="inbound" type="xsd:boolean" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:element name="SwiftDictionaryDesc">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="msg:DictionaryDesc">
+					<xsd:sequence>
+						<xsd:element name="messageDesc" type="SwiftMessageDesc" minOccurs="1" maxOccurs="unbounded" />
+					</xsd:sequence>
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

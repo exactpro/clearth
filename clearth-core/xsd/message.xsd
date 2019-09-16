@@ -1,0 +1,28 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+			jaxb:version="2.1"
+			xmlns="http://exactpro.com/clearth/message"
+			targetNamespace="http://exactpro.com/clearth/message">
+
+	<xsd:complexType name="MessageCondition">
+		<xsd:attribute name="value" use="required" />
+		<xsd:attribute name="invert" type="xsd:boolean" default="false"/>
+	</xsd:complexType>
+
+	<xsd:complexType name="MessageKeyDesc" abstract="true">
+		<xsd:attribute name="name" type="xsd:string" use="required"/>
+	</xsd:complexType>
+
+	<xsd:complexType name="MessageFieldDesc" abstract="true"/>
+
+	<xsd:complexType name="MessageDesc" abstract="true">
+		<xsd:sequence>
+			<xsd:element name="typeCondition" type="MessageCondition" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="condition" type="MessageCondition" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="type" type="xsd:string" use="required"/>
+	</xsd:complexType>
+	
+	<xsd:complexType name="DictionaryDesc" abstract="true">
+	</xsd:complexType>
+</xsd:schema>

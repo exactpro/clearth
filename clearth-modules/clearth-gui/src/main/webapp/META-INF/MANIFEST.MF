@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Implementation-Title: Application based on ClearTH Core
+Implementation-Vendor: Exactpro Systems LLC
+Implementation-Vendor-Id: com.exactprosystems
+Implementation-Version: local_build|LOCAL_BUILD_DATE
+

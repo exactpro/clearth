@@ -1,0 +1,1457 @@
+/******************************************************************************
+ * Copyright 2009-2019 Exactpro Systems Limited
+ * https://www.exactpro.com
+ * Build Software to Test Software
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.exactprosystems.clearth.automation;
+
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
+import com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider;
+import com.exactprosystems.clearth.automation.matrix.linked.MatrixProviderHolder;
+import com.exactprosystems.clearth.automation.persistence.ExecutorState;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
+import com.exactprosystems.clearth.automation.persistence.StepState;
+import com.exactprosystems.clearth.automation.steps.AskForContinue;
+import com.exactprosystems.clearth.automation.steps.Default;
+import com.exactprosystems.clearth.automation.steps.Sleep;
+import com.exactprosystems.clearth.utils.ClearThException;
+import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
+import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Pattern;
+
+import static com.exactprosystems.clearth.ClearThCore.configFiles;
+import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
+
+public abstract class Scheduler
+{
+	protected static final Logger logger = LoggerFactory.getLogger(Scheduler.class);
+	private static final Pattern EXTENSION_FILTER = Pattern.compile("(.*\\.(csv|xls|xlsx)$)");
+
+	protected final String scriptsDir;
+	protected final ExecutorFactory executorFactory;
+	protected final StepFactory stepFactory;
+	protected final SchedulerData schedulerData;
+	protected List<Step> steps = new ArrayList<Step>();
+	protected List<Matrix> matrices = new ArrayList<Matrix>();
+	protected SchedulerStatus status = new SchedulerStatus();
+	protected boolean sequentialRun = false;
+	protected Executor executor = null;
+	protected SequentialExecutor seqExec = null;
+	protected Map<String, List<ActionGeneratorMessage>> matricesErrors = null;
+	protected Date businessDay = new Date(),
+			baseTime = null;
+	protected boolean weekendHoliday = false;
+	protected Map<String, Boolean> holidays = new HashMap<String, Boolean>();
+	protected ExecutorStateInfo stateInfo;
+	protected boolean testMode;
+	private Date executorStartedTime;
+	
+	protected MatrixProviderHolder matrixProviderHolder;
+
+//	protected Map<String, ActionMetaData> actionsMapping;
+
+	public Scheduler(String name, String configsRoot, String schedulerDirName, ExecutorFactory executorFactory, StepFactory stepFactory) throws Exception
+	{
+		scriptsDir = ClearThCore.scriptsPath() + schedulerDirName + File.separator + name + File.separator;
+		this.executorFactory = executorFactory;
+		this.stepFactory = stepFactory;
+		schedulerData = createSchedulerData(name, configsRoot, schedulerDirName, scriptsDir);
+		
+		//If some matrices files were added before scheduler construction - let's add them to schedulerData
+		File mdFile = new File(scriptsDir);
+		File[] files = mdFile.listFiles(file -> EXTENSION_FILTER.matcher(file.getName()).matches());
+		if (files==null)
+			return;
+		MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
+		boolean added = false;
+		for (File f : files)
+			if (schedulerData.matrixFileIndex(f)<0)
+			{
+				schedulerData.getMatrices().add(mdf.createMatrixData(f, null, true,true));
+				added = true;
+			}
+		if (added)
+			saveMatrices();
+		
+		try
+		{
+			stateInfo = loadStateInfo(schedulerData.getStateDir());
+		}
+		catch (IOException e)
+		{
+			//Info might not be saved, so it's normal to silence exception here
+			stateInfo = null;
+		}
+	}
+	
+	public abstract SchedulerData createSchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir) throws Exception;
+	public abstract void initEx() throws Exception;
+	public abstract ActionGenerator createActionGenerator(Map<String, Step> stepsMap, List<Matrix> matricesContainer, Map<String, Preparable> preparableActions);
+	public abstract SequentialExecutor createSequentialExecutor(Scheduler scheduler, String userName, Map<String, Preparable> preparableActions);
+	
+	protected abstract ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException;
+	protected abstract void saveStateInfo(File destDir, ExecutorStateInfo stateInfo) throws IOException;
+	protected abstract ExecutorState createExecutorState(File sourceDir) throws IOException;
+	protected abstract ExecutorState createExecutorState(Executor executor, StepFactory stepFactory, ReportsInfo reportsInfo);
+	
+	protected abstract void initExecutor(Executor executor);
+	protected abstract void initSequentialExecutor(SequentialExecutor executor);
+	protected abstract void initSchedulerOnRestore(Executor executor);
+	
+		
+	/* Properties control routines */
+	
+	private void saveConfigData() throws IOException
+	{
+		try
+		{
+			schedulerData.saveConfigData();
+		}
+		catch (IOException e)
+		{
+			String msg = "Error while saving scheduler config data";
+			logger.error(msg, e);
+			throw new IOException(msg, e);
+		}
+	}
+	
+	public void saveStepsAndInit(String errorMsg) throws IOException
+	{
+		try
+		{
+			schedulerData.saveSteps();
+			schedulerData.setConfigChanged(true);
+			saveConfigData();
+		}
+		catch (IOException e)
+		{
+			logger.error(errorMsg, e);
+			throw new IOException(errorMsg, e);
+		}
+
+		init();
+	}
+
+	@Deprecated
+	synchronized public void uploadStepsOld(File uploadedConfig, String originalFileName, List<String> warnings) throws Exception
+	{
+		FileOperationUtils.copyFile(uploadedConfig.getCanonicalPath(), schedulerData.getConfigName());
+		schedulerData.reloadSteps(warnings);
+		schedulerData.setConfigFileName(originalFileName);
+		schedulerData.setConfigChanged(false);
+		saveConfigData();
+		init();
+	}
+	
+
+	synchronized public void uploadSteps(File uploadedConfig, String originalFileName,
+			List<String> warnings, boolean append) throws Exception
+	{
+		if (append) {
+			Set<String> stepNames = new HashSet<String>();
+			List<Step> stepContainer = new ArrayList<Step>();
+			List<Step> newStepContainer = new ArrayList<Step>();
+			List<String> warnings0 = new ArrayList<String>();
+			
+			SchedulerData.loadSteps(schedulerData.getConfigName(), stepContainer, stepFactory, warnings0);
+			
+			for (Step step : stepContainer) {
+				stepNames.add(step.getName());
+			}
+			
+			SchedulerData.loadSteps(uploadedConfig.getAbsolutePath(), newStepContainer, stepFactory, warnings);
+			
+			for (Step step : newStepContainer) {
+				if (!stepNames.contains(step.getName())) {
+					stepContainer.add(step);
+				}
+			}
+			
+			SchedulerData.saveSteps(schedulerData.getConfigName(), schedulerData.getConfigHeader(), stepContainer);
+		} else {
+			FileOperationUtils.copyFile(uploadedConfig.getCanonicalPath(), schedulerData.getConfigName());
+		}
+		
+		
+		
+		schedulerData.reloadSteps(warnings);
+		if (append) {
+			schedulerData.setConfigChanged(true);
+		} else {
+			schedulerData.setConfigFileName(originalFileName);
+			schedulerData.setConfigChanged(false);
+		}
+		saveConfigData();
+		init();
+	}
+	
+	synchronized public void setExecute(boolean execute) throws IOException
+	{
+		for (Step step : schedulerData.getSteps())
+			step.setExecute(execute);
+		
+		saveStepsAndInit("Error while saving steps after setting 'Execute' flag");
+	}
+
+	synchronized public void setAskForContinue(boolean askForContinue) throws IOException
+	{
+		for (Step step : schedulerData.getSteps())
+			step.setAskForContinue(askForContinue);
+
+		saveStepsAndInit("Error while saving steps after setting 'Ask for continue' flag");
+	}
+
+	synchronized public void setAskIfFailed(boolean askIfFailed) throws IOException
+	{
+		for (Step step : schedulerData.getSteps())
+			step.setAskIfFailed(askIfFailed);
+
+		saveStepsAndInit("Error while saving steps after setting 'Ask if failed' flag");
+	}
+
+	synchronized public void setMatricesExecute(boolean execute)
+	{
+		for (MatrixData md : schedulerData.getMatrices())
+			md.setExecute(execute);
+		
+		saveMatrices();
+	}
+	
+	synchronized public void setMatricesTrim(boolean trim)
+	{
+		for (MatrixData md : schedulerData.getMatrices())
+			md.setTrim(trim);
+		
+		saveMatrices();
+	}
+	
+	synchronized public void toggleHoliday(Date hol) throws IOException
+	{
+		Map<String, Boolean> hols = schedulerData.getHolidays();
+		String holString = MatrixFunctions.getHolidayDF().format(hol);
+		if (hols.containsKey(holString))
+		{
+			if (hols.get(holString))
+				hols.put(holString, false);
+			else
+				hols.remove(holString);
+		}
+		else
+			hols.put(holString, true);
+		
+		try
+		{
+			schedulerData.saveHolidays();
+		}
+		catch (IOException e)
+		{
+			String msg = "Error while saving scheduler holidays after adding/removing a holiday";
+			logger.error(msg, e);
+			throw new IOException(msg, e);
+		}
+		
+		init();
+	}
+	
+	synchronized public void setBusinessDay(Date businessDay) throws IOException
+	{
+		schedulerData.setBusinessDay(businessDay);
+		
+		try
+		{
+			schedulerData.setUseCurrentDate(false);
+			schedulerData.saveBusinessDay();
+		}
+		catch (IOException e)
+		{
+			String msg = "Error while saving scheduler business day after setting it";
+			logger.error(msg, e);
+			throw new IOException(msg, e);
+		}
+		
+		init();
+	}
+	
+	synchronized public void useCurrentDate() throws IOException
+	{
+		new File(schedulerData.getBusinessDayName()).delete();
+		try
+		{
+			schedulerData.setUseCurrentDate(true);
+			schedulerData.setBusinessDay(schedulerData.loadBusinessDay());
+		}
+		catch (Exception e)
+		{
+			logger.warn("Error while loading business day when using current date");
+		}
+		
+		init();
+	}
+	
+	synchronized public void setBaseTime(Date baseTime) throws IOException
+	{
+		schedulerData.setBaseTime(baseTime);
+		
+		try
+		{
+			schedulerData.saveBaseTime();
+		}
+		catch (IOException e)
+		{
+			String msg = "Error while saving scheduler base time after setting it";
+			logger.error(msg, e);
+			throw new IOException(msg, e);
+		}
+		
+		init();
+	}
+	
+	synchronized public void useCurrentTime() throws IOException
+	{
+		new File(schedulerData.getBaseTimeName()).delete();
+		try
+		{
+			schedulerData.setBaseTime(schedulerData.loadBaseTime());
+		}
+		catch (Exception e)
+		{
+			logger.warn("Error while loading base time when using current time");
+		}
+		
+		init();
+	}
+	
+	synchronized public void setWeekendHoliday(boolean weekendHoliday) throws IOException
+	{
+		schedulerData.setWeekendHoliday(weekendHoliday);
+		
+		try
+		{
+			schedulerData.saveWeekendHoliday();
+		}
+		catch (IOException e)
+		{
+			String msg = "Error while saving 'weekend is holiday' setting after setting it";
+			logger.error(msg, e);
+			throw new IOException(msg, e);
+		}
+		
+		init();
+	}
+	
+	
+	/* Steps management routines */
+	
+	protected void validateStep(Step step, Step skipStep) throws SettingsException
+	{
+		if (step.getName().isEmpty())
+			throw new SettingsException("Step should have a unique name");
+		
+		for (Step sdStep : schedulerData.getSteps())
+			if ((sdStep != skipStep) && (sdStep.getName().equals(step.getName())))
+				throw new SettingsException("Step with name '"+step.getName()+"' already exists in this scheduler");
+		
+		if (!stepFactory.validStepKind(step.getKind()))
+			step.setKind(CoreStepKind.Default.getLabel());
+	}
+	
+	synchronized public void addStep(Step newStep) throws IOException, SettingsException
+	{
+		validateStep(newStep, null);
+		
+		schedulerData.getSteps().add(newStep);
+		saveStepsAndInit("Error while saving steps after adding new one");
+	}
+	
+	protected void doModifyStep(Step originalStep, Step newStep) throws IOException, SettingsException
+	{
+		List<Step> steps = schedulerData.getSteps();
+		
+		int stepIndex = steps.indexOf(originalStep);
+		if (stepIndex < 0)
+		{
+			logger.error("Cannot find step to modify: " + originalStep);
+			throw new IOException("Cannot find step to modify");
+		}
+		
+		validateStep(newStep, originalStep);
+		
+		steps.set(stepIndex, newStep);
+	}
+	
+	synchronized public void modifyStep(Step originalStep, Step newStep) throws IOException, SettingsException
+	{
+		doModifyStep(originalStep, newStep);
+		saveStepsAndInit("Error while saving steps after modifying one of them");
+	}
+	
+	synchronized public void modifySteps(List<Step> originalSteps, List<Step> newSteps) throws IOException, SettingsException
+	{
+		for (int i = 0; i < newSteps.size(); i++)
+			doModifyStep(originalSteps.get(i), newSteps.get(i));
+		saveStepsAndInit("Error while saving steps after modifying");
+	}
+	
+	synchronized public void removeStep(Step stepToRemove) throws IOException
+	{
+		schedulerData.getSteps().remove(stepToRemove);
+		saveStepsAndInit("Error while saving steps after removing one of them");
+	}
+	
+	synchronized public void removeSteps(List<Step> stepsToRemove) throws IOException
+	{
+		schedulerData.getSteps().removeAll(stepsToRemove);
+		saveStepsAndInit("Error while saving steps after removing multiple steps");
+	}
+	
+	synchronized public void clearSteps() throws IOException
+	{
+		schedulerData.getSteps().clear();
+		saveStepsAndInit("Error while saving steps after removing all of them");
+	}
+	
+	synchronized public void downStep(Step step) throws IOException
+	{
+		List<Step> steps = schedulerData.getSteps();
+		int index = steps.indexOf(step);
+		if (index < 0)
+			return;
+		
+		steps.remove(index);
+		if (index == steps.size())
+			steps.add(0, step);
+		else
+			steps.add(index + 1, step);
+		saveStepsAndInit("Error while saving steps after moving one of them down");
+	}
+	
+	
+	/* Matrices compilation and check */
+	
+	public Map<String, List<ActionGeneratorMessage>> prepare(List<Step> stepsContainer,
+															 List<Matrix> matricesContainer,
+															 List<MatrixData> matricesData,
+															 Map<String, Preparable> preparableActions) throws Exception
+	{
+		return buildMatrices(stepsContainer, matricesContainer, preparableActions, matricesData, false);
+	}
+
+	public Map<String, List<ActionGeneratorMessage>> checkMatrices(List<Step> stepsContainer,
+															 List<Matrix> matricesContainer,
+															 List<MatrixData> matricesData,
+															 Map<String, Preparable> preparableActions) throws Exception
+	{
+		return buildMatrices(stepsContainer, matricesContainer, preparableActions, matricesData, true);
+	}
+
+	protected Map<String, List<ActionGeneratorMessage>> buildMatrices(List<Step> stepsContainer,
+																	  List<Matrix> matricesContainer,
+																	  Map<String, Preparable> preparableActions,
+																	  List<MatrixData> matricesData,
+																	  boolean onlyCheck) throws IOException {
+		Map<String, Step> stepsMap = toMap(stepsContainer);
+		ActionGenerator generator = createActionGenerator(stepsMap, matricesContainer, preparableActions);
+		boolean allSuccessful = true;
+		for (MatrixData matrixData : matricesData)
+		{
+			if ((!matrixData.isExecute()) || (!matrixData.getFile().isFile()))
+				continue;
+			if (!generator.build(matrixData, onlyCheck))
+				allSuccessful = false;
+		}
+
+		if (!onlyCheck) {
+			generator.createContextCleanData();
+		}
+
+		if (!allSuccessful) return collectIssues(matricesContainer);
+		else return null;
+	}
+
+	
+	synchronized public Map<String, List<ActionGeneratorMessage>> checkMatrices(List<MatrixData> matrices) throws Exception
+	{
+		List<Step> steps;
+		try
+		{ 
+			updateLinkedMatrices();
+			checkDuplicatedMatrixNames();
+			
+			steps = schedulerData.loadSteps(null); //Ignore step warnings
+		}
+		catch (IOException e)
+		{
+			steps = new ArrayList<Step>();
+		}
+
+		return buildMatrices(steps, new ArrayList<Matrix>(), null, matrices, true);
+	}
+
+	protected Map<String, Step> toMap(Collection<Step> stepsCollection) {
+		Map<String, Step> stepsMap = new LinkedHashMap<String, Step>();
+		for (Step step : stepsCollection)
+			stepsMap.put(step.getName(), step);
+		return stepsMap;
+	}
+
+	protected Map<String, List<ActionGeneratorMessage>> collectIssues(List<Matrix> matricesContainer) {
+		Map<String, List<ActionGeneratorMessage>> result = new HashMap<String, List<ActionGeneratorMessage>>();
+		for (Matrix m : matricesContainer)
+			if ((m.getGeneratorMessages()!=null) && (m.getGeneratorMessages().size()>0))
+				result.put(m.getName(), m.getGeneratorMessages());
+		return result;
+	}
+	
+	
+	/* Matrices routines */
+	
+	private void checkMatricesExistance()
+	{
+		List<MatrixData> matrices = schedulerData.getMatrices();
+		for (int i=matrices.size()-1; i>=0; i--)
+			if (!matrices.get(i).getFile().exists())
+				matrices.remove(i);
+	}
+	
+	protected boolean saveMatrices()
+	{
+		try
+		{
+			schedulerData.saveMatrices();
+		}
+		catch (IOException e)
+		{
+			logger.error("Error while saving matrices data", e);
+			return false;
+		}
+		return true;
+	}
+	
+	public List<MatrixData> getMatricesData()
+	{
+		return schedulerData.getMatrices();
+	}
+	
+	protected void doRemoveMatrix(MatrixData matrix)
+	{
+		checkMatricesExistance();
+		
+		schedulerData.getMatrices().remove(matrix);
+		matrix.getFile().delete();
+	}
+	
+	synchronized public void removeMatrix(MatrixData matrix)
+	{
+		doRemoveMatrix(matrix);
+		saveMatrices();
+	}
+	
+	synchronized public void removeMatrices(List<MatrixData> matrices)
+	{
+		for (MatrixData m : matrices)
+			doRemoveMatrix(m);
+		saveMatrices();
+	}
+	
+	synchronized public void removeAllMatrices()
+	{
+		for (MatrixData md : schedulerData.getMatrices())
+			md.getFile().delete();
+		schedulerData.getMatrices().clear();
+		saveMatrices();
+	}
+	
+	synchronized private void updateLinkedMatrices() throws AutomationException
+	{
+		try
+		{
+			for (int i = 0; i < schedulerData.getMatrices().size(); i++)
+			{
+				MatrixData matrix = schedulerData.getMatrices().get(i);
+				if (matrix.isLinked() && matrix.isAutoReload())
+					addLinkedMatrix(matrix);
+			}
+		}
+		catch (Exception e)
+		{
+			logger.error("Error while updating linked matrices", e);
+			throw new AutomationException("Error while updating linked matrices: " + e.getMessage());
+		}
+	}
+
+	public MatrixProviderHolder getMatrixProviderHolder() {
+		//default value
+		return matrixProviderHolder == null ? MatrixProviderHolder.getInstance() : matrixProviderHolder;
+	}
+
+	public void setMatrixProviderHolder(MatrixProviderHolder matrixProviderHolder) {
+		this.matrixProviderHolder = matrixProviderHolder;
+	}
+
+	synchronized public void addLinkedMatrix(MatrixData matrix) throws Exception
+	{
+		File matrixFile = matrix.getFile();
+		boolean isNewMatrix = matrixFile == null; //Add matrix or Update matrix
+		String link = matrix.getLink();
+		String type = matrix.getType();
+		File tempFile = null;
+		
+		for (MatrixData m : schedulerData.getMatrices())
+		{
+			if (StringUtils.equals(m.getLink(), link) && StringUtils.equals(m.getType(), type)
+					&& (isNewMatrix || !matrixFile.equals(m.getFile())))
+				throw new ClearThException("Linked matrix with same link and type already exists");
+		}
+		
+		InputStream input = null;
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			MatrixProvider provider = getMatrixProviderHolder().getMatrixProvider(link, type, params);
+			matrix.setName(provider.getName());
+			for (MatrixData m: getMatricesData()) // check duplicated matrix names
+			{
+				if (!StringUtils.equals(matrix.getLink(), m.getLink())
+					&& StringUtils.equals(matrix.getName(), m.getName())
+					&& isNewMatrix)
+					throw new ClearThException(String.format("'%s' matrix already exists. Please use unique matrix names.", matrix.getName()));
+			}
+			
+			input = provider.getMatrix();
+			
+			FileOutputStream output = null;
+			try
+			{
+				File tempDir = new File(ClearThCore.automationStoragePath());
+				tempFile = File.createTempFile("matrix_", ".csv", tempDir);
+				output = new FileOutputStream(tempFile);
+				output.write(IOUtils.toByteArray(input));
+			}
+			finally
+			{
+				IOUtils.closeQuietly(output);
+			}
+		}
+		finally
+		{
+			IOUtils.closeQuietly(input);
+		}
+		
+		Date currentDate = new Date();
+		matrix.setUploadDate(currentDate);
+		
+		File file;
+		if (matrix.getFile() == null)
+		{
+			String matrixName = STORED_MATRIX_PREFIX + currentDate.getTime() + ".csv";
+			matrix.setFile(new File(scriptsDir + matrixName));
+		} 
+		file = matrix.getFile();
+		if (!file.getParentFile().exists())
+			file.getParentFile().mkdirs();
+		if (file.exists())
+			file.delete();
+		FileOperationUtils.copyFile(tempFile.getCanonicalPath(), file.getCanonicalPath());
+		
+		checkMatricesExistance();
+		int index = schedulerData.matrixFileIndex(file);
+		if (index < 0)
+			schedulerData.getMatrices().add(matrix);
+		else
+			schedulerData.getMatrices().set(index, matrix);
+		saveMatrices();
+	}
+	
+	public void checkDuplicatedMatrixNames() throws ClearThException
+	{
+		List<MatrixData> matrices = getMatricesData();
+		for (int i = 0; i < matrices.size(); i++)
+		{
+			for (int j = i + 1; j < matrices.size(); j++)
+			{
+				if (StringUtils.equals(matrices.get(i).getName(), matrices.get(j).getName()))
+				{
+					throw new ClearThException(String.format("Some matrices contain '%s' duplicated names. Please use unique matrix names.", 
+							matrices.get(i).getName()));
+				}
+			}
+		}
+	}
+	
+	synchronized public boolean addMatrix(File newMatrix)
+	{
+		int index = schedulerData.matrixFileIndex(newMatrix);
+		if (index < 0)
+		{
+			MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
+			schedulerData.getMatrices().add(mdf.createMatrixData(newMatrix, new Date(), true, true));
+		}
+		return true;
+	}
+	
+	synchronized public void addMatrix(File newMatrix, String matrixName) throws ClearThException
+	{
+		try
+		{
+			for (MatrixData m: getMatricesData()) // check duplicated matrix names for linked matrices
+			{
+				if (m.isLinked() && StringUtils.equals(matrixName, m.getName()))
+					throw new ClearThException(String.format("'%s' matrix already exists. Please use unique matrix names.", matrixName));
+			}
+			
+			File matrix = new File(scriptsDir+matrixName);
+			if (!matrix.getParentFile().exists())
+				matrix.getParentFile().mkdirs();
+			if (matrix.exists())
+				matrix.delete();
+			FileOperationUtils.copyFile(newMatrix.getCanonicalPath(), matrix.getCanonicalPath());
+			
+			checkMatricesExistance();
+			int index = schedulerData.matrixFileIndex(matrix);
+			if (index < 0)
+			{
+				MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
+				schedulerData.getMatrices().add(mdf.createMatrixData(matrix, new Date(), true, true));
+			}
+			else
+			{
+				MatrixData matrixData = schedulerData.getMatrices().get(index);
+				matrixData.setUploadDate(new Date());
+				matrixData.setExecute(true);
+			}
+			saveMatrices();
+		}
+		catch (IOException e)
+		{
+			throw new ClearThException("Error while adding new file with matrix", e);
+		}
+	}
+	
+	synchronized public void saveMatricesPositions()
+	{
+		checkMatricesExistance();
+		saveMatrices();
+	}
+	
+	synchronized public void toggleMatrixExecute(MatrixData md)
+	{
+		md.setExecute(!md.isExecute());
+		saveMatrices();
+	}
+	
+	synchronized public void toggleMatrixTrim(MatrixData md)
+	{
+		md.setTrim(!md.isTrim());
+		saveMatrices();
+	}
+	
+	
+	/* Scheduler execution methods */
+	
+	synchronized public boolean isRunning()
+	{
+		return ((executor!=null) && (!executor.isTerminated())) || ((seqExec!=null) && (!seqExec.isTerminated()));
+	}
+	
+	synchronized public boolean isSuspended()
+	{
+		if (!isRunning())
+			return false;
+		
+		if (!sequentialRun)
+			return executor.isSuspended();
+		else
+			return seqExec.isSuspended();
+	}
+	
+	public boolean isReplayEnabled()
+	{
+		if (!isRunning())
+			return false;
+		
+		if (!sequentialRun)
+			return executor.isReplayEnabled();
+		else
+			return seqExec.isReplayEnabled();
+	}
+	
+	public boolean isSequentialRun()
+	{
+		return sequentialRun;
+	}
+	
+	public boolean isInterrupted()
+	{
+		if (!isRunning())
+			return true;
+		
+		if (!sequentialRun)
+			return executor.isExecutionInterrupted();
+		else
+			return seqExec.isExecutionInterrupted();
+	}
+	
+	public boolean init()
+	{
+		if (isRunning())
+			return false;
+		
+		try
+		{
+			schedulerData.loadSteps(steps, null); //Ignore step warnings
+			schedulerData.loadHolidays(holidays);
+			businessDay = schedulerData.loadBusinessDay();
+			baseTime = schedulerData.loadBaseTime();
+			weekendHoliday = schedulerData.loadWeekendHoliday();
+			initEx();
+		}
+		catch (Exception e)
+		{
+			logger.error("Error while initializing scheduler", e);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	
+	synchronized public void start(String userName) throws AutomationException
+	{
+		if (isRunning())
+			throw new AutomationException("Scheduler is already running");
+		
+		if (!init())
+			throw new AutomationException("Error while initiating scheduler");
+		
+		sequentialRun = false;
+		try
+		{
+			status.clear();
+
+			updateLinkedMatrices();
+
+			Map<String, Preparable> preparableActions = new HashMap<String, Preparable>();
+			matricesErrors = prepare(steps, matrices, getMatricesData(), preparableActions);
+			
+			checkIfNothingToExecute();
+			
+			doBeforeStartExecution();
+			
+			executor = executorFactory.createExecutor(this, matrices, userName, preparableActions);
+//			executor.globalContext.setLoadedContext(GlobalContext.ACTIONS_MAPPING, actionsMapping);
+			initExecutor(executor);
+			executor.start();
+			
+			waitAfterExecutionStarted();
+		}
+		catch (AutomationException e)
+		{
+			status.add(e.getMessage());
+			throw e;
+		}
+		catch (Exception e)
+		{
+			final String msg = "Unknown error while starting scheduler";
+			logger.error(msg, e);
+			throw new AutomationException(msg, e);
+		}
+	}
+	
+	private void waitAfterExecutionStarted() throws AutomationException
+	{
+		try
+		{
+			Thread.sleep(100);
+		}
+		catch (InterruptedException e)
+		{
+			final String msg = "Wait after scheduler start interrupted";
+			logger.error(msg);
+			throw new AutomationException(msg, e);
+		}
+	}
+	
+	private void checkIfNothingToExecute() throws NothingToStartException
+	{
+		for (Step step : steps)
+		{
+			if (!step.isExecute())
+				continue;
+			
+			for (Action action : step.getActions())
+			{
+				if (action.isExecutable())
+					return;
+			}
+		}
+		
+		throw new NothingToStartException("Scheduler will not start, because no actions would be executed");
+	}
+	
+	synchronized public void startSequential(String userName) throws AutomationException
+	{
+		if (isRunning())
+			throw new AutomationException("Scheduler is already running");
+
+		if (!init())
+			throw new AutomationException("Error while initiating scheduler");
+		
+		sequentialRun = false;
+		try
+		{
+			status.clear();
+
+			updateLinkedMatrices();
+
+			Map<String, Preparable> preparableActions = new HashMap<String, Preparable>();
+			seqExec = createSequentialExecutor(this, userName, preparableActions);
+			initSequentialExecutor(seqExec);
+			seqExec.start();
+			sequentialRun = true;
+		}
+		catch (AutomationException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
+		{
+			throw new AutomationException("Unknown error while starting scheduler", e);
+		}
+	}
+	
+	protected void doBeforeStartExecution() throws AutomationException
+	{
+		//Do something here
+	}
+	
+	synchronized public boolean restoreState(String userName) throws IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
+		if (isRunning())
+			return false;
+		
+		if (!schedulerData.isStateSaved())  //Checking existence of saved state and not stateInfo==null because state will be restored from state directory, not from stateInfo object
+			return false;
+		
+		sequentialRun = false;
+		status.clear();
+		ExecutorState es = createExecutorState(schedulerData.getStateDir());
+		executor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
+		executor.setRestored(true);
+		executor.setStoredActionReports(schedulerData.getRepDir());
+		
+		steps = executor.getSteps();
+		matrices = executor.getMatrices();
+		holidays = executor.getHolidays();
+		weekendHoliday = executor.isWeekendHoliday();
+		initSchedulerOnRestore(executor);
+		executor.start();
+		
+		return true;
+	}
+	
+	synchronized public void stop() throws AutomationException
+	{
+		if ((!isRunning()) || (isInterrupted()))
+			return;
+
+		if (!sequentialRun)
+			executor.interruptExecution();
+		else
+		{
+			if (seqExec.getCurrentMatrix()!=null)
+				seqExec.interruptExecution();
+			else
+				seqExec.interruptWholeExecution();
+		}
+
+//		matrices.clear();
+	}
+	
+	synchronized public void pause() throws AutomationException
+	{
+		if ((!isRunning()) || (isInterrupted()))
+			return;
+		
+		if (!sequentialRun)
+		{
+			executor.pauseExecution();
+		}
+		else
+		{
+			seqExec.pauseExecution();
+		}
+	}
+	
+	synchronized public void continueExecution()
+	{
+		if (!isSuspended())
+			return;
+		
+		
+		
+		if (!sequentialRun) {
+			executor.clearLastReportsInfo();
+			executor.continueExecution();
+		}
+		else {
+			seqExec.clearLastReportInfo();
+			seqExec.continueExecution();
+		}
+	}
+	
+	synchronized public void replayStep()
+	{
+		if (!isSuspended())
+			return;
+		
+		if (!sequentialRun)
+			executor.replayStep();
+		else
+			seqExec.replayStep();
+	}
+	
+	
+	/* Failover management routines */
+	
+	public boolean isFailover()
+	{
+		if (!isRunning())
+			return false;
+		
+		if (!sequentialRun)
+			return executor.isFailover();
+		else
+			return seqExec.isFailover();
+	}
+	
+	public void tryAgainMain()
+	{
+		if (isFailover())
+			if (!sequentialRun)
+				executor.tryAgainMain();
+			else
+				seqExec.tryAgainMain();
+	}
+	
+	public void tryAgainAlt()
+	{
+		if (isFailover())
+			if (!sequentialRun)
+				executor.tryAgainAlt();
+			else
+				seqExec.tryAgainAlt();
+	}
+	
+	public int getFailoverReason()
+	{
+		if (!isFailover())
+			return FailoverReason.NONE;
+		
+		if (!sequentialRun)
+			return executor.getFailoverReason();
+		else
+			return seqExec.getFailoverReason();
+	}
+
+	public int getFailoverActionType()
+	{
+		if (!isFailover())
+			return ActionType.NONE;
+		
+		if (!sequentialRun)
+			return executor.getFailoverActionType();
+		else
+			return seqExec.getFailoverActionType();
+	}
+	
+	public void setFailoverRestartAction(boolean needRestart)
+	{
+		if (!isFailover())
+			return;
+
+		if (!sequentialRun)
+			executor.setFailoverRestartAction(needRestart);
+		else
+			seqExec.setFailoverRestartAction(needRestart);
+	}
+	
+	
+	/* State management routines */
+	
+	synchronized public boolean saveState() throws IOException
+	{
+		if ((!isSuspended()) || sequentialRun)
+			return false;
+		
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+		String repDir = getReportsDir()+"current_"+df.format(new Date())+"/";
+		ReportsInfo repInfo = makeCurrentReports(repDir);
+		ExecutorState es = createExecutorState(executor, stepFactory, repInfo);
+		es.save(schedulerData.getStateDir());
+		copyActionReport(schedulerData.getRepDir());
+		
+		try
+		{
+			stateInfo = loadStateInfo(schedulerData.getStateDir());
+		}
+		catch (IOException e)
+		{
+			stateInfo = null;
+		}
+		return true;
+	}
+	
+	
+	protected void saveStateInfo() throws IOException
+	{
+		try
+		{
+			saveStateInfo(schedulerData.getStateDir(), stateInfo);
+		}
+		catch (IOException e)
+		{
+			String msg = "Error while saving state info";
+			logger.error(msg, e);
+			throw new IOException(msg, e);
+		}
+	}
+	
+	public void removeSavedState()
+	{
+		
+		try
+		{
+			File stateDir = schedulerData.getStateDir();
+			if(stateDir.isDirectory())
+				FileUtils.deleteDirectory(stateDir);
+			
+			File reportsStateDir = schedulerData.getRepDir();
+			if(reportsStateDir.isDirectory())
+				FileUtils.deleteDirectory(reportsStateDir);
+
+			stateInfo=null;
+			
+		} catch (IOException e)
+		{
+			String msg = "Error while removing saved state";
+			logger.warn(msg,e);
+		}
+	}
+	
+	synchronized public void setStateExecute(boolean execute) throws IOException
+	{
+		if ((stateInfo==null) || (stateInfo.getSteps()==null))
+			return;
+		
+		for (StepState step : stateInfo.getSteps())
+			if (step.getFinished()==null)  //Can change only not finished steps
+				step.setExecute(execute);
+		
+		saveStateInfo();
+	}
+	
+	synchronized public void setStateAskForContinue(boolean askForContinue) throws IOException
+	{
+		if ((stateInfo==null) || (stateInfo.getSteps()==null))
+			return;
+		
+		for (StepState step : stateInfo.getSteps())
+			if (step.getFinished()==null)  //Can change only not finished steps
+				step.setAskForContinue(askForContinue);
+		
+		saveStateInfo();
+	}
+
+	synchronized public void setStateAskIfFailed(boolean stateAskIfFailed) throws IOException
+	{
+		if ((stateInfo==null) || (stateInfo.getSteps()==null))
+			return;
+
+		for (StepState step : stateInfo.getSteps())
+			if (step.getFinished()==null)  //Can change only not finished steps
+				step.setAskIfFailed(stateAskIfFailed);
+
+		saveStateInfo();
+	}
+	
+	synchronized public void modifyStepState(StepState originalStepState, StepState newStepState) throws IOException
+	{
+		if ((stateInfo==null) || (stateInfo.getSteps()==null) || (originalStepState.getFinished()!=null))
+			return;
+		
+		List<StepState> steps = stateInfo.getSteps();
+		
+		int stepIndex = steps.indexOf(originalStepState);
+		if (stepIndex < 0)
+		{
+			logger.error("Cannot find step to modify: " + originalStepState.getName());
+			throw new IOException("Cannot find step to modify");
+		}
+		
+		steps.set(stepIndex, newStepState);
+		saveStateInfo();
+	}
+	
+	
+	/* Various getters */
+	
+	public String getForUser()
+	{
+		return schedulerData.getForUser();
+	}
+	
+	public String getName()
+	{
+		return schedulerData.getName();
+	}
+	
+	public SchedulerData getSchedulerData()
+	{
+		return schedulerData;
+	}
+	
+	public Step getCurrentStep()
+	{
+		if (!isRunning())
+			return null;
+		
+		if (!sequentialRun)
+			return executor.getCurrentStep();
+		else
+			return seqExec.getCurrentStep();
+	}
+	
+	public boolean isCurrentStepIdle()
+	{
+		if (!isRunning())
+			return false;
+		
+		if (!sequentialRun)
+			return executor.isCurrentStepIdle();
+		else
+			return seqExec.isCurrentStepIdle();
+	}
+	
+	public String getCurrentMatrix()
+	{
+		if (sequentialRun)
+			return seqExec.getCurrentMatrix();
+		else
+			return null;
+	}
+	
+	public List<Step> getSteps()
+	{
+		return steps;
+	}
+	
+	public List<Matrix> getMatrices()
+	{
+		return matrices;
+	}
+	
+	public SchedulerStatus getStatus()
+	{
+		return status;
+	}
+	
+	public Map<String, List<ActionGeneratorMessage>> getMatricesErrors()
+	{
+		return matricesErrors;
+	}
+	
+	public Date getBusinessDay()
+	{
+		return businessDay;
+	}
+	
+	public Date getBaseTime()
+	{
+		return baseTime;
+	}
+	
+	public boolean isWeekendHoliday()
+	{
+		return weekendHoliday;
+	}
+	
+	public Map<String, Boolean> getHolidays()
+	{
+		return holidays;
+	}
+	
+	public String getConfigFileName()
+	{
+		return schedulerData.getConfigFileName();
+	}
+	
+	public boolean isConfigChanged()
+	{
+		return schedulerData.isConfigChanged();
+	}
+	
+	public String getReportsDir()
+	{
+		if (!sequentialRun)
+			return executor.getReportsDir();
+		else
+			return seqExec.getReportsDir();
+	}
+	
+	public String getCompletedReportsDir()
+	{
+		if (!sequentialRun)
+			return executor.getCompletedReportsDir();
+		else
+			return seqExec.getCompletedReportsDir();
+	}
+	
+	public ExecutorStateInfo getStateInfo()
+	{
+		return stateInfo;
+	}
+
+	public boolean isTestMode()
+	{
+		return testMode;
+	}
+
+	public void setTestMode(boolean testMode)
+	{
+		this.testMode = testMode;
+	}
+	
+	synchronized public void addLaunch(XmlSchedulerLaunchInfo launchInfo) throws JAXBException, ClearThException
+	{
+		XmlSchedulerLaunches launches = schedulerData.getLaunches();
+		launches.getLaunchesInfo().add(0, launchInfo);
+		schedulerData.saveLaunches();
+	}
+	
+	synchronized public void copyActionReport(File pathToStoreReports)
+	{
+		if (!sequentialRun)
+		{
+			executor.copyActionReports(pathToStoreReports);
+		}
+		else
+		{
+			seqExec.copyActionReports(pathToStoreReports);
+		}
+	}
+	
+	synchronized public ReportsInfo makeCurrentReports(String pathToStoreReports)
+	{
+		if (!sequentialRun)
+		{
+			if (executor.getLastReportsInfo()==null)
+				executor.makeCurrentReports(pathToStoreReports);
+			return executor.getLastReportsInfo();
+		}
+		else
+		{
+			if (seqExec.getLastReportInfo()==null)
+				seqExec.makeCurrentReport(pathToStoreReports);
+			return seqExec.getLastReportInfo();
+		}
+	}
+	
+	
+	synchronized protected void executorFinished()
+	{
+		executor = null;
+	}
+
+	synchronized protected void seqExecutorFinished()
+	{
+		seqExec = null;
+	}
+
+	public StepFactory getStepFactory()
+	{
+		return stepFactory;
+	}
+	
+	
+	public Date getStartTime()
+	{
+		return executorStartedTime;
+		//TODO: need to implement getter for current executor in seqExec. And to obtain start time from it.
+	}
+
+	public void setLastExecutorStartedTime(Date startedTime)
+	{
+		this.executorStartedTime = startedTime;
+	}
+
+	public String getActionReportsDir()
+	{
+		if (executor != null)
+			return executor.getActionsReportsDir();
+		return "";
+	}
+
+	public String getScriptsDir()
+	{
+		return scriptsDir;
+	}
+
+	synchronized public void reloadSchedulerData() throws Exception
+	{
+		schedulerData.loadMatrices(schedulerData.getMatrices());
+		schedulerData.reloadSteps(null);
+		schedulerData.setBusinessDay(schedulerData.loadBusinessDay());
+		schedulerData.setWeekendHoliday(schedulerData.loadWeekendHoliday());
+		schedulerData.loadHolidays(schedulerData.getHolidays());
+		init();
+	}
+
+	public Executor getExecutor() {
+		return executor;
+	}
+	
+	
+	public Class<? extends StepImpl> getStepImplClass(String label) {
+		switch (CoreStepKind.stepKindByLabel(label)) {
+			case Sleep: return Sleep.class;
+			case AskForContinue: return AskForContinue.class;
+			case Default: return Default.class;
+			default: return getStepImplClassEx(label);
+		}
+	}
+
+	protected Class<? extends StepImpl> getStepImplClassEx(String label) {
+		return null;
+	}
+}

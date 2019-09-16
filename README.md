@@ -1,0 +1,48 @@
+ClearTH
+==========
+
+This is the official ClearTH project repository.
+
+## Introduction
+
+ClearTH is a test automation tool whose primary purpose is testing of Clearing, Settlement and Back-Office Systems.
+
+It is able to simultaneously execute multiple end-to-end test scenarios in batches. Test scenarios can be executed within a schedule, thus providing fully autonomous test execution capabilities.
+
+ClearTH typically interacts with the system under test via its gateways / APIs, but can be easily extended with new protocols and data formats to work with.
+
+ClearTH Core provides basic functionality to execute test scenarios, some automation actions and connectivity support. ClearTH modules extend this functionality with new data formats support and other features.
+
+Applications that use ClearTH are built on top of ClearTH Core, optionally including its modules.
+
+
+## How to build
+
+Build and publish ClearTH Core and modules to a local repository, i.e. "shared" directory in the repository root by executing the following command from the repository root:
+```
+$ ./gradlew clean build publish
+```
+
+Create a new project that will use ClearTH Core and its GUI module by executing the following command from the repository root:
+```
+$ ./gradlew createProject -PnewProjectDir=../PROJECTNAME
+```
+
+The new project will be created in the directory adjacent to the repository root.
+
+Navigate to that new directory and execute the following command to start your new project within the Jetty server:
+```
+$ ./gradlew jettyRun
+```
+
+Alternatively, you can use the following command to explicitly build the WAR file with your project and deploy it to the Jetty server:
+```
+$ ./gradlew runClearTH
+```
+
+ClearTH GUI will be available at http://localhost:8080/clearth
+
+You can log-in by using the following login/password:
+```
+admin/admin
+```

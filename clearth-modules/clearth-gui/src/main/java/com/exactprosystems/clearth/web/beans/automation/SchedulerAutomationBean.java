@@ -1,0 +1,302 @@
+/******************************************************************************
+ * Copyright 2009-2019 Exactpro Systems Limited
+ * https://www.exactpro.com
+ * Build Software to Test Software
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.exactprosystems.clearth.web.beans.automation;
+
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.Executor;
+import com.exactprosystems.clearth.automation.Matrix;
+import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
+import com.exactprosystems.clearth.utils.ExceptionUtils;
+import com.exactprosystems.clearth.web.beans.ClearThBean;
+import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import static com.exactprosystems.clearth.ClearThCore.configFiles;
+
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class SchedulerAutomationBean extends ClearThBean {
+	
+	protected AutomationBean automationBean;
+	
+	protected boolean showReportsDialog = false;
+	
+	public SchedulerAutomationBean() {
+
+	}
+
+	protected Scheduler selectedScheduler() {
+		return this.automationBean.selectedScheduler;
+	}
+
+	public void setAutomationBean(AutomationBean automationBean) {
+		this.automationBean = automationBean;
+	}
+
+	/* Execution management */
+
+	public void start()
+	{
+		try
+		{
+			selectedScheduler().start(UserInfoUtils.getUserName());
+
+			logSchedulerStarted();
+			MessageUtils.addInfoMessage("Scheduler started", "All uploaded matrices will be executed in single run");
+		}
+		catch (NothingToStartException e)
+		{
+			MessageUtils.addWarningMessage("Scheduler will not start", e.getMessage());
+		}
+		catch (AutomationException e)
+		{
+			getLogger().error("Error while starting scheduler", e);
+			MessageUtils.addErrorMessage("Error", e.getMessage());
+		}
+		this.automationBean.getMatrixChecker().refreshMatricesChecking();
+	}
+
+	public void startSequential()
+	{
+		try
+		{
+			selectedScheduler().startSequential(UserInfoUtils.getUserName());
+			getLogger().info("Started scheduler sequential run");
+			MessageUtils.addInfoMessage("Scheduler started", "Uploaded matrices will be run sequentially");
+		}
+		catch (AutomationException e)
+		{
+			MessageUtils.addErrorMessage("Error", e.getMessage());
+		}
+		this.automationBean.getMatrixChecker().refreshMatricesChecking();
+	}
+
+	private void logSchedulerStarted()
+	{
+		List<Matrix> matrices = selectedScheduler().getMatrices();
+		List<String> matrixNames = new ArrayList<String>();
+		for (Matrix matrix : matrices)
+		{
+			matrixNames.add(matrix.getName());
+		}
+		getLogger().info("Started scheduler with matrices: {}",matrixNames);
+	}
+
+	public void stop()
+	{
+		try
+		{
+			selectedScheduler().stop();
+
+			getLogger().info("Stopped scheduler '" + selectedScheduler().getName() + "'");
+			MessageUtils.addInfoMessage("Scheduler stopped", "");
+		}
+		catch (AutomationException e)
+		{
+			MessageUtils.addErrorMessage("Error", e.getMessage());
+		}
+	}
+
+	public void exportSchedulerInfo()
+	{
+		File resultFile = null;
+		try
+		{
+			resultFile = ClearThCore.getInstance().getSchedulerInfoExporter().export(selectedScheduler());
+		}
+		catch (Exception e)
+		{
+			String errMsg = "Error while exporting scheduler info";
+			getLogger().error(errMsg, e);
+			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			return;
+		}
+
+		String destDir = configFiles().getTempDir();
+		WebUtils.redirectToFile(destDir + resultFile.getName());
+	}
+
+	public boolean isRunning()
+	{
+		return selectedScheduler().isRunning();
+	}
+
+	public boolean isSequentialRun()
+	{
+		return selectedScheduler().isSequentialRun();
+	}
+
+	public String getCurrentMatrix()
+	{
+		return selectedScheduler().getCurrentMatrix();
+	}
+
+	public boolean isInterrupted()
+	{
+		return selectedScheduler().isInterrupted();
+	}
+
+	public boolean isSuspended()
+	{
+		return selectedScheduler().isSuspended();
+	}
+
+	public boolean isReplayEnabled()
+	{
+		return selectedScheduler().isReplayEnabled();
+	}
+
+	public void continueExecution()
+	{
+		selectedScheduler().continueExecution();
+		getLogger().info("Continued execution");
+	}
+
+	public void replayStep()
+	{
+		selectedScheduler().replayStep();
+	}
+
+	/* Failover */
+
+	public boolean isFailover()
+	{
+		return selectedScheduler().isFailover();
+	}
+
+	public String getFailoverReasonString()
+	{
+		return "";
+	}
+
+	public void tryAgainMain()
+	{
+		selectedScheduler().tryAgainMain();
+	}
+
+	public void tryAgainAlt()
+	{
+		selectedScheduler().tryAgainAlt();
+	}
+
+	public void setFailoverRestartAction(boolean needRestart)  //Can be used in Failover dialog implementation, but not in version of that dialog which comes with Core
+	{
+		selectedScheduler().setFailoverRestartAction(needRestart);
+	}
+
+	public List<String> getStatus()
+	{
+		return selectedScheduler().getStatus().get();
+	}
+
+	public boolean isStatusEmpty()
+	{
+		return getStatus().size()==0;
+	}
+
+	public boolean isRunning(Step step)
+	{
+		Executor exec = selectedScheduler().getExecutor();
+		if (exec != null)
+		{
+			Step currentStep = exec.getCurrentStep();
+			if (currentStep != null)
+				return currentStep.equals(step);
+		}
+		return false;
+	}
+
+
+	public List<Step> getRealTimeSteps()
+	{
+		return selectedScheduler().getSteps();
+	}
+	
+	public long getStartTime()
+	{
+		Executor exec = selectedScheduler().getExecutor();
+		if (exec != null)
+			return Math.max(0, (exec.getStartTimeStep() - System.currentTimeMillis()) / 1000);
+		return 0L;
+	}
+
+
+	public void skipStepWaiting()
+	{
+		Executor exec = selectedScheduler().getExecutor();
+		if (exec != null) {
+			exec.skipWaitingStep();
+			exec.continueExecution();
+			getLogger().info("Skipped waiting for step");
+		}
+	}
+
+	public boolean isWaitingForStep() {
+		Executor exec = selectedScheduler().getExecutor();
+		if (exec != null) {
+			return exec.isSuspensionTimeout();
+		}
+		return false;
+	}
+
+	public boolean isShowReportsDialog()
+	{
+		return showReportsDialog;
+	}
+
+	public void setShowReportsDialog(boolean showReportsDialog)
+	{
+		this.showReportsDialog = showReportsDialog;
+	}
+
+	public void pause()
+	{
+		try
+		{
+			selectedScheduler().pause();
+
+			getLogger().info("Paused scheduler");
+			MessageUtils.addInfoMessage("Scheduler paused", "");
+		}
+		catch (AutomationException e)
+		{
+			MessageUtils.addErrorMessage("Error", e.getMessage());
+		}
+	}
+
+	public Date getSchedulerBaseTime()
+	{
+		return selectedScheduler().getBaseTime();
+	}
+
+	public Date getSchedulerBusinessDay()
+	{
+		return selectedScheduler().getBusinessDay();
+	}
+
+
+}

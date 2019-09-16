@@ -1,0 +1,1 @@
+<% response.sendRedirect("ui/restricted/home.jsf"); %>

@@ -1,0 +1,54 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui"
+		xmlns:c="http://java.sun.com/jsp/jstl/core"
+		template="../../templates/restricted.xhtml">
+	
+	<ui:define name="title">Maintain</ui:define>
+
+	<ui:define name="content">
+		<label class="pageTitle">ClearTH maintenance</label>
+		<div class="entry">
+			<h:form id="Memory">
+				<h2>Memory info</h2>
+				<h:outputText value="Maximum memory: " />
+				<h:outputText value="#{maintainBean.maxMemory} Mb" />
+				<br />
+				<h:panelGroup id="memoryInfo">
+					<h:outputText value="Total memory currently available: " />
+					<h:outputText value="#{maintainBean.totalMemory} Mb" />
+					<br />
+					<h:outputText value="Free memory: " />
+					<h:outputText value="#{maintainBean.freeMemory} Mb"
+							style="#{maintainBean.isMemoryBreachesLimit() ? 'color: red;' : ''}"/>
+					<br />
+					<br />
+					Please note that total amount of available memory can be increased by automatic request of Java VM if more memory is needed by ClearTH. After that amount of free memory will be increased as well.
+					<br />
+					If you see that all free memory is about to be consumed and total amount of memory isn't increasing anymore you can ask Java VM to run Garbage collector for ClearTH. It will force freeing of unused memory.
+					<br />
+					<br />
+					<p:commandButton value="Run Garbage collector" actionListener="#{maintainBean.collectGarbage}" update=":Memory" />
+					<br />
+					<br />
+				</h:panelGroup>
+				<p:poll interval="5" update="memoryInfo" global="false"/>
+			</h:form>
+			<h:form id="Disk">
+				<h2>Disk info</h2>
+				<h:outputText value="Total space: " />
+				<h:outputText value="#{maintainBean.totalSpace} Mb" />
+				<br />
+				<h:panelGroup id="spaceInfo">
+					<h:outputText value="Free space: " />
+					<h:outputText value="#{maintainBean.freeSpace} Mb" />
+					<br />
+					<br />
+				</h:panelGroup>
+				<p:poll interval="15" update="spaceInfo" global="false"/>
+			</h:form>
+		</div>
+	</ui:define>
+</ui:composition>

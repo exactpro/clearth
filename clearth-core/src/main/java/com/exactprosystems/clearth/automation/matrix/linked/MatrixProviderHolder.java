@@ -1,0 +1,55 @@
+/******************************************************************************
+ * Copyright 2009-2019 Exactpro Systems Limited
+ * https://www.exactpro.com
+ * Build Software to Test Software
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.exactprosystems.clearth.automation.matrix.linked;
+
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.SettingsException;
+
+import java.io.InputStream;
+import java.util.Map;
+
+public class MatrixProviderHolder
+{
+	protected MatrixProviderHolder()
+	{
+	}
+
+	public static class SingletonHolder
+	{
+		public static final MatrixProviderHolder HOLDER_INSTANCE = new MatrixProviderHolder();
+	}
+
+	public static MatrixProviderHolder getInstance()
+	{
+		return SingletonHolder.HOLDER_INSTANCE;
+	}
+
+	public MatrixProvider getMatrixProvider(String link, String type, Map<String, Object> params) throws SettingsException
+	{
+		if (LocalMatrixProvider.TYPE.equals(type))
+			return new LocalMatrixProvider(link);
+		if (GoogleSpreadsheetsMatrixProvider.TYPE.equals(type))
+			return new GoogleSpreadsheetsMatrixProvider(link, ClearThCore.getInstance().getGoogleMatricesConfiguration());
+		if (RemoteMatrixProvider.TYPE.equals(type))
+			return new RemoteMatrixProvider(link);
+		else
+		// FIXME: to replace exception type
+			throw new SettingsException("Unknown type of matrix provider: " + type);
+	}
+}

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <!--COMMON FIELD WITH COMMON FIELDS INSIDE TEST-->
+    <!--common-->
+    <commonFieldDesc name="innerCommonFieldA" source="a"/>
+    <commonFieldDesc name="innerCommonFieldB" source="b"/>
+    <commonFieldDesc name="innerCommonFieldC" source="c"/>
+    <commonFieldDesc name="innerCommonFieldD" source="d"/>
+    <commonFieldDesc name="innerCommonFieldE" source="e"/>
+    
+    <!--for 1st message-->
+    <commonFieldDesc name="innerCommonFieldAB" source="ab">
+        <fieldDesc reference="innerCommonFieldA"/>
+        <fieldDesc reference="innerCommonFieldB"/>
+    </commonFieldDesc>    
+    <commonFieldDesc name="commonFieldABC" source="abc">
+        <fieldDesc reference="innerCommonFieldAB"/>
+        <fieldDesc reference="innerCommonFieldC"/>
+    </commonFieldDesc>
+    
+    <!--for 2nd message-->
+    <commonFieldDesc name="innerCommonFieldBC" source="bc">
+        <fieldDesc reference="innerCommonFieldB"/>
+        <fieldDesc reference="innerCommonFieldC"/>
+    </commonFieldDesc>
+    <commonFieldDesc name="innerCommonFieldDE" source="de">
+        <fieldDesc reference="innerCommonFieldD"/>
+        <fieldDesc reference="innerCommonFieldE"/>
+    </commonFieldDesc>
+    <commonFieldDesc name="commonFieldBCDE" source="bcde">
+        <fieldDesc reference="innerCommonFieldBC"/>
+        <fieldDesc reference="innerCommonFieldDE"/>
+    </commonFieldDesc>
+    
+    <!--1st message-->
+    <messageDesc rootTag="commonFieldsA" type="commonFieldsA">
+        <fieldDesc name="privateFieldF" source="f"/>
+        <fieldDesc reference="commonFieldABC"/>
+    </messageDesc>
+    
+    <!--2nd message-->
+    <messageDesc rootTag="commonFieldsB" type="commonFieldsB">
+        <fieldDesc name="privateFieldG" source="g"/>
+        <fieldDesc reference="commonFieldBCDE"/>
+    </messageDesc>
+    
+    
+    
+    <!--COMMON FIELD GROUP TEST-->
+    <!--fields-->
+    <commonFieldDesc name="wrappedGroup" source="group">
+        <fieldDesc name="a" source="a"/>
+        <fieldDesc name="b" source="b"/>
+    </commonFieldDesc>
+    <commonFieldsGroupDesc name="nonWrappedGroup">
+        <fieldDesc name="c" source="c"/>
+        <fieldDesc name="d" source="d"/>
+    </commonFieldsGroupDesc>
+    <!--message-->
+    <messageDesc rootTag="commonFieldsGroup" type="commonFieldsGroup">
+        <fieldDesc reference="wrappedGroup"/>
+        <fieldDesc reference="nonWrappedGroup"/>
+    </messageDesc>
+    
+    
+    <!--In the old version of codec some locations of repeating groups caused infinite recursion while decoding-->
+    <messageDesc rootTag="infiniteLoopBug" type="infiniteLoopBug">
+        <fieldDesc source="b/c/d" name="b" repeat="true" mandatory="true" xpath="true">
+            <fieldDesc source="e" name="e">
+                <attrDesc source="f" name="F" mandatory="true"/>
+                <attrDesc source="g" name="G" mandatory="true"/>
+                <attrDesc source="n" name="n" mandatory="false"/>
+            </fieldDesc>
+            <fieldDesc source="h" name="h" mandatory="false"/>
+        </fieldDesc>
+    </messageDesc>    
+    
+    
+    
+    <!--REPEATING GROUPS TEST-->
+    <messageDesc rootTag="repeatingGroups" type="repeatingGroups">
+        <fieldDesc name="A" source="groupA/B/C/D" repeat="true" xpath="true">
+            <fieldDesc name="E" source="groupE" repeat="true">
+                <fieldDesc name="F" source="groupF" repeat="true">
+                    <fieldDesc name="H" source="G/H" xpath="true"/>
+                </fieldDesc>
+            </fieldDesc>
+        </fieldDesc>
+    </messageDesc>
+    
+    
+    
+    <!--Test for case when non-container element is repeated-->
+    <messageDesc rootTag="simpleRepeating" type="simpleRepeating">
+        <fieldDesc name="user" source="user" repeat="true">
+            <attrDesc name="id" source="id"/>
+            <fieldDesc name="name" source="."/>
+        </fieldDesc>
+    </messageDesc>
+    
+    
+    <!--TEST FOR ATTRIBUTES IN DIFFERENT PLACES OF MESSAGE-->
+    <!--common field-->
+    <commonFieldDesc name="commonWithAttrs" source="commonWithAttrs">
+        <attrDesc name="commonAttrA" source="commonAttrA"/>
+        <attrDesc name="commonAttrB" source="commonAttrB"/>
+    </commonFieldDesc>
+    <!--message-->
+    <messageDesc rootTag="attributes" type="attributes">
+        <defaultAttrDesc name="defaultMsgAttrA" value="123"/>
+        <attrDesc name="msgAttrA" source="msgAttrA"/>
+        <attrDesc name="msgAttrB" source="msgAttrB"/>
+        <fieldDesc reference="commonWithAttrs"/>
+        <fieldDesc name="withAttrs" source="withAttrs">
+            <defaultAttrDesc name="defaultFieldAttrA" value="456"/>
+            <attrDesc name="fieldAttrA" source="fieldAttrA"/>
+            <attrDesc name="fieldAttrB" source="fieldAttrB"/>
+        </fieldDesc>
+    </messageDesc>
+    
+    
+    
+    <!--TEST FOR XML EMPTY TAGS-->
+    <messageDesc rootTag="empty" type="empty">
+        <fieldDesc name="absent"/>
+        <fieldDesc name="absentWithDefault" default="123"/>
+        <fieldDesc name="absentWithEmptyDefault" default=""/>
+        <fieldDesc name="emptyByMatrix"/>
+        <fieldDesc name="emptyByMatrixWithDefault" default="123"/>
+        <fieldDesc name="emptyWithDefault" default=""/>
+        <fieldDesc name="emptyContainer">
+            <fieldDesc name="inner"/>
+        </fieldDesc>
+        <fieldDesc name="emptyNonSelfClosed" default="" useSelfClosingTagForEmpty="false"/>
+        <fieldDesc name="emptyByMatrixNonSelfClosed" useSelfClosingTagForEmpty="false"/>
+        <fieldDesc name="emptyContainerNonSelfClosed" useSelfClosingTagForEmpty="false">
+            <fieldDesc name="inner2"/>
+        </fieldDesc>
+    </messageDesc>
+    
+    
+    <!--Test for message with namespaces-->
+    <messageDesc rootTag="namespace" type="namespace">
+        <fieldDesc name="a"/>
+        <fieldDesc source="b">
+            <fieldDesc name="c"/>
+        </fieldDesc>
+    </messageDesc>
+
+    <!--Test for name and source attributes-->
+    <messageDesc rootTag="nameAndSource" type="nameAndSource">
+        <fieldDesc name="A"/>
+        <fieldDesc name="B" source="b"/>
+
+        <fieldDesc name="C" source="ccc/cc/c" xpath="true"/>
+
+        <fieldDesc source="D">
+            <attrDesc name="D" source="d"/>
+        </fieldDesc>
+        <fieldDesc source="E">
+            <attrDesc name="E"/>
+        </fieldDesc>
+
+        <fieldDesc source="f">
+            <attrDesc name="F" source="f"/>
+            <fieldDesc source="F">
+                <attrDesc name="FF"/>
+            </fieldDesc>
+        </fieldDesc>
+        <fieldDesc source="g">
+            <attrDesc name="G"/>
+            <fieldDesc source="G">
+                <attrDesc name="GG"/>
+            </fieldDesc>
+        </fieldDesc>
+
+        <fieldDesc name="H" source="h"/>
+        <fieldDesc source="H">
+            <fieldDesc name="HH" source="hh"/>
+        </fieldDesc>
+    </messageDesc>
+</XmlDictionaryDesc>

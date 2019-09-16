@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<infiniteLoopBug>
+    <b>
+        <c>
+            <d>
+                <e f="123" g="1">asd</e>
+            </d>
+        </c>
+    </b>
+    <b>
+        <c>
+            <d>
+                <e f="456" g="2" n="48">fgh</e>
+                <h>A</h>
+            </d>
+        </c>
+    </b>
+    <b>
+        <c>
+            <d>
+                <e f="789" g="3">fgh</e>
+            </d>
+        </c>
+    </b>
+</infiniteLoopBug>

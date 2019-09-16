@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simpleRepeating>
+    <user id="1">admin</user>
+    <user id="2">user</user>
+    <user id="3">guest</user>
+</simpleRepeating>

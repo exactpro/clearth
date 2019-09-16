@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <messageDesc type="A">
+        <fieldDesc name="commonField"/>
+    </messageDesc>
+    <messageDesc type="B">
+        <fieldDesc name="commonField"/>
+    </messageDesc>
+</XmlDictionaryDesc>

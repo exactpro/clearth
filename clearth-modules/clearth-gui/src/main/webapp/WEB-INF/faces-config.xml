@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<faces-config xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd"
+	version="2.0">
+
+	<managed-bean>
+		<managed-bean-name>guestPreferences</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.GuestPreferences</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean eager="true">
+		<managed-bean-name>ApplicationBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.ApplicationBean</managed-bean-class>
+		<managed-bean-scope>application</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>dateTimeBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.DateTimeBean</managed-bean-class>
+		<managed-bean-scope>application</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>userBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.UserBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>authBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.AuthBean</managed-bean-class>
+		<managed-bean-scope>view</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>userManagementBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.UserManagementBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>connectivityBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.ConnectivityBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>guiBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.GUIBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>sendMessagesBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.SendMessagesBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>logsBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.LogsBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>maintainBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.MaintainBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>reportBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.ReportBean</managed-bean-class>
+		<managed-bean-scope>request</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>popUpMsgsBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.PopUpMessagesBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>mvelHelperBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.MvelHelperBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	
+<!-- Automation -->
+	<managed-bean>
+		<managed-bean-name>automationBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.automation.AutomationBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>automationReportsBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.automation.AutomationReportsBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>automationBean</property-name>
+			<value>#{automationBean}</value>
+		</managed-property>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>automationConfigBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.automation.ConfigurationAutomationBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>automationBean</property-name>
+			<value>#{automationBean}</value>
+		</managed-property>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>automationMatricesBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.automation.MatricesAutomationBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>automationBean</property-name>
+			<value>#{automationBean}</value>
+		</managed-property>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>automationStateBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.automation.SavedStateAutomationBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>automationBean</property-name>
+			<value>#{automationBean}</value>
+		</managed-property>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>automationSchedulerBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.automation.SchedulerAutomationBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>automationBean</property-name>
+			<value>#{automationBean}</value>
+		</managed-property>
+	</managed-bean>
+	
+<!-- End of Automation -->
+
+<!--Tools beans-->
+	<managed-bean>
+		<managed-bean-name>toolsBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.ToolsBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>messageParserToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.MessageParserToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>messageToScriptToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.MessageToScriptToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>scriptToMessageToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.ScriptToMessageToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>collectorScannerToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.CollectorScannerToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>configMakerToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.ConfigMakerToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>matrixFromReportToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.MatrixFromReportToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>messageHelperToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.MessageHelperToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>ecToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.ExpressionCalculatorToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>dictionaryValidatorToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.DictionaryValidatorToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>matrixUpdaterToolBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.MatrixUpdaterToolBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+<!--End of Tools beans-->
+
+	<factory>
+		<exception-handler-factory>
+			com.exactprosystems.clearth.web.misc.FacesExceptionHandlerFactory
+		</exception-handler-factory>
+	</factory>
+
+	<lifecycle>
+		<phase-listener>com.exactprosystems.clearth.web.misc.ExpiredSessionPhaseListener</phase-listener>
+	</lifecycle>
+</faces-config>

@@ -1,0 +1,471 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+				xmlns:ui="http://java.sun.com/jsf/facelets"
+				xmlns:h="http://java.sun.com/jsf/html"
+				xmlns:f="http://java.sun.com/jsf/core"
+				xmlns:p="http://primefaces.org/ui"
+				xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<style>
+
+		.noPadding.ui-accordion .ui-accordion-content {
+			padding: 1px;
+		}
+
+		.hide-table-header table thead tr {
+			display: none;
+		}
+
+		.hide-table-header {
+			border-top: 1px solid #e0edf6;
+		}
+
+		.lightBlueAccordion.ui-accordion .ui-icon-triangle-1-s {
+			background-image: url(/clearth/images/ui-icons_000000_256x240.png);
+		}
+
+		.lightBlueAccordion.ui-accordion .ui-icon-triangle-1-e {
+			background-image: url(/clearth/images/ui-icons_000000_256x240.png);
+		}
+
+		.noPadding.ui-panel .ui-panel-content{
+			padding:0px;
+		}
+
+		.lightBlueAccordion.ui-accordion .ui-accordion-header.ui-state-active{
+			color:#000000;
+			background:   #E0EDF6;
+		}
+
+		.lightBlueAccordion.ui-accordion .ui-accordion-header.ui-state-default.ui-corner-all{
+			color:#000000;
+			background:   #E0EDF6;
+		}
+
+		.lightBlueAccordion.ui-accordion .ui-accordion-header.ui-state-default.ui-corner-all{
+			border-color:rgb(224, 237, 246);
+			border-width: 2px;
+		}
+
+		.lightBlueAccordion.ui-accordion .ui-accordion-header.ui-state-active.ui-corner-top{
+			border-color:rgb(224, 237, 246);
+			border-width: 2px 2px 0px 2px;
+			border-style:solid;
+		}
+
+		.lightBlueAccordion.ui-accordion .ui-accordion-content.ui-widget-content{
+			border-color:rgb(224, 237, 246);
+			border-width: 0px 2px 2px 2px;
+			border-style:solid;
+		}
+
+		.lightBlueAccordion .ui-helper-reset {
+			border-color:rgb(224, 237, 246);
+			border-width: 2px 2px 2px 2px;
+			border-style:solid;
+		}
+
+		.lightBlueAccordion .accordionHeader .ui-widget-content{
+			background:   #E0EDF6;
+			width:100%;
+			border:0;
+		}
+
+		.toggledButton{
+			background-color: orange!important;
+			border-color: orange!important;
+		}
+
+	</style>
+	<br/>
+	
+	
+	<h:outputText value="This tool can be used to update matrices and templates by following rules specified in tool's settings." />
+	<br/>
+	<h:outputText value="Tool accepts one matrix file or multiple files in ZIP archive." />
+	<br/>
+	<br/>
+	<h:form id="matrixUpdaterTool" enctype="multipart/form-data">
+		<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
+
+		<p:outputPanel style="width:100%; min-width:1010px">
+		<p:panelGrid style="width:100%">
+			<p:row>
+				<p:column style="width:450px;min-width:450px">
+					<label class="pageTitle" style="margin-bottom:0px">Settings</label>
+					<p:fileUpload fileUploadListener="#{matrixUpdaterToolBean.uploadConfigFile}"
+								  label="Upload"
+								  mode="advanced" auto="true" showButtons="false"
+								  multiple="false" styleClass="simple"
+								  update=":matrixUpdaterTool :Growl ">
+					</p:fileUpload>
+					<p:commandButton id="saveSettings"
+									 value="Save" icon="ui-icon-disk"
+									 actionListener="#{matrixUpdaterToolBean.saveSettings}"
+									 update=":Growl" />
+
+					<p:commandButton value="Reset" icon="ui-icon-refresh"
+									 actionListener="#{matrixUpdaterToolBean.reset}" 
+									 update=":matrixUpdaterTool :Growl"/>
+				</p:column>
+				<p:column >
+					<label class="pageTitle" style="margin-bottom:0px">Matrices</label>
+					<p:fileUpload fileUploadListener="#{matrixUpdaterToolBean.uploadMatrixFile}"
+								  label="File | Archive" mode="advanced"
+								  auto="true" showButtons="false"
+								  accept=".csv,.xls,.xlsx,.zip"
+								  multiple="false" styleClass="simple"
+								  update="matricesFileName :Growl matrixUpdaterTool:updateMatrix">
+					</p:fileUpload>
+					<p:outputLabel id="matricesFileName" value="#{matrixUpdaterToolBean.currentMatrixFileName}"/>
+				</p:column>
+
+				<p:column style="width:130px; min-width:130px; text-align:right;">
+					<p:commandButton id="updateMatrix" value="Start update"
+									 actionListener="#{matrixUpdaterToolBean.start()}"
+									 ajax="true" update=":Growl progressDialogForm"
+									 oncomplete="PF('MUPoll').start(); PF('progressDialog').show();"
+									 style="background-color: green;"
+									 disabled="#{empty matrixUpdaterToolBean.updates or empty  matrixUpdaterToolBean.getCurrentMatrixFileName()}"/>
+				</p:column>
+			</p:row>
+			<f:facet name="footer">
+				<p:row>
+					<p:column  colspan="3"/>
+				</p:row>
+			</f:facet>
+		</p:panelGrid>
+		<p:panelGrid style="height:100%; width:100%;">
+			<p:row style="height:100%">
+				<p:column style="width:35%; border-right-width:thick; min-width:260px; vertical-align:top">
+					<p:commandLink id="updatesHelp" styleClass="linkButton" style="float: left;">
+						<h:graphicImage value="/images/help-icon.png" alt="Info" style="vertical-align: text-top;" />
+					</p:commandLink>
+					<label class="pageSubTitle">Updates</label>
+					<p:overlayPanel for="updatesHelp" style="max-width: 500px;">
+						<h:outputText value="Update contains conditions to find actions and changes to be applied to actions found by that conditions." />
+					</p:overlayPanel>
+					<p:inputText ajax="true" id="newUpdateName" value="#{matrixUpdaterToolBean.updateName}"
+								 placeholder="Name"  style="width:96%; margin-bottom:5px;"/>
+					<div class="upperContainer">
+						<div class="upperLeftContainer">
+							<p:selectOneMenu id="actionTypeSelector" value="#{matrixUpdaterToolBean.updateType}"
+											 ajax="true" update=":Growl">
+								<f:selectItems value="#{matrixUpdaterToolBean.actionTypesList}" var="type" itemLabel="#{type.value}" />
+								<p:ajax update="updatesTable" />
+							</p:selectOneMenu>
+						</div>
+						<div class="upperRightContainer">
+							<p:commandButton value="Add" icon="ui-icon-plusthick" title="Add Update"
+											 actionListener="#{matrixUpdaterToolBean.createUpdate()}"
+											 update="updatesTable newUpdateName actionTypeSelector matrixUpdaterTool:updateMatrix" ajax="true"
+											  />
+						</div>
+					</div>
+					<p:dataTable value="#{matrixUpdaterToolBean.updates}" id="updatesTable" widgetVar="updatesTableWidget"
+								 var="update" rowKey="#{update}" editable="#{matrixUpdaterToolBean.updateTableEditMode}" editMode="cell"
+								 selectionMode="single"	selection="#{matrixUpdaterToolBean.currentUpdate}"
+								 scrollable="true" scrollHeight="300"
+								 tableStyle="table-layout: auto;">
+						<p:column headerText="Name">
+							<p:cellEditor>
+								<f:facet name="output">
+									<span style="display: inline-block; width: 100%; height: 100%">
+										<h:outputText value="#{update.name}" />
+									</span>
+								</f:facet>
+								<f:facet name="input">
+									<p:inputText value="#{update.name}" style="width:100%"/>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column headerText="Type">
+							<p:cellEditor>
+								<f:facet name="output">
+									<span style="display: inline-block; width: 100%; height: 100%">
+										<h:outputText value="#{update.process.getValue()}" />
+									</span>
+								</f:facet>
+								<f:facet name="input">
+									<h:selectOneMenu value="#{update.process}" style="width:100%">
+										<f:selectItems value="#{matrixUpdaterToolBean.actionTypesList}"
+													   var="process" itemLabel="#{process.value}" itemValue="#{process}" />
+									</h:selectOneMenu>
+								</f:facet>
+							</p:cellEditor>
+						</p:column>
+						<p:column style="width:26px">
+							<f:facet name="header">
+								<p:commandButton id="switchUpdatesEditMode" icon="ui-icon ui-icon-pencil" title="Switch Edit Mode"
+											 actionListener="#{matrixUpdaterToolBean.switchUpdatesEditMode()}"
+											 update="updatesTable switchUpdatesEditMode" ajax="true"
+											 styleClass="#{!matrixUpdaterToolBean.updateTableEditMode ? '' : 'toggledButton'}"/>
+							</f:facet>
+							<p:commandLink title="Remove Update" action="#{matrixUpdaterToolBean.removeUpdate(update)}"
+									update="updatesTable matrixUpdaterTool:panelChanges matrixUpdaterTool:panelConditions matrixUpdaterTool:updateMatrix">
+								<h:outputText class="ui-icon ui-icon-trash"/>
+							</p:commandLink>
+						</p:column>
+						<p:ajax event="rowSelect"
+								update="matrixUpdaterTool:panelChanges matrixUpdaterTool:panelConditions "/>
+					</p:dataTable>
+				</p:column>
+				<p:column style=" border-right-width:thin; vertical-align:top; width:100%; min-width:375px;">
+					<h:panelGroup layout="block" id="panelConditions" style="height:100%">
+						<p:overlayPanel for="conditionHelp" style="max-width: 500px;">
+							<h:outputText value="Condition defines key fields to find actions. Pattern and other condition functions can be used in key field values, e.g. @{pattern()}" />
+							<br/>
+							<h:outputText value="Changes will be applied to each action found by conditions." />
+						</p:overlayPanel>
+						<p:commandLink id="conditionHelp" styleClass="linkButton" style="float: left;">
+							<h:graphicImage value="/images/help-icon.png" alt="Info" style="vertical-align: text-top;" />
+						</p:commandLink>
+						<label class="pageSubTitle">Conditions</label>
+						<div style="display: flex; flex-direction: row;" >
+							<div style="width: 100%; margin-right:15px; margin-bottom:15px;">
+								<p:inputText ajax="true" id="targetName" placeholder="Name"
+											 value="#{matrixUpdaterToolBean.conditionName}" style="width:100%"/>
+							</div>
+							<div style="width: auto;">
+								<p:outputPanel id="pnlAddCondition">
+									<p:commandButton value="Add" icon="ui-icon-plusthick" title="Add Condition"
+													 actionListener="#{matrixUpdaterToolBean.createCondition()}"
+													 update="targetName conditionsList " ajax="true"
+													 disabled="#{matrixUpdaterToolBean.currentUpdate==null}"/>
+								</p:outputPanel>
+							</div>
+						</div>
+						<p:panel rendered="#{matrixUpdaterToolBean.conditionsList ==null || matrixUpdaterToolBean.conditionsList.isEmpty()}">
+							No records found.
+						</p:panel>
+						<p:scrollPanel mode="native" style="height:360px; border:0;">
+							<p:accordionPanel id="conditionsList" value="#{matrixUpdaterToolBean.conditionsList}"
+									var="condition" multiple="true" styleClass="lightBlueAccordion noPadding">
+								<p:tab>
+									<f:facet name="title" >
+										<p:panelGrid styleClass="accordionHeader">
+											<p:row style="border:0;">
+												<p:column style="width:100%">
+													<p:inplace onclick="return false;" editor="true">
+														<p:inputText value="#{condition.name}" onclick="return false;"/>
+													</p:inplace>
+												</p:column>
+												<p:column style="width:60px; text-align:right; padding-right:0px">
+													<p:commandButton value="Key&#160;field" onclick="event.stopPropagation();"
+															 update=":KeyFieldDialog" oncomplete="PF('keyFieldDialog').show()"
+															 actionListener="#{matrixUpdaterToolBean.setCurrentCondition(condition)}"
+															 icon="ui-icon-plus"
+															 title="Add key field" />
+												</p:column>
+												<p:column style="width:95px; text-align:right; padding-right:0px">
+													<p:commandButton icon="ui-icon ui-icon-trash"
+															 title="Remove Condition"
+															 onclick="event.stopPropagation();"
+															 value="Condition">
+														<p:ajax listener="#{matrixUpdaterToolBean.removeCondition(condition)}"
+																update="matrixUpdaterTool:conditionsList" />
+													</p:commandButton>
+												</p:column>
+											</p:row>
+										</p:panelGrid>
+									</f:facet>
+									<p:dataTable id="keyFieldsTable" var="keyfield"
+												 value="#{condition.getCells()}"
+												 style="width: 100%;" tableStyle="table-layout: auto;"
+												 editable="true" editMode="cell" styleClass="hide-table-header">
+										<p:column>
+											<p:cellEditor>
+												<f:facet name="output"><h:outputText value="#{keyfield.column}" /></f:facet>
+												<f:facet name="input"><p:inputText value="#{keyfield.column}" style="width:100%"/></f:facet>
+											</p:cellEditor>
+										</p:column>
+										<p:column>
+											<p:cellEditor>
+												<f:facet name="output"><h:outputText value="#{keyfield.value}" /></f:facet>
+												<f:facet name="input"><p:inputText value="#{keyfield.value}" style="width:100%"/></f:facet>
+											</p:cellEditor>
+										</p:column>
+										<p:column style="width:26px">
+											<p:commandLink title="Remove key field" action="#{matrixUpdaterToolBean.removeConditionCell(condition, keyfield)}"
+													update="matrixUpdaterTool:conditionsList">
+												<h:outputText class="ui-icon ui-icon-trash"/>
+											</p:commandLink>
+										</p:column>
+									</p:dataTable>
+								</p:tab>
+							</p:accordionPanel>
+						</p:scrollPanel>
+						<p:blockUI block="panelConditions" blocked="#{matrixUpdaterToolBean.currentUpdate==null}"/>
+					</h:panelGroup>
+				</p:column>
+				<!-- CHANGES -->
+				<p:column style=" width:25%; min-width:300px; vertical-align:top">
+					<h:panelGroup layout="block" id="panelChanges"  style="height:100%" >
+						<p:overlayPanel for="changesHelp" style="max-width: 500px;">
+							<h:outputText value="Change defines modification that will be applied to matrices." />
+							<br/>
+							<h:outputText value="&#9679; In case of 'new actions' update type user can upload matrix with actions that will be added before/after each action found by conditions." />
+							<br/>
+							<h:outputText value="&#9679; Otherwise change defines field that will be added/modified in each action found by conditions." />
+						</p:overlayPanel>
+						<p:commandLink id="changesHelp" styleClass="linkButton" style="float: left;">
+							<h:graphicImage value="/images/help-icon.png" alt="Info" style="vertical-align: text-top;" />
+						</p:commandLink>
+						<label class="pageSubTitle">Changes</label>
+						<h:panelGroup id="changeAddActionProperties" layout="block" rendered="#{matrixUpdaterToolBean.isNeedToUploadChanges()}">
+							<p:panel>
+								<div class="upperContainer">
+									<div class="upperLeftContainer">
+										<label style="display: inline-block; margin-bottom: 10px; font-weight:bold">Actions</label>
+									</div>
+									<div class="upperRightContainer">
+										<p:fileUpload fileUploadListener="#{matrixUpdaterToolBean.uploadAdditionFile}"
+												mode="advanced" auto="true" showButtons="false"
+												multiple="false"
+												styleClass="simple" update="Growl actionsFileName" style="margin-bottom: 5px;"/>
+									</div>
+								</div>
+								<p:outputLabel id="actionsFileName" value="#{matrixUpdaterToolBean.getAdditionFile()}"/>
+							</p:panel>
+							<p:panel>
+								<label style="display: inline-block; margin-bottom: 10px; font-weight:bold">Settings</label>
+								<h:panelGroup style="display: flex; justify-content: flex-start; flex-wrap: nowrap; margin-bottom: 5px; align-items:center">
+									<p:outputLabel value="Place actions" style="margin-right:10px"/>
+									<p:selectOneMenu value="#{matrixUpdaterToolBean.before}" immediate="true" ajax="true">
+										<f:selectItem itemLabel="before" itemValue="#{true}" />
+										<f:selectItem itemLabel="after" itemValue="#{false}" />
+										<p:ajax update="changeAddActionProperties" />
+									</p:selectOneMenu>
+									<p:outputLabel value="condition line" style="margin-left:10px"/>
+								</h:panelGroup>
+								<p:selectBooleanCheckbox value="#{matrixUpdaterToolBean.updateIDs}"
+										ajax="true" itemLabel="Update IDs">
+									<p:ajax update="changeAddActionProperties" />
+								</p:selectBooleanCheckbox>
+							</p:panel>
+						</h:panelGroup>
+						<h:panelGroup id="changeProperties" rendered="#{!matrixUpdaterToolBean.isNeedToUploadChanges()}">
+							<p:inputText ajax="true" id="changeCellName" value="#{matrixUpdaterToolBean.column}"
+									placeholder="Field Name" style="width:96%; margin-bottom:5px;"/>
+							<div class="upperContainer">
+								<div class="upperLeftContainer">
+									<p:inputText ajax="true" id="changeCellValue" value="#{matrixUpdaterToolBean.value}"
+											placeholder="Field Value" />
+								</div>
+								<div class="upperRightContainer">
+									<p:commandButton value="Add" icon="ui-icon-plusthick" title="Add Field"
+											actionListener="#{matrixUpdaterToolBean.addChangeCell()}"
+											update="changesTable changeCellValue changeCellName" ajax="true"/>
+								</div>
+							</div>
+							<p:dataTable id="changesTable" value="#{matrixUpdaterToolBean.changes}" widgetVar="changesTableWidget"
+										 var="change" rowKey="#{change}" editable="true" editMode="cell"
+										 scrollable="true" scrollHeight="300"
+										 tableStyle="table-layout: auto;">
+								<p:column headerText="Name">
+									<p:cellEditor>
+										<f:facet name="output">
+											<span style="display: inline-block; width: 100%; height: 100%">
+												<h:outputText value="#{change.column}" />
+											</span>
+										</f:facet>
+										<f:facet name="input">
+											<p:inputText value="#{change.column}" style="width:100%"/>
+										</f:facet>
+									</p:cellEditor>
+								</p:column>
+								<p:column headerText="Value">
+									<p:cellEditor>
+										<f:facet name="output">
+											<span style="display: inline-block; width: 100%; height: 100%">
+												<h:outputText value="#{change.value}" />
+											</span>
+										</f:facet>
+										<f:facet name="input">
+											<p:inputText value="#{change.value}" style="width:100%"/>
+										</f:facet>
+									</p:cellEditor>
+								</p:column>
+								<p:column style="width:26px">
+									<p:commandLink title="Remove field" action="#{matrixUpdaterToolBean.removeChangeCell(change)}"
+											update="changesTable">
+										<h:outputText class="ui-icon ui-icon-trash"/>
+									</p:commandLink>
+								</p:column>
+							</p:dataTable>
+						</h:panelGroup>
+						<p:blockUI block="panelChanges"
+								   blocked="#{matrixUpdaterToolBean.isDisableChanges()}"/>
+					</h:panelGroup>
+				</p:column>
+			</p:row>
+		</p:panelGrid>
+		</p:outputPanel>
+	</h:form>
+
+	<h:form id="MUPolling">
+		<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
+		<p:poll interval="2" widgetVar="MUPoll" autoStart="false" stop="#{!matrixUpdaterToolBean.running}"
+				update=":progressDialogForm :Growl" />
+	</h:form>
+
+	<p:dialog id="progressDlg" header="Updating matrices"
+				  widgetVar="progressDialog"
+				  resizable="false" modal="true"
+				  width="500px"
+				  style="margin: 0 auto"
+				  closable="false">
+		<h:form id="progressDialogForm" >
+			<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
+			<p:panelGrid style="width:100%;" id="progressDialog">
+				<p:row style="border:0">
+					<p:column style="width:100%">
+						<p:progressBar widgetVar="pbAjax" ajax="false"
+								value="#{matrixUpdaterToolBean.progress}"
+								labelTemplate="Updating matrices ({value}%)" styleClass="animated"
+								global="false" style="width:350px">
+						</p:progressBar>
+					</p:column>
+					<p:column style="width:100px; text-align:right; padding: 4px 10px 0 0">
+						<p:commandButton value="Cancel" rendered="#{matrixUpdaterToolBean.running}"
+								actionListener="#{matrixUpdaterToolBean.cancel()}"
+								ajax="true" update=":Growl" icon="ui-icon-cancel"
+								style="background-color: red; width:100px"
+								oncomplete="PF('progressDialog').hide();"/>
+						<p:commandButton value="Download" rendered="#{empty(matrixUpdaterToolBean.error) and matrixUpdaterToolBean.resultAvailable}"
+								actionListener="#{matrixUpdaterToolBean.downloadResult()}"
+								ajax="true" update=":Growl" style="width:100px" icon="ui-icon-arrowthickstop-1-s"
+								oncomplete="PF('progressDialog').hide();"/>
+						<p:commandButton id="closeProgressDialog" value="Close" rendered="#{not empty matrixUpdaterToolBean.error}"
+								ajax="true" update=":Growl" icon="ui-icon-close"
+								oncomplete="PF('progressDialog').hide();"/>
+					</p:column>
+				</p:row>
+			</p:panelGrid>
+			<p:outputPanel style="width:100%">
+				<h:outputText value="#{matrixUpdaterToolBean.error}" style="color: red;" />
+			</p:outputPanel>
+		</h:form>
+	</p:dialog>
+
+
+	<p:dialog id="KeyFieldDlg" header="Condition key fields"
+			widgetVar="keyFieldDialog" closeOnEscape="true"
+			resizable="false" modal="true" style="margin: 0 auto">
+		<h:form id="KeyFieldDialog">
+			<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
+			<label class="pageSubTitle">New key field</label>
+			<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+				<h:panelGrid columns="3">
+					<p:inputText id="keyFieldName" value="#{matrixUpdaterToolBean.newConditionCell.column}"
+							title="Field Name" placeholder="Field Name"/>
+					<p:inputText id="keyFieldValue" value="#{matrixUpdaterToolBean.newConditionCell.value}"
+							title="Field Value" placeholder="Field Value"/>
+					<p:commandButton value="Add key field" icon="ui-icon-plusthick"
+							update=":KeyFieldDialog :matrixUpdaterTool:conditionsList"
+							actionListener="#{matrixUpdaterToolBean.addConditionCell}"
+							oncomplete="PF('keyFieldDialog').hide();">
+					</p:commandButton>
+				</h:panelGrid>
+			</div>
+		</h:form>
+	</p:dialog>
+</ui:composition>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <messageDesc type="C">
+        <fieldDesc name="common">
+            <defaultAttrDesc value="1" name="a"/>
+            <defaultAttrDesc value="2" name="b"/>
+            <attrDesc name="s"/>
+            <attrDesc name="t"/>
+            <attrDesc name="c"/>
+            <attrDesc name="d"/>
+        </fieldDesc>
+    </messageDesc>
+    <messageDesc type="B">
+        <fieldDesc name="common">
+            <defaultAttrDesc value="3" name="e"/>
+            <defaultAttrDesc value="1" name="a"/>
+            <defaultAttrDesc value="2" name="b"/>
+            <attrDesc name="f"/>
+            <attrDesc name="c"/>
+            <attrDesc name="d"/>
+        </fieldDesc>
+    </messageDesc>
+    <messageDesc type="A">
+        <fieldDesc name="common">
+            <defaultAttrDesc value="1" name="a"/>
+            <defaultAttrDesc value="2" name="b"/>
+            <attrDesc name="c"/>
+            <attrDesc name="d"/>
+        </fieldDesc>
+    </messageDesc>
+</XmlDictionaryDesc>

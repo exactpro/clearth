@@ -1,0 +1,46 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+			xmlns:msg="http://exactpro.com/clearth/message"
+			jaxb:version="2.1">
+	<xsd:import schemaLocation="message.xsd" namespace="http://exactpro.com/clearth/message"/>
+
+	<xsd:complexType name="FlatMessageKeyDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageKeyDesc"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="FlatMessageFieldDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageFieldDesc">
+				<xsd:attribute name="position" type="xsd:int" /> <!-- Field position -->
+				<xsd:attribute name="length" type="xsd:int" />  <!-- Field length -->
+				<xsd:attribute name="name" type="xsd:string"  />  <!-- Field name -->
+				<xsd:attribute name="alignment" type="xsd:string" default="left"/> <!-- Field alignment, possible values - "left" or "right" -->
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="FlatMessageDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageDesc">
+				<xsd:sequence>
+					<xsd:element name="key" type="FlatMessageKeyDesc" maxOccurs="unbounded"/>
+					<xsd:element name="fieldDesc" type="FlatMessageFieldDesc" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:element name="FlatMessageDictionaryDesc">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="msg:DictionaryDesc">
+					<xsd:sequence>
+						<xsd:element name="messageDesc" type="FlatMessageDesc" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

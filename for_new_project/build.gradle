@@ -1,0 +1,83 @@
+plugins {
+	id 'war'
+	id 'org.gretty' version '2.3.1'
+}
+
+ext {
+	core_version = '@CORE_VERSION@'
+	war_name = 'clearth.war'
+}
+
+repositories {
+	maven {
+		name "SharedDir" // for local builds only
+		url file("@CORE_SHARED_DIR@")
+	}
+	jcenter()
+}
+
+dependencies {
+	implementation "com.exactprosystems.clearth:clearth-core:${core_version}"
+	implementation "com.exactprosystems.clearth:clearth-gui:${core_version}"
+}
+
+configurations {
+	all {
+		exclude group: 'com.google.guava', module: 'guava-jdk5'
+	}
+}
+
+
+static def getDate() {
+	def date = new Date()
+	def formattedDate = date.format('yyyyMMdd.HHmmss')
+	return formattedDate
+}
+
+
+/*** Tasks ***/
+
+war {
+	//Faster WAR creation
+	entryCompression = org.gradle.api.tasks.bundling.ZipEntryCompression.STORED
+	archiveName = war_name
+}
+
+gretty {
+	contextPath = "clearth"
+	webInfIncludeJarPattern = '.*clearth.*jar$|.*primefaces.*jar$|.*jsf.*jar$|.*freemarker.*jar$'
+	servletContainer = 'jetty9.4'
+	serverConfigFile = 'jetty94.xml'
+}
+
+task copyWar(type: Copy, dependsOn: war) {
+	from "build/libs/${war_name}"
+	into 'jetty/webapps/'
+}
+
+task runClearTH(type: JavaExec, 
+		group: 'ClearTH', 
+		description: 'Builds WAR file, deploys it to Jetty and starts Jetty with remote debugging enabled', 
+		dependsOn: copyWar) {
+	workingDir = file('jetty')
+	classpath = files('jetty/start.jar')
+	main = 'org.eclipse.jetty.start.Main'
+	//debug = true
+	jvmArgs '-Xdebug', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'
+}
+
+task buildRelease(type: Zip, group: 'ClearTH',
+		description: 'Builds ClearTH release to run within Jetty, i.e. WAR file and configuration packed into ZIP archive',  
+		dependsOn: copyWar) {
+	from '.'
+	include "jetty/webapps/${war_name}"
+	include 'cfg/**/*'
+	
+	archiveBaseName = 'clearth'
+	archiveAppendix = ''
+	archiveVersion = getDate()
+	archiveClassifier = ''
+	archiveExtension = 'zip'
+	
+	destinationDirectory = file("$buildDir/dist")
+}

@@ -1,0 +1,107 @@
+/******************************************************************************
+ * Copyright 2009-2019 Exactpro Systems Limited
+ * https://www.exactpro.com
+ * Build Software to Test Software
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.exactprosystems.memorymonitor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.exactprosystems.clearth.utils.Utils;
+
+public class MemoryMonitor extends Thread
+{
+	private static final Logger logger = LoggerFactory.getLogger(MemoryMonitor.class);
+	protected static final long DEFAULT_SLEEP = 10000,
+			DEFAULT_LARGEDIFF = 50000000,
+			DEFAULT_LOWMEMORY = 100000000;
+	
+	protected final Runtime rm = Runtime.getRuntime();
+	protected final long sleep,
+			largeDiff,
+			lowMemory;
+	
+	//TODO after adding config:
+	//init parameters from config
+	public MemoryMonitor(String name)
+	{
+		super(name);
+		sleep = DEFAULT_SLEEP;
+		largeDiff = DEFAULT_LARGEDIFF;
+		lowMemory = DEFAULT_LOWMEMORY;
+	}
+	
+	public MemoryMonitor(String name, long sleep, long largeDiff, long lowMemory)
+	{
+		super(name);
+		this.sleep = sleep;
+		this.largeDiff = largeDiff;
+		this.lowMemory = lowMemory;
+	}
+	
+	@Override
+	public void run()
+	{
+		long max = rm.maxMemory(),
+				maxMb = toMegabytes(max),
+				total = rm.totalMemory(),
+				totalMb = toMegabytes(total),
+				free = rm.freeMemory(),
+				freeMb = toMegabytes(free);
+		logger.info("Maximum available memory: "+maxMb+" Mb ("+max+")");
+		logger.info("Currently available memory: "+totalMb+" Mb ("+total+")");
+		logger.info("Free memory: "+freeMb+" Mb ("+free+")"+Utils.EOL);
+		while (true)
+		{
+			try
+			{
+				Thread.sleep(sleep);
+			}
+			catch (InterruptedException e)
+			{
+				logger.info("Wait for next iteration interrupted, monitoring stopped");
+				return;
+			}
+			
+			long currentTotal = rm.totalMemory(),
+					currentTotalMb = toMegabytes(currentTotal),
+					currentFree = rm.freeMemory(),
+					currentFreeMb = toMegabytes(currentFree);
+			logger.info("Available: {} Mb ({})", currentTotalMb, currentTotal);
+			logger.info("Free: {} Mb ({})"+Utils.EOL, currentFreeMb, currentFree);
+			
+			if (logger.isWarnEnabled())
+			{
+				if (free-currentFree >= largeDiff)
+					logger.warn("Large memory consumption detected!"+Utils.EOL);
+				if ((max-currentTotal <= lowMemory) && (currentTotal-currentFree <= lowMemory))
+					logger.warn("MEMORY LOW! Already allocated "+currentTotalMb+" Mb of maximum "+maxMb+" Mb, "+currentFreeMb+" Mb left"+Utils.EOL);
+			}
+			
+			total = currentTotal;
+			totalMb = currentTotalMb;
+			free = currentFree;
+			freeMb = currentFreeMb;
+		}
+	}
+	
+	
+	private long toMegabytes(long bytes)
+	{
+		return Math.round((double) bytes/1024/1024);
+	}
+}

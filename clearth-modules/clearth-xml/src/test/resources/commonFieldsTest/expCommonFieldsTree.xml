@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <messageDesc type="A">
+        <fieldDesc repeat="true" name="common">
+            <fieldDesc repeat="true" name="abde">
+                <fieldDesc repeat="true" name="ab">
+                    <fieldDesc name="a"/>
+                    <fieldDesc name="b"/>
+                </fieldDesc>
+                <fieldDesc repeat="true" name="de">
+                    <fieldDesc name="d"/>
+                    <fieldDesc name="e"/>
+                </fieldDesc>
+            </fieldDesc>
+            <fieldDesc repeat="true" name="bcf">
+                <fieldDesc repeat="true" name="bc">
+                    <fieldDesc name="b"/>
+                    <fieldDesc name="c"/>
+                </fieldDesc>
+                <fieldDesc name="f"/>
+            </fieldDesc>
+        </fieldDesc>
+    </messageDesc>
+</XmlDictionaryDesc>

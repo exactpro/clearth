@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui"
+		template="../templates/ui.xhtml">
+	
+	<ui:define name="title">Login</ui:define>
+	
+	<f:metadata>
+		<f:viewParam name="requestUrl" value="#{authBean.requestUrl}" />
+		<f:event type="preRenderView" listener="#{authBean.pullValuesFromFlash}"/>
+	</f:metadata>
+	
+	<ui:define name="page">
+		<div id="loginContainer">
+			<h:form id="loginPanel">
+				<div id="#{!userBean.newYear ? 'cthLogo' : 'cthLogoNY'}" />
+				<p:focus context="loginPanel" />
+				<p:inputText id="userName" styleClass="authorizeField" value="#{authBean.userName}" autocomplete="off" />
+				<p:watermark for="userName" value="Username" />
+				<p:password id="password" styleClass="authorizeField" value="#{authBean.password}" feedback="false" />
+				<p:watermark for="password" value="Password" />
+				<p:commandButton styleClass="loginButton" value="Sign in" action="#{authBean.login}"
+						ajax="false" update="loginPanel" />
+				<p:messages id="msg" styleClass="loginError" autoUpdate="false" showSummary="false" showDetail="true" />
+				<p:effect type="drop" event="load" for="msg" delay="5000">
+					<f:param name="mode" value="'hide'" />
+					<f:param name="direction" value="'up'" />
+				</p:effect>
+			</h:form>
+			<!-- <p class="version"></p> -->
+			<h:form>
+				<p style="margin-top: 0px" id="copyright">&copy; 2011-2019 Exactpro Systems, LLC<span style="margin-left: 10px;"><h:outputText value="#{ApplicationBean.svnRevisionInfo}" /></span></p>
+			</h:form>
+			<a href="http://www.exactprosystems.com">
+				<div id="companyLogo"></div>
+			</a>
+		</div>
+	</ui:define>
+</ui:composition>

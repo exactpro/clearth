@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nameAndSource>
+    <A>1</A>
+    <b>2</b>
+    <ccc>
+        <cc>
+            <c>3</c>
+        </cc>
+    </ccc>
+    <D d="4"/>
+    <E E="5"/>
+    <f f="6">
+        <F FF="66"/>
+    </f>
+    <g G="7">
+        <G GG="77"/>
+    </g>
+    <h>8</h>
+    <H>
+        <hh>88</hh>
+    </H>
+</nameAndSource>

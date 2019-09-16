@@ -1,0 +1,79 @@
+html {
+	font-family: sans-serif;
+	font-size: small;
+	padding: 0 10px;
+}
+
+h2,
+h3 {
+	font-weight: normal;
+}
+
+table {
+	border: 1px solid #c9dfee;
+}
+
+table th {
+	font-weight: normal;
+	background-color: #e0edf6;
+	color: #3484b2;
+	padding: 4px 10px;
+}
+
+table td {
+	padding: 4px 10px;
+}
+
+a {
+	color: #3484b2;
+}
+
+.info-panel {
+	float: right;
+	color: gray;
+	font-size: smaller;
+}
+
+.info-panel > div {
+	padding-bottom: 5px;
+}
+
+.failed {
+	background-color: #ffcdd2;
+}
+
+/* Tabs */
+
+#tabs .tab {
+	display: inline-block;
+	border: 1px solid #3f97ca;
+	color: #3f97ca;
+	margin-right: -1px;
+	padding: 5px 10px;
+	cursor: pointer;
+}
+
+#tabs .tab:first-child {
+	border-radius: 3px 0 0 3px;
+}
+
+#tabs .tab:last-child {
+	border-radius: 0 3px 3px 0;
+}
+
+#tabs .active {
+	background: #3f97ca;
+	color: #fff;
+}
+
+#tabs .tabContent {
+	padding: 20px 0;
+}
+
+#tabs .hide {
+	display: none;
+}
+
+#tabs .show {
+	display: block;
+}

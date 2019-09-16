@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <commonFieldsGroupDesc name="modificationInfoFields">
+        <fieldDesc name="modificationDate"/>
+        <fieldDesc name="modificationTime"/>
+    </commonFieldsGroupDesc>
+    <commonFieldsGroupDesc name="resultFields">
+        <fieldDesc name="statusCode"/>
+        <fieldDesc name="message"/>
+    </commonFieldsGroupDesc>
+    <messageDesc type="A">
+        <fieldDesc name="id"/>
+        <fieldDesc reference="modificationInfoFields"/>
+        <fieldDesc reference="resultFields"/>
+        <fieldDesc name="price"/>
+    </messageDesc>
+    <messageDesc type="B">
+        <fieldDesc name="id"/>
+        <fieldDesc reference="resultFields"/>
+        <fieldDesc name="instrument"/>
+        <fieldDesc reference="modificationInfoFields"/>
+    </messageDesc>
+</XmlDictionaryDesc>

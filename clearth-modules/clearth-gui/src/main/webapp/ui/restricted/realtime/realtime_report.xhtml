@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <h:outputText value="#{reportBean.reportHead}" escape="false" />
+</h:head>
+
+<h:body>
+    <h:outputText value="#{reportBean.reportBody}" escape="false" />
+    <p:messages id="messages" showDetail="true" autoUpdate="true" />
+
+    <script type="text/javascript">
+        var originalShowhide = showhide;
+        showhide = function(sender, id)
+        {
+            e = document.getElementById(id);
+            e.style.display = e.style.display == 'block' ? 'none' : 'block';
+            sender.style.backgroundImage = e.style.display == 'block' ? 'url(hide.gif)' : 'url(show.gif)';
+            
+            if (e.style.display == 'block')
+            {
+                localStorage[id] = id;
+            }
+            else
+            {
+                localStorage.removeItem(id);
+            }
+        }
+        
+        function restoreNodes()
+        {
+            for (var i in localStorage)
+            {
+                e = document.getElementById(localStorage[i]);
+                originalShowhide(e.previousElementSibling, localStorage[i]);
+            }
+        }
+        
+        window.onload = function()
+        {
+            restoreNodes();
+        };
+    
+        window.onblur = function ()
+        {
+            localStorage.clear();
+        }
+    </script>
+</h:body>
+</html>

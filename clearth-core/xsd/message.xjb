@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<jxb:bindings version="2.0"
+		xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+		jxb:extensionBindingPrefixes="xjc" >
+
+<jxb:bindings schemaLocation="message.xsd" node="/xsd:schema">
+        <jxb:bindings node="//xsd:attribute[@name='value']">
+            <jxb:property>
+                <jxb:baseType>
+                    <jxb:javaType name="java.util.regex.Pattern"
+                        parseMethod="com.exactprosystems.clearth.connectivity.iface.PatternCompiler.parsePattern"
+                        printMethod="com.exactprosystems.clearth.connectivity.iface.PatternCompiler.printPattern"/>
+                </jxb:baseType>
+            </jxb:property>
+        </jxb:bindings>
+    </jxb:bindings>
+</jxb:bindings>

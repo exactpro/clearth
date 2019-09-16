@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MessageHelperConfigs>
+	<MessageHelperConfig>
+		<Name>Xml</Name>
+		<MessageHelper>com.exactprosystems.clearth.connectivity.xml.XmlMessageHelper</MessageHelper>
+		<DictionaryFile>xml.xml</DictionaryFile>
+	</MessageHelperConfig>
+	<MessageHelperConfig>
+		<Name>Swift</Name>
+		<MessageHelper>com.exactprosystems.clearth.connectivity.swift.SwiftMessageHelper</MessageHelper>
+		<DictionaryFile>swift.xml</DictionaryFile>
+	</MessageHelperConfig>
+</MessageHelperConfigs>

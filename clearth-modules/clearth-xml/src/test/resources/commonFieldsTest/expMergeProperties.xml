@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <messageDesc type="A">
+        <fieldDesc repeat="false" mandatory="true" source="price" name="nowItIsNotRG">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+        <fieldDesc repeat="true" mandatory="false" source="price" name="optionalRg">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+        <fieldDesc repeat="true" mandatory="true" source="originalPrice" name="rgWithCustomSource">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+        <fieldDesc repeat="true" mandatory="true" source="price" name="renamedRg">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+        <fieldDesc repeat="true" mandatory="true" source="price" name="commonRG">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+    </messageDesc>
+    <messageDesc type="B">
+        <fieldDesc repeat="true" mandatory="true" name="mandatoryRG">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+        <fieldDesc name="complexField">
+            <fieldDesc source="val" name="value"/>
+            <fieldDesc source="qty" name="quantity"/>
+        </fieldDesc>
+    </messageDesc>
+</XmlDictionaryDesc>

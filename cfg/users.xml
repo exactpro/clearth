@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Users>
+    <User>
+        <Name>admin</Name>
+        <Password>UXjS9gC732zEhATsf+KY5A==</Password>
+        <Role>admin</Role>
+    </User>
+    <User>
+        <Name>user</Name>
+        <Password>agkylzM9ZCz5w0l2PyVOVw==</Password>
+        <Role>user</Role>
+    </User>
+    <User>
+        <Name>power</Name>
+        <Password>vbQ6TmvxT3LEmly733yzGA==</Password>
+        <Role>poweruser</Role>
+    </User>
+</Users>

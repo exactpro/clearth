@@ -1,0 +1,18 @@
+dependencies {
+	compile project(":clearth-modules:clearth-style")
+	
+	implementation "javax.el:el-api:2.2"
+	compile "org.primefaces:primefaces:6.2"
+}
+
+publishing {
+	publications {
+		gui(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-gui'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <commonFieldDesc name="a"/>
+    <commonFieldDesc name="b"/>
+    <commonFieldDesc name="c"/>
+    <commonFieldDesc name="d"/>
+    <commonFieldDesc name="e"/>
+    <commonFieldDesc name="f"/>
+    
+    <commonFieldDesc repeat="true" name="ab">
+        <fieldDesc reference="a"/>
+        <fieldDesc reference="b"/>
+    </commonFieldDesc>
+    <commonFieldDesc repeat="true" name="bc">
+        <fieldDesc reference="b"/>
+        <fieldDesc reference="c"/>
+    </commonFieldDesc>
+    <commonFieldDesc repeat="true" name="de">
+        <fieldDesc reference="d"/>
+        <fieldDesc reference="e"/>
+    </commonFieldDesc>
+    
+    <commonFieldDesc repeat="true" name="abde">
+        <fieldDesc reference="ab"/>
+        <fieldDesc reference="de"/>
+    </commonFieldDesc>
+    <commonFieldDesc repeat="true" name="bcf">
+        <fieldDesc reference="bc"/>
+        <fieldDesc reference="f"/>
+    </commonFieldDesc>
+    
+    <commonFieldDesc repeat="true" name="common">
+        <fieldDesc reference="abde"/>
+        <fieldDesc reference="bcf"/>
+    </commonFieldDesc>
+    
+    <messageDesc type="A">
+        <fieldDesc reference="common"/>
+    </messageDesc>
+</XmlDictionaryDesc>

@@ -1,0 +1,204 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui">
+
+
+	<h3>Decimal Format</h3>
+	<p>
+		You can use DecimalFormat to parse and format various numbers in any locale.
+		Use DecimalFormat(pattern) constructor to create new formatter.
+		The formatter consists of pattern and symbols. Symbols can be changed using specific API.
+	</p>
+	<p>
+		<b>Example:</b>
+		<br/>
+		new DecimalFormat(##.##).setDecimalSeparator(,)
+	</p>
+	<h3>Structure of the pattern:</h3>
+	<table style="border-spacing:5px;">
+		<tr>
+			<td>
+				pattern
+			</td>
+			<td>
+				positivePattern {;negativePattern}
+			</td>
+		</tr>
+		<tr>
+			<td>
+				positivePattern
+			</td>
+			<td>
+				{prefix}integer{.fraction}{suffix}
+			</td>
+		</tr>
+		<tr>
+			<td>
+				negativePattern
+			</td>
+			<td>
+				the same structure as for the positivePattern
+			</td>
+		</tr>
+		<tr>
+			<td>
+				prefix
+			</td>
+			<td>
+				\\u0000..\\uFFFD - characters
+			</td>
+		</tr>
+		<tr>
+			<td>
+				suffix
+			</td>
+			<td>
+				the same structure as for the prefix
+			</td>
+		</tr>
+		<tr>
+			<td>
+				integer
+			</td>
+			<td>
+				'#'*'0'*'0'
+			</td>
+		</tr>
+		<tr>
+			<td>
+				fraction
+			</td>
+			<td>
+				'0'*'#'*
+			</td>
+		</tr>
+	</table>
+	<p>
+		<b>Used notation:</b>
+		<br/>
+		0 is used for minimum integer digits denotion, # - for maximum.
+		<br/>
+		{} means optional, * - repetitive (zero or more times)
+	</p>
+	<p>
+		<b>Example:</b>
+		<br/>
+		for pattern #,##0.### the number 123456789.123 can be formatted as 123,456,789.123
+	</p>
+	<p>
+		If optional negativePattern is absent, then positivePattern is prefixed with the localized minus sign.
+		We use negativePattern to specify negative prefix and suffix.
+		Such characteristics as number of digits, minimal digits and other are the same as in the positivePattern.
+		So we do not obliged to specify negativePattern if it the same as the positivePattern except minus(-) sign.
+	</p>
+	<p>
+		Digits, separators, prefixes, suffixes and others may be set to arbitrary values. But be careful when setting the strings and symbols.
+		They must be distinct and cannot collide. For example, if group and decimal separators are the same formatter will not be able to parse
+		the number.
+	</p>
+	<p>
+		Grouping separator is a constant number of digits used to separate thousands or ten-thousands (in some countries). 
+		Do not use various number of digits between two group separators.
+	</p>
+	<p>
+		You can use the following characters in the formatting pattern:
+	</p>
+	
+	<table style="border-spacing:5px; width:100%;">
+		<colgroup>
+			<col span="1" style="width: 10%;"/>
+		</colgroup>
+		<tr>
+			<td>
+				0
+			</td>
+			<td>
+				a digit - always displayed, even if number has less digits (then 0 is displayed)
+			</td>
+		</tr>
+		<tr>
+			<td>
+				#
+			</td>
+			<td>
+				a digit, leading zeroes are omitted
+			</td>
+		</tr>
+		<tr>
+			<td>
+				.
+			</td>
+			<td>
+				decimal separator
+			</td>
+		</tr>
+		<tr>
+			<td>
+				,
+			</td>
+			<td>
+				grouping separator
+			</td>
+		</tr>
+		<tr>
+			<td>
+				E
+			</td>
+			<td>
+				separation of mantissa and exponent for exponential formats
+			</td>
+		</tr>
+		<tr>
+			<td>
+				;
+			</td>
+			<td>
+				separates positive and negative subpatterns
+			</td>
+		</tr>
+		<tr>
+			<td>
+				-
+			</td>
+			<td>
+				marks the negative number prefix
+			</td>
+		</tr>
+		<tr>
+			<td>
+				%
+			</td>
+			<td>
+				multiplies by 100 and shows number as percentage
+			</td>
+		</tr>
+		<tr>
+			<td>
+				&#8240; (\u2030)
+			</td>
+			<td>
+				multiplies by 1000 and shows number as per mille
+			</td>
+		</tr>
+		<tr>
+			<td>
+				¤ (\u00A4)
+			</td>
+			<td>
+				currency sign - replaced by the currency sign for the Locale.
+				Also makes formatting use the monetary decimal separator instead of normal decimal separator.
+				¤¤ makes formatting use international monetary symbols
+			</td>
+		</tr>
+		<tr>
+			<td>
+				&#8216; (\u2018)
+			</td>
+			<td>
+				marks a quote around special characters in prefix or suffix of formatted number
+			</td>
+		</tr>
+	</table>
+</ui:composition>

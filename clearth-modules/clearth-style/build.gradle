@@ -1,0 +1,11 @@
+publishing {
+	publications {
+		style(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-style'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}

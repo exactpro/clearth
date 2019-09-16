@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<empty>
+    <absentWithDefault>123</absentWithDefault>
+    <absentWithEmptyDefault/>
+    <emptyByMatrix/>
+    <emptyByMatrixWithDefault/>
+    <emptyWithDefault/>
+    <emptyContainer/>
+    <emptyNonSelfClosed></emptyNonSelfClosed>
+    <emptyByMatrixNonSelfClosed></emptyByMatrixNonSelfClosed>
+    <emptyContainerNonSelfClosed></emptyContainerNonSelfClosed>
+</empty>

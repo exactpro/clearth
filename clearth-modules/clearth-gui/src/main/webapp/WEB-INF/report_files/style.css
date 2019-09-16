@@ -1,0 +1,161 @@
+.passed
+{
+	color: #2E7D32;
+}
+
+.failed
+{
+	color: #E53935;
+}
+
+.failed_comparison
+{
+	color: #C48D36;
+}
+
+.failed_calculation
+{
+	color: black;
+}
+
+.not_executed
+{
+	color: #A2A2A2;
+}
+
+.info
+{
+	color: #0033CC;
+}
+
+
+#header td
+{
+	padding: 4px 0px 4px 20px;
+}
+
+#header td.logo
+{
+	padding: 0px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+table.w-limited tbody tr td
+{
+	max-width: 400px;
+	word-wrap: break-word;
+}
+
+table.big-w-limited tbody tr td
+{
+	max-width: 800px;
+	word-wrap: break-word;
+}
+
+.nodelist
+{
+	width: 100%;
+	line-height: 25px;
+	padding: 20px 0px 0px 20px;
+}
+
+.switch
+{
+	padding-left: 12px;
+	background: url(show.gif) left center no-repeat;
+}
+
+.node
+{
+	font-weight: bold;
+}
+
+
+.container
+{
+	padding-left: 20px;
+	display: none;
+}
+
+.desc
+{
+	padding-left: 12px;
+}
+
+.desc > span
+{
+	color: #9966CC;
+	font-weight: bold;
+}
+
+
+.message
+{
+	padding-left: 12px;
+}
+
+.message > span
+{
+	color: #6495ED;
+	font-weight: bold;
+}
+
+
+.action_data
+{
+	margin-left: 12px;
+}
+
+.action_data tr
+{
+	vertical-align: top;
+}
+
+.params
+{
+	padding-right: 15px;
+	max-width: 50%;
+}
+
+.comps
+{
+	padding-left: 15px;
+	max-width: 50%;
+}
+
+
+.tablehead td
+{
+	background-color: #6495ED;
+	font-weight: bold;
+}
+
+.comparison_result
+{
+	font-style: italic;
+	font-weight: bold;
+	border-color: inherit;
+}
+
+.status td, .params td, .comps td, .text-elements td
+{
+	padding: 2px 10px;
+	white-space: pre-wrap;
+}
+
+td.exception
+{
+	white-space: normal;
+}
+
+.error_message
+{
+	color: #E53935;
+	font-weight: bold;
+}
+
+.hiddenConstant
+{
+	display: none;
+}

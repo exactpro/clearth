@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <commonFieldDesc repeat="true" name="commonRg">
+        <fieldDesc name="value"/>
+        <fieldDesc name="qty"/>
+    </commonFieldDesc>
+    <commonFieldDesc repeat="true" source="price" name="commonRgWithSrc">
+        <fieldDesc name="value"/>
+        <fieldDesc name="qty"/>
+    </commonFieldDesc>
+    <messageDesc type="SomeMessageA">
+        <fieldDesc repeat="true" name="messageRg">
+            <fieldDesc name="innerField"/>
+        </fieldDesc>
+        <fieldDesc repeat="true" source="outerField" name="messageRgWithSrc">
+            <fieldDesc name="innerField"/>
+        </fieldDesc>
+        <fieldDesc reference="commonRg"/>
+        <fieldDesc reference="commonRgWithSrc"/>
+    </messageDesc>
+</XmlDictionaryDesc>

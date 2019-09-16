@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<XmlDictionaryDesc>
+    <messageDesc type="A">
+        <fieldDesc name="id"/>
+        <fieldDesc name="modificationDate"/>
+        <fieldDesc name="modificationTime"/>
+        <fieldDesc name="statusCode"/>
+        <fieldDesc name="message"/>
+        <fieldDesc name="price"/>
+    </messageDesc>
+    <messageDesc type="B">
+        <fieldDesc name="id"/>
+        <fieldDesc name="statusCode"/>
+        <fieldDesc name="message"/>
+        <fieldDesc name="instrument"/>
+        <fieldDesc name="modificationDate"/>
+        <fieldDesc name="modificationTime"/>
+    </messageDesc>
+</XmlDictionaryDesc>

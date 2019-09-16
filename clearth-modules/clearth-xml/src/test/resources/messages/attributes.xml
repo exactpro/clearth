@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<attributes defaultMsgAttrA="123" msgAttrA="45" msgAttrB="67">
+    <commonWithAttrs commonAttrA="54" commonAttrB="76">abc</commonWithAttrs>
+    <withAttrs defaultFieldAttrA="456" fieldAttrA="10" fieldAttrB="30">def</withAttrs>
+</attributes>
