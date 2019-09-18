@@ -31,6 +31,8 @@ import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableDataWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Writer of table-like data to database.
@@ -39,6 +41,8 @@ import com.exactprosystems.clearth.utils.tabledata.TableRow;
  */
 public class DbDataWriter extends TableDataWriter<String, String>
 {
+	private static final Logger logger = LoggerFactory.getLogger(DbDataWriter.class);
+
 	protected final PreparedStatement stmt;
 	
 	public DbDataWriter(TableHeader<String> header, Connection con, String tableName) throws SQLException
@@ -159,18 +163,16 @@ public class DbDataWriter extends TableDataWriter<String, String>
 	
 	protected int getGeneratedKey(PreparedStatement ps) throws SQLException
 	{
-		ResultSet rs = null;
-		try
+		try (ResultSet rs = ps.getGeneratedKeys())
 		{
-			rs = ps.getGeneratedKeys();
 			if (rs.next())
 				return rs.getInt(1);
-			return -1;
 		}
-		finally
+		catch (Exception e)
 		{
-			if (rs != null)
-				rs.close();
+			logger.warn("Error while retrieving auto-generated keys", e);
 		}
+
+		return -1;
 	}
 }
