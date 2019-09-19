@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.utils.inputparams;
 
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static com.exactprosystems.clearth.utils.CollectionUtils.map;
 
@@ -43,6 +45,11 @@ public class InputParamsHandlerTest {
 		c.set(Calendar.SECOND,	0);
 		c.set(Calendar.MILLISECOND, 0);
 		return c.getTime();
+	}
+	
+	@BeforeClass
+	public static void setLocale() {
+		Locale.setDefault(Locale.ENGLISH);
 	}
 	
 	@Test
