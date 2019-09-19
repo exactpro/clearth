@@ -54,12 +54,7 @@ public class TableDataComparator<A, B> implements Closeable
 		this.actualReader.start();
 		expectedHeader = expectedReader.getTableData().getHeader();
 		actualHeader = actualReader.getTableData().getHeader();
-		
-		// Create common header to avoid wrong placed values in reports
-		LinkedHashSet<A> commonHeaderSet = new LinkedHashSet<>();
-		expectedHeader.forEach(commonHeaderSet::add);
-		actualHeader.forEach(commonHeaderSet::add);
-		commonHeader = new TableHeader<>(commonHeaderSet);
+		commonHeader = createCommonHeader();
 	}
 	
 	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader) throws IOException
@@ -102,6 +97,17 @@ public class TableDataComparator<A, B> implements Closeable
 	}
 	
 	
+	/**
+	 * Creates a common header which contains columns to read from data sources.
+	 */
+	protected TableHeader<A> createCommonHeader()
+	{
+		LinkedHashSet<A> commonHeaderSet = new LinkedHashSet<>();
+		expectedHeader.forEach(commonHeaderSet::add);
+		actualHeader.forEach(commonHeaderSet::add);
+		return new TableHeader<>(commonHeaderSet);
+	}
+	
 	protected RowComparisonData<A, B> compareCoupleOfRows(TableRow<A, B> expectedRow, TableRow<A, B> actualRow) throws IllegalArgumentException
 	{
 		if (expectedRow == null && actualRow == null)
@@ -112,9 +118,8 @@ public class TableDataComparator<A, B> implements Closeable
 		{
 			for (A column : commonHeader)
 			{
-				compData.addComparisonDetail(column, 
-						expectedRow != null && expectedHeader.containsColumn(column) ? expectedRow.getValue(column) : null,
-						actualRow != null && actualHeader.containsColumn(column) ? actualRow.getValue(column) : null, false);
+				compData.addComparisonDetail(column, expectedRow != null ? expectedRow.getValue(column) : null,
+						actualRow != null ? actualRow.getValue(column) : null, false);
 			}
 			return compData;
 		}
@@ -128,8 +133,7 @@ public class TableDataComparator<A, B> implements Closeable
 				continue;
 			}
 			
-			B expectedValue = expectedRow.getValue(column), 
-					actualValue = actualRow.getValue(column);
+			B expectedValue = expectedRow.getValue(column), actualValue = actualRow.getValue(column);
 			boolean identical;
 			try
 			{

@@ -39,8 +39,6 @@ public class ContainerResult extends Result implements Serializable
 	private static final long serialVersionUID = -2015931472252216998L;
 	
 	protected ContainerResult parentResult = null;
-	protected FailReason failReason = FailReason.FAILED;
-	
 	protected final List<Result> details;
 	protected String header;
 	protected boolean blockView = false, hasStatus = true, useFailReasonColor = false;

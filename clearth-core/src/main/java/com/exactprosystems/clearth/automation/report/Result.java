@@ -40,7 +40,7 @@ public abstract class Result implements Serializable
 	private Throwable error = null;
 	private String message = null,
 			comment = null;
-	private FailReason failReason = FailReason.FAILED;
+	protected FailReason failReason = FailReason.FAILED;
 	private FailoverException failoverData;
 
 	/* default constructor is required for all types of results to have ability to deserialize them from JSON */
