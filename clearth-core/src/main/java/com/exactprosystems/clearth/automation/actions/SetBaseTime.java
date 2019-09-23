@@ -60,7 +60,7 @@ public class SetBaseTime extends Action
 			}
 			
 			if (bt == null)
-				return DefaultResult.failedWithComment("Could not parse value from '"+PARAM_TIME+"' parameter as time.");
+				return DefaultResult.failed("Could not parse value from '"+PARAM_TIME+"' parameter as time.");
 		}
 		
 		globalContext.getMatrixFunctions().setBaseTime(bt);
