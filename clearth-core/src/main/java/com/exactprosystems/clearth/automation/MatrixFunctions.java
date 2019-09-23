@@ -134,8 +134,12 @@ public class MatrixFunctions
 			c.set(Calendar.SECOND, baseTime.get(Calendar.SECOND));
 			c.set(Calendar.MILLISECOND, baseTime.get(Calendar.MILLISECOND));
 			
-			//FIXME: need to prevent change of day. Only time should be changed here!
+			int year = c.get(Calendar.YEAR),
+					day = c.get(Calendar.DAY_OF_YEAR);
 			c.setTimeInMillis(c.getTimeInMillis()+(now.getTimeInMillis()-baseTimeChanged.getTimeInMillis()));
+			//Prevent change of day. Only time should be changed here!
+			c.set(Calendar.YEAR, year);
+			c.set(Calendar.DAY_OF_YEAR, day);
 		}
 	}
 	
@@ -1033,7 +1037,7 @@ public class MatrixFunctions
 	}
 
 	//Basetime, if set, works as origin instead of execution start time.
-	//Calculating difference betseen basetime and current real time.
+	//Calculating difference between basetime and current real time.
 	//It will be subtracted from current time in applyTime() to calculate time value relative to basetime.
 	public void setBaseTime(Date baseTime)
 	{
