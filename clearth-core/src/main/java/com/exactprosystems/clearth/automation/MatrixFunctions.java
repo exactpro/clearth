@@ -1033,7 +1033,7 @@ public class MatrixFunctions
 	
 	public Date getBaseTime()
 	{
-		return baseTime.getTime();
+		return baseTime != null ? baseTime.getTime() : null;
 	}
 
 	//Basetime, if set, works as origin instead of execution start time.
