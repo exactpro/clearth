@@ -24,9 +24,6 @@ import org.testng.annotations.Test;
 import static com.exactprosystems.clearth.utils.TagUtils.indexClosingTag;
 import static org.testng.Assert.*;
 
-/**
- * 06 August 2019
- */
 public class TagUtilsTest
 {
 	@DataProvider(name = "getParamsForIndexClosingTag")

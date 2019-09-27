@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils;
 
+import static java.lang.Integer.max;
 import static java.lang.Integer.parseInt;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -47,13 +48,18 @@ public class StringOperationUtils
 		}
 	}
 	
-	public static boolean checkUnquotedSymbol(String formula, int dot)
+	public static boolean checkUnquotedSymbol(String formula, int indexToCheck)
+	{
+		return checkUnquotedSymbol(formula, 0, indexToCheck);
+	}
+
+	public static boolean checkUnquotedSymbol(String text, int indexToCheck, int formulaStart)
 	{
 		// If '.' is located inside string literal - skip it
 		int quoteCount = 0, quoteIndex = -1;
-		while (((quoteIndex = formula.indexOf('\'', quoteIndex+1)) > -1) && (quoteIndex < dot))
+		while (((quoteIndex = text.indexOf('\'', max(quoteIndex+1, formulaStart))) > -1) && (quoteIndex < indexToCheck))
 			quoteCount++;
-		return (quoteCount % 2 == 0);  // Odd number of quotes means that dot is inside of string literal - skipping it
+		return (quoteCount % 2 == 0);  // Odd number of quotes means that symbol is inside of string literal - skipping it
 	}
 	
 	public static String stringOfSpaces(int length)

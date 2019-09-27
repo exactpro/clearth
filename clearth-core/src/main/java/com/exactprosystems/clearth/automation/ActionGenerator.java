@@ -582,7 +582,13 @@ public abstract class ActionGenerator
 	public boolean build(MatrixData matrixData, boolean onlyCheck) throws IOException
 	{
 		Matrix matrix = createMatrix(matrixData);
+		
 		boolean allSuccessful = generateActions(matrix.getFileName(), matrixData.isTrim(), matrix, onlyCheck);
+		
+		MvelVariables vars = matrix.getMvelVars();
+		MvelVarsCleaningTableBuilder cleaningTableBuilder = new MvelVarsCleaningTableBuilder();
+		vars.setCleaningTable(cleaningTableBuilder.build(matrix, steps.keySet()));
+		
 		matrices.add(matrix);
 		getLogger().debug(String.format("Matrix '%s' %s", matrixData.getFile().getCanonicalPath(), onlyCheck ? "checked" : "compiled"));
 		return allSuccessful;

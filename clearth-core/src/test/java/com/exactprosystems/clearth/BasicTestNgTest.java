@@ -27,18 +27,21 @@ import static org.mockito.Mockito.*;
 
 public abstract class BasicTestNgTest
 {
-	protected void mockOtherApplicationFields(@SuppressWarnings("unused") ClearThCore application) 
-			throws ReflectiveOperationException {}
+	protected void mockOtherApplicationFields(@SuppressWarnings("unused") ClearThCore application) throws Exception {}
+
+	protected void mockOtherBeforeClass() throws Exception {}
 	
 	
 	@BeforeClass
-	public void mockApplication() throws ReflectiveOperationException
+	public void mockApplication() throws Exception
 	{
 		ClearThCore application = mock(ClearThCore.class, CALLS_REAL_METHODS);
 		setStaticField(ClearThCore.class, "instance", application);
 		
 		mockApplicationFields(application);
 		mockOtherApplicationFields(application);
+
+		mockOtherBeforeClass();
 	}
 	
 	

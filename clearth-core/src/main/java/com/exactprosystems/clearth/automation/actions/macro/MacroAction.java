@@ -137,7 +137,6 @@ public class MacroAction extends Action implements Preparable
 	protected NestedActionExecutor createActionExecutor(Matrix macroMatrix)
 	{
 		ActionParamsCalculator paramsCalculator = new ActionParamsCalculator(globalContext.getMatrixFunctions());
-		paramsCalculator.init(Arrays.asList(macroMatrix));
 		return new NestedActionExecutor(globalContext, paramsCalculator, getNestedActionsReportsPath());
 	}
 

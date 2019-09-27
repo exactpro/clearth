@@ -20,8 +20,6 @@ package com.exactprosystems.clearth.automation;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,41 +38,12 @@ public class ActionParamsCalculator
 	
 	private final MatrixFunctions matrixFunctions;
 	private Action action;
-	private Map<String, String> fixedIds;
 	private List<String> errors;
 	private boolean warnOnError;
 	
 	public ActionParamsCalculator(MatrixFunctions matrixFunctions)
 	{
 		this.matrixFunctions = matrixFunctions;
-	}
-	
-	
-	public void init(List<Matrix> matrices)
-	{
-		//Saving all action parameters in mvelVars, so references to future actions can be solved during step execution
-		for (Matrix matrix : matrices)
-		{
-			getLogger().trace("Saving action parameters for matrix '"+matrix.getShortFileName()+"'");
-			Map<String, Object> mvelVars = matrix.getMvelVars();
-			for (Action action : matrix.getActions())
-			{
-				String actionId = action.getIdInMatrix(), id;
-				//Do we need to fix action ID so that MVEL could resolve reference to it?
-				if ((!actionId.isEmpty()) && ((Character.isDigit(actionId.charAt(0))) || (actionId.charAt(0)=='_')))
-				{
-					id = "MVELFIXED_"+actionId;
-					if (fixedIds == null)
-						fixedIds = new HashMap<String, String>();
-					fixedIds.put(actionId, id);
-				}
-				else
-					id = actionId;
-				
-				mvelVars.put(id, makeInputParamsMap(action.getInputParams()));
-			}
-			getLogger().trace("Finished saving action parameters for matrix '"+matrix.getShortFileName()+"'");
-		}
 	}
 	
 	
@@ -93,11 +62,6 @@ public class ActionParamsCalculator
 		return action;
 	}
 
-	protected Map<String, String> getFixedIds()
-	{
-		return fixedIds;
-	}
-	
 	public List<String> getErrors()
 	{
 		return errors;
@@ -111,6 +75,10 @@ public class ActionParamsCalculator
 
 	public List<String> calculateParameters(Action action, boolean warnOnError)
 	{
+		Matrix matrix = action.getMatrix();
+		MvelVariables mvelVars = matrix.getMvelVars();
+		mvelVars.saveInputParams(action);
+
 		calculateMainParameters(action, new ArrayList<String>(), warnOnError);
 		
 		Map<String, String> params = action.getInputParams();
@@ -118,8 +86,7 @@ public class ActionParamsCalculator
 		for (Entry<String, String> param : params.entrySet())
 		{
 			String value = calculateParameter(param.getValue(), param.getKey());
-			if (value != null)
-				params.put(param.getKey(), value);
+			params.put(param.getKey(), value);
 		}
 		matrixFunctions.setCurrentTime(null);
 		
@@ -148,27 +115,25 @@ public class ActionParamsCalculator
 	}
 	
 	
-	@SuppressWarnings("unchecked")
 	protected String calculateParameter(String valueExpression, String parameterName)
 	{
 		if (valueExpression == null)
 			return null;
-		
-		Map<String, Object> mvelVars = action.getMatrix().getMvelVars();
-		Map<String, String> fixedIds = getFixedIds();
+
+		MvelVariables mvelVars = action.getMatrix().getMvelVars();
 		try
 		{
-			String value = matrixFunctions.calculateExpression(valueExpression, parameterName, mvelVars, fixedIds, getAction(),
-					new ObjectWrapper(0)).toString();
+			Object valueObj = matrixFunctions.calculateExpression(valueExpression, parameterName,
+					mvelVars.getVariables(), mvelVars.getFixedIds(), getAction(), new ObjectWrapper(0));
 			
-			String id = MatrixFunctions.resolveFixedId(action.getIdInMatrix(), fixedIds);
-			((Map<String, Object>)mvelVars.get(id)).put(parameterName, value);
+			String value = (valueObj != null) ? valueObj.toString() : null;
+			mvelVars.saveCalculatedParameter(action.getIdInMatrix(), parameterName, value);
 			return value;
 		}
 		catch (Exception e)
 		{
 			if (warnOnError && action.isExecutable())
-				getLogger().warn("Error while calculating parameter '"+parameterName+"'", e);
+				getLogger().warn("Error while calculating parameter '{}'", parameterName, e);
 			
 			if (errors != null)
 			{
@@ -289,15 +254,6 @@ public class ActionParamsCalculator
 			action.setWaitAsyncEnd(WaitAsyncEnd.byLabel(wait));
 	}
 	
-	
-	protected Map<String, Object> makeInputParamsMap(Map<String, String> inputParams)
-	{
-		Map<String, Object> commonParams = new LinkedHashMap<String, Object>(inputParams),
-				justInput = new LinkedHashMap<String, Object>(inputParams);
-		commonParams.put(ActionExecutor.PARAMS_IN, justInput);
-		return commonParams;
-	}
-
 	protected void calculateIdInTemplate()
 	{
 		String formula = action.getFormulaIdInTemplate();
