@@ -81,6 +81,7 @@ public class ComparisonUtils
 		add(IS_NOT_SET_OR_EMPTY);
 	}};
 
+	public static final String IS_ANY_VALUE = "@{isAnyValue}";
 	public static final String IS_NUMBER = "@{isNumber}";
 	public static final String IS_INTEGER = "@{isInteger}";
 	public static final String IS_FLOAT = "@{isFloat}";
@@ -96,6 +97,7 @@ public class ComparisonUtils
 		add(IS_NULL_OR_EMPTY);
 		add(IS_NOT_PRESENT_OR_EMPTY);
 		add(IS_NOT_SET_OR_EMPTY);
+		add(IS_ANY_VALUE);
 		add(IS_NUMBER);
 		add(IS_INTEGER);
 		add(IS_FLOAT);
@@ -391,6 +393,10 @@ public class ComparisonUtils
 			else if (NULL_OR_EMPTY_VALUES.contains(trimmedExpectedValue))
 			{
 				return isEmpty(actualValue);
+			}
+			else if (IS_ANY_VALUE.equals(trimmedExpectedValue))
+			{
+				return true;
 			}
 			else if (IS_NUMBER.equals(trimmedExpectedValue))
 			{
