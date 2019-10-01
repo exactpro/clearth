@@ -40,7 +40,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @JsonIgnoreProperties({ "logger", "failReason", "tempReportFile", "csvWriter" })
-public class CsvContainerResult extends ContainerResult implements Closeable
+public class CsvContainerResult extends ContainerResult implements AutoCloseable
 {
 	private static final long serialVersionUID = 5699150687216722251L;
 	

@@ -30,6 +30,7 @@ import com.exactprosystems.clearth.automation.report.results.ContainerResult;
 import com.exactprosystems.clearth.automation.report.results.CsvContainerResult;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.IValueTransformer;
+import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
@@ -47,7 +48,6 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.StringTableDataCom
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.*;
 import java.sql.Connection;
@@ -151,15 +151,13 @@ public class CompareDataSets extends Action
 	protected Result compareTables(BasicTableDataReader<String, String, ?> expectedReader,
 			BasicTableDataReader<String, String, ?> actualReader, Set<String> keyColumns) throws IOException
 	{
-		TableDataComparator<String, String> comparator = null;
 		ContainerResult result = null;
-		try
+		try (TableDataComparator<String, String> comparator = createTableDataComparator(expectedReader, actualReader, keyColumns))
 		{
-			long comparisonStartTime = System.currentTimeMillis();
-			comparator = createTableDataComparator(expectedReader, actualReader, keyColumns);
 			if (!comparator.hasMoreRows())
 				return DefaultResult.passed("Both datasets are empty. Nothing to compare.");
 			
+			long comparisonStartTime = System.currentTimeMillis();
 			result = createComparisonContainerResult();
 			int rowsCount = 0, passedRowsCount = 0;
 			do
@@ -169,22 +167,18 @@ public class CompareDataSets extends Action
 				if (compData.isSuccess())
 					passedRowsCount++;
 				
-				// Pass comparison errors to logs if exist
+				// Pass comparison errors to the logs if exist
 				List<String> compErrors = compData.getErrors();
-				if (CollectionUtils.isNotEmpty(compErrors))
+				if (getLogger().isWarnEnabled() && !compErrors.isEmpty())
 				{
-					StringBuilder errorMsg = new StringBuilder("Comparison error(s) in line #" + rowsCount);
-					for (int i = 0; i < compErrors.size(); i++)
-						errorMsg.append(Utils.EOL).append(i + 1).append(". ").append(compErrors.get(i));
-					getLogger().warn(errorMsg.toString());
+					LineBuilder errMsgBuilder = new LineBuilder();
+					errMsgBuilder.add("Comparison error(s) at line #").add(rowsCount).append(":");
+					compErrors.forEach(currentError -> errMsgBuilder.add("* ").append(currentError));
+					getLogger().warn(errMsgBuilder.toString());
 				}
 				
 				result.addDetail(createBlockResult(compData, "Row #" + rowsCount));
-				logComparisonProgress(rowsCount, passedRowsCount);
-				
-				// Check if action has been interrupted (i.e. scheduler stopped) and should be finished
-				if (rowsCount % 1000 == 0 && Thread.interrupted())
-					throw ResultException.failed("Action execution has been interrupted.");
+				afterRow(rowsCount, passedRowsCount);
 			}
 			while (comparator.hasMoreRows());
 			
@@ -195,7 +189,6 @@ public class CompareDataSets extends Action
 		}
 		finally
 		{
-			Utils.closeResource(comparator);
 			if (result instanceof Closeable)
 				Utils.closeResource((Closeable)result);
 		}
@@ -209,7 +202,7 @@ public class CompareDataSets extends Action
 	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
 			BasicTableDataReader<String, String, ?> actualReader, Set<String> keyColumns) throws IOException
 	{
-		return CollectionUtils.isEmpty(keyColumns) ? new StringTableDataComparator(expectedReader, actualReader)
+		return keyColumns.isEmpty() ? new StringTableDataComparator(expectedReader, actualReader)
 				: new IndexedStringTableDataComparator(expectedReader, actualReader, createTableRowMatcher(keyColumns));
 	}
 	
@@ -220,11 +213,15 @@ public class CompareDataSets extends Action
 		return blockResult;
 	}
 	
-	protected void logComparisonProgress(int rowNumber, int passedRowsCount)
+	protected void afterRow(int rowNumber, int passedRowsCount)
 	{
 		if (rowNumber > 0 && (rowNumber <= 10000 && rowNumber % 1000 == 0 || rowNumber <= 100000 && rowNumber % 10000 == 0
 				|| rowNumber <= 1000000 && rowNumber % 100000 == 0 || rowNumber % 1000000 == 0))
 			getLogger().debug("Compared {} rows, {} passed", rowNumber, passedRowsCount);
+		
+		// Check if action has been interrupted (i.e. scheduler stopped) and should be finished
+		if (rowNumber % 1000 == 0 && Thread.currentThread().isInterrupted())
+			throw ResultException.failed("Action execution has been interrupted.");
 	}
 	
 	

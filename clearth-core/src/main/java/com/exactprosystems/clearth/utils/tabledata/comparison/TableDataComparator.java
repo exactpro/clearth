@@ -26,7 +26,6 @@ import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.DefaultValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 
@@ -36,10 +35,12 @@ import java.util.LinkedHashSet;
  * @param <A> class of header members.
  * @param <B> class of values in table rows.
  */
-public class TableDataComparator<A, B> implements Closeable
+public class TableDataComparator<A, B> implements AutoCloseable
 {
 	protected final BasicTableDataReader<A, B, ?> expectedReader, actualReader;
-	protected final TableHeader<A> expectedHeader, actualHeader, commonHeader;
+	protected final TableHeader<A> expectedHeader, actualHeader;
+	protected final LinkedHashSet<A> commonHeader;
+	
 	protected boolean expectedReadMore, actualReadMore;
 	protected final ValuesComparator<A, B> valuesComparator;
 	
@@ -54,7 +55,11 @@ public class TableDataComparator<A, B> implements Closeable
 		this.actualReader.start();
 		expectedHeader = expectedReader.getTableData().getHeader();
 		actualHeader = actualReader.getTableData().getHeader();
-		commonHeader = createCommonHeader();
+		
+		// Create a common header which contains columns to read from expected and actual data sources
+		commonHeader = new LinkedHashSet<>();
+		expectedHeader.forEach(commonHeader::add);
+		actualHeader.forEach(commonHeader::add);
 	}
 	
 	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader) throws IOException
@@ -96,17 +101,6 @@ public class TableDataComparator<A, B> implements Closeable
 		Utils.closeResource(actualReader);
 	}
 	
-	
-	/**
-	 * Creates a common header which contains columns to read from data sources.
-	 */
-	protected TableHeader<A> createCommonHeader()
-	{
-		LinkedHashSet<A> commonHeaderSet = new LinkedHashSet<>();
-		expectedHeader.forEach(commonHeaderSet::add);
-		actualHeader.forEach(commonHeaderSet::add);
-		return new TableHeader<>(commonHeaderSet);
-	}
 	
 	protected RowComparisonData<A, B> compareCoupleOfRows(TableRow<A, B> expectedRow, TableRow<A, B> actualRow) throws IllegalArgumentException
 	{
