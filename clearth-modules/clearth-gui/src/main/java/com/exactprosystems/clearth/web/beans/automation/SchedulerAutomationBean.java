@@ -18,25 +18,19 @@
 
 package com.exactprosystems.clearth.web.beans.automation;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Executor;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
-import com.exactprosystems.clearth.web.misc.WebUtils;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import static com.exactprosystems.clearth.ClearThCore.configFiles;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class SchedulerAutomationBean extends ClearThBean {
@@ -119,25 +113,6 @@ public class SchedulerAutomationBean extends ClearThBean {
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
-	}
-
-	public void exportSchedulerInfo()
-	{
-		File resultFile = null;
-		try
-		{
-			resultFile = ClearThCore.getInstance().getSchedulerInfoExporter().export(selectedScheduler());
-		}
-		catch (Exception e)
-		{
-			String errMsg = "Error while exporting scheduler info";
-			getLogger().error(errMsg, e);
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			return;
-		}
-
-		String destDir = configFiles().getTempDir();
-		WebUtils.redirectToFile(destDir + resultFile.getName());
 	}
 
 	public boolean isRunning()

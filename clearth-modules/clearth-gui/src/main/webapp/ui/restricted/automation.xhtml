@@ -156,7 +156,10 @@
 						</h:form>
 					</div>
 					<div class="upperRightContainer">
-						<p:commandButton value="Export scheduler info" actionListener="#{automationSchedulerBean.exportSchedulerInfo}" update=":Growl" icon="ui-icon-arrowthickstop-1-s" />
+						<h:form id="ExportSchedulerInfo">
+							<p:commandButton value="Export scheduler info" icon="ui-icon-arrowthickstop-1-s" action="#{schedulerInfoExportBean.collectSchedulerInfoFiles}"
+									update=":Growl :ExportSchedulerInfoDlg" oncomplete="PF('exportSchedulerInfoDialog').show()" />
+						</h:form>
 					</div>
 				</div>
 
@@ -803,6 +806,30 @@
 						</p:outputPanel>
 					</f:facet>
 				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<!-- Export scheduler info dialog -->
+		<p:dialog header="Export scheduler information" widgetVar="exportSchedulerInfoDialog" resizable="false" closeOnEscape="true" modal="true">
+			<h:form id="ExportSchedulerInfoDlg">
+				<h:outputText value="Select files to export:" />
+				<p:scrollPanel mode="native" style="width: 800px; max-height: 400px;">
+					<p:treeTable var="exportFile" value="#{schedulerInfoExportBean.schedulerInfoFilesRoot}" selectionMode="checkbox"
+							selection="#{schedulerInfoExportBean.selectedSchedulerInfoFilesNodes}" emptyMessage="No files">
+						<p:column headerText="File">
+							<h:outputText value="#{exportFile.name}" />
+						</p:column>
+						<p:column headerText="Size" style="width: 80px;">
+							<h:outputText value="#{exportFile.size}" />
+						</p:column>
+					</p:treeTable>
+				</p:scrollPanel>
+				&#160;
+				<p:outputPanel layout="block" style="text-align: right;">
+					<p:commandButton value="Download" update=":Growl" actionListener="#{schedulerInfoExportBean.exportSelectedSchedulerInfoFiles}"
+							oncomplete="if (args.canClose) PF('exportSchedulerInfoDialog').hide();" icon="ui-icon-arrowthickstop-1-s" />
+					<p:commandButton value="Cancel" onclick="PF('exportSchedulerInfoDialog').hide();" icon="ui-icon ui-icon-close" type="button" />
+				</p:outputPanel>
 			</h:form>
 		</p:dialog>
 

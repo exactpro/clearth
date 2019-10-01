@@ -28,9 +28,9 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
-
 import freemarker.template.TemplateException;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,42 +43,20 @@ public class SchedulerInfoExporter
 {
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerInfoExporter.class);
 
-	private static final String SCHEDULER_INFO_FILE = "schedulerInfo.html", MATRICES_DIR = "matrices", REPORTS_DIR = "reports";
-	protected static final String pathToResourceFiles;
+	protected static final String SCHEDULER_SUMMARY_INFO_FILE = "schedulerInfo.html",
+			PATH_TO_RESOURCE_FILES = ClearThCore.getInstance().getSchedulerInfoFilePath();
 	protected static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss");
-
-	static
-	{
-		pathToResourceFiles = ClearThCore.getInstance().getSchedulerInfoFilePath();
-	}
-
-	public File export(Scheduler scheduler, List<XmlMatrixInfo> matricesInfo, String reportsPath) throws IOException
-	{
-		String destDir = ClearThCore.tempPath();
-		File exportFolder = FileOperationUtils.createTempDirectory("scheduler_info_", new File(destDir));
-		
-		createInfoPage(exportFolder, scheduler, matricesInfo);
-		copyMatrices(exportFolder, scheduler);
-		copyReports(exportFolder, reportsPath);
-		prepareOtherFiles(exportFolder);
-
-		File resultFile = zipExportedFiles(exportFolder, destDir);
-		
-		FileUtils.deleteDirectory(exportFolder);
-		return resultFile;
-	}
 	
-	public File export(Scheduler scheduler) throws IOException
+	public SchedulerInfoFile collectFiles(Scheduler scheduler) throws IOException
 	{
-		List<XmlMatrixInfo> reports = null;
+		// Obtaining necessary metadata to collect scheduler files
+		List<XmlMatrixInfo> matricesInfo = null;
 		String reportsPath = null;
-		
 		if (scheduler.isRunning())
 		{
-			ReportsInfo selectedReportsInfo = scheduler.makeCurrentReports
-					(scheduler.getReportsDir()+"current_"+DATETIME_FORMAT.format(new Date()));
-			reports = selectedReportsInfo.getMatrices();
-			reportsPath = selectedReportsInfo.getPath();
+			ReportsInfo info = scheduler.makeCurrentReports(scheduler.getReportsDir() + "current_" + DATETIME_FORMAT.format(new Date()));
+			matricesInfo = info.getMatrices();
+			reportsPath = info.getPath();
 		}
 		else
 		{
@@ -86,28 +64,113 @@ public class SchedulerInfoExporter
 			XmlSchedulerLaunchInfo lastLaunch = launches.size() > 0 ? launches.get(0) : null;
 			if (lastLaunch != null)
 			{
-				reports = lastLaunch.getMatricesInfo();
-				reportsPath = ClearThCore.getInstance()
-						.getRootRelative(ClearThCore.configFiles().getReportsDir() + lastLaunch.getReportsPath());
-			}
-			else
-			{
-				reports = null;
-				reportsPath = null;
+				matricesInfo = lastLaunch.getMatricesInfo();
+				reportsPath = ClearThCore.reportsPath() + lastLaunch.getReportsPath();
 			}
 		}
 		
-		return export(scheduler, reports, reportsPath);
+		SchedulerInfoFile exportFiles = createSchedulerInfoFile("root", null);
+		exportFiles.addChildFile(getMatrices(scheduler.getMatricesData(), exportFiles));
+		exportFiles.addChildFile(getReports(reportsPath, exportFiles));
+		exportFiles.addChildFile(getOtherFiles(exportFiles));
+		exportFiles.addChildFile(createSchedulerSummaryFile(SCHEDULER_SUMMARY_INFO_FILE, scheduler.getSteps(), scheduler.getMatricesData(), matricesInfo, exportFiles));
+		return exportFiles;
 	}
 	
-	protected void createInfoPage(File exportFolder, Scheduler scheduler, List<XmlMatrixInfo> matricesInfo) throws IOException
+	public File exportSelectedZip(SchedulerInfoFile toExport) throws IOException
 	{
-		String pathToFiles = exportFolder.getCanonicalPath() + "/";
+		return exportZip(toExport, true);
+	}
+	
+	public File exportAllZip(Scheduler scheduler) throws IOException
+	{
+		return exportZip(collectFiles(scheduler), false);
+	}
+	
+	protected File exportZip(SchedulerInfoFile toExport, boolean checkInclude) throws IOException
+	{
+		// Collecting all selected files and putting them into zip archive
+		File resultFile = File.createTempFile("scheduler_info_", ".zip", new File(ClearThCore.tempPath()));
+		Map<File, String> filesAndNames = collectFilesAndNamesToExport(toExport, "", checkInclude);
+		FileOperationUtils.zipFiles(resultFile, filesAndNames.keySet().toArray(new File[0]), filesAndNames.values().toArray(new String[0]));
+		
+		// Trying to find and delete scheduler summary info file
+		filesAndNames.entrySet().stream().filter(fileAndName -> fileAndName.getValue().equals(SCHEDULER_SUMMARY_INFO_FILE))
+				.findFirst().map(Map.Entry::getKey).ifPresent(File::delete);
+		return resultFile;
+	}
+	
+	protected Map<File, String> collectFilesAndNamesToExport(SchedulerInfoFile file, String archiveDirPath, boolean checkInclude) throws IOException
+	{
+		Map<File, String> result = new HashMap<>();
+		for (SchedulerInfoFile child : file.getChildren())
+		{
+			if (checkInclude && !child.isInclude())
+				continue;
+			
+			if (child.isDirectory())
+				result.putAll(collectFilesAndNamesToExport(child, archiveDirPath + child.getName() + "/", checkInclude));
+			else if (child instanceof SchedulerSummaryFile)
+			{
+				SchedulerSummaryFile summaryFile = (SchedulerSummaryFile)child;
+				File generatedFile = createSummaryInfoPage(summaryFile.getSteps(), summaryFile.getMatricesData(), summaryFile.getMatricesInfo());
+				summaryFile.setFilePath(generatedFile.getAbsolutePath());
+				result.put(generatedFile, archiveDirPath + summaryFile.getName());
+			}
+			else
+				result.put(new File(child.getFilePath()), archiveDirPath + child.getName());
+		}
+		return result;
+	}
+	
+	
+	protected SchedulerInfoFile getMatrices(List<MatrixData> matricesData, SchedulerInfoFile parent) throws IOException
+	{
+		if (CollectionUtils.isEmpty(matricesData))
+			return null;
+		
+		SchedulerInfoFile matricesDir = createSchedulerInfoFile("matrices", parent);
+		for (MatrixData matrixData : matricesData)
+			matricesDir.addChildFile(createSchedulerInfoFile(matrixData.getFile(), parent));
+		return matricesDir;
+	}
+	
+	protected SchedulerInfoFile getReports(String reportsPath, SchedulerInfoFile parent) throws IOException
+	{
+		if (reportsPath != null)
+		{
+			File reports = new File(reportsPath);
+			if (reports.isDirectory())
+				return processReportDir(reports, createSchedulerInfoFile("reports", parent));
+		}
+		return null;
+	}
+	
+	protected SchedulerInfoFile processReportDir(File reportDir, SchedulerInfoFile parent) throws IOException
+	{
+		File[] reports = reportDir.listFiles();
+		if (ArrayUtils.isNotEmpty(reports))
+		{
+			for (File file : reports)
+				parent.addChildFile(file.isDirectory() ? processReportDir(file, createSchedulerInfoFile(file, parent)) : createSchedulerInfoFile(file, parent));
+		}
+		return parent;
+	}
+	
+	protected SchedulerInfoFile getOtherFiles(SchedulerInfoFile parent) throws IOException
+	{
+		return null;
+	}
+	
+	
+	protected File createSummaryInfoPage(List<Step> steps, List<MatrixData> matricesData, List<XmlMatrixInfo> matricesInfo) throws IOException
+	{
 		PrintWriter writer = null;
+		File summaryInfoFile = File.createTempFile(SCHEDULER_SUMMARY_INFO_FILE, null, new File(ClearThCore.tempPath()));
 		try
 		{
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(pathToFiles + SCHEDULER_INFO_FILE)));
-			Map<String, Object> parameters = initTemplateParameters(scheduler, matricesInfo);
+			writer = new PrintWriter(new BufferedWriter(new FileWriter(summaryInfoFile)));
+			Map<String, Object> parameters = initTemplateParameters(steps, matricesData, matricesInfo);
 			ClearThCore.getInstance().getSchedulerInfoTemplatesProcessor().processTemplate(writer, parameters, SchedulerInfoTemplateFiles.SCHEDULER_INFO);
 		}
 		catch (TemplateException e)
@@ -118,86 +181,62 @@ public class SchedulerInfoExporter
 		{
 			Utils.closeResource(writer);
 		}
+		return summaryInfoFile;
 	}
 	
-	protected void copyMatrices(File exportFolder, Scheduler scheduler) throws IOException
+	protected Map<String, Object> initTemplateParameters(List<Step> steps, List<MatrixData> matricesData, List<XmlMatrixInfo> matricesInfo)
 	{
-		File matricesFolder = new File(exportFolder, MATRICES_DIR);
-		matricesFolder.mkdirs();
-		String matricesPath = matricesFolder.getCanonicalPath();
-
-		for (MatrixData matrixData : scheduler.getMatricesData())
-			FileOperationUtils.copyFile(matrixData.getFile().getCanonicalPath(), matricesPath + File.separator + matrixData.getFile().getName());
-	}
-	
-	protected void copyReports(File exportFolder, String reportsPath) throws IOException
-	{
-		File reportFolder = new File(exportFolder, REPORTS_DIR);
-		reportFolder.mkdirs();
-		if (reportsPath != null)
-			FileUtils.copyDirectory(new File(reportsPath), reportFolder);
-	}
-	
-	protected void prepareOtherFiles(File exportFolder) throws IOException
-	{
-		
-	}
-	
-	protected File zipExportedFiles(File exportFolder, String uploadsDirPath) throws IOException
-	{
-		File resultFile = File.createTempFile("scheduler_info_", ".zip", new File(uploadsDirPath));
-		FileOperationUtils.zipFiles(resultFile, exportFolder.listFiles());
-		FileOperationUtils.zipDirectories(resultFile, Arrays.asList(exportFolder.listFiles()));
-		return resultFile;
-	}
-
-	protected Map<String, Object> initTemplateParameters(Scheduler scheduler, List<XmlMatrixInfo> matricesInfo)
-	{
-		Map<String, Object> parameters = new HashMap<String, Object>();
-
-		parameters.put("pathToStyles", pathToResourceFiles + "style.css");
-		parameters.put("pathToJS", pathToResourceFiles + "script.js");
-
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("pathToStyles", PATH_TO_RESOURCE_FILES + "style.css");
+		parameters.put("pathToJS", PATH_TO_RESOURCE_FILES + "script.js");
 		parameters.put("revision", getRevisionData());
-
-		parameters.put("stepsData", createStepsData(scheduler.getSteps()));
-		parameters.put("matricesData", scheduler.getMatricesData());
-
+		parameters.put("stepsData", createStepsData(steps));
+		parameters.put("matricesData", matricesData);
 		parameters.put("reportsData", matricesInfo);
-
 		addExtraTemplateParameters(parameters);
-
 		return parameters;
 	}
-
+	
 	protected String getRevisionData()
 	{
 		return ClearThCore.getInstance().getVersion().getBuildNumber();
 	}
-
+	
 	protected List<SchedulerStepData> createStepsData(List<Step> allSteps)
 	{
-		if (allSteps == null || allSteps.isEmpty())
-			return Collections.emptyList();
-		else
+		List<SchedulerStepData> stepsData = new ArrayList<>();
+		if (CollectionUtils.isNotEmpty(allSteps))
 		{
-			List<SchedulerStepData> stepsData = new ArrayList<SchedulerStepData>(allSteps.size());
 			for (Step step : allSteps)
-			{
-				String stepName = step.getName();
-				SchedulerStepData data = new SchedulerStepData(step, StringEscapeUtils.escapeHtml(stepName));
-				stepsData.add(data);
-			}
-			return stepsData;
+				stepsData.add(new SchedulerStepData(step, StringEscapeUtils.escapeHtml(step.getName())));
 		}
+		return stepsData;
 	}
-
+	
 	protected void addExtraTemplateParameters(Map<String, Object> parameters)
 	{
+	
 	}
-
+	
+	
 	protected Logger getLogger()
 	{
 		return logger;
+	}
+	
+	protected SchedulerInfoFile createSchedulerInfoFile(String name, SchedulerInfoFile parent)
+	{
+		return new SchedulerInfoFile(name, parent);
+	}
+	
+	protected SchedulerInfoFile createSchedulerInfoFile(File f, SchedulerInfoFile parent)
+	{
+		return new SchedulerInfoFile(f, parent);
+	}
+	
+	public SchedulerSummaryFile createSchedulerSummaryFile(String name, List<Step> steps, List<MatrixData> matricesData,
+			List<XmlMatrixInfo> matricesInfo, SchedulerInfoFile parent)
+	{
+		return new SchedulerSummaryFile(name, steps, matricesData, matricesInfo, parent);
 	}
 }
