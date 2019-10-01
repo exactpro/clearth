@@ -47,11 +47,19 @@ public abstract class Action
 	protected Map<String, String> formulas;
 
 	private List<String> cleanableContext;
-	
-	protected String idInMatrix, comment, name;
+
+	/**
+	 * {@link #idInTemplate} field can be used in some template or matrix generator tool if you have one.
+	 * Can be helpful to debug matrix.
+	 */
+	protected String idInMatrix, comment, name, idInTemplate;
 	protected boolean executable, inverted, done, passed, suspendIfFailed;
+	/**
+	 * {@link #formulaIdInTemplate} same as {@link #idInTemplate} but it is set with formula.
+	 */
 	protected String formulaExecutable, formulaInverted, formulaComment, formulaTimeout,
-			formulaAsync, formulaAsyncGroup, formulaWaitAsyncEnd;
+			formulaAsync, formulaAsyncGroup, formulaWaitAsyncEnd, formulaIdInTemplate;
+
 	protected long timeout;
 	
 	protected boolean async;
@@ -99,7 +107,10 @@ public abstract class Action
 		comment = settings.getComment();
 		formulaComment = settings.getFormulaComment();
 //		name = settings.getActionName();
-		
+
+		idInTemplate = settings.getIdInTemplate();
+		formulaIdInTemplate = settings.getFormulaIdInTemplate();
+
 		async = settings.isAsync();
 		formulaAsync = settings.getFormulaAsync();
 		asyncGroup = settings.getAsyncGroup();
@@ -426,8 +437,27 @@ public abstract class Action
 	{
 		this.done = done;
 	}
-	
-	
+
+	public String getIdInTemplate()
+	{
+		return idInTemplate;
+	}
+
+	public void setIdInTemplate(String idInTemplate)
+	{
+		this.idInTemplate = idInTemplate;
+	}
+
+	public String getFormulaIdInTemplate()
+	{
+		return formulaIdInTemplate;
+	}
+
+	public void setFormulaIdInTemplate(String formulaIdInTemplate)
+	{
+		this.formulaIdInTemplate = formulaIdInTemplate;
+	}
+
 	public boolean isPassed()
 	{
 		return passed;

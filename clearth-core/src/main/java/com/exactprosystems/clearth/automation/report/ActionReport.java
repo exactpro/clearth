@@ -35,6 +35,7 @@ public class ActionReport
 	protected String actionId;
 	protected String actionName;
 	protected String comment;
+	protected String idInTemplate;
 	
 	protected ReportStatus status;
 	protected ExceptionWrapper error;
@@ -54,6 +55,7 @@ public class ActionReport
 	{
 		this.actionReportWriter = actionReportWriter;
 		this.setActionId(action.getIdInMatrix());
+		this.setIdInTemplate(action.getIdInTemplate());
 		this.setActionName(action.getName());
 		this.setInputParams(action.getInputParams());
 		this.setOutputParams(action.getOutputParams());
@@ -87,6 +89,7 @@ public class ActionReport
 		subActionReport.setActionId(subActionId);
 		subActionReport.setActionName(subActionData.getName());
 		subActionReport.setComment(subActionData.getComment());
+		subActionReport.setIdInTemplate(subActionData.getIdInTemplate());
 		subActionReport.setStatus(subActionData.getSuccess());
 		subActionReport.setInputParams(subActionData.getParams());
 		
@@ -127,6 +130,16 @@ public class ActionReport
 	public String getComment()
 	{
 		return comment;
+	}
+	
+	public String getIdInTemplate()
+	{
+		return idInTemplate;
+	}
+	
+	public void setIdInTemplate(String idInTemplate)
+	{
+		this.idInTemplate = idInTemplate;
 	}
 	
 	public void setComment(String comment)

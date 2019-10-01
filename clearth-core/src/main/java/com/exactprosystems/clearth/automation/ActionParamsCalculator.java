@@ -139,6 +139,7 @@ public class ActionParamsCalculator
 		calculateAsync();
 		calculateAsyncGroup();
 		calculateWaitAsyncEnd();
+		calculateIdInTemplate();
 	}
 	
 	public String buildParameterError(String name, String expression, String value)
@@ -295,5 +296,13 @@ public class ActionParamsCalculator
 				justInput = new LinkedHashMap<String, Object>(inputParams);
 		commonParams.put(ActionExecutor.PARAMS_IN, justInput);
 		return commonParams;
+	}
+
+	protected void calculateIdInTemplate()
+	{
+		String formula = action.getFormulaIdInTemplate();
+		String idInMatrixGenerator = calculateParameter(formula, ActionGenerator.COLUMN_ID_IN_TEMPLATE);
+		if (idInMatrixGenerator != null)
+			action.setIdInTemplate(idInMatrixGenerator);
 	}
 }

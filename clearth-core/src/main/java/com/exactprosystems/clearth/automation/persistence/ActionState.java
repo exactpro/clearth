@@ -38,10 +38,18 @@ public abstract class ActionState
 	private LinkedHashMap<String, String> inputParams = null;  //outputParams are cleaned after action end, no need to store them
 	private LinkedHashMap<String, SubActionData> subActionsData = null;
 	//subOutputParams, duplicateParams, formulas are cleaned after action end, no need to store them
-	
-	private String idInMatrix = null, comment = null, name = null, stepName = null;
+
+	/**
+	 * {@link #idInTemplate} field can be used in some template or matrix generator tool if you have one.
+	 * Can be helpful to debug matrix.
+	 */
+	private String idInMatrix, comment, name, stepName, idInTemplate;
 	private boolean executable = true, inverted = false, done = false, passed = true, suspendIfFailed = false;
-	private String formulaExecutable, formulaInverted, formulaComment, formulaTimeout;
+	/**
+	 * {@link #formulaIdInTemplate} same as {@link #idInTemplate} but set with formula.
+	 */
+	private String formulaExecutable, formulaInverted, formulaComment, formulaTimeout, formulaIdInTemplate;
+	
 	private long timeout = 0;
 	private ResultState result = null;
 	
@@ -79,6 +87,9 @@ public abstract class ActionState
 		
 		this.started = action.getStarted();
 		this.finished = action.getFinished();
+
+		idInTemplate = action.getIdInTemplate();
+		formulaIdInTemplate = action.getFormulaIdInTemplate();
 	}
 	
 	public Action actionFromState(List<Step> steps) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
@@ -107,6 +118,8 @@ public abstract class ActionState
 		settings.setTimeout(timeout);
 		settings.setFormulaTimeout(formulaTimeout);
 		settings.setSuspendIfFailed(suspendIfFailed);
+		settings.setIdInTemplate(idInTemplate);
+		settings.setFormulaIdInTemplate(formulaIdInTemplate);
 		
 		initActionSettings(settings);
 		
@@ -293,5 +306,27 @@ public abstract class ActionState
 	public void setFinished(Date finished)
 	{
 		this.finished = finished;
+	}
+
+
+	public String getIdInTemplate()
+	{
+		return idInTemplate;
+	}
+
+	public void setIdInTemplate(String idInTemplate)
+	{
+		this.idInTemplate = idInTemplate;
+	}
+
+
+	public String getFormulaIdInTemplate()
+	{
+		return formulaIdInTemplate;
+	}
+
+	public void setFormulaIdInTemplate(String formulaIdInTemplate)
+	{
+		this.formulaIdInTemplate = formulaIdInTemplate;
 	}
 }

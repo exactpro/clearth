@@ -46,7 +46,8 @@ public abstract class ActionGenerator
 	public static final String COLUMN_ID = "id", COLUMN_GLOBALSTEP = "globalstep", COLUMN_ACTION = "action",
 			COLUMN_EXECUTE = "execute", COLUMN_TIMEOUT = "timeout", COLUMN_COMMENT = "comment",
 			COLUMN_INVERT = "invert", COLUMN_SUSPEND_FAILED = "suspendiffailed",
-			COLUMN_ASYNC = "async", COLUMN_ASYNCGROUP = "asyncgroup", COLUMN_WAITASYNCEND = "waitasyncend";
+			COLUMN_ASYNC = "async", COLUMN_ASYNCGROUP = "asyncgroup", COLUMN_WAITASYNCEND = "waitasyncend",
+			COLUMN_ID_IN_TEMPLATE = "idintemplate";
 
 	// initAction results
 	public static final int NO_ERROR = 0, CHECKING_ERROR = 1, INIT_ERROR = 2;
@@ -433,6 +434,13 @@ public abstract class ActionGenerator
 					actionSettings.setFormulaWaitAsyncEnd(value);
 				else
 					actionSettings.setWaitAsyncEnd(WaitAsyncEnd.byLabel(value));
+			}
+			else if (headLow.equals(COLUMN_ID_IN_TEMPLATE))
+			{
+				if (value.contains(MatrixFunctions.FORMULA_START))
+					actionSettings.setFormulaIdInTemplate(value);
+				else
+					actionSettings.setIdInTemplate(value);
 			}
 			else if (!customSetting(headLow, value, actionSettings, headerLineNumber, lineNumber))
 			{

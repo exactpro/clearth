@@ -27,21 +27,33 @@ import java.util.Map;
 @JsonIgnoreProperties({"exception"})
 public class SubActionData
 {
-	public String name;
-	public LinkedHashMap<String, String> params;
-	public Map<String, String> formulas;
-	public LinkedHashMap<String, SubActionData> subActionData;
+	private String name;
+	private LinkedHashMap<String, String> params;
+	private Map<String, String> formulas;
+	private LinkedHashMap<String, SubActionData> subActionData;
 	//TODO add ExceptionWrapper after JSON reports migration to core
 	public Exception exception;
-	public String comment;
-	public ReportStatus success;
-	
-	public SubActionData(String name, LinkedHashMap<String, String> params, Map<String, String> formulas, LinkedHashMap<String, SubActionData> subActionData)
+	private String comment;
+	private String idInTemplate;
+	private ReportStatus success;
+
+	public SubActionData(String name,
+	                     LinkedHashMap<String, String> params,
+	                     Map<String, String> formulas,
+	                     LinkedHashMap<String, SubActionData> subActionData)
 	{
 		this.name = name;
 		this.params = params;
 		this.formulas = formulas;
 		this.subActionData = subActionData;
+		success = new ReportStatus(true);
+	}
+
+	public SubActionData(Action action)
+	{
+		this(action.getName(),action.getInputParams(), action.getFormulas(), action.getSubActionData());
+
+		idInTemplate = action.getIdInTemplate();
 		success = new ReportStatus(true);
 	}
 
@@ -82,6 +94,11 @@ public class SubActionData
 		return formulas;
 	}
 
+	public void setSubActionData(LinkedHashMap<String, SubActionData> subActionData)
+	{
+		this.subActionData = subActionData;
+	}
+
 	public LinkedHashMap<String, SubActionData> getSubActionData()
 	{
 		if (subActionData == null)
@@ -102,5 +119,15 @@ public class SubActionData
 	public ReportStatus getSuccess()
 	{
 		return success;
+	}
+
+	public String getIdInTemplate()
+	{
+		return idInTemplate;
+	}
+
+	public void setIdInTemplate(String idInTemplate)
+	{
+		this.idInTemplate = idInTemplate;
 	}
 }

@@ -26,10 +26,17 @@ import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
 
 public class ActionSettings
 {
-	private String actionId = null, actionName = null, comment = null;
+	/**
+	 * {@link #idInTemplate} field can be used in some template or matrix generator tool if you have one.
+	 * Can be helpful to debug matrix.
+	 */
+	private String actionId, actionName, comment, idInTemplate;
 	private boolean executable = true, inverted = false, suspendIfFailed = false;
-	protected String formulaExecutable = null, formulaInverted = null, formulaComment = null, formulaTimeout = null, 
-			formulaAsync = null, formulaAsyncGroup = null, formulaWaitAsyncEnd = null;
+	/**
+	 * {@link #formulaIdInTemplate} same as {@link #idInTemplate} but set with formula.
+	 */
+	protected String formulaExecutable, formulaInverted, formulaComment, formulaTimeout,
+			formulaAsync, formulaAsyncGroup, formulaWaitAsyncEnd, formulaIdInTemplate;
 	private long timeout = 0;
 	
 	protected boolean async;
@@ -43,8 +50,7 @@ public class ActionSettings
 	
 	private Matrix matrix = null;
 	private Step step = null;
-	
-	
+
 	public String getActionId()
 	{
 		return actionId;
@@ -290,5 +296,26 @@ public class ActionSettings
 
 	public void setSuspendIfFailed(boolean suspendIfFailed) {
 		this.suspendIfFailed = suspendIfFailed;
+	}
+
+
+	public String getIdInTemplate()
+	{
+		return idInTemplate;
+	}
+	
+	public void setIdInTemplate(String idInTemplate)
+	{
+		this.idInTemplate = idInTemplate;
+	}
+
+	public String getFormulaIdInTemplate()
+	{
+		return formulaIdInTemplate;
+	}
+
+	public void setFormulaIdInTemplate(String formulaIdInTemplate)
+	{
+		this.formulaIdInTemplate = formulaIdInTemplate;
 	}
 }

@@ -18,6 +18,10 @@
                 <span class="node ${statusSubAction} switch" onclick="showhide(this, '${containerIdSubAction}');">
                     ${key} - ${subActionData.name!""} - ${statusSubAction} 
                 </span>
+                <#if subActionData.idInTemplate?? && subActionData.idInTemplate != "">
+                    <span style="color:#9370DB">&#160;&#160;&#160;IdInTemplate:  </span>
+                    <span style="color:Black; font-weight:normal">${subActionData.idInTemplate}</span>
+                </#if>
                 <div class="container" id="${containerIdSubAction}">
                     <@common.printStatusTable
                         status = subActionStatus
@@ -57,6 +61,10 @@
 		<span class="node ${statusForClass} switch" onclick="showhide(this, '${containerId}');">${action.idInMatrix} - ${action.name} (${statusForTitle})
 			<#if action.comment?? && action.comment != "">
 				<span style="color:#9370DB">&#160;&#160;&#160;Comment: </span><span style="color:Black; font-weight:normal">${action.comment}</span>
+			</#if>
+			<#if action.idInTemplate?? && action.idInTemplate != "">
+				<span style="color:#9370DB">&#160;&#160;&#160;IdInTemplate:  </span>
+				<span style="color:Black; font-weight:normal">${action.idInTemplate}</span>
 			</#if>
 		</span>
 		<div class="container" id="${containerId}">

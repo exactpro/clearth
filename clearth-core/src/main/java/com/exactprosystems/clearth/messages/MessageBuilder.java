@@ -92,7 +92,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	
 	/**
 	 * Sets sub-message type. Valid only for sub-messages
-	 * @param type to set for message being built
+	 * @param subMessageType to set for message being built
 	 */
 	public MessageBuilder<M> subMessageType(String subMessageType)
 	{
@@ -223,12 +223,12 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	{
 		M result = createMessage();
 		result.addField(ClearThMessage.SUBMSGSOURCE, groupId);
-		for (String paramName : rgData.params.keySet())
+		for (String paramName : rgData.getParams().keySet())
 		{
 			if (paramName.equals(MessageAction.REPEATINGGROUPS))
 				continue;
 
-			String paramValue = rgData.params.get(paramName);
+			String paramValue = rgData.getParams().get(paramName);
 			result.addField(paramName, paramValue);
 		}
 		return result;
@@ -236,7 +236,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	
 	protected List<M> findRgChildren(SubActionData rgData, int recursionDepth)
 	{
-		String rgIds = rgData.params.get(MessageAction.REPEATINGGROUPS);
+		String rgIds = rgData.getParams().get(MessageAction.REPEATINGGROUPS);
 		List<M> result = null;
 		try
 		{
@@ -256,7 +256,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 		else
 			parent.getSubActionData().put(groupId, rgData);
 		
-		if (!rgData.success.passed)
+		if (!rgData.getSuccess().passed)
 			rgErrors.add("Sub-action with ID '" + groupId + "' has errors. See details below.");
 		
 		M rgMessage = createRgMessage(groupId, rgData);

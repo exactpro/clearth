@@ -367,7 +367,7 @@ public class ActionExecutor implements Closeable
 		
 		if (action.isSubaction())
 		{
-			SubActionData subActionData = new SubActionData(action.getName(), action.getInputParams(), action.getFormulas(), action.getSubActionData());
+			SubActionData subActionData = new SubActionData(action);
 			matrix.getContext().setSubActionData(actionId, subActionData);
 			subActionData.setException(e);
 		}
@@ -475,7 +475,7 @@ public class ActionExecutor implements Closeable
 	
 	protected SubActionData createSubActionData(Action action)
 	{
-		return new SubActionData(action.getName(), action.getInputParams(), action.getFormulas(), action.getSubActionData());
+		return new SubActionData(action);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -725,7 +725,7 @@ public class ActionExecutor implements Closeable
 		else
 		{
 			if (action.getSubActionData() != null && action.getSubActionData().size() > 0)
-				matrixContext.getSubActionData(actionId).subActionData = action.getSubActionData();
+				matrixContext.getSubActionData(actionId).setSubActionData(action.getSubActionData());
 		
 			if (!action.isPassed())
 				reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
