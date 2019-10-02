@@ -37,7 +37,6 @@ public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 	private final SwiftMetaData metaData;
 	
 	public final static String INCOMINGMESSAGE = "IncomingMessage",
-			USEBLOCK3 = "UseBlock3",
 			ADDBLOCK5 = "AddBlock5",
 			DICTIONARYMSGTYPE = "DictionaryMsgType",
 			MSGCOUNT = "MsgCount";

@@ -20,8 +20,11 @@ package com.exactprosystems.clearth.connectivity.swift;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,6 +34,7 @@ import java.util.Set;
 public class SwiftMetaData
 {
 	protected HashMap<String, String> metadata;
+	protected Map<String, String> block3Tags;
 	
 	public static final String APPLICATION_ID = "ApplicationId",
 			SERVICE_ID = "ServiceId",
@@ -49,10 +53,11 @@ public class SwiftMetaData
 			MIR_SEQUENCE_NUMBER = "MIRSequenceNumber",
 			RECEIVER_OUTPUT_DATE = "ReceiverOutputDate",
 			RECEIVER_OUTPUT_TIME = "ReceiverOutputTime",
-			TAG108 = "Tag108",
 			
 			MAC = "Mac",
-			CHK = "Chk";
+			CHK = "Chk",
+	
+			BLOCK_3_HEADER = "Block3_";
 
 	/**
 	 * Params which should be removed from msgFields
@@ -77,8 +82,6 @@ public class SwiftMetaData
 		add(SwiftMetaData.RECEIVER_OUTPUT_DATE);
 		add(SwiftMetaData.RECEIVER_OUTPUT_TIME);
 
-		add(SwiftMetaData.TAG108);
-
 		add(SwiftMetaData.CHK);
 		add(SwiftMetaData.MAC);
 	}};
@@ -90,14 +93,14 @@ public class SwiftMetaData
 	{{
 		add(ClearThSwiftMessage.MSGTYPE);
 		add(ClearThSwiftMessage.INCOMINGMESSAGE);
-		add(ClearThSwiftMessage.USEBLOCK3);
 		add(ClearThSwiftMessage.ADDBLOCK5);
 	}};
 	
 	
 	public SwiftMetaData()
 	{
-		this.metadata = new HashMap<String, String>();
+		this.metadata = new HashMap<>();
+		this.block3Tags = Collections.emptyMap();
 	}
 	
 	public SwiftMetaData(Map<String, String> messageFields)
@@ -110,13 +113,21 @@ public class SwiftMetaData
 
 			for (String param : getBlacklistParams())
 				addMetaDataValue(param, messageFields.remove(param));
+			
+			Set<String> keys = new LinkedHashSet<>(messageFields.keySet());
+			for (String key : keys) {
+				if (key.startsWith(BLOCK_3_HEADER))
+					this.addBlock3Tag(key.substring(BLOCK_3_HEADER.length()), messageFields.remove(key));
+			}
 		}
 	}
 
 
 	public SwiftMetaData(SwiftMetaData smd)
 	{
-		this.metadata = new HashMap<String, String>(smd.metadata);
+		this.metadata = new HashMap<>(smd.metadata);
+		this.block3Tags = (smd.block3Tags == Collections.EMPTY_MAP) ? smd.block3Tags 
+				: new LinkedHashMap<>(smd.block3Tags);
 	}
 
 	
@@ -130,19 +141,6 @@ public class SwiftMetaData
 	{
 		this.metadata.put(ClearThSwiftMessage.INCOMINGMESSAGE, String.valueOf(incoming));
 	}
-	
-	
-	public boolean isBlock3()
-	{
-		String ub3 = this.metadata.get(ClearThSwiftMessage.USEBLOCK3);
-		return (ub3 != null) && (ub3.equalsIgnoreCase("true"));
-	}
-	
-	public void setBlock3(boolean block3)
-	{
-		this.metadata.put(ClearThSwiftMessage.USEBLOCK3, String.valueOf(block3));
-	}
-	
 	
 	public boolean isBlock5()
 	{
@@ -331,16 +329,6 @@ public class SwiftMetaData
 		return this.metadata.get(RECEIVER_OUTPUT_TIME);
 	}
 	
-	public String getTag108()
-	{
-		return this.metadata.get(TAG108);
-	}
-	
-	public void setTag108(String tag108)
-	{
-		this.metadata.put(TAG108, tag108);
-	}
-	
 	public String getMac()
 	{
 		return this.metadata.get(MAC);
@@ -374,6 +362,8 @@ public class SwiftMetaData
 	}
 
 	public String getMetaDataValue(String key) {
+		if (key != null && key.startsWith(BLOCK_3_HEADER))
+			return this.block3Tags.get(key.substring(BLOCK_3_HEADER.length()));
 		return this.metadata.get(key);
 	}
 
@@ -382,7 +372,11 @@ public class SwiftMetaData
 	 */
 	public boolean addMetaDataValue(String key, String value)
 	{
-		this.metadata.put(key, value);
+		if (key != null && key.startsWith(BLOCK_3_HEADER)) {
+			this.addBlock3Tag(key.substring(BLOCK_3_HEADER.length()), value);
+		} else {
+			this.metadata.put(key, value);
+		}
 		return checkNeedToRemove(key);
 	}
 
@@ -404,7 +398,9 @@ public class SwiftMetaData
 
 	public boolean isMetaDataValue(String key)
 	{
-		return getBlacklistParams().contains(key) || getWhitelistParams().contains(key);
+		return getBlacklistParams().contains(key) 
+				|| getWhitelistParams().contains(key)
+				|| key.startsWith(BLOCK_3_HEADER);
 	}
 
 	public void updateMetaData(SwiftMetaData smd) {
@@ -422,6 +418,32 @@ public class SwiftMetaData
 	{
 		return whitelistParams;
 	}
+
+	public void addBlock3Tag(String tagName, String tagValue) {
+		if (block3Tags == Collections.EMPTY_MAP) {
+			block3Tags = new LinkedHashMap<>();
+		}
+		block3Tags.put(tagName, tagValue);
+	}
+	
+	public String getBlock3Tag(String tagName) {
+		return block3Tags.get(tagName);
+	}
+
+	public void removeBlock3Tag(String tagName) {
+		if (block3Tags != Collections.EMPTY_MAP) {
+			this.block3Tags.remove(tagName);
+		}
+	}
+
+	public Set<String> getCurrentBlock3Names() {
+		return Collections.unmodifiableSet(this.block3Tags.keySet());
+	}
+
+	public boolean hasBlock3Fields() {
+		return !this.block3Tags.isEmpty();
+	}
+	
 
 	@Override
 	public boolean equals(Object obj) {

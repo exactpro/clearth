@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,7 +76,7 @@ public class SwiftCodec implements ICodec
 	protected ValueGenerator generator;
 	protected final MessageValidator messageValidator;
 	
-	protected static final SwiftMetaData emptySwiftMetaData = new SwiftMetaData(Collections.EMPTY_MAP);
+	protected static final SwiftMetaData emptySwiftMetaData = new SwiftMetaData(Collections.emptyMap());
 
 	public SwiftCodec(SwiftDictionary swiftDictionary)
 	{
@@ -147,23 +148,18 @@ public class SwiftCodec implements ICodec
 	
 	protected SwiftBlock3 encodeSwiftBlock3(ClearThMessage message, SwiftBlock4 swift4)
 	{
-		String tag108 = (message instanceof ClearThSwiftMessage) ? 
-				((ClearThSwiftMessage)message).getMetaData().getTag108() : null;
-		
-		if (tag108 == null)
-		{
-			List<Tag> getTags = swift4.getTagsByContent("SEME");	
-			if (getTags.size() == 1)
-			{
-				String seme = getTags.get(0).getValue();
-				tag108 = seme.substring(seme.lastIndexOf("//") + 2);
-			}
-			else
-				return null;
+		SwiftMetaData metaData = (message instanceof ClearThSwiftMessage) ? ((ClearThSwiftMessage)message).getMetaData() : null;
+		if (metaData == null || !metaData.hasBlock3Fields()) {
+			return null;
 		}
 		
-		Tag[] tags3 = new Tag[] { new Tag("108:" + tag108) };
-		return new SwiftBlock3(Arrays.asList(tags3));
+		Set<String> block3Names = metaData.getCurrentBlock3Names();
+		List<Tag> tags = new ArrayList<>(block3Names.size());
+		for (String currentBlock3Name : block3Names) {
+			tags.add(new Tag(currentBlock3Name, metaData.getBlock3Tag(currentBlock3Name)));
+		}
+
+		return new SwiftBlock3(tags);
 	}
 	
 	protected SwiftBlock4 encodeSwiftBlock4(ClearThMessage message) throws EncodeException
@@ -205,11 +201,10 @@ public class SwiftCodec implements ICodec
 		swiftMsg.setBlock1(encodeSwiftBlock1(message));
 		swiftMsg.setBlock2(encodeSwiftBlock2(message));
 		SwiftBlock4 swift4 = encodeSwiftBlock4(message);
-		SwiftMetaData smd = (message instanceof ClearThSwiftMessage) ? 
-				((ClearThSwiftMessage)message).getMetaData() : emptySwiftMetaData;		
-		if (smd.isBlock3())
-			swiftMsg.setBlock3(encodeSwiftBlock3(message, swift4));
+		swiftMsg.setBlock3(encodeSwiftBlock3(message, swift4));
 		swiftMsg.setBlock4(swift4);
+		SwiftMetaData smd = (message instanceof ClearThSwiftMessage) ?
+				((ClearThSwiftMessage)message).getMetaData() : emptySwiftMetaData;
 		if (smd.isBlock5())
 			swiftMsg.setBlock5(encodeSwiftBlock5(message));
 		return srv.getFIN(swiftMsg);
@@ -526,10 +521,11 @@ public class SwiftCodec implements ICodec
 
 	protected void decodeSwiftBlock3(SwiftBlock3 swiftBlock, ClearThSwiftMessage swiftMessage)
 	{
-		swiftMessage.getMetaData().setBlock3(swiftBlock != null);
-		if (swiftBlock != null) {
-			String tag108 = swiftBlock.getTagValue("108");
-			swiftMessage.getMetaData().setTag108(tag108);
+		List<Tag> tags;
+		if (swiftBlock != null && (tags = swiftBlock.getTags()) != null) {
+			for (Tag block3tag : tags) {
+				swiftMessage.getMetaData().addBlock3Tag(block3tag.getName(), block3tag.getValue());
+			}
 		}
 	}
 
