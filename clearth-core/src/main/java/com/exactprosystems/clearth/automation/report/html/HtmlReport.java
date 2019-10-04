@@ -178,7 +178,7 @@ public class HtmlReport
 			List<StepData> stepsData = new ArrayList<StepData>(matrixSteps.size());
 			for (Step step : allSteps)
 			{
-				if (!step.isExecute() || step.getFinished() == null && step.getActionsDone() == 0)
+				if (!step.isExecute() || step.getFinished() == null && step.getExecutionProgress().getDone() == 0)
 					continue;
 				String stepName = step.getName();
 				String stepFileName = step.getSafeName();

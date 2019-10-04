@@ -18,11 +18,11 @@
 
 package com.exactprosystems.clearth.automation.persistence;
 
+import com.exactprosystems.clearth.automation.*;
+
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import com.exactprosystems.clearth.automation.*;
 
 public abstract class StepState
 {
@@ -30,7 +30,7 @@ public abstract class StepState
 	private boolean askForContinue = false, askIfFailed = false, execute = true;
 	private String comment;
 	private Date started = null, finished = null;
-	private int actionsDone = 0, actionsSuccessful = 0;
+	private ActionsExecutionProgress executionProgress;
 	private boolean successful = true;  //interrupted flag can't be set without interrupting a step, no need to store its value
 	private Map<String, StepContext> stepContexts = null;
 	private String statusComment = null;
@@ -58,8 +58,7 @@ public abstract class StepState
 		this.started = step.getStarted();
 		this.finished = step.getFinished();
 		
-		this.actionsDone = step.getActionsDone();
-		this.actionsSuccessful = step.getActionsSuccessful();
+		this.executionProgress = step.getExecutionProgress();
 		
 		this.successful = step.isSuccessful();
 		if (step.getStepContexts() != null)
@@ -91,8 +90,7 @@ public abstract class StepState
 		this.started = stepState.getStarted();
 		this.finished = stepState.getFinished();
 		
-		this.actionsDone = stepState.getActionsDone();
-		this.actionsSuccessful = stepState.getActionsSuccessful();
+		this.executionProgress = stepState.getExecutionProgress();
 		
 		this.successful = stepState.isSuccessful();
 		this.stepContexts = stepState.getStepContexts();
@@ -104,17 +102,17 @@ public abstract class StepState
 	
 	public Step stepFromState(StepFactory stepFactory)
 	{
-		Step result = stepFactory.createStep(this.name, this.kind, this.startAt, this.startAtType, this.waitNextDay, this.parameter, this.askForContinue, this.askIfFailed, this.execute, this.comment);
+		Step result = stepFactory.createStep(name, kind, startAt, startAtType, waitNextDay, parameter,
+				askForContinue, askIfFailed, execute, comment);
 		
-		result.setStarted(this.started);
-		result.setFinished(this.finished);
+		result.setStarted(started);
+		result.setFinished(finished);
 		
-		result.setActionsDone(this.actionsDone);
-		result.setActionsSuccessful(this.actionsSuccessful);
+		result.setExecutionProgress(executionProgress);
 		
-		result.setSuccessful(this.successful);
-		result.setStatusComment(this.statusComment);
-		result.setError(this.error);
+		result.setSuccessful(successful);
+		result.setStatusComment(statusComment);
+		result.setError(error);
 		
 		initStep(result);
 		
@@ -235,25 +233,14 @@ public abstract class StepState
 	}
 	
 	
-	public int getActionsDone()
+	public ActionsExecutionProgress getExecutionProgress()
 	{
-		return actionsDone;
+		return executionProgress;
 	}
 	
-	public void setActionsDone(int actionsDone)
+	public void setExecutionProgress(ActionsExecutionProgress executionProgress)
 	{
-		this.actionsDone = actionsDone;
-	}
-	
-	
-	public int getActionsSuccessful()
-	{
-		return actionsSuccessful;
-	}
-	
-	public void setActionsSuccessful(int actionsSuccessful)
-	{
-		this.actionsSuccessful = actionsSuccessful;
+		this.executionProgress = executionProgress;
 	}
 	
 	

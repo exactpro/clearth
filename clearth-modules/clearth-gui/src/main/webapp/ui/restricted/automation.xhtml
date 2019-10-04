@@ -233,7 +233,7 @@
 								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.started != null}" />
 							</p:column>
 							<p:column headerText="Actions&#160;successful" priority="3">
-								<h:outputText value="#{step.actionsSuccessful} / #{step.actionsDone}" />
+								<h:outputText value="#{step.executionProgress}" />
 							</p:column>
 							<p:column headerText="Finished" priority="4">
 								<h:outputText value="#{step.finished}" rendered="#{step.execute}">
@@ -762,7 +762,7 @@
 								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.started != null}" />
 							</p:column>
 							<p:column headerText="Actions&#160;successful" priority="3">
-								<h:outputText value="#{step.actionsSuccessful} / #{step.actionsDone}" />
+								<h:outputText value="#{step.executionProgress}" />
 							</p:column>
 							<p:column headerText="Finished" priority="4">
 								<h:outputText value="#{step.finished}" rendered="#{step.execute}">

@@ -24,7 +24,7 @@ import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.report.Result;
 import org.slf4j.Logger;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -40,7 +40,7 @@ public abstract class Step
 	protected String actionsReportsDir = null;
 
 	protected Date started, finished;
-	protected int actionsDone = 0, actionsSuccessful = 0;
+	protected ActionsExecutionProgress executionProgress = new ActionsExecutionProgress();
 	protected boolean successful = true, interrupted = false, paused = false;
 	protected SchedulerSuspension suspension = null;
 	protected Map<Matrix, StepContext> stepContexts = null;
@@ -63,7 +63,8 @@ public abstract class Step
 		kind = null;
 	}
 	
-	public Step(String name, String kind, String startAt, StartAtType startAtType, boolean waitNextDay, String parameter, boolean askForContinue, boolean askIfFailed, boolean execute, String comment)
+	public Step(String name, String kind, String startAt, StartAtType startAtType, boolean waitNextDay, String parameter,
+			boolean askForContinue, boolean askIfFailed, boolean execute, String comment)
 	{
 		this.name = name;
 		safeName = name;
@@ -280,25 +281,14 @@ public abstract class Step
 	}
 	
 	
-	public int getActionsDone()
+	public ActionsExecutionProgress getExecutionProgress()
 	{
-		return actionsDone;
+		return executionProgress;
 	}
 	
-	public void setActionsDone(int actionsDone)
+	public void setExecutionProgress(ActionsExecutionProgress executionProgress)
 	{
-		this.actionsDone = actionsDone;
-	}
-	
-	
-	public int getActionsSuccessful()
-	{
-		return actionsSuccessful;
-	}
-	
-	public void setActionsSuccessful(int actionsSuccessful)
-	{
-		this.actionsSuccessful = actionsSuccessful;
+		this.executionProgress = executionProgress;
 	}
 	
 	
@@ -462,7 +452,6 @@ public abstract class Step
 	protected void updateByAsyncActions(ActionExecutor actionExec)
 	{
 		actionExec.checkAsyncActions();
-		actionsSuccessful = actionExec.getActionsSuccessful();
 	}
 	
 	protected void waitForAsyncActions(ActionExecutor actionExec)
@@ -502,7 +491,7 @@ public abstract class Step
 			//paused = false;
 			beforeActions(globalContext);
 			
-			actionExec.reset(actionsReportsDir);  //Resetting all internal counters to prepare execution of actions from this particular step
+			actionExec.reset(actionsReportsDir, executionProgress);  //Resetting all internal counters to prepare execution of actions from this particular step
 			
 			AtomicBoolean canReplay = new AtomicBoolean(false);
 			logger.info("Running actions for step '{}'", this.getName());
@@ -540,9 +529,6 @@ public abstract class Step
 				{
 					if (!isAsyncAction(action))
 						action.dispose();
-					
-					actionsDone = actionExec.getActionsDone();
-					actionsSuccessful = actionExec.getActionsSuccessful();
 				}
 			}
 

@@ -33,11 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ActionExecutor implements Closeable
@@ -55,7 +51,7 @@ public class ActionExecutor implements Closeable
 	private final FailoverStatus failoverStatus;
 	private AsyncActionsManager asyncManager;
 	
-	private int actionsDone = 0, actionsSuccessful = 0;
+	private ActionsExecutionProgress executionProgress;
 	private String actionsReportsDir;
 	private boolean interrupted = false;
 	
@@ -88,24 +84,12 @@ public class ActionExecutor implements Closeable
 	}
 	
 	
-	public int getActionsDone()
-	{
-		return actionsDone;
-	}
-
-	public int getActionsSuccessful()
-	{
-		return actionsSuccessful;
-	}
-	
-	
 	/**
 	 * Use this method to prepare action executor for actions from new step
 	 */
-	public void reset(String actionsReportsDir)
+	public void reset(String actionsReportsDir, ActionsExecutionProgress executionProgress)
 	{
-		actionsDone = 0;
-		actionsSuccessful = 0;
+		this.executionProgress = executionProgress;
 		reportWriter.reset();
 		this.actionsReportsDir = actionsReportsDir;
 	}
@@ -134,12 +118,12 @@ public class ActionExecutor implements Closeable
 			}
 			else if (!action.isSubaction())
 			{
-				actionsSuccessful++;
+				executionProgress.incrementSuccessful();
 				matrix.incActionsSuccess();
 			}
 			
 			if (!action.isSubaction())
-				actionsDone++;
+				executionProgress.incrementDone();
 			return false;
 		}
 		
@@ -309,15 +293,21 @@ public class ActionExecutor implements Closeable
 	protected void updateAsyncActionReport(AsyncActionData actionData)
 	{
 		Action action = actionData.getAction();
+		Result result = actionData.getResult();
 		if (getLogger().isTraceEnabled())
 			getLogger().trace(action.getDescForLog("Updating report of"));
 		
 		action.setStarted(actionData.getStarted());
 		action.setFinished(actionData.getFinished());
-		action.setResult(actionData.getResult());
-		applyActionResult(action, true);
+		action.setResult(result);
+		applyActionResult(action, false);
 		reportWriter.updateReports(action, actionsReportsDir, action.getStep().getSafeName());
 		processActionResult(action);
+		
+		// If asynchronous action is finished and failed, need to decrement number of successful actions for certain step
+		// because all async actions are treated as passed on start of their executions
+		if (result != null && !result.isSuccess())
+			action.getStep().getExecutionProgress().decrementSuccessful();
 	}
 
 	protected void afterAsyncAction(@SuppressWarnings("unused") Action action) { /* Nothing to do by default*/ }
@@ -421,7 +411,7 @@ public class ActionExecutor implements Closeable
 			subActionData.setFailedComment(comment.toString());
 	}
 	
-	protected void applyActionResult(Action action, boolean isUpdateAsyncActionReport)
+	protected void applyActionResult(Action action, boolean countSuccess)
 	{
 		Matrix matrix = action.getMatrix();
 		Result result = action.getResult();
@@ -433,17 +423,14 @@ public class ActionExecutor implements Closeable
 			
 			if (result.isSuccess())
 			{
-				if (!action.isSubaction() && !isUpdateAsyncActionReport)
+				if (!action.isSubaction() && countSuccess)
 				{
-					actionsSuccessful++;
+					executionProgress.incrementSuccessful();
 					matrix.incActionsSuccess();
 				}
 			}
 			else
 			{
-				if (!action.isSubaction() && isUpdateAsyncActionReport)
-					actionsSuccessful--;
-				
 				// If verification is not successful - mark this matrix and step as FAILED
 				String stepName = action.getStepName();
 				matrix.setStepSuccessful(stepName, false);
@@ -455,9 +442,9 @@ public class ActionExecutor implements Closeable
 		else
 		{
 			action.setPassed(true);
-			if (!action.isSubaction() && !isUpdateAsyncActionReport)
+			if (!action.isSubaction() && countSuccess)
 			{
-				actionsSuccessful++;
+				executionProgress.incrementSuccessful();
 				matrix.incActionsSuccess();
 			}
 		}
@@ -641,7 +628,7 @@ public class ActionExecutor implements Closeable
 		//Run action
 		if (!action.isSubaction())
 		{
-			actionsDone++;
+			executionProgress.incrementDone();
 			matrix.incActionsDone();
 		}
 		else
@@ -716,7 +703,7 @@ public class ActionExecutor implements Closeable
 			while (!passed);
 		}
 		
-		applyActionResult(action, false);
+		applyActionResult(action, true);
 		if (!action.isSubaction())
 		{
 			actionToMvel(action, globalContext);

@@ -303,7 +303,7 @@ public abstract class Executor extends Thread
 						
 						if ((stepResult!=null) && (stepResult.getError()!=null) && (stepResult.getError() instanceof InterruptedException))
 							interrupted.set(true);
-						else if (step.isAskForContinue() || step.isAskIfFailed() && step.getActionsSuccessful() < step.getActionsDone())
+						else if (step.isAskForContinue()|| step.isAskIfFailed() && step.getExecutionProgress().getSuccessful() < step.getExecutionProgress().getDone())
 						{
 							ended = Calendar.getInstance().getTime();
 							lastReportsInfo = null;

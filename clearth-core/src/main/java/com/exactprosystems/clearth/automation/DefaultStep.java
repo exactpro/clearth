@@ -18,14 +18,13 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.IOException;
-import java.util.Map;
-
+import com.csvreader.CsvReader;
+import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.csvreader.CsvReader;
-import com.exactprosystems.clearth.automation.exceptions.FailoverException;
+import java.io.IOException;
+import java.util.Map;
 
 public class DefaultStep extends Step
 {
@@ -58,8 +57,7 @@ public class DefaultStep extends Step
 	{
 		started = null;
 		finished = null;
-		actionsDone = 0;
-		actionsSuccessful = 0;
+		executionProgress = new ActionsExecutionProgress();
 		interrupted = false;
 		paused = false;
 	}
@@ -67,8 +65,7 @@ public class DefaultStep extends Step
 	@Override
 	public void initBeforeReplay()
 	{
-		actionsDone = 0;
-		actionsSuccessful = 0;
+		executionProgress = new ActionsExecutionProgress();
 		statusComment = null;
 		finished = null;
 	}
