@@ -32,10 +32,10 @@ import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
 import com.exactprosystems.clearth.tools.ToolsManager;
 import com.exactprosystems.clearth.utils.sql.ClearThDbConnection;
-import com.exactprosystems.memorymonitor.*;
 import com.exactprosystems.clearth.tools.ToolsFactory;
 import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.xmldata.*;
+import com.exactprosystems.memorymonitor.MemoryMonitor;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
 
@@ -875,6 +875,7 @@ public abstract class ClearThCore
 	public void beforeShutdown()
 	{
 		connectionStorage.stopAllConnections();
+		memoryMonitor.halt();
 	}
 
 	

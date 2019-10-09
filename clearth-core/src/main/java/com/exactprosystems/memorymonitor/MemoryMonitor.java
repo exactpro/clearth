@@ -29,12 +29,12 @@ public class MemoryMonitor extends Thread
 	protected static final long DEFAULT_SLEEP = 10000,
 			DEFAULT_LARGEDIFF = 50000000,
 			DEFAULT_LOWMEMORY = 100000000;
-	
+
 	protected final Runtime rm = Runtime.getRuntime();
 	protected final long sleep,
 			largeDiff,
 			lowMemory;
-	
+
 	//TODO after adding config:
 	//init parameters from config
 	public MemoryMonitor(String name)
@@ -44,7 +44,7 @@ public class MemoryMonitor extends Thread
 		largeDiff = DEFAULT_LARGEDIFF;
 		lowMemory = DEFAULT_LOWMEMORY;
 	}
-	
+
 	public MemoryMonitor(String name, long sleep, long largeDiff, long lowMemory)
 	{
 		super(name);
@@ -52,7 +52,12 @@ public class MemoryMonitor extends Thread
 		this.largeDiff = largeDiff;
 		this.lowMemory = lowMemory;
 	}
-	
+
+	public void halt()
+	{
+		this.interrupt();
+	}
+
 	@Override
 	public void run()
 	{
@@ -62,9 +67,9 @@ public class MemoryMonitor extends Thread
 				totalMb = toMegabytes(total),
 				free = rm.freeMemory(),
 				freeMb = toMegabytes(free);
-		logger.info("Maximum available memory: "+maxMb+" Mb ("+max+")");
-		logger.info("Currently available memory: "+totalMb+" Mb ("+total+")");
-		logger.info("Free memory: "+freeMb+" Mb ("+free+")"+Utils.EOL);
+		logger.info("Maximum available memory: {} Mb ({})", maxMb, max);
+		logger.info("Currently available memory: {} Mb ({})", totalMb, total);
+		logger.info("Free memory: {} Mb ({}){}", freeMb, free, Utils.EOL);
 		while (true)
 		{
 			try
@@ -76,30 +81,31 @@ public class MemoryMonitor extends Thread
 				logger.info("Wait for next iteration interrupted, monitoring stopped");
 				return;
 			}
-			
+
 			long currentTotal = rm.totalMemory(),
 					currentTotalMb = toMegabytes(currentTotal),
 					currentFree = rm.freeMemory(),
 					currentFreeMb = toMegabytes(currentFree);
 			logger.info("Available: {} Mb ({})", currentTotalMb, currentTotal);
-			logger.info("Free: {} Mb ({})"+Utils.EOL, currentFreeMb, currentFree);
-			
+			logger.info("Free: {} Mb ({}){}", currentFreeMb, currentFree, Utils.EOL);
+
 			if (logger.isWarnEnabled())
 			{
 				if (free-currentFree >= largeDiff)
-					logger.warn("Large memory consumption detected!"+Utils.EOL);
+					logger.warn("Large memory consumption detected!{}", Utils.EOL);
 				if ((max-currentTotal <= lowMemory) && (currentTotal-currentFree <= lowMemory))
-					logger.warn("MEMORY LOW! Already allocated "+currentTotalMb+" Mb of maximum "+maxMb+" Mb, "+currentFreeMb+" Mb left"+Utils.EOL);
+					logger.warn("MEMORY LOW! Already allocated {} Mb of maximum {} Mb, {} Mb left{}",
+							currentTotalMb, maxMb, currentFreeMb, Utils.EOL);
 			}
-			
+
 			total = currentTotal;
 			totalMb = currentTotalMb;
 			free = currentFree;
 			freeMb = currentFreeMb;
 		}
 	}
-	
-	
+
+
 	private long toMegabytes(long bytes)
 	{
 		return Math.round((double) bytes/1024/1024);

@@ -1,0 +1,3 @@
+#Id,#GlobalStep,#Action,#Execute,#Param1,#Param2
+"id3","Step1","TestAction",true,1,2
+"id4","Step2","TestAction",true,1,2
