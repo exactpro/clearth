@@ -189,8 +189,8 @@ public class CompareDataSets extends Action
 		}
 		finally
 		{
-			if (result instanceof Closeable)
-				Utils.closeResource((Closeable)result);
+			if (result instanceof AutoCloseable)
+				Utils.closeResource((AutoCloseable)result);
 		}
 	}
 	
