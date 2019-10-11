@@ -18,118 +18,165 @@
 
 package com.exactprosystems.clearth.web.misc;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.csvreader.CsvReader;
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.utils.Utils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.Step;
-import com.exactprosystems.clearth.utils.Utils;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
-public class StepUploadHandler {
-
+public class StepUploadHandler
+{
 	private static final Logger logger = LoggerFactory.getLogger(StepUploadHandler.class);
 
-	public static final String CSV = ".csv", 
-			CFG = ".cfg", 
+	private static final String CSV = "csv",
+			CFG = "cfg",
 			VALID_MIME_TYPE_STEPS_CFG = "text/";
 
 	public static void uploadSteps(FileUploadEvent event, Scheduler scheduler, boolean appendSteps)
 	{
-		UploadedFile file = event.getFile();
-		if((file == null) || (file.getContents().length == 0))
-		{
-			logger.error("Steps configuration file doesn't exist or empty");
-			MessageUtils.addErrorMessage("Error", "Error occurred while working with scheduler configuration");
+		UploadedFile uploadedFile = event.getFile();
+		if (!isValidStepConfig(uploadedFile))
 			return;
-		}
 
-		if(!isValidStepConfig(file))
-		{
-			String message = "Invalid file's type for steps configuration file. Valid type is: " + CFG + ", " + CSV;
-			logger.error(message);
-			MessageUtils.addErrorMessage("Error", message);
-			return;
-		}
-
+		String uploadedFilename = uploadedFile.getFileName();
 		try
 		{
-			File storedFile = WebUtils.storeUploadedFile(file, new File(ClearThCore.automationStoragePath()), "scconfig_", CSV);
+			File storageDir = new File(ClearThCore.automationStoragePath());
+			File storedFile = WebUtils.storeUploadedFile(uploadedFile, storageDir, "scconfig_", "."+CSV);
 
-			List<String> headerErrors = checkStepConfigHeader(storedFile.getAbsolutePath());
-			if(!headerErrors.isEmpty())
-			{
-				boolean success = storedFile.delete();
-				logger.info(storedFile.getName() + " was " + (success ? "successfully" : "not") + " deleted.");
-
-				String message = file.getFileName() + " doesn't contain following header params: " + headerErrors;
-				logger.error(message);
-				MessageUtils.addErrorMessage("Error", message);
+			if (!checkStepConfigHeader(uploadedFilename, storedFile))
 				return;
-			}
 
-			List<String> warnings = new ArrayList<String>();
-			scheduler.uploadSteps(storedFile, new File(file.getFileName()).getName(), warnings, appendSteps);
-			if(warnings.isEmpty())
-				MessageUtils.addInfoMessage("Success", "Scheduler configuration uploaded.");
-			else
-				MessageUtils.addWarningMessage("Warning",
-											   "Scheduler configuration uploaded with errors:\r\n<br /><li>" + StringUtils.join(warnings,
-																																"\r\n<br /><li>"));
-			logger.info("uploaded configuration '" + file.getFileName() + "' for scheduler '" + scheduler.getName() + "' with " + (appendSteps ? "append" : "apply"));
-		} catch (Exception e)
+			List<String> warnings = new ArrayList<>();
+			scheduler.uploadSteps(storedFile, uploadedFilename, warnings, appendSteps);
+			checkUploadWarnings(warnings);
+
+			logger.info("uploaded configuration '{}' for scheduler '{}' with {}", uploadedFilename,
+					scheduler.getName(), appendSteps ? "append" : "apply");
+		}
+		catch (Exception e)
 		{
-			logger.error("Error while working with scheduler configuration from file " + file.getFileName(), e);
-			MessageUtils.addErrorMessage("Error",
-										 "Error occurred while working with scheduler configuration from file " + file.getFileName() + ": " + e.getMessage());
+			String message = String.format("Error occurred while working with scheduler configuration from file '%s'", uploadedFilename);
+			logger.error(message, e);
+			MessageUtils.addErrorMessage("Error", message + ": " + e.getMessage());
 		}
 	}
 
-	public static boolean isValidStepConfig(UploadedFile file)
+	private static void deleteStoredFile(File storedFile)
 	{
-		String fileName = file.getFileName().toLowerCase();
+		try
+		{
+			Files.deleteIfExists(Paths.get(storedFile.getAbsolutePath()));
+		}
+		catch (IOException e)
+		{
+			logger.warn("Error while deleting '"+storedFile.getName()+"' file.", e);
+			return;
+		}
+		
+		logger.info("File '{}' has been deleted.", storedFile.getName());
+	}
 
-		if(!file.getContentType().toLowerCase().startsWith(VALID_MIME_TYPE_STEPS_CFG) && !fileName.endsWith(CSV) && !fileName.endsWith(CFG))
+	private static void checkUploadWarnings(List<String> warnings)
+	{
+		if (warnings.isEmpty())
+		{
+			MessageUtils.addInfoMessage("Success", "Scheduler configuration uploaded.");
+		}
+		else
+		{
+			String separator = "\r\n<br /><li>";
+			MessageUtils.addWarningMessage("Warning",
+					"Scheduler configuration uploaded with errors:" + separator +
+							StringUtils.join(warnings, separator));
+		}
+	}
+
+	private static boolean isValidStepConfig(UploadedFile file)
+	{
+		if ((file == null) || (file.getContents().length == 0))
+		{
+			logger.error("Steps configuration file doesn't exist or empty");
+			MessageUtils.addErrorMessage("Error", "Error occurred while working with scheduler configuration");
 			return false;
+		}
+
+		boolean isCsvOrCfg = FilenameUtils.isExtension(file.getFileName().toLowerCase(), new String[]{CSV, CFG});
+		boolean isValidContent = file.getContentType().toLowerCase().startsWith(VALID_MIME_TYPE_STEPS_CFG);
+
+		if (!isValidContent || !isCsvOrCfg)
+		{
+			String message =
+					String.format("Invalid file type for steps configuration file. Valid types are: '%s', '%s'", CFG, CSV);
+			logger.error(message);
+			MessageUtils.addErrorMessage("Error", message);
+			return false;
+		}
 
 		return true;
 	}
 
-	public static List<String> checkStepConfigHeader(String filename) throws IOException
+	private static boolean checkStepConfigHeader(String uploadedFilename, File storedFile) throws IOException
 	{
-		CsvReader reader = null;
-
+		String storedFilename = storedFile.getAbsolutePath();
+		List<String> undefinedFields;
 		try
 		{
-			reader = new CsvReader(filename);
+			undefinedFields = readConfigHeaders(storedFilename);
+		}
+		catch (IOException e)
+		{
+			deleteStoredFile(storedFile);
+			throw e;
+		}
+
+		if (!undefinedFields.isEmpty())
+		{
+			String message = String.format("File '%s' doesn't contain the following header parameters: %s", uploadedFilename, undefinedFields);
+			logger.error(message);
+			MessageUtils.addErrorMessage("Error", message);
+			deleteStoredFile(storedFile);
+			return false;
+		}
+
+		return true;
+	}
+
+	private static List<String> readConfigHeaders(String storedFilename) throws IOException
+	{
+		CsvReader reader = null;
+		List<String> undefinedFields = new ArrayList<>();
+		try
+		{
+			reader = new CsvReader(storedFilename);
 			reader.setSafetySwitch(false);
 			reader.readHeaders();
 
 			List<String> header = Arrays.asList(reader.getHeaders());
-			List<String> undefinedFields = new ArrayList<String>();
-
 			for (Step.StepParams param : Step.StepParams.values())
 			{
 				if (!header.contains(param.getValue()) && !excludedParams().contains(param))
 					undefinedFields.add(param.getValue());
 			}
-			return undefinedFields;
-		} finally
+		}
+		finally
 		{
 			Utils.closeResource(reader);
 		}
+
+		return undefinedFields;
 	}
 
 	private static Set<Step.StepParams> excludedParams()
