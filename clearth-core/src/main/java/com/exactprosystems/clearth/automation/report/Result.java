@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.Serializable;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.MINIMAL_CLASS)
-@JsonIgnoreProperties({"error"})
+@JsonIgnoreProperties({"error", "successWithoutInversionRegard"})
 public abstract class Result implements Serializable
 {
 	public static final String DETAILS_DIR = "details/";
