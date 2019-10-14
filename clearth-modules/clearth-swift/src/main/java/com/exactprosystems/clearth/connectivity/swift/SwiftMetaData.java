@@ -60,7 +60,7 @@ public class SwiftMetaData
 			BLOCK_3_HEADER = "Block3_";
 
 	/**
-	 * Params which should be removed from msgFields
+	 * Parameters which should be removed from msgFields
 	 */
 	protected final Set<String> blacklistParams = new HashSet<String>()
 	{{
@@ -87,7 +87,7 @@ public class SwiftMetaData
 	}};
 
 	/**
-	 * Params which shouldn't be removed from msgFields
+	 * Parameters which shouldn't be removed from msgFields
 	 */
 	protected final Set<String> whitelistParams = new HashSet<String>()
 	{{
@@ -368,7 +368,7 @@ public class SwiftMetaData
 	}
 
 	/**
-	 * @return true if this value should be removed from msgFields (param not contains in whitelist)
+	 * @return true if this value should be removed from msgFields (i.e. parameter is not included in whitelist)
 	 */
 	public boolean addMetaDataValue(String key, String value)
 	{
@@ -381,7 +381,7 @@ public class SwiftMetaData
 	}
 
 	/**
-	 * @return true if this value should be removed from msgFields (param not contains in whitelist)
+	 * @return true if this value should be removed from msgFields (i.e. parameter is not included in whitelist)
 	 */
 	public boolean addIfNeeded(String key, String value)
 	{

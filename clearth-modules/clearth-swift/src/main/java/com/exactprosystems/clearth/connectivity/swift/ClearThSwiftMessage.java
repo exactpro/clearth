@@ -69,7 +69,7 @@ public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 		}
 		this.metaData = smd != null ?
 				smd :
-				initMetaData(null);
+				initMetaData(tags);
 	}
 
 	protected SwiftMetaData initMetaData(Map<String, String> tags)
