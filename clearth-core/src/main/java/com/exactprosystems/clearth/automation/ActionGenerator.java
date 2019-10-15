@@ -63,7 +63,7 @@ public abstract class ActionGenerator
 	{
 		this.steps = steps;
 		for (String stepName : steps.keySet())
-			steps.get(stepName).getActions().clear();
+			steps.get(stepName).clearActions();
 		this.matrices = matrices;
 		this.matrices.clear();
 		this.preparableActions = preparableActions;
@@ -558,7 +558,7 @@ public abstract class ActionGenerator
 						logger.warn(message);
 						matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.UNEXPECTED_STEP_KIND, message);
 					}
-					step.getActions().add(action);
+					step.addAction(action);
 					if (preparableActions != null && !preparableActions.containsKey(action.getName())
 							&& action.isExecutable() && action instanceof Preparable)
 						preparableActions.put(action.getName(), (Preparable)action);

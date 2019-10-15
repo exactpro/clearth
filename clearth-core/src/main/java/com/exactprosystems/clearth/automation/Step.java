@@ -33,10 +33,10 @@ import static com.exactprosystems.clearth.automation.ActionExecutor.isAsyncActio
 public abstract class Step
 {
 	protected String name, kind, startAt, parameter;
-	protected boolean askForContinue, askIfFailed, execute;
+	protected boolean askForContinue, askIfFailed, execute, executable, async;
 	protected String comment = "";
 	
-	protected List<Action> actions = new ArrayList<Action>();
+	protected final List<Action> actions = new ArrayList<>();
 	protected String actionsReportsDir = null;
 
 	protected Date started, finished;
@@ -220,10 +220,20 @@ public abstract class Step
 		this.askIfFailed = askIfFailed;
 	}
 
-
+	/**
+	 * @return True if execute flag is true
+	 */
 	public boolean isExecute()
 	{
 		return execute;
+	}
+
+	/**
+	 * @return True if step is execute and if at least one action in actions is executable.
+	 */
+	protected boolean isExecutable()
+	{
+		return executable;
 	}
 	
 	public void setExecute(boolean execute)
@@ -242,15 +252,10 @@ public abstract class Step
 			comment = comment.replaceAll("[\r\n\t]+"," ");
 		this.comment = comment;
 	}
-	
+
 	public List<Action> getActions()
 	{
-		return actions;
-	}
-	
-	public void setActions(List<Action> actions)
-	{
-		this.actions = actions;
+		return Collections.unmodifiableList(actions);
 	}
 	
 	public String getActionsReportsDir()
@@ -477,9 +482,9 @@ public abstract class Step
 		this.actionsReportsDir = actionsReportsDir;
 		Logger logger = getLogger();
 		checkContextsExist();
-		if ((actions == null) || (actions.isEmpty()))
+		if (actions.isEmpty())
 		{
-			logger.info("No actions for step " + this.getName());
+			logger.info("No actions for step {}", this.getName());
 			return;
 		}
 		
@@ -551,6 +556,41 @@ public abstract class Step
 		}
 	}
 
+	public boolean isAsync()
+	{
+		return async;
+	}
+
+	public void refreshAsyncFlag()
+	{
+		async = !actions.isEmpty() && actions.stream().anyMatch(action -> action.isAsync() && !action.isPayloadFinished());
+	}
+
+	public void addAction(Action action)
+	{
+		actions.add(action);
+		setStatuses();
+	}
+
+	public void clearActions()
+	{
+		actions.clear();
+		setStatuses();
+	}
+
+	public void setActions(List<Action> actions)
+	{
+		clearActions();
+		this.actions.addAll(actions);
+		setStatuses();
+	}
+
+	private void setStatuses()
+	{
+		executable = execute && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
+		refreshAsyncFlag();
+	}
+	
 	public enum StepParams
 	{
 		GLOBAL_STEP ("Global step"),

@@ -342,7 +342,7 @@ public abstract class Executor extends Thread
 				}
 				finally
 				{
-					stepFinished(step);
+					clearStepContexts(step);
 				}
 				
 				if (!interrupted.get())
@@ -396,6 +396,8 @@ public abstract class Executor extends Thread
 			clearGlobalContexts();
 
 			this.matrices.clear();
+			clearSteps();
+			
 			if(scheduler.executor != null) // We can't clear steps if it is executor created in seqExec
 				steps.clear();
 
@@ -411,6 +413,18 @@ public abstract class Executor extends Thread
 	{
 		step.clearContexts(); // step.getStepContext(matrix).clearContext(); can be done if it is executor created in seqExec
 		step.actions.clear();
+	}
+
+	protected void clearSteps()
+	{
+		steps.forEach(Step::clearActions);
+		if (scheduler.executor != null) // We can't clear steps if it is executor created in seqExec
+			steps.clear();
+	}
+
+	protected void clearStepContexts(Step step)
+	{
+		step.clearContexts();
 	}
 
 	public void clearMatricesContexts()
@@ -909,7 +923,7 @@ public abstract class Executor extends Thread
 	
 	protected void waitForStepStart(Step step)
 	{
-		if (isStepExecutable(step) && (step.getStartAt() != null) && (!step.getStartAt().isEmpty()))
+		if (step.isExecutable() && (step.getStartAt() != null) && (!step.getStartAt().isEmpty()))
 		{
 			Calendar now = Calendar.getInstance(), 
 					startTime = Calendar.getInstance();

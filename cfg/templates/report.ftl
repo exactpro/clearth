@@ -83,6 +83,7 @@
 					pathToActionsFile = stepData.pathToActionsFile!""
 					expanded = stepData.statusExpanded
 					stepName = stepData.stepName
+					async = stepData.async
 				/>
 			</#list>
 		</div>

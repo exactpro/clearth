@@ -68,4 +68,9 @@ public class StepData
 	{
 		return stepName;
 	}
+
+	public boolean isAsync()
+	{
+		return step.isAsync();
+	}
 }

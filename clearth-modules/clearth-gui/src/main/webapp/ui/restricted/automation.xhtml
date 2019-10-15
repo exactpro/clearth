@@ -203,6 +203,12 @@
 								<h:outputText value="#{step.name}" />&#160;&#160;
 								<h:graphicImage rendered="#{!step.comment.isEmpty()}" value="/images/help-icon.png" alt="Comment" style="vertical-align: middle; opacity: 1"
 												title="#{step.comment}"/>
+								<div style="float: right">
+									<p:outputLabel style="padding: 2px 4px; color:white; background-color:#0075d2; border-radius: 2px; font-size:10px;"
+											value="ASYNC"
+											rendered="#{step.isAsync()}"
+											title="Asynchronous actions have been started in this step"/>
+								</div>
 							</p:column>
 							<p:column headerText="Kind" priority="1" style="width: 20%">
 								<h:outputText value="#{step.kind}" />

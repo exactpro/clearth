@@ -1,10 +1,13 @@
 <#import "common.ftl" as common>
 <#import "result.ftl" as resultTemplate>
 
-<#macro printStep step status containerId pathToActionsFile expanded stepName>
+<#macro printStep step status containerId pathToActionsFile expanded stepName async>
 	<div class="step">
 		<#assign s = status.passed?then('passed','failed')>
 		<span class="node ${s} switch" onclick="showhide(this, '${containerId}');">${stepName} - ${step.kind} (${s?upper_case})</span>
+		<#if async>
+		<span class="async">ASYNC</span>
+		</#if>
 		<div class="container" id="${containerId}">
 			<label><input type="checkbox" class="expandStep" onclick="toggleExpandStep('${containerId}', this.checked)" unchecked>Expand all actions</label>
 			<#if pathToActionsFile != "">

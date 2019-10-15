@@ -63,6 +63,7 @@ public abstract class Action
 	protected long timeout;
 	
 	protected boolean async;
+	protected boolean payloadFinished;
 	protected String asyncGroup;
 	protected WaitAsyncEnd waitAsyncEnd;
 	
@@ -666,5 +667,15 @@ public abstract class Action
 		
 		return String.format(prefix + "%s action '%s' with ID '%s' from matrix '%s'%s",
 						actionType, getName(), getIdInMatrix(), matrixName, actionComment);
+	}
+
+	public boolean isPayloadFinished()
+	{
+		return payloadFinished;
+	}
+
+	public void setPayloadFinished(boolean payloadFinished)
+	{
+		this.payloadFinished = payloadFinished;
 	}
 }

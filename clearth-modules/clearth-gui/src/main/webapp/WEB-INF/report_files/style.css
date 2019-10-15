@@ -159,3 +159,9 @@ td.exception
 {
 	display: none;
 }
+
+.async
+{
+    color: #0075d2;
+    font-weight: bold;
+}

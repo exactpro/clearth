@@ -58,15 +58,28 @@
 			
 			statusForTitle = action.inverted?then("INVERTED TO ", "") + status.passed?then("PASSED", "FAILED")
 		>
-		<span class="node ${statusForClass} switch" onclick="showhide(this, '${containerId}');">${action.idInMatrix} - ${action.name} (${statusForTitle})
-			<#if action.comment?? && action.comment != "">
-				<span style="color:#9370DB">&#160;&#160;&#160;Comment: </span><span style="color:Black; font-weight:normal">${action.comment}</span>
-			</#if>
-			<#if action.idInTemplate?? && action.idInTemplate != "">
-				<span style="color:#9370DB">&#160;&#160;&#160;IdInTemplate:  </span>
-				<span style="color:Black; font-weight:normal">${action.idInTemplate}</span>
-			</#if>
-		</span>
+		<#if action.async && !action.payloadFinished>
+			<span class="node async switch" onclick="showhide(this, '${containerId}');">${action.idInMatrix} - ${action.name}
+				<#if action.comment?? && action.comment != "">
+					<span style="color:#9370DB">&#160;&#160;&#160;Comment: </span><span style="color:Black; font-weight:normal">${action.comment}</span>
+				</#if>
+				<#if action.idInTemplate?? && action.idInTemplate != "">
+					<span style="color:#9370DB">&#160;&#160;&#160;IdInTemplate:  </span>
+					<span style="color:Black; font-weight:normal">${action.idInTemplate}</span>
+				</#if>
+			</span>
+		</#if>
+		<#if !action.async || (action.async && action.payloadFinished)>
+			<span class="node ${statusForClass} switch" onclick="showhide(this, '${containerId}');">${action.idInMatrix} - ${action.name} (${statusForTitle})
+				<#if action.comment?? && action.comment != "">
+					<span style="color:#9370DB">&#160;&#160;&#160;Comment: </span><span style="color:Black; font-weight:normal">${action.comment}</span>
+				</#if>
+				<#if action.idInTemplate?? && action.idInTemplate != "">
+					<span style="color:#9370DB">&#160;&#160;&#160;IdInTemplate:  </span>
+					<span style="color:Black; font-weight:normal">${action.idInTemplate}</span>
+				</#if>
+        	</span>
+		</#if>
 		<div class="container" id="${containerId}">
 			<#if action.timeOut?? && action.timeOut != 0>
 				<div class="desc"><span>Timeout: </span>${action.timeOut}</div>
