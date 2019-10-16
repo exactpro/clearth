@@ -18,22 +18,28 @@
 
 package com.exactprosystems.clearth.automation.actions.macro;
 
-import java.io.File;
-
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 
+import java.io.File;
+
 public class NestedActionReportWriter extends ActionReportWriter
 {
-	private final File reportsFile;
+	private final File reportFile;
 	private boolean writeReport = true;
 	
-	public NestedActionReportWriter(String actionsReportsPath)
+	public NestedActionReportWriter(String nestedActionsReportFilePath)
 	{
-		reportsFile = new File(ClearThCore.appRootRelative(actionsReportsPath));
-		reportsFile.getParentFile().mkdirs();
+		reportFile = new File(ClearThCore.rootRelative(nestedActionsReportFilePath));
+		reportFile.getParentFile().mkdirs();
 	}
+	
+	public void setWriteReport(boolean writeReport)
+	{
+		this.writeReport = writeReport;
+	}
+	
 	
 	@Override
 	public void writeReport(Action action, String actionsReportsDir, String stepFileName, boolean writeFailedReport)
@@ -43,21 +49,20 @@ public class NestedActionReportWriter extends ActionReportWriter
 	}
 	
 	@Override
+	protected void writeJsonActionReport(Action action, String actionsReportsDir, String actionsReportFile)
+	{
+		// JSON report will be written while writing one for whole macro action
+	}
+	
+	@Override
 	protected File getReportDir(String actionsReportsDir, Action action)
 	{
-		// Override to avoid NPE in super method logic
-		// File with reports is final one and will be returned in 'getReportsFile' method
-		return null;
+		return reportFile.getParentFile();
 	}
 	
 	@Override
 	protected File getReportFile(File reportDir, String actionsReportFile, boolean onlyFailed)
 	{
-		return reportsFile;
-	}
-	
-	public void setWriteReport(boolean writeReport)
-	{
-		this.writeReport = writeReport;
+		return reportFile;
 	}
 }

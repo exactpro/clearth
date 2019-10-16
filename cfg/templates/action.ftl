@@ -174,14 +174,14 @@
 					</td>
 				</tr>
 			</table>
-			<#if instanceOf(action, MacroAction)>
-				<div class="node">Nested actions (passed: ${action.passedActionsCount}/${action.executedActionsCount}, hidden: ${action.hiddenActionsCount})</div>
-				<#if action.executedActionsCount != action.hiddenActionsCount>
-					<@includeFile name=action.nestedActionsReportsPath />
-				</#if>
-			</#if>
 			<#if (action.result.message)??>
                 <#noescape><div class="message"><span>Info: </span>${action.result.message}</div></#noescape>
+            </#if>
+            <#if instanceOf(action, MacroAction) && action.executionProgress??>
+                <div class="node">Nested actions (passed: ${action.executionProgress}, hidden: ${action.executionProgress.hidden})</div>
+                <#if action.executionProgress.done != action.executionProgress.hidden>
+                    <@includeFile name = action.nestedActionsReportFilePath />
+                </#if>
             </#if>
 		</div>
 	</div>

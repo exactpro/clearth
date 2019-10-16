@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation.report;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
+import com.exactprosystems.clearth.automation.actions.macro.MacroAction;
 import com.exactprosystems.clearth.automation.report.html.HtmlActionReport;
 import com.exactprosystems.clearth.utils.JsonMarshaller;
 import com.exactprosystems.clearth.utils.Utils;
@@ -91,7 +92,7 @@ public class ActionReportWriter
 		}
 		catch (IOException e)
 		{
-			getLogger().error("Error occurred while json action report writing", e);
+			getLogger().error("Error occurred while writing json action report", e);
 		}
 		finally
 		{
@@ -236,7 +237,8 @@ public class ActionReportWriter
 
 	protected ActionReport createActionReport(Action action)
 	{
-		return new ActionReport(action, this);
+		return !(action instanceof MacroAction) ? new ActionReport(action, this)
+				: new MacroActionReport((MacroAction)action, this);
 	}
 
 	protected ActionReport createActionReport()

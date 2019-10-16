@@ -18,30 +18,19 @@
 
 package com.exactprosystems.clearth.automation.actions.macro;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.ActionParamsCalculator;
-import com.exactprosystems.clearth.automation.CoreStepKind;
-import com.exactprosystems.clearth.automation.DefaultStep;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.Matrix;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.Preparable;
-import com.exactprosystems.clearth.automation.SchedulerStatus;
-import com.exactprosystems.clearth.automation.StartAtType;
-import com.exactprosystems.clearth.automation.Step;
-import com.exactprosystems.clearth.automation.StepContext;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class MacroAction extends Action implements Preparable
 {
@@ -50,9 +39,10 @@ public class MacroAction extends Action implements Preparable
 	protected SchedulerStatus schedulerStatus; // For actions that should be prepared
 	protected StepContext stepContext;
 	protected GlobalContext globalContext;
+	protected NestedActionGenerator naGenerator;
 	
-	private int executedActionsCount, passedActionsCount, hiddenActionsCount;
-	protected String nestedActionsReportsPath;
+	private String nestedActionsReportFilePath;
+	private NestedActionsExecutionProgress executionProgress;
 	
 	@Override
 	public void prepare(GlobalContext globalContext, SchedulerStatus status) throws Exception
@@ -64,100 +54,96 @@ public class MacroAction extends Action implements Preparable
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
+		initMacroAction(stepContext, globalContext);
+		try
+		{
+			naGenerator.generateNestedActions();
+			// Prepare necessary actions
+			for (Preparable preparableAction : naGenerator.getPreparableActions())
+				preparableAction.prepare(globalContext, schedulerStatus);
+			return executeNestedActions();
+		}
+		catch (Exception e)
+		{
+			return DefaultResult.failed("Error occurred while working with nested actions.", e);
+		}
+	}
+	
+	
+	protected void initMacroAction(StepContext stepContext, GlobalContext globalContext)
+	{
 		this.stepContext = stepContext;
 		this.globalContext = globalContext;
 		
 		File macroMatrixFile = new File(InputParamsUtils.getRequiredFilePath(inputParams, PARAM_MACRO_FILENAME));
-		Step macroStep = new DefaultStep(buildNestedStepName(macroMatrixFile), CoreStepKind.Default.getLabel(), null, StartAtType.DEFAULT, false, null, false, false, true, null);
-		NestedActionGenerator naGenerator = createActionGenerator(macroMatrixFile, copyInputParams(), macroStep);
-		nestedActionsReportsPath = getStep().getActionsReportsDir() + File.separator + getMatrix().getShortFileName() + File.separator + macroStep.getSafeName();
-		try
-		{
-			naGenerator.generateNestedActions();
-			for (Preparable preparableAction : naGenerator.getPreparableActions())
-				preparableAction.prepare(globalContext, schedulerStatus);
-			
-			return executeNestedActions(createActionExecutor(naGenerator.getMacroMatrix()), naGenerator.getNestedActions());
-		}
-		catch (Exception e)
-		{
-			if (e instanceof ResultException)
-				throw (ResultException)e;
-			throw ResultException.failed("Error occurred while working with nested actions.", e);
-		}
+		Step nestedStep = new DefaultStep(buildNestedStepName(macroMatrixFile), CoreStepKind.Default.getLabel(), null,
+				StartAtType.DEFAULT, false, null, false, false, true, null);
+		naGenerator = createActionGenerator(macroMatrixFile, copyInputParams(), nestedStep);
+		nestedActionsReportFilePath = Paths.get(getStep().getActionsReportsDir(), getMatrix().getShortFileName(), nestedStep.getSafeName()).toString();
+		executionProgress = new NestedActionsExecutionProgress();
 	}
 	
-	protected Result executeNestedActions(NestedActionExecutor actionExec, List<NestedAction> nestedActions) throws Exception
+	protected Result executeNestedActions() throws IOException
 	{
-		try
+		try (NestedActionExecutor actionExec = createActionExecutor())
 		{
-			int failedActionsCount = 0;
-			for (NestedAction nestedAction : nestedActions)
+			actionExec.reset(null, executionProgress); // actionsReportsDir isn't used in NestedActionReportWriter class
+			for (NestedAction nestedAction : naGenerator.getNestedActions())
 			{
 				Action actionToExecute = nestedAction.getAction();
 				// Need to "execute" action anyway to calculate necessary MVEL values which could be used in other actions
 				actionExec.executeAction(actionToExecute, stepContext, nestedAction.isShowInReport());
 				if (actionToExecute.isExecutable())
 				{
-					executedActionsCount++;
 					if (actionToExecute.isPassed())
 					{
-						passedActionsCount++;
 						if (!nestedAction.isShowInReport())
-							hiddenActionsCount++;
+							executionProgress.incrementHidden();
 					}
 					else if (!nestedAction.isContinueIfFailed())
 						return DefaultResult.failed("Nested action '" + actionToExecute.getIdInMatrix() + "' (" + actionToExecute.getName() + ") failed. Macro execution has been interrupted.");
-					else
-						failedActionsCount++;
 				}
 			}
 			
-			if (failedActionsCount == 0)
-				return DefaultResult.passed(executedActionsCount != 0 ? "Nested actions executed successfully." : "No one executable nested action found in macro file.");
+			int executedActionsCount = executionProgress.getDone(), passedActionsCount = executionProgress.getSuccessful();
+			if (executedActionsCount == passedActionsCount)
+				return DefaultResult.passed(executedActionsCount > 0 ? "Nested actions executed successfully." : "No one executable nested action found in macro file.");
 			else
-				return DefaultResult.failed("Nested actions have been executed, but " + failedActionsCount + " of them were failed.");
-		}
-		finally
-		{
-			Utils.closeResource(actionExec);
+				return DefaultResult.failed("Nested actions have been executed, but " + (executedActionsCount - passedActionsCount) + " of them failed.");
 		}
 	}
+	
 	
 	protected String buildNestedStepName(File macroMatrixFile)
 	{
 		return String.format("%s_%s(%s)_%s_%d", getStep().getSafeName(), getIdInMatrix(), getName(), macroMatrixFile.getName(), System.currentTimeMillis());
 	}
 	
-	protected NestedActionGenerator createActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step macroStep)
+	protected NestedActionGenerator createActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step nestedStep)
 	{
-		return NestedActionGenerator.create(macroMatrixFile, macroParams, macroStep);
+		return NestedActionGenerator.create(macroMatrixFile, macroParams, nestedStep);
 	}
 	
-	protected NestedActionExecutor createActionExecutor(Matrix macroMatrix)
+	protected NestedActionExecutor createActionExecutor()
 	{
 		ActionParamsCalculator paramsCalculator = new ActionParamsCalculator(globalContext.getMatrixFunctions());
-		paramsCalculator.init(Arrays.asList(macroMatrix));
-		return new NestedActionExecutor(globalContext, paramsCalculator, getNestedActionsReportsPath());
+		paramsCalculator.init(Collections.singletonList(naGenerator.getMacroMatrix()));
+		return new NestedActionExecutor(globalContext, paramsCalculator, getNestedActionsReportFilePath());
 	}
-
-	public int getExecutedActionsCount()
+	
+	
+	public List<NestedAction> getNestedActions()
 	{
-		return executedActionsCount;
+		return naGenerator.getNestedActions();
 	}
-
-	public int getPassedActionsCount()
+	
+	public String getNestedActionsReportFilePath()
 	{
-		return passedActionsCount;
+		return nestedActionsReportFilePath;
 	}
-
-	public int getHiddenActionsCount()
+	
+	public ActionsExecutionProgress getExecutionProgress()
 	{
-		return hiddenActionsCount;
-	}
-
-	public String getNestedActionsReportsPath()
-	{
-		return nestedActionsReportsPath;
+		return executionProgress;
 	}
 }

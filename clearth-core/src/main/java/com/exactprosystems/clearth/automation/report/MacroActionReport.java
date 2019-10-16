@@ -16,44 +16,37 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.macro;
+package com.exactprosystems.clearth.automation.report;
 
-import com.exactprosystems.clearth.automation.Action;
+import com.exactprosystems.clearth.automation.actions.macro.MacroAction;
+import com.exactprosystems.clearth.automation.actions.macro.NestedAction;
 
-public class NestedAction
+import java.util.ArrayList;
+import java.util.List;
+
+public class MacroActionReport extends ActionReport
 {
-	private final Action action;
-	private boolean showInReport, continueIfFailed;
+	protected List<ActionReport> nestedActions = new ArrayList<>();
 	
-	public NestedAction(Action action)
+	public MacroActionReport()
 	{
-		this.action = action;
-		showInReport = true;
-		continueIfFailed = false;
+		super();
 	}
 	
-	public Action getAction()
+	public MacroActionReport(MacroAction action, ActionReportWriter actionReportWriter)
 	{
-		return action;
+		super(action, actionReportWriter);
+		for (NestedAction nestedAction : action.getNestedActions())
+			nestedActions.add(actionReportWriter.createActionReport(nestedAction.getAction()));
 	}
 	
-	public void setShowInReport(boolean showInReport)
+	public List<ActionReport> getNestedActions()
 	{
-		this.showInReport = showInReport;
+		return nestedActions;
 	}
 	
-	public boolean isShowInReport()
+	public void setNestedActions(List<ActionReport> nestedActions)
 	{
-		return showInReport;
-	}
-	
-	public void setContinueIfFailed(boolean continueIfFailed)
-	{
-		this.continueIfFailed = continueIfFailed;
-	}
-	
-	public boolean isContinueIfFailed()
-	{
-		return continueIfFailed;
+		this.nestedActions = nestedActions;
 	}
 }
