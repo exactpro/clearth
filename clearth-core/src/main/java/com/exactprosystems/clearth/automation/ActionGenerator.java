@@ -522,7 +522,8 @@ public abstract class ActionGenerator
 			}
 		} catch (AutomationException e) {
 			allSuccessful = false;
-			String message = "Action '"+actionSettings.getActionId()+"' (line "+lineNumber+") can not be instantiated. Probably wrong class name specified for this action. See log for details.";
+			String message = "Action '"+actionSettings.getActionId()+"' (line "+lineNumber+") cannot be instantiated. "
+					+ "Probably, wrong class name is specified for this action. See log for details.";
 			logger.warn(message);
 			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.ACTION_INSTANCE_ERROR, message);
 		}
