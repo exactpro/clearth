@@ -201,8 +201,9 @@ public class MatrixFunctions
 	@MethodDataModel(
 			group = "Date and Time",
 			args = "long time, int offset",
-			description = "The same as time() function, but but for optional shift not to skip holidays.",
-			usage = "timeIncludingHolidays(0,0)"
+			description = "Shifts given time in milliseconds passed since January 1, 1970 by a given number of days, skipping holidays and weekends."
+					+ "Treats all weekends as holidays disregarding 'Weekend is holiday' setting.",
+			usage = "timeIncludingHolidays(time(0),3)"
 	)
 	public long timeIncludingHolidays(long time, int offset) throws FunctionException
 	{
