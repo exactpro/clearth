@@ -84,13 +84,13 @@ public class ExceptionUtils
 	 * @param e error to get information about
 	 * @return messages related to given error and its causes.
 	 */
-	public static String getDetailedMessage(Exception e)
+	public static String getDetailedMessage(Throwable e)
 	{
 		return joinStackTraceMessages(e);
 	}
 	
 	/**
-	 * Use {@link #getDetailedMessage(Exception e) getDetailedMessage} instead
+	 * Use {@link #getDetailedMessage(Throwable e) getDetailedMessage} instead
 	 */
 	@Deprecated
 	public static String getExceptionMessage(Exception e)
