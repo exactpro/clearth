@@ -524,7 +524,7 @@ public abstract class ActionGenerator
 			allSuccessful = false;
 			String message = "Action '"+actionSettings.getActionId()+"' (line "+lineNumber+") cannot be instantiated. "
 					+ "Probably, wrong class name is specified for this action. See log for details.";
-			logger.warn(message);
+			logger.warn(message, e);
 			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.ACTION_INSTANCE_ERROR, message);
 		}
 
