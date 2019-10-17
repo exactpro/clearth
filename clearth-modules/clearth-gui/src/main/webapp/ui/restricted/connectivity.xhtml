@@ -458,7 +458,7 @@
 				<p:commandButton value="Yes" update=":Connections :Growl"
 								 actionListener="#{connectivityBean.saveConnections}"
 								 onstart="saveConsScrollPos();"
-								 oncomplete="PF('restartConnectionConfirmDialog').hide(); PF('conDialog').hide(); restoreConsScrollPos();"
+								 oncomplete="PF('restartConnectionConfirmDialog').hide(); hideConnectionDialog(); restoreConsScrollPos();"
 								 ajax="true"/>
 				<p:commandButton value="No"
 								 onclick="PF('restartConnectionConfirmDialog').hide();"
@@ -535,6 +535,18 @@
 			function restoreConsScrollPos()
 			{
 				restoreScrollPos('consScrollTop', 'ConnectionsList');
+			}
+
+			function hideConnectionDialog()
+			{
+				if (PF('conDialog').isVisible())
+				{
+					PF('conDialog').hide();
+				}
+				if (PF('listenersDialog').isVisible())
+				{
+					PF('listenersDialog').hide();
+				}
 			}
 		</script>
 	</ui:define>
