@@ -22,7 +22,6 @@ import java.util.*;
 import static com.exactprosystems.clearth.automation.ActionExecutor.PARAMS_PREV_ACTION;
 import static com.exactprosystems.clearth.automation.ActionExecutor.PARAMS_THIS_ACTION;
 import static com.exactprosystems.clearth.automation.MatrixFunctions.FORMULA_START;
-import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.contains;
 
 public class MvelVarsCleaningTableBuilder
@@ -71,8 +70,7 @@ public class MvelVarsCleaningTableBuilder
 		{
 			Step step = action.getStep();
 			if (step == null)
-				throw new IllegalStateException(format("Reference to step isn't set for action with #id='%s'.",
-						action.getIdInMatrix()));
+				continue; // Nonexistent step is specified in matrix, action won't be executed
 
 			actionsByStepName.put(step.getName(), action);
 		}
