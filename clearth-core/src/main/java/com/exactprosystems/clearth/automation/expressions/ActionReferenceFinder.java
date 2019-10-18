@@ -1,12 +1,21 @@
 /******************************************************************************
- * Copyright (c) 2009-2019, Exactpro Systems LLC
- * www.exactpro.com
+ * Copyright 2009-2019 Exactpro Systems Limited
+ * https://www.exactpro.com
  * Build Software to Test Software
  *
- * All rights reserved.
- * This is unpublished, licensed software, confidential and proprietary 
- * information which is the property of Exactpro Systems LLC or its licensors.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  ******************************************************************************/
+
 package com.exactprosystems.clearth.automation.expressions;
 
 import com.exactprosystems.clearth.utils.Pair;
@@ -99,13 +108,13 @@ public class ActionReferenceFinder
 
 
 	/**
-	 * Try to move pointers to next @{...} expression.
+	 * Trying to move pointers to next @{...} expression.
 	 *
 	 * Result: @{......................}
 	 *           ^                     ^ 
 	 *           expStartIndex         expEndIndex
 	 *
-	 * @return true if next expression found.
+	 * @return true if next expression is found.
 	 */
 	private boolean findNextExpression()
 	{
@@ -123,11 +132,11 @@ public class ActionReferenceFinder
 	}
 
 	/**
-	 * Try to move pointers to next actionId.ParamName reference inside [expStartIndex, expEndIndex) bounds.
+	 * Trying to move pointers to next actionId.ParamName reference inside [expStartIndex, expEndIndex) bounds.
 	 *
 	 * Result:     actionId.out.ParamName
 	 *             ^       ^    ^        ^
-	 *  idStartIndex idEndIndex paramNameStartIndex paramNameEndIndex    
+	 *  idStartIndex idEndIndex paramNameStartIndex paramNameEndIndex
 	 *
 	 * Notes:
 	 *
@@ -138,7 +147,7 @@ public class ActionReferenceFinder
 	 *
 	 * * ParamName is a valid Java identifier so let's check it before action id.
 	 *
-	 * @return true if next reference found.
+	 * @return true if next reference is found.
 	 */
 	private boolean findNextReference()
 	{
@@ -157,19 +166,17 @@ public class ActionReferenceFinder
 				continue;
 
 			if (findNextActionId(dotIndex))
-				break;
+				return true;
 		}
-
-		return true;
 	}
 
 	/**
-	 * Try to move pointers to the next action id located before the specified findToIndex.
+	 * Trying to move pointers to the next action id located before the specified findToIndex.
 	 * Action id doesn't have to be a valid MVEL (Java) identifier.
 	 * It can be started from digit or consisted only from digits.
 	 *
 	 * @param findToIndex index of next char after possible action id.
-	 * @return true if next action id found.
+	 * @return true if next action id is found.
 	 */
 	private boolean findNextActionId(int findToIndex)
 	{
@@ -187,7 +194,7 @@ public class ActionReferenceFinder
 	}
 
 	/**
-	 * Try to move pointers to the next parameter name skipping special references like 'in', 'out' and 'action'.
+	 * Trying to move pointers to the next parameter name skipping special references like 'in', 'out' and 'action'.
 	 * Action parameter name is a valid Java identifier.
 	 *
 	 * Results:
@@ -204,7 +211,7 @@ public class ActionReferenceFinder
 	 * If endIndex points to '(' it is method call.
 	 *
 	 * @param findFromIndex index of the first char of possible parameter name.
-	 * @return true if next parameter name found.
+	 * @return true if next parameter name is found.
 	 */
 	private boolean findNextParamName(int findFromIndex)
 	{
@@ -231,7 +238,7 @@ public class ActionReferenceFinder
 	}
 
 	/**
-	 * Try to find end of identifier: parameter name or special reference ('in', 'out' or 'action')
+	 * Trying to find end of identifier: parameter name or special reference ('in', 'out' or 'action')
 	 * started from the specified index. Parameter name is valid Java identifier.
 	 *
 	 * @param findFromIndex  index of first char of possible identifier.

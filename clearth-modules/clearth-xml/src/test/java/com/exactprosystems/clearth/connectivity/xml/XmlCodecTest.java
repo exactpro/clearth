@@ -25,15 +25,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 
 import static com.exactprosystems.clearth.utils.CollectionUtils.map;
+import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 import static org.junit.Assert.*;
 
 public class XmlCodecTest
@@ -145,7 +144,7 @@ public class XmlCodecTest
 	@Before
 	public void setUp() throws Exception
 	{
-		codec = new XmlCodec(new XmlDictionary(resourceToAbsoluteFileName(DICTIONARY_PATH)));
+		codec = new XmlCodec(new XmlDictionary(resourceToAbsoluteFilePath(DICTIONARY_PATH)));
 	}
 	
 	//////////////// DECODING ////////////////////////
@@ -153,46 +152,46 @@ public class XmlCodecTest
 	@Test(timeout = 5000 /* Prevent infinite loop */)
 	public void checkInfiniteLoopBug() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/infiniteLoopBug.xml"), INFINITE_LOOP_BUG);
+		decode(resourceToAbsoluteFilePath("messages/infiniteLoopBug.xml"), INFINITE_LOOP_BUG);
 	}
 
 	@Test(timeout = 5000 /* Prevent infinite loop */)
 	public void decodeRepeatingGroups() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/repeatingGroups.xml"), REPEATING_GROUP);
+		decode(resourceToAbsoluteFilePath("messages/repeatingGroups.xml"), REPEATING_GROUP);
 	}
 
 	@Ignore("This feature is unused now")
 	@Test(timeout = 5000 /* Prevent infinite loop */)
 	public void decodeSimpleRepeating() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/simpleRepeating.xml"), SIMPLE_REPEATING);
+		decode(resourceToAbsoluteFilePath("messages/simpleRepeating.xml"), SIMPLE_REPEATING);
 	}
 	
 	@Test
 	public void decodeAttributes() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/attributes.xml"), ATTRIBUTES);
+		decode(resourceToAbsoluteFilePath("messages/attributes.xml"), ATTRIBUTES);
 	}
 	
 	@Test
 	public void decodeCommonFields() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/commonFieldsA.xml"), COMMON_FIELDS_A);
-		decode(resourceToAbsoluteFileName("messages/commonFieldsB.xml"), COMMON_FIELDS_B);
+		decode(resourceToAbsoluteFilePath("messages/commonFieldsA.xml"), COMMON_FIELDS_A);
+		decode(resourceToAbsoluteFilePath("messages/commonFieldsB.xml"), COMMON_FIELDS_B);
 	}
 	
 	@Test
 	public void decodeCommonFieldsGroup() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/commonFieldsGroup.xml"), COMMON_FIELDS_GROUP);
+		decode(resourceToAbsoluteFilePath("messages/commonFieldsGroup.xml"), COMMON_FIELDS_GROUP);
 	}
 	
 	@Test
 	public void decodeEmpty() throws Exception
 	{
 		
-		String messageText = new String(Files.readAllBytes(Paths.get(resourceToAbsoluteFileName("messages/empty.xml"))));
+		String messageText = new String(Files.readAllBytes(Paths.get(resourceToAbsoluteFilePath("messages/empty.xml"))));
 		ClearThXmlMessage decoded = codec.decode(messageText);
 		assertNull(decoded.getField("absent"));
 		assertNull(decoded.getField("absentWithDefault"));
@@ -205,13 +204,13 @@ public class XmlCodecTest
 	@Test
 	public void decodeNamespace() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/namespace.xm"), NAMESPACE);
+		decode(resourceToAbsoluteFilePath("messages/namespace.xm"), NAMESPACE);
 	}
 
 	@Test
 	public void decodeNameAndSource() throws Exception
 	{
-		decode(resourceToAbsoluteFileName("messages/nameAndSource.xml"), NAME_AND_SOURCE);
+		decode(resourceToAbsoluteFilePath("messages/nameAndSource.xml"), NAME_AND_SOURCE);
 	}
 	
 	protected void decode(String messagePath, ClearThXmlMessage expected) throws Exception
@@ -226,38 +225,38 @@ public class XmlCodecTest
 	@Test
 	public void encodeRepeatingGroups() throws Exception
 	{
-		encode(REPEATING_GROUP, resourceToAbsoluteFileName("messages/repeatingGroups.xml"));
+		encode(REPEATING_GROUP, resourceToAbsoluteFilePath("messages/repeatingGroups.xml"));
 	}
 	
 	@Test
 	public void encodeInfinite() throws Exception
 	{
-		encode(INFINITE_LOOP_BUG, resourceToAbsoluteFileName("messages/infiniteLoopBug.xml"));
+		encode(INFINITE_LOOP_BUG, resourceToAbsoluteFilePath("messages/infiniteLoopBug.xml"));
 	}
 	
 	@Test
 	public void encodeSimpleRepeating() throws Exception
 	{
-		encode(SIMPLE_REPEATING, resourceToAbsoluteFileName("messages/simpleRepeating.xml"));
+		encode(SIMPLE_REPEATING, resourceToAbsoluteFilePath("messages/simpleRepeating.xml"));
 	}
 	
 	@Test
 	public void encodeAttributes() throws Exception
 	{
-		encode(ATTRIBUTES, resourceToAbsoluteFileName("messages/attributes.xml"));
+		encode(ATTRIBUTES, resourceToAbsoluteFilePath("messages/attributes.xml"));
 	}
 	
 	@Test
 	public void encodeCommonFields() throws Exception
 	{
-		encode(COMMON_FIELDS_A, resourceToAbsoluteFileName("messages/commonFieldsA.xml"));
-		encode(COMMON_FIELDS_B, resourceToAbsoluteFileName("messages/commonFieldsB.xml"));
+		encode(COMMON_FIELDS_A, resourceToAbsoluteFilePath("messages/commonFieldsA.xml"));
+		encode(COMMON_FIELDS_B, resourceToAbsoluteFilePath("messages/commonFieldsB.xml"));
 	}
 	
 	@Test
 	public void encodeCommonFieldsGroup() throws Exception
 	{
-		encode(COMMON_FIELDS_GROUP, resourceToAbsoluteFileName("messages/commonFieldsGroup.xml"));
+		encode(COMMON_FIELDS_GROUP, resourceToAbsoluteFilePath("messages/commonFieldsGroup.xml"));
 	}
 	
 	@Test
@@ -269,19 +268,19 @@ public class XmlCodecTest
 				"emptyContainer", ClearThXmlMessage.EMPTY_VALUE,
 				"emptyByMatrixNonSelfClosed", ComparisonUtils.IS_EMPTY,
 				"emptyContainerNonSelfClosed", ComparisonUtils.IS_EMPTY));
-		encode(m, resourceToAbsoluteFileName("messages/emptyEncoded.xml"));
+		encode(m, resourceToAbsoluteFilePath("messages/emptyEncoded.xml"));
 	}
 	
 	@Test
 	public void encodeNamespace() throws Exception
 	{
-		encode(NAMESPACE, resourceToAbsoluteFileName("messages/namespace.xm"));
+		encode(NAMESPACE, resourceToAbsoluteFilePath("messages/namespace.xm"));
 	}
 
 	@Test
 	public void encodeNameAndSource() throws Exception
 	{
-		encode(NAME_AND_SOURCE, resourceToAbsoluteFileName("messages/nameAndSource.xml"));
+		encode(NAME_AND_SOURCE, resourceToAbsoluteFilePath("messages/nameAndSource.xml"));
 	}
 	
 	protected void encode(ClearThXmlMessage message, String pathToExpected) throws Exception
@@ -296,15 +295,5 @@ public class XmlCodecTest
 	public static ClearThXmlMessage message(Map<String, String> fields, ClearThXmlMessage... subMessages)
 	{
 		return new ClearThXmlMessage(fields, subMessages.length == 0 ? null : Arrays.asList(subMessages));
-	}
-	
-	
-	public static String resourceToAbsoluteFileName(String file) throws FileNotFoundException {
-		File compiledFile = FileUtils.toFile(ClassLoader.getSystemClassLoader().getResource(file));
-
-		if (compiledFile == null)
-			throw new FileNotFoundException(file + " file not found");
-
-		return compiledFile.getAbsolutePath();
 	}
 }

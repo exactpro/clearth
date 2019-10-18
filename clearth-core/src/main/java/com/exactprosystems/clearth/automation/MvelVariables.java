@@ -1,12 +1,21 @@
 /******************************************************************************
- * Copyright (c) 2009-2019, Exactpro Systems LLC
- * www.exactpro.com
+ * Copyright 2009-2019 Exactpro Systems Limited
+ * https://www.exactpro.com
  * Build Software to Test Software
  *
- * All rights reserved.
- * This is unpublished, licensed software, confidential and proprietary 
- * information which is the property of Exactpro Systems LLC or its licensors.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  ******************************************************************************/
+
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.automation.report.FailReason;
@@ -98,7 +107,7 @@ public class MvelVariables
 		if (idForMvel != idInMatrix)
 			actionIdInMatrixToIdForMvel.put(idInMatrix, idForMvel);
 
-		variables.put(idForMvel, makeInputParamsMap(action.getInputParams()));
+		variables.merge(idForMvel, makeInputParamsMap(action.getInputParams()), this::mergeActionsParams);
 
 		variables.put(PARAMS_THIS_ACTION, action.getInputParams());
 	}
@@ -127,6 +136,8 @@ public class MvelVariables
 		String id = actionIdInMatrixToIdForMvel.getOrDefault(action.getIdInMatrix(), action.getIdInMatrix());
 		//noinspection unchecked
 		Map<String, Object> actionVars = (Map<String, Object>) variables.get(id);
+		if (actionVars == null)
+			return; // This may happen if result of async action is no longer needed.
 
 		if (action.getOutputParams() != null)
 			addOutputParams(actionVars, action.getOutputParams());
@@ -142,7 +153,7 @@ public class MvelVariables
 		for (Map.Entry<String, LinkedHashMap<String, String>> entry : subParams.entrySet())
 		{
 			String subActionId = entry.getKey();
-			if (subActionId == null)  //This may happen is sub-output parameters are based on some generated message, not on matrix actions
+			if (subActionId == null)  //This may happen if sub-output parameters are based on some generated message, not on matrix actions
 				continue;
 
 			String subId = actionIdInMatrixToIdForMvel.getOrDefault(subActionId, subActionId);
@@ -192,12 +203,7 @@ public class MvelVariables
 	public void saveMatrixInfo(String name, String value)
 	{
 		//noinspection unchecked
-		Map<String, String> info = (Map<String, String>) variables.get(MATRIX);
-		if (info == null)
-		{
-			info = new HashMap<String, String>();
-			variables.put(MATRIX, info);
-		}
+		Map<String, String> info = (Map<String, String>) variables.computeIfAbsent(MATRIX, k -> new HashMap<>());
 		info.put(name, value);
 	}
 
@@ -228,6 +234,25 @@ public class MvelVariables
 			FailReason failReason = (result != null) ? result.getFailReason() : FailReason.FAILED;
 			return FAILED_ACTION_PARAMS.get(failReason);
 		}
+	}
+
+
+	/*
+	 * Remapping function for merge of parameters of actions with duplicated IDs.
+	 */
+	private Map<String, String> mergeActionsParams(Object oldValue, Object newValue)
+	{
+		//noinspection unchecked
+		Map<String, String> newParams = (Map<String, String>) newValue;
+		if (oldValue instanceof Map)
+		{
+			//noinspection unchecked
+			Map<String, String> mergedParams = new LinkedHashMap<>((Map<String, String>) oldValue);
+			mergedParams.putAll(newParams);
+			return mergedParams;
+		}
+		else 
+			return newParams;
 	}
 
 

@@ -32,6 +32,8 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Pair;
 
+import static java.util.Collections.emptySet;
+
 public abstract class Action
 {
 	private static final Logger staticLogger = LoggerFactory.getLogger(Action.class);
@@ -490,6 +492,17 @@ public abstract class Action
 	public Set<String> getExpectedStepKinds()
 	{
 		return null;
+	}
+
+	/**
+	 * Returns names of parameters containing links to input files (f.e. SQL queries).
+	 * Such files may contain MVEL expressions.
+	 * 
+	 * @return set of parameters names.
+	 */
+	public Set<String> getInputFileParamNames()
+	{
+		return emptySet();
 	}
 
 	public Step getStep()

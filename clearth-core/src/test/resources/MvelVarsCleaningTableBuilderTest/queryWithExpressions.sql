@@ -1,0 +1,1 @@
+select * from CURRENCIES where CURRENCY_CODE = @{id1.Currency}

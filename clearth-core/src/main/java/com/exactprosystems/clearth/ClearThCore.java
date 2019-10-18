@@ -253,7 +253,6 @@ public abstract class ClearThCore
 			connectionsTransmitter = createConnectionsTransmitter();
 			matrixFunctionsFactory = createMatrixFunctionsHolder();
 			mvelVariablesFactory = createMvelVariablesFactory();
-			valueGenerators = createValueGenerators();
 			schedulerFactory = createSchedulerFactory(valueGenerators);
 			memoryMonitor = createMemoryMonitor();
 			if (memoryMonitor != null)
