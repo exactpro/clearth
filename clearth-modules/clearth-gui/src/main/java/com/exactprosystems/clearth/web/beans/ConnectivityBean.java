@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.web.beans;
 
 import static com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage.MQ;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.*;
@@ -54,11 +55,13 @@ public class ConnectivityBean extends ClearThBean
 			selectedListener = null;
 	private boolean copy = false;
 	private boolean copyListners = true;
+	private boolean noListenersInfo;
 	private boolean listenerInfoVisible = false;
 	private FavoriteConnectionManager favoriteConnection;
 	private Set<String> favoriteConnectionList;
 	private String username;
 	private List<ClearThConnection<?, ?>> connections;
+	protected String selectedType;
 
 	public ConnectivityBean()
 	{
@@ -438,6 +441,18 @@ public class ConnectivityBean extends ClearThBean
 	public void setSelectedListener(ListenerConfiguration selectedListener)
 	{
 		this.selectedListener = selectedListener;
+		if (selectedListener != null)
+			selectedType = selectedListener.getType();
+	}
+
+	public void selectFirstListener()
+	{
+		ClearThMessageConnection<?, ?> con = (ClearThMessageConnection<?, ?>) getOneSelectedConnection();
+		List<ListenerConfiguration> listeners = con.getListeners();
+		if (isNotEmpty(listeners))
+			setSelectedListener(listeners.get(0));
+		else
+			setSelectedListener(null);
 	}
 
 	public ListenerConfiguration getNewListener()
@@ -470,15 +485,33 @@ public class ConnectivityBean extends ClearThBean
 	public void addListener()
 	{
 		((ClearThMessageConnection<?, ?>)getOneSelectedConnection()).addListener(newListener);
+		setSelectedListener(newListener);
 		newListener = new ListenerConfiguration("", defaultListenerType, "");
-
+		noListenersInfo = false;
 	}
 
 	public void removeListener()
 	{
 		ClearThMessageConnection<?, ?> con = (ClearThMessageConnection<?, ?>)getOneSelectedConnection();
+		List<ListenerConfiguration> listeners = con.getListeners();
+		int index = listeners.indexOf(selectedListener);
 		con.removeListener(selectedListener);
 		getLogger().info("removed listener '"+selectedListener.getName()+"' from connection '"+con.getName()+"'");
+		if (isNotEmpty(listeners))
+		{
+			if (index <= listeners.size() - 1)
+				setSelectedListener(listeners.get(index));
+			else
+				setSelectedListener(listeners.get(index - 1));
+		}
+		else
+			setSelectedListener(null);
+	}
+
+	public boolean selectedConHasListeners()
+	{
+		ClearThMessageConnection<?, ?> msgCon = (ClearThMessageConnection<?, ?>) getOneSelectedConnection();
+		return msgCon != null && isNotEmpty(msgCon.getListeners());
 	}
 
 	public String getListenerDescription()
@@ -486,10 +519,10 @@ public class ConnectivityBean extends ClearThBean
 		ClearThConnection<?, ?> c = getOneSelectedConnection();
 		if (!ClearThMessageConnection.isMessageConnection(c))
 			return null;
-		if ((newListener == null) || (c == null))
+		if ((getSelectedListener() == null) || (c == null))
 			return null;
 
-		Class<?> descriptionOwner = ((ClearThMessageConnection<?, ?>)c).getListenerClass(newListener.getType());
+		Class<?> descriptionOwner = ((ClearThMessageConnection<?, ?>) c).getListenerClass(getSelectedListener().getType());
 		if (descriptionOwner == null)
 			return "Error: no class found for this listener type";
 		ListenerDescription ann = descriptionOwner.getAnnotation(ListenerDescription.class);
@@ -503,10 +536,10 @@ public class ConnectivityBean extends ClearThBean
 		ClearThConnection<?, ?> c = getOneSelectedConnection();
 		if (!ClearThMessageConnection.isMessageConnection(c))
 			return null;
-		if ((newListener == null) || (c == null))
+		if ((getSelectedListener() == null) || (c == null))
 			return null;
 
-		Class<?> detailsOwner = ((ClearThMessageConnection<?, ?>)c).getListenerClass(newListener.getType());
+		Class<?> detailsOwner = ((ClearThMessageConnection<?, ?>) c).getListenerClass(getSelectedListener().getType());
 		if (detailsOwner == null)
 			return "Error: no class found for this listener type";
 		SettingsDetails ann = detailsOwner.getAnnotation(SettingsDetails.class);
@@ -537,8 +570,10 @@ public class ConnectivityBean extends ClearThBean
 	}
 
 	public void trueListners() {
+		selectFirstListener();
 		copy = false;
 		copyListners = false;
+		noListenersInfo = !selectedConHasListeners();
 	}
 
 	public boolean isCopyListners() {
@@ -548,6 +583,27 @@ public class ConnectivityBean extends ClearThBean
 	public void setCopyListners(boolean copyListeners) {
 		this.copyListners = copyListeners;
 	}
+
+	public boolean isNoListenersInfo()
+	{
+		return noListenersInfo;
+	}
+
+	public String getSelectedType()
+	{
+		return selectedType;
+	}
+
+	public void setSelectedType(String selectedType)
+	{
+		this.selectedType = selectedType;
+	}
+
+	public void changeListenerType()
+	{
+		getSelectedListener().setType(selectedType);
+	}
+
 
 	public boolean isFavorite(ClearThConnection<?, ?> con)
 	{

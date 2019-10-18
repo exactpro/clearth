@@ -232,102 +232,100 @@
 			</div>
 		</h:form>
 <!-- Listeners dialog -->
-		<p:dialog header="Connection listeners" widgetVar="listenersDialog"
-				  id="ListenersDlg" resizable="false" width="800" closeOnEscape="true" modal="true">
+		<p:dialog header="Connection listeners" widgetVar="listenersDialog" id="ListenersDlg" resizable="false" width="1000" closeOnEscape="true" modal="true"
+				  styleClass="dialog-nopadding-top-bottom">
 			<h:form id="ListenersDialog">
-				<label class="pageSubTitle">New listener</label>
-				<div class="upperContainer">
-					<div class="upperLeftContainer">
-						<p:watermark for="listenerName" value="Name" />
-						<p:watermark for="listenerSettings" value="Settings" />
-						<h:panelGrid columns="4">
-							<p:selectOneMenu id="listenerType" value="#{connectivityBean.newListener.type}" style="width: 120px; margin-top: 3px;" title="Listener type">
-								<f:selectItems value="#{connectivityBean.listenersTypes}" var="type" />
-								<p:ajax event="change" update="listenerInfo" process="@this" />
-							</p:selectOneMenu>
-							<p:inputText id="listenerName" value="#{connectivityBean.newListener.name}" title="Listener name" />
-							<p:inputText id="listenerSettings" value="#{connectivityBean.newListener.settings}" title="Listener settings" />
-							<h:panelGrid id="listenerInfoButtons">
-								<p:commandButton value="Info" icon="ui-icon-notice" update="listenerInfoButtons" style="width: 80px;"
-												 rendered="#{!connectivityBean.listenerInfoVisible}">
-									<f:setPropertyActionListener target="#{connectivityBean.listenerInfoVisible}" value="true" />
-									<p:effect type="blind" event="click" for="listenerInfoPanel" speed="400">
-										<f:param name="mode" value="'show'" />
-									</p:effect>
-								</p:commandButton>
-								<p:commandButton value="Hide" icon="ui-icon-notice" update="listenerInfoButtons" style="width: 80px;"
-												 rendered="#{connectivityBean.listenerInfoVisible}">
-									<f:setPropertyActionListener target="#{connectivityBean.listenerInfoVisible}" value="false" />
-									<p:effect type="blind" event="click" for="listenerInfoPanel" speed="400" />
-								</p:commandButton>
-							</h:panelGrid>
-						</h:panelGrid>
+				<h:panelGroup layout="block" styleClass="big-info-block" rendered="#{connectivityBean.noListenersInfo}">
+					Connection '#{connectivityBean.oneSelectedMqConnection.name}' has no listeners
+					<br/>
+					<p:commandButton value="Add" icon="fa fa-fw fa-plus" update=":ListenersDialog"
+									 actionListener="#{connectivityBean.addListener}" styleClass="margin-top"/>
+				</h:panelGroup>
+				<h:panelGroup layout="block" rendered="#{!connectivityBean.noListenersInfo}">
+					<p:panelGrid styleClass="fullWidth ui-noborder borderBottom">
+						<p:row styleClass="topAlignment">
+							<p:column style="width: 230px;" styleClass="listeners-dlg-list-column">
+								<div class="block-container-wrapper margin-all">
+									<div class="block-left-container">
+										<label class="pageSubTitle" style="margin-bottom: 0;">Listeners</label>
+									</div>
+									<div class="block-right-container">
+										<p:commandButton value="Add" icon="ui-icon-plusthick" update=":ListenersDialog" actionListener="#{connectivityBean.addListener}"/>
+									</div>
+								</div>
+								<p:dataTable id="listenersTable" var="listener" value="#{connectivityBean.oneSelectedMqConnection.listeners}"
+											 styleClass="hide-table-header" emptyMessage="No listeners here"
+											 selectionMode="single" selection="#{connectivityBean.selectedListener}" rowKey="#{listener}"
+											 scrollable="true" scrollHeight="400">
+									<p:ajax event="rowSelect" update=":ListenersDialog :Growl"/>
+									<p:column>
+										<h:outputText value="#{listener.type}" styleClass="listeners-tbl-type"/>
+										<h:outputText value="#{listener.name}" styleClass="listeners-tbl-name"/>
+										<br/>
+										<h:outputText value="#{listener.settings}" styleClass="listeners-tbl-settings"/>
+									</p:column>
+								</p:dataTable>
+							</p:column>
+							<p:column styleClass="verticalHr listeners-dlg-spacer-column">
+							</p:column>
+							<p:column styleClass="listeners-dlg-edit-column" rendered="#{not empty connectivityBean.selectedListener}">
+								<div class="block-container-wrapper margin-top-bottom">
+									<div class="block-left-container">
+										<label class="pageSubTitle" style="margin-bottom: 0;">Edit listener</label>
+									</div>
+									<div class="block-right-container">
+										<p:commandButton value="Remove" title="Remove listener" action="#{connectivityBean.removeListener}"
+														 update=":ListenersDialog :Growl"/>
+									</div>
+								</div>
+								<p:outputLabel style="font-weight: bold" for="listenersDlgListenerType" value="Type:"/>
+								<br/>
+								<p:selectOneMenu id="listenersDlgListenerType" value="#{connectivityBean.selectedType}" styleClass="fillAvailableWidth margin-bottom">
+									<p:ajax event="change" listener="#{connectivityBean.changeListenerType}" update=":ListenersDialog"/>
+									<f:selectItems value="#{connectivityBean.listenersTypes}"/>
+									<c:if test="#{!connectivityBean.listenersTypes.contains(connectivityBean.selectedType)}">
+										<f:selectItem itemLabel="#{connectivityBean.selectedType}" itemValue="#{connectivityBean.selectedType}"/>
+									</c:if>
+								</p:selectOneMenu>
+								<br/>
+								<p:outputLabel style="font-weight: bold" for="listenersDlgListenerName" value="Name:"/>
+								<p:inputText id="listenersDlgListenerName" value="#{connectivityBean.selectedListener.name}"
+											 styleClass="fillAvailableWidth margin-bottom">
+									<p:ajax event="blur" update="ListenersDialog:listenersTable"/>
+								</p:inputText>
+								<br/>
+								<p:outputLabel style="font-weight: bold" for="listenersDlgListenerSettings" value="Settings:"/>
+								<p:inputTextarea id="listenersDlgListenerSettings" value="#{connectivityBean.selectedListener.settings}" autoResize="false" rows="10"
+												 style="resize: none;" styleClass="fillAvailableWidth">
+									<p:ajax event="blur" update="ListenersDialog:listenersTable"/>
+								</p:inputTextarea>
+							</p:column>
+							<p:column styleClass="listeners-dlg-descr-column" rendered="#{not empty connectivityBean.selectedListener}">
+								<div style="overflow-y: auto; max-height: 447px;">
+									<label class="pageSubTitle margin-top-bottom"><i class="fa fa-fw fa-info"/> Description</label>
+									<br/>
+									<h:outputText value="#{connectivityBean.listenerDescription}" escape="false"/>
+									<br/>
+									<label class="pageSubTitle margin-top-bottom"><i class="fa fa-fw fa-gear"/> Settings details</label>
+									<br/>
+									<h:outputText value="#{connectivityBean.listenerSettingsDetails}" escape="false"/>
+								</div>
+							</p:column>
+							<p:column rendered="#{empty connectivityBean.selectedListener}">
+								<h:panelGroup layout="block" styleClass="big-info-block">
+									Connection '#{connectivityBean.oneSelectedMqConnection.name}' has no listeners
+								</h:panelGroup>
+							</p:column>
+						</p:row>
+					</p:panelGrid>
+					<div class="block-container-wrapper margin-top-bottom">
+						<div class="block-right-container">
+							<p:commandButton value="Save" icon="ui-icon ui-icon-check" update=":Connections :Growl" actionListener="#{connectivityBean.saveConnections}"
+											 onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos(); PF('listenersDialog').hide()"/>
+							<p:commandButton value="Cancel" onclick="PF('listenersDialog').hide()" icon="ui-icon ui-icon-close"/>
+						</div>
 					</div>
-					<div class="upperRightContainer" style="margin-top: 6px;">
-						<p:commandButton value="Add listener" icon="ui-icon-plusthick" update=":ListenersDialog"
-										 actionListener="#{connectivityBean.addListener}">
-						</p:commandButton>
-					</div>
-				</div>
-
-				<h:panelGrid id="listenerInfoPanel" style="#{connectivityBean.listenerInfoVisible ? '' : 'display: none;'} width: 100%;">
-					<h:panelGrid id="listenerInfo" columns="2" style="width: 100%;" rowClasses="topAlignment">
-						<h:outputText value="Listener description" style="font-weight:bold" />
-						<h:outputText value="Settings details" style="font-weight:bold" />
-						<h:outputText value="#{connectivityBean.listenerDescription}" escape="false" />
-						<h:outputText value="#{connectivityBean.listenerSettingsDetails}" escape="false" />
-					</h:panelGrid>
-					<br />
-				</h:panelGrid>
-
-				<label class="pageSubTitle">Current listeners</label>
-				<p:dataTable id="Listeners" var="listener" value="#{connectivityBean.oneSelectedMqConnection.listeners}"
-							 selectionMode="single" selection="#{connectivityBean.selectedListener}" rowKey="#{listener.name}"
-							 editable="true" styleClass="fullWidth">
-					<p:column headerText="Type" style="width: 100px;">
-						<h:outputText value="#{listener.type}" />
-					</p:column>
-					<p:column headerText="Name" style="width: 100px;">
-						<p:cellEditor>
-							<f:facet name="output">
-								<h:outputText value="#{listener.name}" />
-							</f:facet>
-							<f:facet name="input">
-								<p:inputText value="#{listener.name}" style="width: 100%;" />
-							</f:facet>
-						</p:cellEditor>
-					</p:column>
-					<p:column headerText="Settings">
-						<p:cellEditor>
-							<f:facet name="output">
-								<h:outputText value="#{listener.settings}" />
-							</f:facet>
-							<f:facet name="input">
-								<p:inputText value="#{listener.settings}" style="width: 100%;" />
-							</f:facet>
-						</p:cellEditor>
-					</p:column>
-					<p:column style="width: 40px;">
-						<p:rowEditor />
-					</p:column>
-					<p:column style="width: 30px;">
-						<p:commandButton icon="ui-icon ui-icon-close" title="Remove" action="#{connectivityBean.removeListener}"
-										 update=":ListenersDialog">
-							<f:setPropertyActionListener value="#{listener}" target="#{connectivityBean.selectedListener}" />
-						</p:commandButton>
-					</p:column>
-				</p:dataTable>
-
-				<div class="dialogLowerContainer">
-					<div class="dialogLowerButtonsContainer">
-						<p:commandButton value="Save" rendered="#{!connectivityBean.selectedConnectionRunning}" update=":Connections :Growl" actionListener="#{connectivityBean.saveConnections}"
-										 onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos(); if (args.canClose) PF('listenersDialog').hide()"
-										 icon="ui-icon ui-icon-check" />
-						<p:commandButton value="Save" rendered="#{connectivityBean.selectedConnectionRunning}" oncomplete="PF('restartConnectionConfirmDialog').show(); if (args.canClose) PF('listenersDialog').hide()"
-										 icon="ui-icon ui-icon-check" />
-						<p:commandButton value="Cancel" onclick="PF('listenersDialog').hide()" icon="ui-icon ui-icon-close" />
-					</div>
-				</div>
+				</h:panelGroup>
 			</h:form>
 		</p:dialog>
 <!-- Connection dialog -->
