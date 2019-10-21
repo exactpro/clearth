@@ -3,7 +3,12 @@ ext {
 	coreXsdDir = file('clearth-core/xsd')
 	version = file('version').text.trim()
 	if (!project.hasProperty('newProjectDir')) {
-		newProjectDir = 'undef'
+		newProjectDir = "undef"
+	}
+
+	oldProjectName = 'newproject'
+	if (!project.hasProperty('newProjectName')) {
+		newProjectName = "undef"
 	}
 	jettyVersion = '9.4.19.v20190610'
 	jettyDistName = "jetty-distribution-${jettyVersion}"
@@ -203,29 +208,64 @@ task downloadJetty() {
 	}
 }
 
+task updateJettyXml(){
+	dependsOn 'downloadJetty'
+	dependsOn ':clearth-modules:clearth-gui:runJettyXmlUpdater'
+ 	tasks.findByPath(':updateJettyXml').mustRunAfter(':downloadJetty')
+	
+	subprojects {
+		project ->
+			project.afterEvaluate {
+				if (project.name == 'clearth-gui') {
+					project.setProperty("pathToJettyXml", "${rootDir}/jetty/jetty-distribution-${jettyVersion}/etc/jetty.xml")
+					project.setProperty("contextPath", "/clearth/reports")
+				}
+			}
+	}
+}
+
 task createProject(type: Copy, 
 		group: 'ClearTH', 
 		description: 'Creates directory with new ClearTH-based project', 
-		dependsOn: 'downloadJetty') {
+		dependsOn: 'updateJettyXml') {
 	
 	onlyIf {
 		if (newProjectDir == 'undef') {
 			println 'You must set "newProjectDir" property via "-PnewProjectDir=<path_to_new_project>" key'
 			false
-		} else {
+		}
+		if (newProjectName == 'undef') {
+			println 'You must set "newProjectName" property via "-PnewProjectName=<project_name>" key'
+			false
+		}
+		if (!newProjectName.find('^[_*\\w*\\d*]+$')) {
+			println("Project name contains illegal characters")
+			false
+		}
+		else {
 			true
 		}
 	}
+	newProjectName = newProjectName.toLowerCase()
 	
 	outputs.upToDateWhen { false }
 
-	from ("${projectDir}/for_new_project") {
-		exclude "build.gradle"
-		exclude "gradle.properties"
+	from("${projectDir}/for_new_project/src/main/java/com/exactprosystems/clearth/${oldProjectName}") {
+		into "src/main/java/com/exactprosystems/clearth/${newProjectName}"
+		filter {
+			line -> line.replaceAll(oldProjectName, newProjectName)
+		}
+	}
+	from("${projectDir}/for_new_project/src/main/webapp/") {
+		into "src/main/webapp"
+		filter {
+			line -> line.replaceAll("com.exactprosystems.clearth.${oldProjectName}", "com.exactprosystems.clearth.${newProjectName}")
+		}
 	}
 	from ("${projectDir}/for_new_project") {
 		include "build.gradle"
 		include "gradle.properties"
+		include "jetty94.xml"
 		filter( org.apache.tools.ant.filters.ReplaceTokens, tokens: ["JETTY_VERSION": jettyVersion.toString(),
 																	 "CORE_SHARED_DIR": sharedDir.toString().replace('\\', '/'),
 																	 "CORE_VERSION": rootProject.ext.version.toString()] )
@@ -245,7 +285,6 @@ task createProject(type: Copy,
 		include 'gradle/'
 		include 'gradlew.bat'
 		include 'gradlew'
-	}	
-	
+	}
 	into newProjectDir
 }

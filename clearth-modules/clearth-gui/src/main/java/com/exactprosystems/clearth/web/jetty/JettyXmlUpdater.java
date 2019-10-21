@@ -58,7 +58,7 @@ public class JettyXmlUpdater
                     "</Item>";
     
     
-    public void updateJettyXml(String pathToJettyXml)
+    public void updateJettyXml(String pathToJettyXml, String newContextPath)
     {
         File jettyXml = new File(pathToJettyXml);
         if (jettyXml.exists())
@@ -68,9 +68,10 @@ public class JettyXmlUpdater
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                 factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
                 DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-                String newContextPath = ClearThCoreApplicationBean.getInstance().getAppContextPath() + "/reports";
-
-                Document jettyXmlDocument = documentBuilder.parse(jettyXml);
+                
+                if(newContextPath == null)
+	                newContextPath = ClearThCoreApplicationBean.getInstance().getAppContextPath() + "/reports";
+	            Document jettyXmlDocument = documentBuilder.parse(jettyXml);
                 NodeList list = jettyXmlDocument.getElementsByTagName("Array");
                 for (int i = 0; i < list.getLength(); i++)
                 {
@@ -144,5 +145,22 @@ public class JettyXmlUpdater
         transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, jettyXmlDocument.getDoctype().getSystemId());
 
         transformer.transform(new DOMSource(jettyXmlDocument), new StreamResult(oldJettyXml));
+    }
+
+	public void updateJettyXml(String pathToJettyXml)
+	{
+		updateJettyXml(pathToJettyXml, null);
+	}
+
+    public static void main(String[] args)
+    {
+    	if(args.length != 2){
+		    log.error("The number of arguments must be 2. jetty.xml has not been updated");
+			return;
+	    }
+    	
+        JettyXmlUpdater xmlUpdater = new JettyXmlUpdater();
+        xmlUpdater.updateJettyXml(args[0], args[1]);
+        log.info("Updated jetty.xml created");
     }
 }
