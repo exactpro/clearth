@@ -326,7 +326,7 @@
 					</c:if>
 					<c:if test="#{messageHelperToolBean.messageHelpers.size() lt 5}">
 						<br />
-						<p:selectOneRadio id="currentMessageHelpFormat" value="#{messageHelperToolBean.currentMessageHelpFormat}" style="width:125px">
+						<p:selectOneRadio id="currentMessageHelpFormat" value="#{messageHelperToolBean.currentMessageHelpFormat}">
 							<f:selectItems value="#{messageHelperToolBean.messageHelpers}" />
 							<p:ajax event="change" update=":MessageHelp :Growl" process="@this" oncomplete="resetFilters();" />
 						</p:selectOneRadio>
