@@ -126,7 +126,16 @@ public class ExecuteScript extends Action {
 	
 	protected void processScriptResult(ScriptResult res)
 	{
-		addOutputParam(OUTPUT, res.outStr);
+		String resultString, outStr = res.outStr;
+		
+		if (StringUtils.endsWith(outStr, Utils.EOL))
+			resultString = StringUtils.left(outStr, outStr.length() - Utils.EOL.length());
+		else if (StringUtils.endsWith(outStr,"\n"))
+			resultString = StringUtils.left(outStr, outStr.length() - 1);
+		else
+			resultString = outStr;
+
+		addOutputParam(OUTPUT, resultString);
 	}
 	
 	protected boolean isFailOnErrorOutput() {
