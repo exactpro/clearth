@@ -40,7 +40,7 @@ public class StepUploadHandler
 {
 	private static final Logger logger = LoggerFactory.getLogger(StepUploadHandler.class);
 
-	private static final String CSV = "csv",
+	public static final String CSV = "csv",
 			CFG = "cfg",
 			VALID_MIME_TYPE_STEPS_CFG = "text/";
 
@@ -104,7 +104,7 @@ public class StepUploadHandler
 		}
 	}
 
-	private static boolean isValidStepConfig(UploadedFile file)
+	public static boolean isValidStepConfig(UploadedFile file)
 	{
 		if ((file == null) || (file.getContents().length == 0))
 		{
@@ -128,7 +128,7 @@ public class StepUploadHandler
 		return true;
 	}
 
-	private static boolean checkStepConfigHeader(String uploadedFilename, File storedFile) throws IOException
+	public static boolean checkStepConfigHeader(String uploadedFilename, File storedFile) throws IOException
 	{
 		String storedFilename = storedFile.getAbsolutePath();
 		List<String> undefinedFields;
