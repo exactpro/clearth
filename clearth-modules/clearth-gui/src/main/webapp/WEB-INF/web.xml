@@ -127,6 +127,11 @@
 		<extension>csv</extension>
 		<mime-type>text/csv</mime-type>
 	</mime-mapping>
+	
+	<mime-mapping>
+		<extension>cfg</extension>
+		<mime-type>text/cfg</mime-type>
+	</mime-mapping>
 
 	<context-param>
 		<param-name>session_expired_page</param-name>

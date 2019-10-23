@@ -114,7 +114,7 @@ public class StepUploadHandler
 		}
 		
 		boolean isCsvOrCfg = FilenameUtils.isExtension(file.getFileName().toLowerCase(), new String[]{CSV, CFG});
-		boolean isValidContent = mimeType.startsWith(VALID_MIME_TYPE_STEPS_CFG);
+		boolean isValidContent = mimeType == null ? false : mimeType.startsWith(VALID_MIME_TYPE_STEPS_CFG);
 
 		if (!isValidContent || !isCsvOrCfg)
 		{
