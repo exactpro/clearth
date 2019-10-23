@@ -44,10 +44,10 @@ public class StepUploadHandler
 			CFG = "cfg",
 			VALID_MIME_TYPE_STEPS_CFG = "text/";
 
-	public static void uploadSteps(FileUploadEvent event, Scheduler scheduler, boolean appendSteps)
+	public static void uploadSteps(FileUploadEvent event, String mimeType, Scheduler scheduler, boolean appendSteps)
 	{
 		UploadedFile uploadedFile = event.getFile();
-		if (!isValidStepConfig(uploadedFile))
+		if (!isValidStepConfig(uploadedFile, mimeType))
 			return;
 
 		String uploadedFilename = uploadedFile.getFileName();
@@ -104,7 +104,7 @@ public class StepUploadHandler
 		}
 	}
 
-	public static boolean isValidStepConfig(UploadedFile file)
+	public static boolean isValidStepConfig(UploadedFile file, String mimeType)
 	{
 		if ((file == null) || (file.getContents().length == 0))
 		{
@@ -112,9 +112,9 @@ public class StepUploadHandler
 			MessageUtils.addErrorMessage("Error", "Error occurred while working with scheduler configuration");
 			return false;
 		}
-
+		
 		boolean isCsvOrCfg = FilenameUtils.isExtension(file.getFileName().toLowerCase(), new String[]{CSV, CFG});
-		boolean isValidContent = file.getContentType().toLowerCase().startsWith(VALID_MIME_TYPE_STEPS_CFG);
+		boolean isValidContent = mimeType.startsWith(VALID_MIME_TYPE_STEPS_CFG);
 
 		if (!isValidContent || !isCsvOrCfg)
 		{

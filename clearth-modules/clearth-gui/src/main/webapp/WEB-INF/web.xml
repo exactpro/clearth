@@ -122,6 +122,11 @@
 		<extension>ttf</extension>
 		<mime-type>application/font-ttf</mime-type>
 	</mime-mapping>
+	
+	<mime-mapping>
+		<extension>csv</extension>
+		<mime-type>text/csv</mime-type>
+	</mime-mapping>
 
 	<context-param>
 		<param-name>session_expired_page</param-name>

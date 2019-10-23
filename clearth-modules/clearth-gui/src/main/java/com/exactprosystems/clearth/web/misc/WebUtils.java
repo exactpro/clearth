@@ -35,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.primefaces.PrimeFaces;
+import org.primefaces.context.PrimeFacesContext;
 import org.primefaces.context.RequestContext;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
@@ -159,5 +160,10 @@ public class WebUtils
 	public static void logAndGrowlException(String message, Exception e, Logger logger) {
 		logger.error(message, e);
 		MessageUtils.addErrorMessage(message, ExceptionUtils.getDetailedMessage(e));
+	}
+	
+	public static String getMimeType(String fileName)
+	{
+		return PrimeFacesContext.getCurrentInstance().getExternalContext().getMimeType(fileName);
 	}
 }

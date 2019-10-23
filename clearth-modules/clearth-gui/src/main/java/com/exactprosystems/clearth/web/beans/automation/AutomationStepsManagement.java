@@ -29,6 +29,8 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.StepPropsToEdit;
 import com.exactprosystems.clearth.web.misc.StepUploadHandler;
 import com.exactprosystems.clearth.web.misc.WebUtils;
+
+import org.primefaces.context.PrimeFacesContext;
 import org.primefaces.event.FileUploadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +39,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class AutomationStepsManagement {
@@ -281,7 +286,9 @@ public class AutomationStepsManagement {
 
 	public void uploadSteps(FileUploadEvent event)
 	{
-		StepUploadHandler.uploadSteps(event, selectedScheduler(), appendSteps);
+		StepUploadHandler.uploadSteps(event, 
+				WebUtils.getMimeType(event.getFile().getFileName()),
+				selectedScheduler(), appendSteps);
 	}
 
 	public void toggleAskForContinue()
