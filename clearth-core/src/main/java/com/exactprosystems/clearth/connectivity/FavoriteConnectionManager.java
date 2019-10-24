@@ -21,7 +21,6 @@ package com.exactprosystems.clearth.connectivity;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -57,7 +56,12 @@ public class FavoriteConnectionManager
 		favoriteConnectionList = new HashMap<String, Set<String>>();
 		fileList = new HashMap<String, File>();
 		this.userSettingsDir = userSettingsDir;
-		
+	}
+	
+	public void loadFavoriteConnections()
+	{
+		favoriteConnectionList.clear();
+		fileList.clear();
 		File[] dirs = userSettingsDir.listFiles(File::isDirectory);
 		
 		for (File dir : dirs)

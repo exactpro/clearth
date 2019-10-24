@@ -279,6 +279,7 @@ public abstract class ClearThCore
 			initOtherEntities(otherEntities);  //Point of extension with project-specific objects
 			initConnectionStorage();
 			initSchedulersManager();
+			initFavoriteConnectionManager();
 			initFinish(depConfig);
 		}
 		catch (Throwable e)
@@ -462,10 +463,17 @@ public abstract class ClearThCore
 		return result;
 	}
 	
+	
 	protected FavoriteConnectionManager createFavoriteConnectionManager(String userSettingsDir)
 	{
 		return new FavoriteConnectionManager(new File(userSettingsDir));
 	}
+	
+	protected void initFavoriteConnectionManager()
+	{
+		favoriteConnections.loadFavoriteConnections();
+	}
+	
 	
 	protected ToolsManager createToolsManager()
 	{
