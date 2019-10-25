@@ -22,6 +22,7 @@ import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.utils.javaFunction.BiConsumerWithException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -458,27 +459,30 @@ public abstract class Step
 	{
 		actionExec.checkAsyncActions();
 	}
-	
-	protected void waitForAsyncActions(ActionExecutor actionExec)
+
+	protected void waitForAsyncActions(ActionExecutor actionExec,
+			BiConsumerWithException<ActionExecutor, String, InterruptedException> waitMethod)
 	{
 		if (!interrupted)
 		{
 			try
 			{
-				actionExec.waitForStepAsyncActions(this.getName());
+				waitMethod.accept(actionExec, this.getName());
 			}
 			catch (InterruptedException e)
 			{
 				getLogger().warn("Wait for async actions interrupted", e);
 			}
 		}
-		
+
 		updateByAsyncActions(actionExec);
 	}
 	
-	
+
 	public void executeActions(ActionExecutor actionExec, String actionsReportsDir, BooleanObject replay, SchedulerSuspension suspension)
 	{
+		waitForAsyncActions(actionExec, ActionExecutor::waitForBeforeStepAsyncActions);
+
 		this.actionsReportsDir = actionsReportsDir;
 		Logger logger = getLogger();
 		checkContextsExist();
@@ -538,7 +542,7 @@ public abstract class Step
 			}
 
 			actionExec.afterActionsExecution(this);
-			waitForAsyncActions(actionExec);
+			waitForAsyncActions(actionExec, ActionExecutor::waitForStepAsyncActions);
 			replay.setValue(canReplay.get());
 		}
 		finally

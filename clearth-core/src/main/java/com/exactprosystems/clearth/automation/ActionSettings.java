@@ -40,7 +40,7 @@ public class ActionSettings
 	private long timeout = 0;
 	
 	protected boolean async;
-	protected String asyncGroup;
+	protected String asyncGroup, waitAsyncEndStep;
 	protected WaitAsyncEnd waitAsyncEnd = WaitAsyncEnd.NO;
 	
 	private LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
@@ -218,7 +218,17 @@ public class ActionSettings
 	{
 		this.waitAsyncEnd = waitAsyncEnd;
 	}
-	
+
+	public String getWaitAsyncEndStep()
+	{
+		return waitAsyncEndStep;
+	}
+
+	public void setWaitAsyncEndStep(String waitAsyncEndStep)
+	{
+		this.waitAsyncEndStep = waitAsyncEndStep;
+	}
+
 	public String getFormulaWaitAsyncEnd()
 	{
 		return formulaWaitAsyncEnd;

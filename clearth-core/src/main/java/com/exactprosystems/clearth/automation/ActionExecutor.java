@@ -35,6 +35,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 public class ActionExecutor implements Closeable
 {
@@ -179,7 +182,12 @@ public class ActionExecutor implements Closeable
 		String waitMsg;
 		switch (action.getWaitAsyncEnd())
 		{
-		case STEP : waitMsg = "Will wait in end of step for this action to finish"; break;
+		case STEP :
+			String beforeStep = action.getWaitAsyncEndStep();
+			waitMsg = (isNotBlank(beforeStep))
+				? "Will wait for this action to finish before starting step '" + beforeStep + "'"
+				: "Will wait in end of step for this action to finish";
+			break;
 		case SCHEDULER : waitMsg = "Will wait in end of scheduler for this action to finish"; break;
 		default : waitMsg = "Won't wait for this action to finish"; break;
 		}
@@ -209,30 +217,36 @@ public class ActionExecutor implements Closeable
 			cleanAfterAsyncAction(action);
 		}
 	}
-	
+
+	public void waitForBeforeStepAsyncActions(String stepName) throws InterruptedException
+	{
+		callWaitForAsyncActions(a -> a.getBeforeStepActions(stepName),
+				"Waiting for async actions to finish before step '" + stepName + "'");
+	}
+
 	public void waitForStepAsyncActions(String stepName) throws InterruptedException
 	{
-		if ((!isAsyncEnabled()) || (isExecutionInterrupted()))
-			return;
-		
-		Set<AsyncActionData> actions = asyncManager.getStepActions(stepName);
-		if ((actions == null) || (actions.isEmpty()))
-			return;
-		
-		getLogger().debug("Waiting for step '"+stepName+"' async actions to finish");
-		waitForAsyncActions(actions);
+		callWaitForAsyncActions(a -> a.getStepActions(stepName),
+				"Waiting for step '"+stepName+"' async actions to finish");
 	}
 	
 	public void waitForSchedulerAsyncActions() throws InterruptedException
 	{
+		callWaitForAsyncActions(AsyncActionsManager::getSchedulerActions,
+				"Waiting for scheduler async actions to finish");
+	}
+
+	protected void callWaitForAsyncActions(Function<AsyncActionsManager, Set<AsyncActionData>> actionSupplier,
+										   String messageToLog) throws InterruptedException
+	{
 		if ((!isAsyncEnabled()) || (isExecutionInterrupted()))
 			return;
-		
-		Set<AsyncActionData> actions = asyncManager.getSchedulerActions();
+
+		Set<AsyncActionData> actions = actionSupplier.apply(asyncManager);
 		if ((actions == null) || (actions.isEmpty()))
 			return;
-		
-		getLogger().debug("Waiting for scheduler async actions to finish");
+
+		getLogger().debug(messageToLog);
 		waitForAsyncActions(actions);
 	}
 	

@@ -64,7 +64,7 @@ public abstract class Action
 	
 	protected boolean async;
 	protected boolean payloadFinished;
-	protected String asyncGroup;
+	protected String asyncGroup, waitAsyncEndStep;
 	protected WaitAsyncEnd waitAsyncEnd;
 	
 	private Result result;
@@ -117,6 +117,7 @@ public abstract class Action
 		asyncGroup = settings.getAsyncGroup();
 		formulaAsyncGroup = settings.getFormulaAsyncGroup();
 		waitAsyncEnd = settings.getWaitAsyncEnd();
+		waitAsyncEndStep = settings.getWaitAsyncEndStep();
 		formulaWaitAsyncEnd = settings.getFormulaWaitAsyncEnd();
 		
 		step = settings.getStep();
@@ -377,7 +378,17 @@ public abstract class Action
 	{
 		return waitAsyncEnd;
 	}
-	
+
+	public String getWaitAsyncEndStep()
+	{
+		return waitAsyncEndStep;
+	}
+
+	public void setWaitAsyncEndStep(String waitAsyncEndStep)
+	{
+		this.waitAsyncEndStep = waitAsyncEndStep;
+	}
+
 	public String getFormulaWaitAsyncEnd()
 	{
 		return formulaWaitAsyncEnd;

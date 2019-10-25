@@ -36,6 +36,8 @@ import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 public class AsyncActionsManager implements ActionMonitor, Closeable
 {
 	private static final Logger logger = LoggerFactory.getLogger(AsyncActionsManager.class);
@@ -47,7 +49,8 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 	protected Map<String, AsyncActionsThread> threads;
 	protected final Set<AsyncActionData> startedActions, finishedActions;
 	protected final BlockingQueue<AsyncActionData> actionsToProcess;
-	protected final Map<String, Set<AsyncActionData>> actionsByStep;  //Arranges actions by step name to quickly get know if step needs to wait for actions end
+	protected final Map<String, Set<AsyncActionData>> actionsByStep,  //Arranges actions by step name to quickly get know if step needs to wait for actions end
+		actionsBeforeStep;  //Arranges actions by step name to quickly get know which actions should finish before the step starts
 	protected final Set<AsyncActionData> actionsForScheduler;
 	
 	public AsyncActionsManager(GlobalContext globalContext)
@@ -59,6 +62,7 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		actionsToProcess = createActionDataQueue();
 		
 		actionsByStep = createActionsByStepStorage();
+		actionsBeforeStep = createActionsByStepStorage();
 		actionsForScheduler = createActionDataSet();
 	}
 	
@@ -87,6 +91,7 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		finishedActions.clear();
 		actionsToProcess.clear();
 		actionsByStep.clear();
+		actionsBeforeStep.clear();
 		actionsForScheduler.clear();
 	}
 	
@@ -151,6 +156,11 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 	{
 		return actionsByStep.get(stepName);
 	}
+
+	public Set<AsyncActionData> getBeforeStepActions(String stepName)
+	{
+		return actionsBeforeStep.get(stepName);
+	}
 	
 	public Set<AsyncActionData> getSchedulerActions()
 	{
@@ -204,23 +214,22 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		default : break;
 		}
 	}
-	
+
 	protected void addActionToStep(AsyncActionData actionData)
 	{
-		String stepName = actionData.getAction().getStepName();
-		Set<AsyncActionData> set = actionsByStep.get(stepName);
-		if (set == null)
-		{
-			set = createActionDataSet();
-			actionsByStep.put(stepName, set);
-		}
+		String beforeStepName = actionData.getAction().getWaitAsyncEndStep();
+		Set<AsyncActionData> set = (isNotBlank(beforeStepName))
+			? actionsBeforeStep.computeIfAbsent(beforeStepName, key -> createActionDataSet())
+			: actionsByStep.computeIfAbsent(actionData.getAction().getStepName(), key -> createActionDataSet());
 		set.add(actionData);
 	}
 	
 	protected void removeActionFromStep(AsyncActionData actionData)
 	{
-		String stepName = actionData.getAction().getStepName();
-		Set<AsyncActionData> set = actionsByStep.get(stepName);
+		String beforeStepName = actionData.getAction().getWaitAsyncEndStep();
+		Set<AsyncActionData> set = (isNotBlank(beforeStepName))
+			? actionsBeforeStep.get(beforeStepName)
+			: actionsByStep.get(actionData.getAction().getStepName());
 		if (set != null)
 			set.remove(actionData);
 	}
