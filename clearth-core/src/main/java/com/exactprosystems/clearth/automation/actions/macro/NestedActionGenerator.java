@@ -215,13 +215,15 @@ public class NestedActionGenerator extends ActionGenerator
 									   List<String> header,
 									   List<String> values,
 									   int headerLineNumber,
-									   boolean missingValues)
+									   boolean missingValues,
+	                                   boolean onlyCheck)
 	{
 		actionSettings.setStep(macroStep);
 		// Nested actions should be executed sequentially
 		actionSettings.setAsync(false);
 		actionSettings.setFormulaAsync(null);
 
-		return super.initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber, missingValues);
+		return super.initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber,
+				missingValues, onlyCheck);
 	}
 }
