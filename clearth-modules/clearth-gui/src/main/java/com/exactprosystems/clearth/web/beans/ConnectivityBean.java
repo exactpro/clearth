@@ -212,7 +212,7 @@ public class ConnectivityBean extends ClearThBean
 				{
 					i++;
 					ClearThCore.connectionStorage().modifyConnection(c, selectedConnections.get(i));
-					if (c.isRunning())
+					if (c.isRunning() && !copy)
 					{
 						stopConnection(c);
 						startConnection(c);
@@ -244,6 +244,12 @@ public class ConnectivityBean extends ClearThBean
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
 		WebUtils.addCanCloseCallback(canClose);
+	}
+
+	public void saveConnectionsAfterCopy()
+	{
+		if(isCopy())
+			saveConnections();
 	}
 
 	public void removeConnections()

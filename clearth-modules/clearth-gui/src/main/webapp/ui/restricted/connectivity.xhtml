@@ -391,11 +391,12 @@
 									oncomplete="restoreConsScrollPos(); if (args.canClose) PF('conDialog').hide();"
 									icon="ui-icon ui-icon-check">
 							</p:commandButton>
-							<p:commandButton value="Save"
+							<p:commandButton value="Save" 
 									rendered="#{connectivityBean.selectedConnectionRunning}"
-									oncomplete="PF('restartConnectionConfirmDialog').show(); if (args.canClose) PF('conDialog').hide();"
-									icon="ui-icon ui-icon-check">
-							</p:commandButton>
+									actionListener="#{connectivityBean.saveConnectionsAfterCopy}"
+									oncomplete="if (#{!connectivityBean.copy}) PF('restartConnectionConfirmDialog').show(); else {hideConnectionDialog(); saveConsScrollPos(); restoreConsScrollPos();}"
+									ajax="true" update=":Connections :Growl"
+									icon="ui-icon ui-icon-check" />
 							<p:commandButton value="Cancel"
 									onclick="PF('conDialog').hide();"
 									icon="ui-icon ui-icon-close" />
