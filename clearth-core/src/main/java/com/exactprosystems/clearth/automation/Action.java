@@ -38,7 +38,7 @@ public abstract class Action
 	
 	protected static final String PARAM_OUTPUTPARAMS = "OutputParams";
 
-	protected LinkedHashMap<String, String> inputParams; // Matrix and default input parameters
+	protected Map<String, String> inputParams; // Matrix and default input parameters
 	protected LinkedHashMap<String, String> outputParams;
 	protected LinkedHashMap<String, SubActionData> subActionsData;
 	protected LinkedHashMap<String, LinkedHashMap<String, String>> subOutputParams;
@@ -228,7 +228,7 @@ public abstract class Action
 	 * Returns map of input parameters as <Key, Value>
 	 * @return map of input parameters
 	 */
-	public LinkedHashMap<String, String> getInputParams()
+	public Map<String, String> getInputParams()
 	{
 		return inputParams;
 	}

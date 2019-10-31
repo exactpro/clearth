@@ -545,7 +545,7 @@ public abstract class ActionGenerator
 
 		if (action != null) {
 			// Init default input parameters
-			LinkedHashMap<String, String> matrixInputParams = actionSettings.getParams();
+			Map<String, String> matrixInputParams = actionSettings.getParams();
 			LinkedHashMap<String, String> allParams = new LinkedHashMap<String, String>(matrixInputParams);
 			actionSettings.setParams(allParams);
 			actionSettings.setMatrixInputParams(matrixInputParams.keySet());

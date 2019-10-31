@@ -28,7 +28,7 @@ import java.util.Map;
 public class SubActionData
 {
 	private String name;
-	private LinkedHashMap<String, String> params;
+	private Map<String, String> params;
 	private Map<String, String> formulas;
 	private LinkedHashMap<String, SubActionData> subActionData;
 	//TODO add ExceptionWrapper after JSON reports migration to core
@@ -38,7 +38,7 @@ public class SubActionData
 	private ReportStatus success;
 
 	public SubActionData(String name,
-	                     LinkedHashMap<String, String> params,
+	                     Map<String, String> params,
 	                     Map<String, String> formulas,
 	                     LinkedHashMap<String, SubActionData> subActionData)
 	{
@@ -84,7 +84,7 @@ public class SubActionData
 		return name;
 	}
 
-	public LinkedHashMap<String, String> getParams()
+	public Map<String, String> getParams()
 	{
 		return params;
 	}

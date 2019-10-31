@@ -28,6 +28,7 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.map.UnmodifiableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -598,6 +599,11 @@ public class ActionExecutor implements Closeable
 		return true;
 	}
 	
+	private void prepareActionInputParams(Action action)
+	{
+		action.inputParams = UnmodifiableMap.unmodifiableMap(action.inputParams); // To exclude inputParams modification during action execution
+	}
+	
 	protected void prepareToAction(Action action, StepContext stepContext, MatrixContext matrixContext) throws FailoverException
 	{
 	}
@@ -664,6 +670,7 @@ public class ActionExecutor implements Closeable
 				passed = true;
 				try
 				{
+					prepareActionInputParams(action);
 					prepareToAction(action, stepContext, matrixContext);  //Creating connections according to action type, if needed
 					action.setStarted(new Date());
 					handleTimeout(action);

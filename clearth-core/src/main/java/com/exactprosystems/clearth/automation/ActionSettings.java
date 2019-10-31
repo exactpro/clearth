@@ -43,7 +43,7 @@ public class ActionSettings
 	protected String asyncGroup, waitAsyncEndStep;
 	protected WaitAsyncEnd waitAsyncEnd = WaitAsyncEnd.NO;
 	
-	private LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
+	private Map<String, String> params = new LinkedHashMap<>();
 	private Set<String> matrixInputParams = null;
 	private List<String> duplicateParams = null;
 	private HashMap<String, String> formulas = null;
@@ -240,12 +240,12 @@ public class ActionSettings
 	}
 
 
-	public LinkedHashMap<String, String> getParams()
+	public Map<String, String> getParams()
 	{
 		return params;
 	}
 	
-	public void setParams(LinkedHashMap<String, String> params)
+	public void setParams(Map<String, String> params)
 	{
 		this.params = params;
 	}
