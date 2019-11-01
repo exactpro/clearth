@@ -72,6 +72,8 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		startedActions.remove(actionData);
 		finishedActions.add(actionData);
 		
+		refreshState(actionData.getAction());
+		
 		try
 		{
 			actionsToProcess.put(actionData);
@@ -80,6 +82,12 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		{
 			getLogger().error("Could not update finished actions storage", e);
 		}
+	}
+
+	private void refreshState(Action action)
+	{
+		action.setPayloadFinished(true);
+		action.getStep().refreshAsyncFlag(action);
 	}
 	
 	@Override

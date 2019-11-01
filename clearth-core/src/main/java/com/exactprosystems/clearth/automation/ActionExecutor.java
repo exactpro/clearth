@@ -315,7 +315,6 @@ public class ActionExecutor implements Closeable
 		action.setStarted(actionData.getStarted());
 		action.setFinished(actionData.getFinished());
 		action.setResult(result);
-		action.setPayloadFinished(true);
 		applyActionResult(action, false);
 		reportWriter.updateReports(action, actionsReportsDir, action.getStep().getSafeName());
 		processActionResult(action);

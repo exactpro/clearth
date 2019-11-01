@@ -134,7 +134,6 @@ public abstract class ExecutorState
 							if (step.getName().equals(a.getStepName()))
 							{
 								step.addAction(a);
-								step.getActions().add(a);
 								if (!preparableActions.containsKey(a.getName()) && a.isExecutable() && a instanceof Preparable)
 									preparableActions.put(a.getName(), (Preparable)a);
 								break;
