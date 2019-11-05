@@ -23,12 +23,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties({"exception"})
 public class SubActionData
 {
 	private String name;
 	private Map<String, String> params;
+	private Set<String> matrixInputParams;
 	private Map<String, String> formulas;
 	private LinkedHashMap<String, SubActionData> subActionData;
 	//TODO add ExceptionWrapper after JSON reports migration to core
@@ -37,7 +40,7 @@ public class SubActionData
 	private String idInTemplate;
 	private ReportStatus success;
 
-	public SubActionData(String name,
+	private SubActionData(String name,
 	                     Map<String, String> params,
 	                     Map<String, String> formulas,
 	                     LinkedHashMap<String, SubActionData> subActionData)
@@ -51,9 +54,10 @@ public class SubActionData
 
 	public SubActionData(Action action)
 	{
-		this(action.getName(),action.getInputParams(), action.getFormulas(), action.getSubActionData());
+		this(action.getName(), action.getInputParams(), action.getFormulas(), action.getSubActionData());
 
 		idInTemplate = action.getIdInTemplate();
+		matrixInputParams = action.getMatrixInputParams();
 		success = new ReportStatus(true);
 	}
 
@@ -87,6 +91,16 @@ public class SubActionData
 	public Map<String, String> getParams()
 	{
 		return params;
+	}
+
+	public Set<String> getMatrixInputParams()
+	{
+		return matrixInputParams;
+	}
+
+	public Map<String, String> extractMatrixInputParams()
+	{
+		return matrixInputParams.stream().collect(Collectors.toMap(p -> p, params::get));
 	}
 
 	public Map<String, String> getFormulas()

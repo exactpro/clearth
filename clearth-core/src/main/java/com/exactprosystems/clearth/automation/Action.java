@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -256,6 +257,14 @@ public abstract class Action
 	public Set<String> getMatrixInputParams()
 	{
 		return matrixInputParams;
+	}
+
+	/** 
+	 * This method returns map with items from <b>inputParams</b> with keys from <b>matrixInputParams</b>
+	 */
+	public Map<String, String> extractMatrixInputParams()
+	{
+		return matrixInputParams.stream().collect(Collectors.toMap(p -> p, inputParams::get));
 	}
 	
 	public Map<String, String> copyInputParams()
