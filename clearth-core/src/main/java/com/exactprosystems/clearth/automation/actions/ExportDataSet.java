@@ -69,6 +69,7 @@ public abstract class ExportDataSet extends Action
 
 	public static final int BUF_SIZE_DEF_VALUE = 100;
 
+	protected GlobalContext globalContext;
 	protected SrcFormat srcFormat;
 	protected DstFormat dstFormat;
 	protected String source, destination;
@@ -99,6 +100,7 @@ public abstract class ExportDataSet extends Action
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
+		this.globalContext = globalContext;
 		initParameters();
 
 		try

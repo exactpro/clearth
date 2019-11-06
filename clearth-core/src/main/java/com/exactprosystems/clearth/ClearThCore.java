@@ -31,6 +31,7 @@ import com.exactprosystems.clearth.connectivity.iface.DefaultCodecFactory;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
 import com.exactprosystems.clearth.tools.ToolsManager;
+import com.exactprosystems.clearth.utils.sql.ClearThDbConnection;
 import com.exactprosystems.memorymonitor.*;
 import com.exactprosystems.clearth.tools.ToolsFactory;
 import com.exactprosystems.clearth.utils.*;
@@ -753,7 +754,13 @@ public abstract class ClearThCore
 	
 	public static Connection createDBConnection(String url, String user, String password) throws SQLException
 	{
-		return DriverManager.getConnection(url, user, password);
+		return createDBConnection(url, user, password, null);
+	}
+	
+	public static Connection createDBConnection(String url, String user, String password, GlobalContext globalContext)
+			throws SQLException
+	{
+		return new ClearThDbConnection(DriverManager.getConnection(url, user, password), globalContext);
 	}
 
 	public CodecsStorage getCodecs()

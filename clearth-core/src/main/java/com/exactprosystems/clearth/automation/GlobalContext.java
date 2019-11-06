@@ -20,7 +20,9 @@ package com.exactprosystems.clearth.automation;
 
 import static com.exactprosystems.clearth.utils.ExceptionUtils.exceptionWrapper;
 
+import java.sql.Statement;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 
@@ -35,6 +37,7 @@ public class GlobalContext
 	private final MatrixFunctions matrixFunctions;
 	private final String startedByUser;
 	private final List<String> attemtedConnections;
+	private final Set<Statement> statements;
 	
 	private Date started, finished;
 	
@@ -55,6 +58,7 @@ public class GlobalContext
 		this.matrixFunctions = matrixFunctions;
 		this.startedByUser = startedByUser;
 		this.attemtedConnections = new ArrayList<String>(0);
+		this.statements = ConcurrentHashMap.newKeySet();
 		
 		this.started = null;
 		this.finished = null;
@@ -109,6 +113,24 @@ public class GlobalContext
 	{
 		return attemtedConnections;
 	}
+
+	/**
+	 * Package-private access used to make statements set accessible only by Scheduler and not by actions
+	 */
+	Set<Statement> getSqlStatements()
+	{
+		return statements;
+	}
+	
+	public void registerStatement(Statement statement)
+	{
+		statements.add(statement);
+	}
+	
+	public void unregisterStatement(Statement statement)
+	{
+		statements.remove(statement);
+	}
 	
 	
 	public Date getStarted()
@@ -136,5 +158,6 @@ public class GlobalContext
 		loadedContext.clear();
 		attemtedConnections.clear();
 		holidays.clear();
+		statements.clear();
 	}
 }

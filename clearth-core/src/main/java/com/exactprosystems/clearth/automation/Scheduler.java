@@ -47,11 +47,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static com.exactprosystems.clearth.ClearThCore.configFiles;
 import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
 
 public abstract class Scheduler
@@ -986,16 +987,40 @@ public abstract class Scheduler
 			return;
 
 		if (!sequentialRun)
+		{
+			interruptSqlStatements(executor.globalContext);
 			executor.interruptExecution();
+		}
 		else
 		{
-			if (seqExec.getCurrentMatrix()!=null)
+			if (seqExec.currentExecutor != null)
+				interruptSqlStatements(seqExec.currentExecutor.globalContext);
+			
+			if (seqExec.getCurrentMatrix() != null)
 				seqExec.interruptExecution();
 			else
 				seqExec.interruptWholeExecution();
 		}
 
 //		matrices.clear();
+	}
+
+	protected void interruptSqlStatements(GlobalContext globalContext)
+	{
+		Set<Statement> statements = globalContext.getSqlStatements();
+		Iterator<Statement> it = statements.iterator();
+		while (it.hasNext())
+		{
+			try (Statement statement = it.next())
+			{
+				if (statement != null && !statement.isClosed())
+					statement.cancel();
+			}
+			catch (SQLException e)
+			{
+				logger.warn("Error occurred while closing statement", e);
+			}
+		}
 	}
 	
 	synchronized public void pause() throws AutomationException
