@@ -163,7 +163,7 @@ public class ReportBean
 			int searchFrom = 0;
 			while ((linkTagAndStart = TagUtils.getTagAndStart("a", reportBody, searchFrom)) != null)
 			{
-				// Obtain 'a' tag and value of its 'href' attribute
+				// Obtaining 'a' tag and value of its 'href' attribute
 				int linkTagStart = linkTagAndStart.getSecond();
 				String linkTag = linkTagAndStart.getFirst(),
 						linkValue = TagUtils.getTagAttribute("a", "href", linkTag);
@@ -175,7 +175,7 @@ public class ReportBean
 				Path actionReportsDir = Paths.get(scheduler.getActionReportsDir());
 				int dirsInPathCount = actionReportsDir.getNameCount();
 				String newLinkValue = ClearThCoreApplicationBean.getInstance().getAppContextPath() + "/"
-						+ actionReportsDir.subpath(dirsInPathCount - 4, dirsInPathCount).toString() + "/"
+						+ actionReportsDir.subpath(dirsInPathCount - 5, dirsInPathCount).toString() + "/"
 						+ URLEncoder.encode(matrix.getName(), "UTF-8").replace("+", "%20") + "/"
 						+ linkValue;
 				
