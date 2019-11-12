@@ -573,7 +573,7 @@ public abstract class Step
 		actions.add(action);
 		if (execute && !executable && action.isExecutable())
 			executable = true;
-		if (action.isAsync())
+		if (executable && action.isAsync())
 		{
 			asyncActions.add(action);
 			if (!async)
@@ -583,9 +583,14 @@ public abstract class Step
 
 	public void clearActions()
 	{
-		actions.clear();
+		clearSyncActions();
 		asyncActions.clear();
 		executable = async = false;
+	}
+	
+	public void clearSyncActions()
+	{
+		actions.clear();
 	}
 
 	public void setActions(List<Action> actions)
