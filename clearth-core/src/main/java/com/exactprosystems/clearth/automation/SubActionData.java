@@ -40,13 +40,15 @@ public class SubActionData
 	private String idInTemplate;
 	private ReportStatus success;
 
-	private SubActionData(String name,
-	                     Map<String, String> params,
-	                     Map<String, String> formulas,
-	                     LinkedHashMap<String, SubActionData> subActionData)
+	public SubActionData(String name,
+			Map<String, String> params,
+			Set<String> matrixInputParams,
+			Map<String, String> formulas,
+			LinkedHashMap<String, SubActionData> subActionData)
 	{
 		this.name = name;
 		this.params = params;
+		this.matrixInputParams = matrixInputParams;
 		this.formulas = formulas;
 		this.subActionData = subActionData;
 		success = new ReportStatus(true);
@@ -54,11 +56,9 @@ public class SubActionData
 
 	public SubActionData(Action action)
 	{
-		this(action.getName(), action.getInputParams(), action.getFormulas(), action.getSubActionData());
-
+		this(action.getName(), action.getInputParams(), action.getMatrixInputParams(), action.getFormulas(),
+				action.getSubActionData());
 		idInTemplate = action.getIdInTemplate();
-		matrixInputParams = action.getMatrixInputParams();
-		success = new ReportStatus(true);
 	}
 
 	public void setComment(String comment)
