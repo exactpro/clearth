@@ -47,7 +47,7 @@ public abstract class ActionGenerator
 			COLUMN_EXECUTE = "execute", COLUMN_TIMEOUT = "timeout", COLUMN_COMMENT = "comment",
 			COLUMN_INVERT = "invert", COLUMN_SUSPEND_FAILED = "suspendiffailed",
 			COLUMN_ASYNC = "async", COLUMN_ASYNCGROUP = "asyncgroup", COLUMN_WAITASYNCEND = "waitasyncend",
-			COLUMN_ID_IN_TEMPLATE = "idintemplate";
+			COLUMN_ID_IN_TEMPLATE = "idintemplate", COLUMN_WAITASYNCENDSTEP = "waitasyncendstep";
 
 	// initAction results
 	public static final int NO_ERROR = 0, CHECKING_ERROR = 1, INIT_ERROR = 2;
@@ -445,6 +445,21 @@ public abstract class ActionGenerator
 				else
 					actionSettings.setWaitAsyncEnd(WaitAsyncEnd.byLabel(value));
 			}
+			else if (headLow.equals(COLUMN_WAITASYNCENDSTEP))
+			{
+				if(StringUtils.isNotBlank(value))
+				{
+					if (steps.containsKey(value))
+						actionSettings.setWaitAsyncEndStep(value);
+					else
+					{
+						allSuccessful = false;
+						String message = "Action '" + actionSettings.getActionId() + "' (line " + lineNumber + ") has nonexistent step '" + value + "' in '" + COLUMN_WAITASYNCENDSTEP + "' field, it will be ignored";
+						logger.warn(message);
+						matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.NONEXISTENT_GLOBALSTEP, message);
+					}
+				}
+			}
 			else if (headLow.equals(COLUMN_ID_IN_TEMPLATE))
 			{
 				if (value.contains(MatrixFunctions.FORMULA_START))
@@ -540,7 +555,7 @@ public abstract class ActionGenerator
 
 		if (action != null) {
 			// Init default input parameters
-			LinkedHashMap<String, String> matrixInputParams = actionSettings.getParams();
+			Map<String, String> matrixInputParams = actionSettings.getParams();
 			LinkedHashMap<String, String> allParams = new LinkedHashMap<String, String>(matrixInputParams);
 			actionSettings.setParams(allParams);
 			actionSettings.setMatrixInputParams(matrixInputParams.keySet());

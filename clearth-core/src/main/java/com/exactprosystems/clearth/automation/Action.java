@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ public abstract class Action
 	
 	protected static final String PARAM_OUTPUTPARAMS = "OutputParams";
 
-	protected LinkedHashMap<String, String> inputParams; // Matrix and default input parameters
+	protected Map<String, String> inputParams; // Matrix and default input parameters
 	protected LinkedHashMap<String, String> outputParams;
 	protected LinkedHashMap<String, SubActionData> subActionsData;
 	protected LinkedHashMap<String, LinkedHashMap<String, String>> subOutputParams;
@@ -66,7 +67,7 @@ public abstract class Action
 	
 	protected boolean async;
 	protected boolean payloadFinished;
-	protected String asyncGroup;
+	protected String asyncGroup, waitAsyncEndStep;
 	protected WaitAsyncEnd waitAsyncEnd;
 	
 	private Result result;
@@ -119,6 +120,7 @@ public abstract class Action
 		asyncGroup = settings.getAsyncGroup();
 		formulaAsyncGroup = settings.getFormulaAsyncGroup();
 		waitAsyncEnd = settings.getWaitAsyncEnd();
+		waitAsyncEndStep = settings.getWaitAsyncEndStep();
 		formulaWaitAsyncEnd = settings.getFormulaWaitAsyncEnd();
 		
 		step = settings.getStep();
@@ -229,7 +231,7 @@ public abstract class Action
 	 * Returns map of input parameters as <Key, Value>
 	 * @return map of input parameters
 	 */
-	public LinkedHashMap<String, String> getInputParams()
+	public Map<String, String> getInputParams()
 	{
 		return inputParams;
 	}
@@ -257,6 +259,14 @@ public abstract class Action
 	public Set<String> getMatrixInputParams()
 	{
 		return matrixInputParams;
+	}
+
+	/** 
+	 * This method returns map with items from <b>inputParams</b> with keys from <b>matrixInputParams</b>
+	 */
+	public Map<String, String> extractMatrixInputParams()
+	{
+		return matrixInputParams.stream().collect(Collectors.toMap(p -> p, inputParams::get));
 	}
 	
 	public Map<String, String> copyInputParams()
@@ -379,7 +389,17 @@ public abstract class Action
 	{
 		return waitAsyncEnd;
 	}
-	
+
+	public String getWaitAsyncEndStep()
+	{
+		return waitAsyncEndStep;
+	}
+
+	public void setWaitAsyncEndStep(String waitAsyncEndStep)
+	{
+		this.waitAsyncEndStep = waitAsyncEndStep;
+	}
+
 	public String getFormulaWaitAsyncEnd()
 	{
 		return formulaWaitAsyncEnd;

@@ -40,10 +40,10 @@ public class ActionSettings
 	private long timeout = 0;
 	
 	protected boolean async;
-	protected String asyncGroup;
+	protected String asyncGroup, waitAsyncEndStep;
 	protected WaitAsyncEnd waitAsyncEnd = WaitAsyncEnd.NO;
 	
-	private LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
+	private Map<String, String> params = new LinkedHashMap<>();
 	private Set<String> matrixInputParams = null;
 	private List<String> duplicateParams = null;
 	private HashMap<String, String> formulas = null;
@@ -218,7 +218,17 @@ public class ActionSettings
 	{
 		this.waitAsyncEnd = waitAsyncEnd;
 	}
-	
+
+	public String getWaitAsyncEndStep()
+	{
+		return waitAsyncEndStep;
+	}
+
+	public void setWaitAsyncEndStep(String waitAsyncEndStep)
+	{
+		this.waitAsyncEndStep = waitAsyncEndStep;
+	}
+
 	public String getFormulaWaitAsyncEnd()
 	{
 		return formulaWaitAsyncEnd;
@@ -230,12 +240,12 @@ public class ActionSettings
 	}
 
 
-	public LinkedHashMap<String, String> getParams()
+	public Map<String, String> getParams()
 	{
 		return params;
 	}
 	
-	public void setParams(LinkedHashMap<String, String> params)
+	public void setParams(Map<String, String> params)
 	{
 		this.params = params;
 	}

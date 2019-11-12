@@ -23,12 +23,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties({"exception"})
 public class SubActionData
 {
 	private String name;
-	private LinkedHashMap<String, String> params;
+	private Map<String, String> params;
+	private Set<String> matrixInputParams;
 	private Map<String, String> formulas;
 	private LinkedHashMap<String, SubActionData> subActionData;
 	//TODO add ExceptionWrapper after JSON reports migration to core
@@ -38,12 +41,14 @@ public class SubActionData
 	private ReportStatus success;
 
 	public SubActionData(String name,
-	                     LinkedHashMap<String, String> params,
-	                     Map<String, String> formulas,
-	                     LinkedHashMap<String, SubActionData> subActionData)
+			Map<String, String> params,
+			Set<String> matrixInputParams,
+			Map<String, String> formulas,
+			LinkedHashMap<String, SubActionData> subActionData)
 	{
 		this.name = name;
 		this.params = params;
+		this.matrixInputParams = matrixInputParams;
 		this.formulas = formulas;
 		this.subActionData = subActionData;
 		success = new ReportStatus(true);
@@ -51,10 +56,9 @@ public class SubActionData
 
 	public SubActionData(Action action)
 	{
-		this(action.getName(),action.getInputParams(), action.getFormulas(), action.getSubActionData());
-
+		this(action.getName(), action.getInputParams(), action.getMatrixInputParams(), action.getFormulas(),
+				action.getSubActionData());
 		idInTemplate = action.getIdInTemplate();
-		success = new ReportStatus(true);
 	}
 
 	public void setComment(String comment)
@@ -84,9 +88,19 @@ public class SubActionData
 		return name;
 	}
 
-	public LinkedHashMap<String, String> getParams()
+	public Map<String, String> getParams()
 	{
 		return params;
+	}
+
+	public Set<String> getMatrixInputParams()
+	{
+		return matrixInputParams;
+	}
+
+	public Map<String, String> extractMatrixInputParams()
+	{
+		return matrixInputParams.stream().collect(Collectors.toMap(p -> p, params::get));
 	}
 
 	public Map<String, String> getFormulas()

@@ -22,21 +22,25 @@ import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.utils.javaFunction.BiConsumerWithException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.automation.ActionExecutor.isAsyncAction;
 
 public abstract class Step
 {
 	protected String name, kind, startAt, parameter;
-	protected boolean askForContinue, askIfFailed, execute, executable, async;
+	protected boolean askForContinue, askIfFailed, execute, executable;
+	protected volatile boolean async;
 	protected String comment = "";
 	
 	protected final List<Action> actions = new ArrayList<>();
+	protected final Set<Action> asyncActions = new HashSet<>();
 	protected String actionsReportsDir = null;
 
 	protected Date started, finished;
@@ -458,27 +462,30 @@ public abstract class Step
 	{
 		actionExec.checkAsyncActions();
 	}
-	
-	protected void waitForAsyncActions(ActionExecutor actionExec)
+
+	protected void waitForAsyncActions(ActionExecutor actionExec,
+			BiConsumerWithException<ActionExecutor, String, InterruptedException> waitMethod)
 	{
 		if (!interrupted)
 		{
 			try
 			{
-				actionExec.waitForStepAsyncActions(this.getName());
+				waitMethod.accept(actionExec, this.getName());
 			}
 			catch (InterruptedException e)
 			{
 				getLogger().warn("Wait for async actions interrupted", e);
 			}
 		}
-		
+
 		updateByAsyncActions(actionExec);
 	}
 	
-	
+
 	public void executeActions(ActionExecutor actionExec, String actionsReportsDir, BooleanObject replay, SchedulerSuspension suspension)
 	{
+		waitForAsyncActions(actionExec, ActionExecutor::waitForBeforeStepAsyncActions);
+
 		this.actionsReportsDir = actionsReportsDir;
 		Logger logger = getLogger();
 		checkContextsExist();
@@ -538,7 +545,7 @@ public abstract class Step
 			}
 
 			actionExec.afterActionsExecution(this);
-			waitForAsyncActions(actionExec);
+			waitForAsyncActions(actionExec, ActionExecutor::waitForStepAsyncActions);
 			replay.setValue(canReplay.get());
 		}
 		finally
@@ -561,34 +568,49 @@ public abstract class Step
 		return async;
 	}
 
-	public void refreshAsyncFlag()
-	{
-		async = !actions.isEmpty() && actions.stream().anyMatch(action -> action.isAsync() && !action.isPayloadFinished());
-	}
-
 	public void addAction(Action action)
 	{
 		actions.add(action);
-		setStatuses();
+		if (execute && !executable && action.isExecutable())
+			executable = true;
+		if (executable && action.isAsync())
+		{
+			asyncActions.add(action);
+			if (!async)
+				async = true;
+		}
 	}
 
 	public void clearActions()
 	{
+		clearSyncActions();
+		asyncActions.clear();
+		executable = async = false;
+	}
+	
+	public void clearSyncActions()
+	{
 		actions.clear();
-		setStatuses();
 	}
 
 	public void setActions(List<Action> actions)
 	{
 		clearActions();
 		this.actions.addAll(actions);
-		setStatuses();
+		asyncActions.addAll(actions.stream().filter(Action::isAsync).collect(Collectors.toList()));
+		executable = execute && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
+		async = !asyncActions.isEmpty();
 	}
 
-	private void setStatuses()
+	public void refreshAsyncFlag(Action asyncAction)
 	{
-		executable = execute && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
-		refreshAsyncFlag();
+		synchronized (asyncActions)
+		{
+			if (asyncActions.remove(asyncAction))
+			{
+				async = !asyncActions.isEmpty();
+			}
+		}
 	}
 	
 	public enum StepParams

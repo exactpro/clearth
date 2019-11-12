@@ -18,42 +18,27 @@
 
 package com.exactprosystems.clearth.automation.actions.macro;
 
-import com.exactprosystems.clearth.automation.Action;
-
-public class NestedAction
+public class NestedActionGenerationException extends Exception
 {
-	private final Action action;
-	private boolean showInReport, continueIfFailed;
+	private static final long serialVersionUID = -8348473234136682634L;
 	
-	public NestedAction(Action action)
+	public NestedActionGenerationException()
 	{
-		this.action = action;
-		showInReport = true;
-		continueIfFailed = false;
+		super();
 	}
 	
-	public Action getAction()
+	public NestedActionGenerationException(String message)
 	{
-		return action;
+		super(message);
 	}
 	
-	public void setShowInReport(boolean showInReport)
+	public NestedActionGenerationException(Throwable cause)
 	{
-		this.showInReport = showInReport;
+		super(cause);
 	}
 	
-	public boolean isShowInReport()
+	public NestedActionGenerationException(String message, Throwable cause)
 	{
-		return showInReport;
-	}
-	
-	public void setContinueIfFailed(boolean continueIfFailed)
-	{
-		this.continueIfFailed = continueIfFailed;
-	}
-	
-	public boolean isContinueIfFailed()
-	{
-		return continueIfFailed;
+		super(message, cause);
 	}
 }

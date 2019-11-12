@@ -18,42 +18,42 @@
 
 package com.exactprosystems.clearth.automation.actions.macro;
 
-import com.exactprosystems.clearth.automation.Action;
+import com.exactprosystems.clearth.automation.ActionsExecutionProgress;
 
-public class NestedAction
+public class NestedActionsExecutionProgress extends ActionsExecutionProgress
 {
-	private final Action action;
-	private boolean showInReport, continueIfFailed;
+	private int hidden;
 	
-	public NestedAction(Action action)
+	public NestedActionsExecutionProgress(int successful, int done, int hidden)
 	{
-		this.action = action;
-		showInReport = true;
-		continueIfFailed = false;
+		super(successful, done);
+		this.hidden = hidden;
 	}
 	
-	public Action getAction()
+	public NestedActionsExecutionProgress()
 	{
-		return action;
+		this(0, 0, 0);
 	}
 	
-	public void setShowInReport(boolean showInReport)
+	
+	public void incrementHidden()
 	{
-		this.showInReport = showInReport;
+		hidden++;
 	}
 	
-	public boolean isShowInReport()
+	public void decrementHidden()
 	{
-		return showInReport;
+		hidden--;
 	}
 	
-	public void setContinueIfFailed(boolean continueIfFailed)
+	
+	public void setHidden(int hidden)
 	{
-		this.continueIfFailed = continueIfFailed;
+		this.hidden = hidden;
 	}
 	
-	public boolean isContinueIfFailed()
+	public int getHidden()
 	{
-		return continueIfFailed;
+		return hidden;
 	}
 }

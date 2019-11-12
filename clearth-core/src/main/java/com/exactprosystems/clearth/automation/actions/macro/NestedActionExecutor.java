@@ -18,25 +18,19 @@
 
 package com.exactprosystems.clearth.automation.actions.macro;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.exactprosystems.clearth.automation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.ActionExecutor;
-import com.exactprosystems.clearth.automation.ActionParamsCalculator;
-import com.exactprosystems.clearth.automation.FailoverStatus;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.StepContext;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NestedActionExecutor extends ActionExecutor
 {
 	private static final Logger logger = LoggerFactory.getLogger(NestedActionExecutor.class);
 	
-	public NestedActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, String actionsReportsPath)
+	public NestedActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, String nestedActionsReportFilePath)
 	{
-		super(globalContext, calculator, new NestedActionReportWriter(actionsReportsPath), new FailoverStatus());
+		super(globalContext, calculator, new NestedActionReportWriter(nestedActionsReportFilePath), new FailoverStatus());
 	}
 	
 	public void executeAction(Action action, StepContext stepContext, boolean writeReport)

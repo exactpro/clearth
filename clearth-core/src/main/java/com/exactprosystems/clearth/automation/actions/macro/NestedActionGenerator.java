@@ -18,56 +18,39 @@
 
 package com.exactprosystems.clearth.automation.actions.macro;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.utils.LineBuilder;
+import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.ActionGenerator;
-import com.exactprosystems.clearth.automation.ActionGeneratorMessage;
-import com.exactprosystems.clearth.automation.ActionGeneratorMessageType;
-import com.exactprosystems.clearth.automation.ActionSettings;
-import com.exactprosystems.clearth.automation.Matrix;
-import com.exactprosystems.clearth.automation.MatrixData;
-import com.exactprosystems.clearth.automation.Preparable;
-import com.exactprosystems.clearth.automation.Step;
-import com.exactprosystems.clearth.automation.exceptions.ResultException;
-import com.exactprosystems.clearth.utils.LineBuilder;
-import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class NestedActionGenerator extends ActionGenerator
 {	
 	private static final Logger logger = LoggerFactory.getLogger(NestedActionGenerator.class);
 	
-	public static final String SHOW_IN_REPORT = "showinreport",
-			CONTINUE_IF_FAILED = "continueiffailed";
+	public static final String SHOW_IN_REPORT = "showinreport", CONTINUE_IF_FAILED = "continueiffailed";
 	
 	protected File macroMatrixFile;
 	protected Map<String, String> macroParams;
 	protected Step macroStep;
 	
-	protected List<Matrix> matrices;
 	protected Matrix generatedMacroMatrix;
 	protected List<NestedAction> nestedActions;
+	// For compatibility with super-class
+	protected List<Matrix> matrices;
 	protected Map<String, Preparable> preparableActions;
-	
-	private NestedActionGenerator()
-	{
-		super(new HashMap<String, Step>(), new ArrayList<Matrix>(), null);
-	}
 	
 	private NestedActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step macroStep,
 			List<Matrix> matrices, Map<String, Preparable> preparableActions)
 	{
-		super(new HashMap<String, Step>(), matrices, preparableActions);
+		super(new HashMap<>(), matrices, preparableActions);
 		this.macroMatrixFile = macroMatrixFile;
 		this.macroParams = macroParams;
 		this.macroStep = macroStep;
@@ -77,21 +60,21 @@ public class NestedActionGenerator extends ActionGenerator
 	
 	public static NestedActionGenerator create(File macroMatrixFile, Map<String, String> macroParams, Step macroStep)
 	{
-		return new NestedActionGenerator(macroMatrixFile, macroParams, macroStep, new ArrayList<Matrix>(), new HashMap<String, Preparable>());
+		return new NestedActionGenerator(macroMatrixFile, macroParams, macroStep, new ArrayList<>(), new HashMap<>());
 	}
 	
 	
-	public void generateNestedActions() throws Exception
+	public void generateNestedActions() throws IOException, NestedActionGenerationException
 	{
 		MatrixData matrixData = buildMatrixData();
 		boolean allSuccess = this.build(matrixData, false);
 		generatedMacroMatrix = matrices.get(0);
 		if (!allSuccess)
-			checkGenerationMessages(generatedMacroMatrix.getGeneratorMessages()); // If any error occurred on macro compilation, exception will be thrown
+			checkGeneratorMessages(generatedMacroMatrix.getGeneratorMessages()); // If any error occurred on macro compilation, exception will be thrown here
 		if (CollectionUtils.isEmpty(generatedMacroMatrix.getActions()))
-			throw ResultException.failed("No actions found in macro file '" + macroMatrixFile.getAbsolutePath() + "'.");
+			throw new NestedActionGenerationException("No actions found in macro file '" + macroMatrixFile.getAbsolutePath() + "'.");
 		
-		// Adding MVEL parameters to be able to use them inside nested actions
+		// Add MVEL parameters to be able to use them inside nested actions
 		generatedMacroMatrix.getMvelVars().put("macro", macroParams);
 		this.nestedActions = wrapActions(generatedMacroMatrix.getActions());
 	}
@@ -108,43 +91,40 @@ public class NestedActionGenerator extends ActionGenerator
 	
 	public List<Preparable> getPreparableActions()
 	{
-		return new ArrayList<Preparable>(preparableActions.values());
+		return new ArrayList<>(preparableActions.values());
 	}
 	
 	
 	protected MatrixData buildMatrixData()
 	{
-		MatrixData data = ClearThCore.getInstance().getMatrixDataFactory().createMatrixData();
-		data.setName(macroMatrixFile.getName());
-		data.setFile(macroMatrixFile);
-		data.setExecute(true);
-		data.setTrim(true);
-		return data;
+		MatrixData mData = ClearThCore.getInstance().getMatrixDataFactory().createMatrixData();
+		mData.setName(macroMatrixFile.getName());
+		mData.setFile(macroMatrixFile);
+		mData.setExecute(true);
+		mData.setTrim(true);
+		return mData;
 	}
 	
-	protected void checkGenerationMessages(List<ActionGeneratorMessage> generatorMsgs) throws Exception
+	protected void checkGeneratorMessages(List<ActionGeneratorMessage> generatorMsgs) throws NestedActionGenerationException
 	{
 		if (CollectionUtils.isNotEmpty(generatorMsgs))
 		{
 			LineBuilder msgBuilder = new LineBuilder();
-			for (ActionGeneratorMessage message : generatorMsgs)
-			{
-				if (message.type != ActionGeneratorMessageType.INFO)
-					msgBuilder.add("* ").append(message.message);
-			}
-			throw ResultException.failed("The following error(s) occurred while compiling macro:" + Utils.EOL + msgBuilder.toString());
+			generatorMsgs.stream().filter(msg -> msg.type != ActionGeneratorMessageType.INFO)
+					.map(msg -> msg.message).forEach(msg -> msgBuilder.add("* ").append(msg));
+			throw new NestedActionGenerationException("The following error(s) occurred while compiling macro:" + Utils.EOL + msgBuilder.toString());
 		}
 	}
 	
 	protected List<NestedAction> wrapActions(List<Action> actions)
 	{
-		List<NestedAction> wrappedActions = new ArrayList<NestedAction>();
+		List<NestedAction> wrappedActions = new ArrayList<>();
 		List<String> settingsParamsNames = getSettingsParamsNames();
 		for (Action action : actions)
 		{
 			NestedAction nestedAction = createNestedAction(action);
 			setNestedActionParams(action, nestedAction);
-			// Remove settings parameters from all action input params
+			// Remove settings parameters from all action's input ones
 			for (String paramName : settingsParamsNames)
 			{
 				action.getInputParams().remove(paramName);
@@ -168,29 +148,34 @@ public class NestedActionGenerator extends ActionGenerator
 	
 	protected List<String> getSettingsParamsNames()
 	{
-		List<String> paramsNames = new ArrayList<String>();
-		paramsNames.add(SHOW_IN_REPORT);
-		paramsNames.add(CONTINUE_IF_FAILED);
-		return paramsNames;
+		return Arrays.asList(SHOW_IN_REPORT, CONTINUE_IF_FAILED);
 	}
 	
 	
-	@Override
-	protected Logger getLogger()
-	{
-		return logger;
-	}
-
 	@Override
 	protected boolean customSetting(String name, String value, ActionSettings settings, int headerLineNumber, int lineNumber)
 	{
 		if (name.equals(SHOW_IN_REPORT) || name.equals(CONTINUE_IF_FAILED))
 		{
-			// Need to add to settings this parameters with lower case key
+			// Adding special parameters for nested action in lower case key
 			settings.addParam(name, value);
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	protected boolean initActionSettings(ActionSettings actionSettings, Matrix matrix, int lineNumber,
+	                                     List<String> header, List<String> values, int headerLineNumber, 
+	                                     boolean missingValues, boolean onlyCheck)
+	{
+		actionSettings.setStep(macroStep);
+		// Nested actions could be executed only sequentially (just preventing non-sequential execution if async=true is specified in matrix)
+		actionSettings.setAsync(false);
+		actionSettings.setFormulaAsync(null);
+
+		return super.initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber, 
+				missingValues, onlyCheck);
 	}
 	
 	@Override
@@ -207,23 +192,11 @@ public class NestedActionGenerator extends ActionGenerator
 	{
 		return true;
 	}
-
+	
+	
 	@Override
-	protected boolean initActionSettings(ActionSettings actionSettings,
-									   Matrix matrix,
-									   int lineNumber,
-									   List<String> header,
-									   List<String> values,
-									   int headerLineNumber,
-									   boolean missingValues,
-	                                   boolean onlyCheck)
+	protected Logger getLogger()
 	{
-		actionSettings.setStep(macroStep);
-		// Nested actions should be executed sequentially
-		actionSettings.setAsync(false);
-		actionSettings.setFormulaAsync(null);
-
-		return super.initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber,
-				missingValues, onlyCheck);
+		return logger;
 	}
 }

@@ -69,54 +69,54 @@ public class JsonMarshaller<T>
 
 
 	/**
-     * To unmarshal generic types use {@link #unmarshal(String, Class)}
-     * method, created because of Type Erasure.
-     */
+	 * To unmarshal generic types use {@link #unmarshal(String, Class)}
+	 * method, created because of Type Erasure.
+	 */
 	public T unmarshal(String jsonString) throws IOException
 	{
 		return objectMapper.readValue(jsonString, new TypeReference<T>(){});
 	}
 
 	/**
-     * This method is equivalent of {@link #unmarshal(String)} method
-     * for generic types due to Type Erasure.
-     */
+	 * This method is equivalent of {@link #unmarshal(String)} method
+	 * for generic types due to Type Erasure.
+	 */
 	public T unmarshal(String jsonString, Class<T> targetClass) throws IOException
 	{
 		return objectMapper.readValue(jsonString, targetClass);
 	}
 
 	/**
-     * To unmarshal generic types use {@link #unmarshal(File, Class)}
-     * method, created because of Type Erasure.
-     */
+	 * To unmarshal generic types use {@link #unmarshal(File, Class)}
+	 * method, created because of Type Erasure.
+	 */
 	public T unmarshal(File src) throws IOException
 	{
 		return objectMapper.readValue(src, new TypeReference<T>(){});
 	}
 
 	/**
-     * This method is equivalent of {@link #unmarshal(File)} method
-     * for generic types due to Type Erasure.
-     */
+	 * This method is equivalent of {@link #unmarshal(File)} method
+	 * for generic types due to Type Erasure.
+	 */
 	public T unmarshal(File src, Class<T> targetClass) throws IOException
 	{
 		return objectMapper.readValue(src, targetClass);
 	}
 
 	/**
-     * To unmarshal generic types use {@link #unmarshal(Path, Class)}
-     * method, created because of Type Erasure.
-     */
+	 * To unmarshal generic types use {@link #unmarshal(Path, Class)}
+	 * method, created because of Type Erasure.
+	 */
 	public T unmarshal(Path destPath) throws IOException
 	{
 		return unmarshal(destPath.toFile());
 	}
 
 	/**
-     * This method is equivalent of {@link #unmarshal(Path)} method
-     * for generic types due to Type Erasure.
-     */
+	 * This method is equivalent of {@link #unmarshal(Path)} method
+	 * for generic types due to Type Erasure.
+	 */
 	public T unmarshal(Path destPath, Class<T> targetClass) throws IOException
 	{
 		return unmarshal(destPath.toFile(), targetClass);

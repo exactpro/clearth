@@ -57,7 +57,7 @@ public class ActionReport
 		this.setActionId(action.getIdInMatrix());
 		this.setIdInTemplate(action.getIdInTemplate());
 		this.setActionName(action.getName());
-		this.setInputParams(action.getInputParams());
+		this.setInputParams(action.extractMatrixInputParams());
 		this.setOutputParams(action.getOutputParams());
 		this.setStatus(new ReportStatus(action));
 		
@@ -91,7 +91,7 @@ public class ActionReport
 		subActionReport.setComment(subActionData.getComment());
 		subActionReport.setIdInTemplate(subActionData.getIdInTemplate());
 		subActionReport.setStatus(subActionData.getSuccess());
-		subActionReport.setInputParams(subActionData.getParams());
+		subActionReport.setInputParams(subActionData.extractMatrixInputParams());
 		
 		actionReport.addSubActionReport(subActionReport);
 		

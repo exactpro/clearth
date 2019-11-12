@@ -341,7 +341,7 @@ public abstract class Executor extends Thread
 				}
 				finally
 				{
-					clearStepContexts(step);
+					stepFinished(step);
 				}
 				
 				if (!interrupted.get())
@@ -396,9 +396,6 @@ public abstract class Executor extends Thread
 
 			this.matrices.clear();
 			clearSteps();
-			
-			if(scheduler.executor != null) // We can't clear steps if it is executor created in seqExec
-				steps.clear();
 
 			if (sleepTimer != null) {
 				sleepTimer.cancel();
@@ -410,8 +407,8 @@ public abstract class Executor extends Thread
 
 	protected void stepFinished(Step step)
 	{
-		step.clearContexts(); // step.getStepContext(matrix).clearContext(); can be done if it is executor created in seqExec
-		step.actions.clear();
+		step.clearContexts();
+		step.clearSyncActions();
 	}
 
 	protected void clearSteps()
@@ -419,11 +416,6 @@ public abstract class Executor extends Thread
 		steps.forEach(Step::clearActions);
 		if (scheduler.executor != null) // We can't clear steps if it is executor created in seqExec
 			steps.clear();
-	}
-
-	protected void clearStepContexts(Step step)
-	{
-		step.clearContexts();
 	}
 
 	public void clearMatricesContexts()

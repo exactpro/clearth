@@ -16,44 +16,14 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.macro;
+package com.exactprosystems.clearth.utils.tabledata.readers;
 
-import com.exactprosystems.clearth.automation.Action;
-
-public class NestedAction
+public interface FixedLengthRowFilter
 {
-	private final Action action;
-	private boolean showInReport, continueIfFailed;
-	
-	public NestedAction(Action action)
-	{
-		this.action = action;
-		showInReport = true;
-		continueIfFailed = false;
-	}
-	
-	public Action getAction()
-	{
-		return action;
-	}
-	
-	public void setShowInReport(boolean showInReport)
-	{
-		this.showInReport = showInReport;
-	}
-	
-	public boolean isShowInReport()
-	{
-		return showInReport;
-	}
-	
-	public void setContinueIfFailed(boolean continueIfFailed)
-	{
-		this.continueIfFailed = continueIfFailed;
-	}
-	
-	public boolean isContinueIfFailed()
-	{
-		return continueIfFailed;
-	}
+	/**
+	 * Filter row to add to TableData.
+	 * @param rawLine current line from file being read
+	 * @return {@code true} if row should be added to TableData; {@code false} otherwise
+	 */
+	boolean filter(String rawLine);
 }

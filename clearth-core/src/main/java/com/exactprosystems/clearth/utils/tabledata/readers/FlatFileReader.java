@@ -16,44 +16,32 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.macro;
+package com.exactprosystems.clearth.utils.tabledata.readers;
 
-import com.exactprosystems.clearth.automation.Action;
+import com.exactprosystems.clearth.connectivity.flat.FlatMessageDesc;
+import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 
-public class NestedAction
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Set;
+
+public class FlatFileReader extends AbstractFlatFileReader<StringTableData>
 {
-	private final Action action;
-	private boolean showInReport, continueIfFailed;
-	
-	public NestedAction(Action action)
+	public FlatFileReader(File file, FlatMessageDesc messageDesc) throws IOException
 	{
-		this.action = action;
-		showInReport = true;
-		continueIfFailed = false;
+		super(file, messageDesc);
 	}
 	
-	public Action getAction()
+	public FlatFileReader(Reader reader, FlatMessageDesc messageDesc)
 	{
-		return action;
+		super(reader, messageDesc);
 	}
 	
-	public void setShowInReport(boolean showInReport)
+	@Override
+	protected StringTableData createTableData(Set<String> header, RowsListFactory<String, String> rowsListFactory)
 	{
-		this.showInReport = showInReport;
-	}
-	
-	public boolean isShowInReport()
-	{
-		return showInReport;
-	}
-	
-	public void setContinueIfFailed(boolean continueIfFailed)
-	{
-		this.continueIfFailed = continueIfFailed;
-	}
-	
-	public boolean isContinueIfFailed()
-	{
-		return continueIfFailed;
+		return new StringTableData(header, rowsListFactory);
 	}
 }

@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.exactprosystems.clearth.ClearThCore;
@@ -35,7 +36,7 @@ public abstract class ActionState
 	private Class<?> actionClass = null;
 
 	private Set<String> matrixInputParams = null;
-	private LinkedHashMap<String, String> inputParams = null;  //outputParams are cleaned after action end, no need to store them
+	private Map<String, String> inputParams = null;  //outputParams are cleaned after action end, no need to store them
 	private LinkedHashMap<String, SubActionData> subActionsData = null;
 	//subOutputParams, duplicateParams, formulas are cleaned after action end, no need to store them
 
@@ -157,12 +158,12 @@ public abstract class ActionState
 	}
 	
 	
-	public LinkedHashMap<String, String> getInputParams()
+	public Map<String, String> getInputParams()
 	{
 		return inputParams;
 	}
 	
-	public void setInputParams(LinkedHashMap<String, String> inputParams)
+	public void setInputParams(Map<String, String> inputParams)
 	{
 		this.inputParams = inputParams;
 	}
