@@ -598,9 +598,9 @@ public class ActionExecutor implements Closeable
 		return true;
 	}
 	
-	private void prepareActionInputParams(Action action)
+	protected void prepareActionInputParams(Action action)
 	{
-		action.inputParams = UnmodifiableMap.unmodifiableMap(action.inputParams); // To exclude inputParams modification during action execution
+		action.inputParams = UnmodifiableMap.unmodifiableMap(action.inputParams); // To prevent inputParams modification during action execution
 	}
 	
 	protected void prepareToAction(Action action, StepContext stepContext, MatrixContext matrixContext) throws FailoverException
