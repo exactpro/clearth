@@ -142,7 +142,7 @@ public class ReportsWriter
 			String storedActionsReports = Paths.get(actionsReportsDir, step.getSafeName() + ActionReportWriter.JSON_SUFFIX).toString();
 			try
 			{
-				buildStepReport(report, step, storedActionsReports);
+				buildStepReport(report, step, matrix, storedActionsReports);
 			}
 			catch (IOException e)
 			{
@@ -153,9 +153,9 @@ public class ReportsWriter
 		return report;
 	}
 	
-	protected void buildStepReport(AutomationReport report, Step step, String storedActionsReportsPath) throws IOException
+	protected void buildStepReport(AutomationReport report, Step step, Matrix matrix, String storedActionsReportsPath) throws IOException
 	{
-		StepReport stepReport = new StepReport(step);
+		StepReport stepReport = new StepReport(step, matrix);
 		
 		List<ActionReport> actionsReports = new JsonMarshaller<List<ActionReport>>().unmarshal(Paths.get(storedActionsReportsPath));
 

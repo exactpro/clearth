@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report;
 
+import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
 
 import java.util.ArrayList;
@@ -42,17 +43,17 @@ public class StepReport
 	{
 	}
 	
-	public StepReport(Step step)
+	public StepReport(Step step, Matrix matrix)
 	{
 		this.stepName = step.getName();
 		this.stepKind = step.getKind();
-		this.processStatus(step);
+		this.processStatus(step, matrix);
 		this.setResult(step.getResult());
 	}
 	
-	private void processStatus(Step step)
+	private void processStatus(Step step, Matrix matrix)
 	{
-		ReportStatus stepStatus = new ReportStatus(step.isSuccessful());
+		ReportStatus stepStatus = new ReportStatus(step.isSuccessful() && matrix.isStepSuccessful(step.getName()));
 		stepStatus.setStarted(step.getStarted());
 		stepStatus.setFinished(step.getFinished());
 		if (!isEmpty(step.getComment()))
