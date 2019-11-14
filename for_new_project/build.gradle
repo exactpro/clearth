@@ -5,6 +5,7 @@ plugins {
 
 ext {
 	core_version = '@CORE_VERSION@'
+	build_version = 'build_version'
 	war_name = 'clearth.war'
 }
 
@@ -28,9 +29,9 @@ configurations {
 }
 
 
-static def getDate() {
+static def getDate(String format) {
 	def date = new Date()
-	def formattedDate = date.format('yyyyMMdd.HHmmss')
+	def formattedDate = date.format(format)
 	return formattedDate
 }
 
@@ -41,6 +42,12 @@ war {
 	//Faster WAR creation
 	entryCompression = org.gradle.api.tasks.bundling.ZipEntryCompression.STORED
 	archiveName = war_name
+	manifest {
+		attributes('Implementation-Title': 'Application based on ClearTH Core')
+		attributes('Implementation-Vendor': 'Exactpro Systems LLC')
+		attributes('Implementation-Vendor-Id': 'com.exactprosystems')
+		attributes('Implementation-Version': "${build_version}|" + getDate('dd/MM/yyyy'))
+	}
 }
 
 gretty {
@@ -75,7 +82,7 @@ task buildRelease(type: Zip, group: 'ClearTH',
 	
 	archiveBaseName = 'clearth'
 	archiveAppendix = ''
-	archiveVersion = getDate()
+	archiveVersion = getDate('yyyyMMdd.HHmmss')
 	archiveClassifier = ''
 	archiveExtension = 'zip'
 	
