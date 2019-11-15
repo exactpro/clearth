@@ -26,6 +26,7 @@ public class ExceptionWrapper
 {
 	private String name;
 	private String message;
+	private StackTraceElement[] stackTrace;
 	
 	private ExceptionWrapper cause;
 	
@@ -37,6 +38,7 @@ public class ExceptionWrapper
 	{
 		name = error.getClass().getSimpleName();
 		message = error.getMessage();
+		stackTrace = error.getStackTrace();
 		
 		Throwable cause = error.getCause();
 		if (cause != null)
@@ -71,5 +73,15 @@ public class ExceptionWrapper
 	public void setCause(ExceptionWrapper cause)
 	{
 		this.cause = cause;
+	}
+
+	public StackTraceElement[] getStackTrace()
+	{
+		return stackTrace;
+	}
+
+	public void setStackTrace(StackTraceElement[] stackTrace)
+	{
+		this.stackTrace = stackTrace;
 	}
 }
