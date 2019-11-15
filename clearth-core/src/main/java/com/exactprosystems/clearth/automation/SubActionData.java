@@ -18,13 +18,13 @@
 
 package com.exactprosystems.clearth.automation;
 
+import com.exactprosystems.clearth.automation.report.ReportParamValue;
 import com.exactprosystems.clearth.automation.report.ReportStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @JsonIgnoreProperties({"exception"})
 public class SubActionData
@@ -98,9 +98,9 @@ public class SubActionData
 		return matrixInputParams;
 	}
 
-	public Map<String, String> extractMatrixInputParams()
+	public Map<String, ReportParamValue> extractMatrixInputParams()
 	{
-		return matrixInputParams.stream().collect(Collectors.toMap(p -> p, params::get));
+		return ReportParamValue.collectParamValues(matrixInputParams, params, formulas);
 	}
 
 	public Map<String, String> getFormulas()

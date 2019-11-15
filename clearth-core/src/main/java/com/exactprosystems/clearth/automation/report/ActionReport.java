@@ -40,7 +40,7 @@ public class ActionReport
 	protected ReportStatus status;
 	protected ExceptionWrapper error;
 	
-	protected Map<String, String> inputParams;
+	protected Map<String, ReportParamValue> inputParams;
 	protected Map<String, String> outputParams;
 	
 	protected Result result;
@@ -57,6 +57,7 @@ public class ActionReport
 		this.setActionId(action.getIdInMatrix());
 		this.setIdInTemplate(action.getIdInTemplate());
 		this.setActionName(action.getName());
+		this.setComment(action.getComment());
 		this.setInputParams(action.extractMatrixInputParams());
 		this.setOutputParams(action.getOutputParams());
 		this.setStatus(new ReportStatus(action));
@@ -167,12 +168,12 @@ public class ActionReport
 		this.error = error;
 	}
 	
-	public Map<String, String> getInputParams()
+	public Map<String, ReportParamValue> getInputParams()
 	{
 		return inputParams;
 	}
 	
-	public void setInputParams(Map<String, String> inputParams)
+	public void setInputParams(Map<String, ReportParamValue> inputParams)
 	{
 		this.inputParams = inputParams;
 	}

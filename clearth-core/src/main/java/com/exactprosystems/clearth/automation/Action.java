@@ -19,8 +19,8 @@
 package com.exactprosystems.clearth.automation;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
+import com.exactprosystems.clearth.automation.report.ReportParamValue;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -260,11 +260,11 @@ public abstract class Action
 	}
 
 	/** 
-	 * This method returns map with items from <b>inputParams</b> with keys from <b>matrixInputParams</b>
+	 * This method returns map with items from <b>inputParams, formulas</b> with keys from <b>matrixInputParams</b>
 	 */
-	public Map<String, String> extractMatrixInputParams()
+	public Map<String, ReportParamValue> extractMatrixInputParams()
 	{
-		return matrixInputParams.stream().collect(Collectors.toMap(p -> p, inputParams::get));
+		return ReportParamValue.collectParamValues(matrixInputParams, inputParams, formulas);
 	}
 	
 	public Map<String, String> copyInputParams()
