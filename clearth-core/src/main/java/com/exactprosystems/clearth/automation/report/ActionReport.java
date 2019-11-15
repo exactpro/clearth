@@ -34,6 +34,8 @@ public class ActionReport
 	
 	protected String actionId;
 	protected String actionName;
+	protected long timeout;
+	protected boolean async;
 	protected String comment;
 	protected String idInTemplate;
 	
@@ -57,6 +59,8 @@ public class ActionReport
 		this.setActionId(action.getIdInMatrix());
 		this.setIdInTemplate(action.getIdInTemplate());
 		this.setActionName(action.getName());
+		this.setTimeout(action.getTimeOut());
+		this.setAsync(action.isAsync());
 		this.setComment(action.getComment());
 		this.setInputParams(action.extractMatrixInputParams());
 		this.setOutputParams(action.getOutputParams());
@@ -141,7 +145,27 @@ public class ActionReport
 	{
 		this.actionName = actionName;
 	}
-	
+
+	public long getTimeout()
+	{
+		return timeout;
+	}
+
+	public void setTimeout(long timeout)
+	{
+		this.timeout = timeout;
+	}
+
+	public boolean isAsync()
+	{
+		return async;
+	}
+
+	public void setAsync(boolean async)
+	{
+		this.async = async;
+	}
+
 	public String getComment()
 	{
 		return comment;

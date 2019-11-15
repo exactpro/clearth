@@ -31,6 +31,7 @@ public class StepReport
 {
 	protected String stepName;
 	protected String stepKind;
+	protected boolean async;
 	
 	protected ReportStatus status;
 	protected ExceptionWrapper error;
@@ -47,6 +48,7 @@ public class StepReport
 	{
 		this.stepName = step.getName();
 		this.stepKind = step.getKind();
+		this.setAsync(step.isAsync());
 		this.processStatus(step, matrix);
 		this.setResult(step.getResult());
 	}
@@ -87,7 +89,17 @@ public class StepReport
 	{
 		this.stepKind = stepKind;
 	}
-	
+
+	public boolean isAsync()
+	{
+		return async;
+	}
+
+	public void setAsync(boolean async)
+	{
+		this.async = async;
+	}
+
 	public ReportStatus getStatus()
 	{
 		return status;
