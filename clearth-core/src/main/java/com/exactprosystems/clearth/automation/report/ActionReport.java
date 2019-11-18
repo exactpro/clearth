@@ -67,10 +67,22 @@ public class ActionReport
 		if (result != null && result.getError() != null)
 			this.error = new ExceptionWrapper(result.getError());
 		
+		setCustomFields(action);
+		
 		processSubActionsData(action);
 	}
 	
-	public void processSubActionsData(Action action)
+
+	/* Override methods below to support custom Action's fields in JSON reports */
+	
+	protected void setCustomFields(@SuppressWarnings("unused") Action action) { /* Nothing to do by default */ }
+	
+	protected void setSubActionCustomFields(@SuppressWarnings("unused") SubActionData subActionData,
+	                                        @SuppressWarnings("unused") ActionReport subActionReport) 
+	{ /* Nothing to do by default */ }
+	
+	
+	private void processSubActionsData(Action action)
 	{
 		LinkedHashMap<String, SubActionData> subActionsData = action.getSubActionData();
 		if (subActionsData == null)
@@ -93,6 +105,8 @@ public class ActionReport
 		subActionReport.setIdInTemplate(subActionData.getIdInTemplate());
 		subActionReport.setStatus(subActionData.getSuccess());
 		subActionReport.setInputParams(subActionData.extractMatrixInputParams());
+		
+		setSubActionCustomFields(subActionData, subActionReport);
 		
 		actionReport.addSubActionReport(subActionReport);
 		
