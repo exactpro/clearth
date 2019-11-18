@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report;
 
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class ReportParamValue
 {
 	private String value, formula;
+	private @JsonInclude(Include.NON_DEFAULT) boolean isSpecialValue;
 
 	public ReportParamValue()
 	{}
@@ -37,6 +39,7 @@ public class ReportParamValue
 	public ReportParamValue(String value)
 	{
 		this.value = value;
+		this.isSpecialValue = ComparisonUtils.SPECIAL_VALUES.contains(value);
 	}
 
 	public String getValue()
@@ -57,6 +60,16 @@ public class ReportParamValue
 	public void setFormula(String formula)
 	{
 		this.formula = formula;
+	}
+
+	public boolean isSpecialValue()
+	{
+		return isSpecialValue;
+	}
+
+	public void setSpecialValue(boolean specialValue)
+	{
+		isSpecialValue = specialValue;
 	}
 
 	public static ReportParamValue createReportParamValue(String paramName,

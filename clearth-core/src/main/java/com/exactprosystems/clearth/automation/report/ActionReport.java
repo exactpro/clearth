@@ -20,13 +20,16 @@ package com.exactprosystems.clearth.automation.report;
 
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.SubActionData;
+import com.exactprosystems.clearth.automation.async.WaitAsyncEnd;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties({"actionReportWriter"})
 public class ActionReport
 {
@@ -38,6 +41,12 @@ public class ActionReport
 	protected boolean async;
 	protected String comment;
 	protected String idInTemplate;
+
+	protected String formulaExecutable, formulaInverted, formulaComment, formulaTimeout,
+			formulaAsync, formulaAsyncGroup, formulaWaitAsyncEnd, formulaIdInTemplate;
+	protected boolean payloadFinished;
+	protected String asyncGroup, waitAsyncEndStep;
+	protected WaitAsyncEnd waitAsyncEnd;
 	
 	protected ReportStatus status;
 	protected ExceptionWrapper error;
@@ -70,6 +79,19 @@ public class ActionReport
 		this.setResult(result);
 		if (result != null && result.getError() != null)
 			this.error = new ExceptionWrapper(result.getError());
+
+		this.setFormulaExecutable(action.getFormulaExecutable());
+		this.setFormulaInverted(action.getFormulaInverted());
+		this.setFormulaComment(action.getFormulaComment());
+		this.setFormulaTimeout(action.getFormulaTimeout());
+		this.setFormulaAsync(action.getFormulaAsync());
+		this.setFormulaAsyncGroup(action.getFormulaAsyncGroup());
+		this.setFormulaWaitAsyncEnd(action.getFormulaWaitAsyncEnd());
+		this.setFormulaIdInTemplate(action.getFormulaIdInTemplate());
+		this.setPayloadFinished(action.isPayloadFinished());
+		this.setAsyncGroup(action.getAsyncGroup());
+		this.setWaitAsyncEndStep(action.getWaitAsyncEndStep());
+		this.setWaitAsyncEnd(action.getWaitAsyncEnd());
 		
 		setCustomFields(action);
 		
@@ -244,5 +266,125 @@ public class ActionReport
 	public void setSubActions(List<ActionReport> subActions)
 	{
 		this.subActions = subActions;
+	}
+
+	public String getFormulaExecutable()
+	{
+		return formulaExecutable;
+	}
+
+	public void setFormulaExecutable(String formulaExecutable)
+	{
+		this.formulaExecutable = formulaExecutable;
+	}
+
+	public String getFormulaInverted()
+	{
+		return formulaInverted;
+	}
+
+	public void setFormulaInverted(String formulaInverted)
+	{
+		this.formulaInverted = formulaInverted;
+	}
+
+	public String getFormulaComment()
+	{
+		return formulaComment;
+	}
+
+	public void setFormulaComment(String formulaComment)
+	{
+		this.formulaComment = formulaComment;
+	}
+
+	public String getFormulaTimeout()
+	{
+		return formulaTimeout;
+	}
+
+	public void setFormulaTimeout(String formulaTimeout)
+	{
+		this.formulaTimeout = formulaTimeout;
+	}
+
+	public String getFormulaAsync()
+	{
+		return formulaAsync;
+	}
+
+	public void setFormulaAsync(String formulaAsync)
+	{
+		this.formulaAsync = formulaAsync;
+	}
+
+	public String getFormulaAsyncGroup()
+	{
+		return formulaAsyncGroup;
+	}
+
+	public void setFormulaAsyncGroup(String formulaAsyncGroup)
+	{
+		this.formulaAsyncGroup = formulaAsyncGroup;
+	}
+
+	public String getFormulaWaitAsyncEnd()
+	{
+		return formulaWaitAsyncEnd;
+	}
+
+	public void setFormulaWaitAsyncEnd(String formulaWaitAsyncEnd)
+	{
+		this.formulaWaitAsyncEnd = formulaWaitAsyncEnd;
+	}
+
+	public String getFormulaIdInTemplate()
+	{
+		return formulaIdInTemplate;
+	}
+
+	public void setFormulaIdInTemplate(String formulaIdInTemplate)
+	{
+		this.formulaIdInTemplate = formulaIdInTemplate;
+	}
+
+	public boolean isPayloadFinished()
+	{
+		return payloadFinished;
+	}
+
+	public void setPayloadFinished(boolean payloadFinished)
+	{
+		this.payloadFinished = payloadFinished;
+	}
+
+	public String getAsyncGroup()
+	{
+		return asyncGroup;
+	}
+
+	public void setAsyncGroup(String asyncGroup)
+	{
+		this.asyncGroup = asyncGroup;
+	}
+
+	public String getWaitAsyncEndStep()
+	{
+		return waitAsyncEndStep;
+	}
+
+	public void setWaitAsyncEndStep(String waitAsyncEndStep)
+	{
+		this.waitAsyncEndStep = waitAsyncEndStep;
+	}
+
+	public WaitAsyncEnd getWaitAsyncEnd()
+	{
+		return waitAsyncEnd;
+	}
+
+	public void setWaitAsyncEnd(WaitAsyncEnd waitAsyncEnd)
+	{
+		this.waitAsyncEnd = waitAsyncEnd;
 	}
 }
