@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.automation;
 
+import com.exactprosystems.clearth.ClearThCore;
+
 import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
 
 import java.io.File;
@@ -32,7 +34,7 @@ public class Matrix
 	private String fileName, shortFileName, description;
 
 	private List<Action> actions = new ArrayList<Action>();
-	private Map<String, Object> mvelVars = new HashMap<String, Object>();
+	private MvelVariables mvelVars;
 	private Map<String, Boolean> stepSuccess = new HashMap<String, Boolean>();
 	private Map<String, List<String>> stepStatusComments = new HashMap<String, List<String>>();
 	private Map<String, String> constants = new LinkedHashMap<String, String>();
@@ -50,6 +52,14 @@ public class Matrix
 	private MatrixData matrixData;
 
 	private List<ActionGeneratorMessage> generatorMessages = null;
+	
+	
+	public Matrix()
+	{
+		MvelVariablesFactory mvelVariablesFactory = ClearThCore.getInstance().getMvelVariablesFactory();
+		mvelVars = mvelVariablesFactory.create();
+	}
+	
 
 	public String getName()
 	{
@@ -116,13 +126,7 @@ public class Matrix
 	
 	protected void saveMatrixInfoToMvel(String name, String value)
 	{
-		Map<String, String> info = (Map<String, String>)mvelVars.get(MATRIX);
-		if (info == null)
-		{
-			info = new HashMap<String, String>();
-			mvelVars.put(MATRIX, info);
-		}
-		info.put(name, value);
+		mvelVars.saveMatrixInfo(name, value);
 	}
 
 	
@@ -138,14 +142,14 @@ public class Matrix
 	}
 	
 	
-	public Map<String, Object> getMvelVars()
+	public MvelVariables getMvelVars()
 	{
 		return mvelVars;
 	}
 	
-	public void setMvelVars(Map<String, Object> mvelVars)
+	public void setMvelVars(MvelVariables variables)
 	{
-		this.mvelVars = mvelVars;
+		this.mvelVars = variables;
 	}
 	
 	

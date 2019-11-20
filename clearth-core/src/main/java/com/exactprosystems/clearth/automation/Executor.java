@@ -161,7 +161,6 @@ public abstract class Executor extends Thread
 					step.init();
 				
 				storeStepNames();
-				paramsCalculator.init(matrices);
 			}
 			else
 				restoreActionsReports();
@@ -445,14 +444,14 @@ public abstract class Executor extends Thread
 		MatrixFunctions functions = globalContext.getMatrixFunctions();
 		Map<String, String> constants = matrix.getConstants(),
 				formulas = matrix.getFormulas();
-		
-		Map<String, Object> mvelVars = matrix.getMvelVars();
+
+		MvelVariables mvelVars = matrix.getMvelVars();
 		if (isNotEmpty(matrix.getDescription()))
 		{
 			try
 			{
 				String desc = functions.calculateExpression(matrix.getDescription(), Matrix.DESCRIPTION,
-				                                            mvelVars, null, null, new ObjectWrapper(0)).toString();
+						mvelVars.getVariables(), null, null, new ObjectWrapper(0)).toString();
 				matrix.setDescription(desc);
 			}
 			catch (Exception e)
@@ -471,7 +470,7 @@ public abstract class Executor extends Thread
 			try
 			{
 				String value = functions.calculateExpression(f.getValue(), f.getKey(),
-						mvelVars, null, null, new ObjectWrapper(0)).toString();
+						mvelVars.getVariables(), null, null, new ObjectWrapper(0)).toString();
 				constants.put(f.getKey(), value);
 				references.put(f.getKey(), value);
 			}

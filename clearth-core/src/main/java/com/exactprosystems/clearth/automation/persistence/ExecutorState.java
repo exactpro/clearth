@@ -28,26 +28,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import org.apache.commons.io.FileUtils;
 
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.Executor;
-import com.exactprosystems.clearth.automation.ExecutorFactory;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.Matrix;
-import com.exactprosystems.clearth.automation.Preparable;
-import com.exactprosystems.clearth.automation.ReportsInfo;
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.Step;
-import com.exactprosystems.clearth.automation.StepContext;
-import com.exactprosystems.clearth.automation.StepFactory;
 import com.exactprosystems.clearth.utils.XmlUtils;
 
 public abstract class ExecutorState
 {
 	public static final String STATEOBJECTS_FILENAME = "stateobjects.xml", STATEINFO_FILENAME = "stateinfo.xml";
-	protected static final int MAXACTIONS = 100, MAXVARS = 100;
+	protected static final int MAXACTIONS = 100;
 	protected Map<String, Preparable> preparableActions;
 	
 	public List<StepState> steps = new ArrayList<StepState>();
@@ -177,9 +168,9 @@ public abstract class ExecutorState
 		return matrixShortFileName+"_actions_"+fileIndex+".xml";
 	}
 	
-	protected static String varsFileName(String matrixShortFileName, int fileIndex)
+	protected static String varsFileName(String matrixShortFileName)
 	{
-		return matrixShortFileName+"_vars_"+fileIndex+".xml";
+		return matrixShortFileName + "_vars.xml";
 	}
 	
 	public void save(File destDir) throws IOException
@@ -216,24 +207,8 @@ public abstract class ExecutorState
 //					matrix.getActions().clear();
 				}
 				
-				if (matrix.getMvelVars()!=null)// && (matrix.getMvelVars().size()>MAXVARS))
-				{
-					int index = 1;
-					Map<String, Object> vars = new LinkedHashMap<String, Object>();
-					for (String key : matrix.getMvelVars().keySet())
-					{
-						vars.put(key, matrix.getMvelVars().get(key));
-						if (vars.size()>=MAXVARS)
-						{
-							XmlUtils.objectToXmlFile(vars, new File(destDir, varsFileName(shortName, index)), null);
-							index++;
-							vars.clear();
-						}
-					}
-					if (vars.size()>0)
-						XmlUtils.objectToXmlFile(vars, new File(destDir, varsFileName(shortName, index)), null);
-//					matrix.getMvelVars().clear();
-				}
+				if (matrix.getMvelVars() != null)
+					XmlUtils.objectToXmlFile(matrix.getMvelVars(), new File(destDir, varsFileName(shortName)), null);
 			}
 		}
 		
@@ -292,19 +267,12 @@ public abstract class ExecutorState
 					index++;
 					actionFile = new File(sourceDir, actionsFileName(shortName, index));
 				}
-				
-				index = 1;
-				File varsFile = new File(sourceDir, varsFileName(shortName, index));
-				while (varsFile.isFile())
-				{
-					Map<String, Object> vars = (Map<String, Object>)XmlUtils.xmlFileToObject(varsFile, null);
-					if (matrix.getMvelVars()==null)
-						matrix.setMvelVars(new LinkedHashMap<String, Object>());
-					matrix.getMvelVars().putAll(vars);
-					
-					index++;
-					varsFile = new File(sourceDir, varsFileName(shortName, index));
-				}
+
+				File varsFile = new File(sourceDir, varsFileName(shortName));
+				MvelVariables vars = varsFile.isFile()
+						? (MvelVariables) XmlUtils.xmlFileToObject(varsFile, null)
+						: ClearThCore.getInstance().getMvelVariablesFactory().create();
+				matrix.setMvelVars(vars);
 			}
 		}
 	}

@@ -496,6 +496,8 @@ public abstract class Scheduler
 		if (!onlyCheck) {
 			generator.createContextCleanData();
 		}
+		
+		generator.dispose();
 
 		if (!allSuccessful) return collectIssues(matricesContainer);
 		else return null;

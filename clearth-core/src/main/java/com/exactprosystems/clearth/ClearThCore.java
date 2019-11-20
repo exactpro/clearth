@@ -72,6 +72,7 @@ public abstract class ClearThCore
 	protected CodecsStorage codecs;
 	protected ToolsManager toolsManager;
 	protected MatrixFunctionsFactory<MatrixFunctions> matrixFunctionsFactory;
+	protected MvelVariablesFactory mvelVariablesFactory;
 	protected Map<String, XmlMessageConverterConfig> messageConverterConfigs;
 	protected Map<String, XmlScriptConverterConfig> scriptConverterConfigs;
 	protected ReportTemplatesProcessor reportTemplatesProcessor;
@@ -252,6 +253,7 @@ public abstract class ClearThCore
 			schedulerInfoExporter = createSchedulerInfoExporter();
 			connectionsTransmitter = createConnectionsTransmitter();
 			matrixFunctionsFactory = createMatrixFunctionsHolder();
+			mvelVariablesFactory = createMvelVariablesFactory();
 			schedulerFactory = createSchedulerFactory(valueGenerators);
 			memoryMonitor = createMemoryMonitor();
 			if (memoryMonitor != null)
@@ -340,6 +342,11 @@ public abstract class ClearThCore
 	protected MatrixDataFactory createMatrixDataFactory()
 	{
 		return new DefaultMatrixDataFactory();
+	}
+	
+	protected MvelVariablesFactory createMvelVariablesFactory()
+	{
+		return new MvelVariablesFactory();
 	}
 	
 	protected ICodecFactory createCodecFactory()
@@ -892,6 +899,11 @@ public abstract class ClearThCore
 	public MatrixDataFactory getMatrixDataFactory()
 	{
 		return matrixDataFactory;
+	}
+
+	public MvelVariablesFactory getMvelVariablesFactory()
+	{
+		return mvelVariablesFactory;
 	}
 
 	public ComparisonUtils getComparisonUtils() {

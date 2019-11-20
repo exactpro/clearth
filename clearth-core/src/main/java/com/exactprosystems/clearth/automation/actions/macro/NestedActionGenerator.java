@@ -163,17 +163,19 @@ public class NestedActionGenerator extends ActionGenerator
 		}
 		return false;
 	}
-	
+
 	@Override
 	protected boolean initActionSettings(ActionSettings actionSettings, Matrix matrix, int lineNumber,
-			List<String> header, List<String> values, int headerLineNumber, boolean missingValues)
+	                                     List<String> header, List<String> values, int headerLineNumber, 
+	                                     boolean missingValues, boolean onlyCheck)
 	{
 		actionSettings.setStep(macroStep);
 		// Nested actions could be executed only sequentially (just preventing non-sequential execution if async=true is specified in matrix)
 		actionSettings.setAsync(false);
 		actionSettings.setFormulaAsync(null);
-		
-		return super.initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber, missingValues);
+
+		return super.initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber, 
+				missingValues, onlyCheck);
 	}
 	
 	@Override

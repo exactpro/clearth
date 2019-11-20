@@ -33,7 +33,7 @@ public abstract class MatrixState
 	private String name = null;
 	
 	private transient List<ActionState> actions = new ArrayList<ActionState>();
-	private transient Map<String, Object> mvelVars = null;
+	private transient MvelVariables mvelVars;
 	private Map<String, Boolean> stepSuccess = null;
 	private Map<String, List<String>> stepStatusComments = null;
 	
@@ -121,12 +121,12 @@ public abstract class MatrixState
 	}
 	
 	
-	public Map<String, Object> getMvelVars()
+	public MvelVariables getMvelVars()
 	{
 		return mvelVars;
 	}
 	
-	public void setMvelVars(Map<String, Object> mvelVars)
+	public void setMvelVars(MvelVariables mvelVars)
 	{
 		this.mvelVars = mvelVars;
 	}

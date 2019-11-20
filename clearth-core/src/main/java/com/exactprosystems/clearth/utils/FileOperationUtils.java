@@ -19,18 +19,9 @@
 package com.exactprosystems.clearth.utils;
 
 import static com.exactprosystems.clearth.utils.Utils.closeResource;
+import static java.lang.String.format;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -55,10 +46,8 @@ public class FileOperationUtils
 {
 	private static final String EXT_ZIP = "ZIP";
 
-	public static final String
-			FILE_SEPARATOR = "/",
-			TEMP = ClearThCore.tempPath();
-	
+	public static final String FILE_SEPARATOR = "/";
+
 	public static void writeToFile(String filePath, String text) throws IOException
 	{
 		FileWriter writer = null;
@@ -457,7 +446,7 @@ public class FileOperationUtils
 
 		if (EXT_ZIP.equals(fileExtension))
 		{
-			File files = Paths.get(TEMP).resolve(FilenameUtils.removeExtension(zipFile.getName())).toFile();
+			File files = Paths.get(ClearThCore.tempPath()).resolve(FilenameUtils.removeExtension(zipFile.getName())).toFile();
 
 			List<File> unzipped = unzipFile(zipFile, files);
 
@@ -478,5 +467,15 @@ public class FileOperationUtils
 		}
 
 		return count;
+	}
+
+	public static String resourceToAbsoluteFilePath(String file) throws FileNotFoundException
+	{
+		File compiledFile = FileUtils.toFile(ClassLoader.getSystemClassLoader().getResource(file));
+
+		if (compiledFile == null)
+			throw new FileNotFoundException(format("file '%s' not found", file));
+
+		return compiledFile.getAbsolutePath();
 	}
 }

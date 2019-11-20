@@ -58,6 +58,8 @@ public abstract class ActionGenerator
 	private final List<Matrix> matrices;
 	protected Map<String, Preparable> preparableActions;
 	private String matrixStepName;
+	protected final StringCache stringCache = new StringCache(1_000_000, 500);
+	
 
 	public ActionGenerator(Map<String, Step> steps, List<Matrix> matrices, Map<String, Preparable> preparableActions)
 	{
@@ -249,7 +251,8 @@ public abstract class ActionGenerator
 			missingValues = true;
 		}
 
-		allSuccessful &= initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber, missingValues);
+		allSuccessful &= initActionSettings(actionSettings, matrix, lineNumber, header, values, headerLineNumber,
+				missingValues, onlyCheck);
 		allSuccessful &= checkActionSettings(actionSettings, matrix, lineNumber, usedIDs);
 
 		if (!onlyCheck) {
@@ -276,7 +279,8 @@ public abstract class ActionGenerator
 									   List<String> header,
 									   List<String> values,
 									   int headerLineNumber,
-									   boolean missingValues)
+									   boolean missingValues,
+	                                   boolean onlyCheck)
 	{
 		boolean allSuccessful = true;
 		Logger logger = getLogger();
@@ -314,6 +318,12 @@ public abstract class ActionGenerator
 				continue;
 			
 			valueLow = value.toLowerCase().trim();
+			
+			if (!onlyCheck)
+			{
+				head = stringCache.get(head);
+				value = stringCache.get(value);
+			}
 			
 			if (headLow.equals(COLUMN_ID))
 			{
@@ -597,7 +607,13 @@ public abstract class ActionGenerator
 	public boolean build(MatrixData matrixData, boolean onlyCheck) throws IOException
 	{
 		Matrix matrix = createMatrix(matrixData);
+		
 		boolean allSuccessful = generateActions(matrix.getFileName(), matrixData.isTrim(), matrix, onlyCheck);
+		
+		MvelVariables vars = matrix.getMvelVars();
+		MvelVarsCleaningTableBuilder cleaningTableBuilder = new MvelVarsCleaningTableBuilder();
+		vars.setCleaningTable(cleaningTableBuilder.build(matrix, steps.keySet()));
+		
 		matrices.add(matrix);
 		getLogger().debug(String.format("Matrix '%s' %s", matrixData.getFile().getCanonicalPath(), onlyCheck ? "checked" : "compiled"));
 		return allSuccessful;
@@ -797,5 +813,9 @@ public abstract class ActionGenerator
 		}
 	}
 
-
+	
+	public void dispose()
+	{
+		stringCache.clear();
+	}
 }

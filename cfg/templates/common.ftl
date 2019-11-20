@@ -182,7 +182,7 @@
 					>
 					<tr>
 						<td>${key}</td>
-						<td><span class="node switch" onclick="showhide(this, '${contId}');">${prepareParam(parameters[key])}<div class="container" id="${contId}">${formulas[key]}</div></span></td>
+						<td><span class="node switch" onclick="showhide(this, '${contId}');">${prepareParam(parameters[key]!"")}<div class="container" id="${contId}">${formulas[key]}</div></span></td>
 					</tr>
 				<#else>
 					<tr>

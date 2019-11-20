@@ -530,9 +530,9 @@ public abstract class Step
 					
 					if (replay.getValue() && !actionExec.prepareActionReplay(action))
 						continue;
-					
-					if (this.isExecute())
-						actionExec.executeAction(action, stepContext, canReplay);
+
+					//Need to "execute actions" even if step is not executable, because actions may need to set some parameters referenced by further actions
+					actionExec.executeAction(action, stepContext, canReplay);
 					
 					afterAction(action, stepContext, matrixContext, globalContext);
 					updateByAsyncActions(actionExec);

@@ -34,7 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -149,19 +151,18 @@ public class ActionExecutor implements Closeable
 				getLogger().debug("Calculating parameters of{}", actionDesc);
 			}
 
-			addActionParamsToMvel(action);
 			List<String> errorsInParams = calculator.calculateParameters(action, stepExecutable);
 			
 			if (getLogger().isTraceEnabled())
 				getLogger().trace("Finished calculation for{}", actionDesc != null ? actionDesc : action.getDescForLog(""));
 			
-			if (action.isExecutable())
+			if (action.isExecutable() && stepExecutable)
 			{
 				if (!doExecuteAction(action, errorsInParams, stepContext, canReplay))  //Action may trigger step end due to aborted failover
 					return;
 			}
-			else if (action.getFormulaExecutable() != null)
-				handleNonExecutableAction(action);
+			else
+				handleNonExecutableAction(action, stepExecutable);
 		}
 		catch (Exception e)
 		{
@@ -212,7 +213,7 @@ public class ActionExecutor implements Closeable
 		while ((a = asyncManager.getNextFinishedAction()) != null)
 		{
 			Action action = a.getAction();
-			actionToMvel(action, globalContext);
+			actionToMvel(action);
 			updateAsyncActionReport(a);
 			afterAsyncAction(action);
 			cleanAfterAsyncAction(action);
@@ -479,90 +480,15 @@ public class ActionExecutor implements Closeable
 	{
 		return new SubActionData(action);
 	}
-
-	@SuppressWarnings("unchecked")
-	protected void addActionResultToMvel(Action action, MatrixFunctions matrixFunctions,
-	                                     Map<String, Object> mvelVars)
-	{
-		String id = MatrixFunctions.resolveFixedId(action.getIdInMatrix(), calculator.getFixedIds());
-		Map<String, Object> actionVars = (Map<String, Object>) mvelVars.get(id);
-
-		if (action.getOutputParams() != null)
-			addOutputParams(actionVars, action.getOutputParams());
-		
-		mvelVars.put(ActionExecutor.PARAMS_PREV_ACTION, actionVars);
-		actionVars.put(VARKEY_ACTION, matrixFunctions.getExecutionResultParams(action));
-	}
-
-	protected void addActionParamsToMvel(Action action)
-	{
-		Map<String, Object> mvelVars = action.getMatrix().getMvelVars();
-		mvelVars.put(ActionExecutor.PARAMS_THIS_ACTION, action.getInputParams());
-	}
 	
-	protected void addOutputParams(Map<String, Object> destination, Map<String, String> outputParams)
-	{
-		Map<String, Object> commonParams = new LinkedHashMap<String, Object>(outputParams);
-		Map<String, Object> justOutput = new LinkedHashMap<String, Object>(outputParams);
-		commonParams.put(PARAMS_OUT, justOutput);
-		destination.putAll(commonParams);
-	}
-	
-	@SuppressWarnings("unchecked")
-	protected void addSubParamsToMvel(LinkedHashMap<String, LinkedHashMap<String, String>> subParams, Map<String, Object> execResultParams, 
-			Map<String, Object> mvelVars)
-	{
-		Map<String, String> fixedIds = calculator.getFixedIds();
-		for (String subActionId : subParams.keySet())
-		{
-			if (subActionId == null)  //This may happen if sub-output parameters are based on some generated message, not on matrix actions
-				continue;
-			
-			String subId = MatrixFunctions.resolveFixedId(subActionId, fixedIds);
-			Map<String, Object> subVars = (Map<String, Object>) mvelVars.get(subId);
-			if (subVars == null)  //Checking if reference is valid just in case
-				continue;
-			
-			LinkedHashMap<String, String> subOutParams = subParams.get(subActionId);
-			subVars.putAll(subOutParams);
-			subVars.put(PARAMS_OUT, subOutParams);
-			subVars.put(VARKEY_ACTION, execResultParams);
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	protected void addSubDataToMvel(LinkedHashMap<String, SubActionData> subData, Map<String, Object> execResultParams,
-			Map<String, Object> mvelVars)
-	{
-		Map<String, String> fixedIds = calculator.getFixedIds();
-		for (String subActionId : subData.keySet())
-		{
-			String subId = MatrixFunctions.resolveFixedId(subActionId, fixedIds);
-			Map<String, Object> subVars = (Map<String, Object>) mvelVars.get(subId);
-			subVars.put(VARKEY_ACTION, execResultParams);
-		}
-	}
-	
-	protected void actionToMvel(Action action, GlobalContext globalContext)
+	protected void actionToMvel(Action action)
 	{
 		if (getLogger().isTraceEnabled())
 			getLogger().trace(action.getDescForLog("Adding output params of"));
-		
-		Map<String, Object> mvelVars = action.getMatrix().getMvelVars();
-		addActionResultToMvel(action, globalContext.getMatrixFunctions(), mvelVars);
-		
-		LinkedHashMap<String, LinkedHashMap<String, String>> subParams = action.getSubOutputParams();
-		LinkedHashMap<String, SubActionData> subData = action.getSubActionData();
-		//Need to put sub-output parameters to mvelVars to make them available by reference. 
-		//Even if there is no sub-output parameters, action result should be available for sub-actions as well
-		if ((subParams == null) && (subData == null))
-			return;
-		
-		Map<String, Object> execResultParams = globalContext.getMatrixFunctions().getExecutionResultParams(action);
-		if (subParams != null)
-			addSubParamsToMvel(subParams, execResultParams, mvelVars);  //This does the same as addSubDataToMvel+something more
-		else
-			addSubDataToMvel(subData, execResultParams, mvelVars);
+
+		MvelVariables mvelVars = action.getMatrix().getMvelVars();
+		mvelVars.saveActionResult(action);
+		mvelVars.cleanAfterAction(action);
 	}
 	
 	
@@ -727,7 +653,7 @@ public class ActionExecutor implements Closeable
 		applyActionResult(action, true);
 		if (!action.isSubaction())
 		{
-			actionToMvel(action, globalContext);
+			actionToMvel(action);
 			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), !action.isPassed());
 		}
 		else
@@ -749,16 +675,21 @@ public class ActionExecutor implements Closeable
 		return true;
 	}
 	
-	protected void handleNonExecutableAction(Action action)
+	protected void handleNonExecutableAction(Action action, boolean stepExecutable)
 	{
-		Result actionResult = new DefaultResult();
-		actionResult.setSuccess(false);
-		actionResult.setFailReason(FailReason.NOT_EXECUTED);
-		
-		action.setResult(actionResult);
-		addActionResultToMvel(action, globalContext.getMatrixFunctions(), action.getMatrix().getMvelVars());
-		
-		reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
+		MvelVariables variables = action.getMatrix().getMvelVars();
+
+		if (stepExecutable && (action.getFormulaExecutable() != null))
+		{
+			Result actionResult = new DefaultResult();
+			actionResult.setSuccess(false);
+			actionResult.setFailReason(FailReason.NOT_EXECUTED);
+			action.setResult(actionResult);
+			variables.saveOutputParams(action);
+
+			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
+		}
+		variables.cleanAfterAction(action);
 	}
 	
 	protected void cleanContexts(Action action)

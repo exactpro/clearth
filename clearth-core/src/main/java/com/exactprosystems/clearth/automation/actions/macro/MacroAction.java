@@ -127,7 +127,6 @@ public class MacroAction extends Action implements Preparable
 	protected NestedActionExecutor createActionExecutor()
 	{
 		ActionParamsCalculator paramsCalculator = new ActionParamsCalculator(globalContext.getMatrixFunctions());
-		paramsCalculator.init(Collections.singletonList(naGenerator.getMacroMatrix()));
 		return new NestedActionExecutor(globalContext, paramsCalculator, getNestedActionsReportFilePath());
 	}
 	
