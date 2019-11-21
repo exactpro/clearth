@@ -64,6 +64,11 @@ public class ActionReport
 	
 	public ActionReport(Action action, ActionReportWriter actionReportWriter)
 	{
+		init(action, actionReportWriter);
+	}
+	
+	protected void init(Action action, ActionReportWriter actionReportWriter)
+	{
 		this.actionReportWriter = actionReportWriter;
 		this.setActionId(action.getIdInMatrix());
 		this.setIdInTemplate(action.getIdInTemplate());
@@ -74,7 +79,7 @@ public class ActionReport
 		this.setInputParams(action.extractMatrixInputParams());
 		this.setOutputParams(action.getOutputParams());
 		this.setStatus(createReportStatus(action));
-		
+
 		Result result = action.getResult();
 		this.setResult(result);
 		if (result != null && result.getError() != null)
@@ -94,10 +99,10 @@ public class ActionReport
 		this.setWaitAsyncEnd(action.getWaitAsyncEnd());
 		
 		setCustomFields(action);
-		
+
 		processSubActionsData(action);
 	}
-	
+
 
 	/* Override methods below to support custom Action's fields in JSON reports */
 	
