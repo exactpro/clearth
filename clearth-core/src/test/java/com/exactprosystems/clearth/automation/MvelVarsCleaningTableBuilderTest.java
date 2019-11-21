@@ -104,6 +104,22 @@ public class MvelVarsCleaningTableBuilderTest extends BasicTestNgTest
 								singleton("Step1"),
 
 								cleaningTable("id3", asList("id1", "id2", "id3"))
+						},
+						{
+								mockMatrix(
+										mockAction("id1", "Step1"), mockAction("id2", "Step1"), 
+										mockAction("id3", "Step1"), mockAction("id4", "Step1"),
+										mockAction("id5", "Step1"), mockAction("id6", "Step1"),
+										mockAction("id7", "Step1"),
+										mockAction("id0", "Step1", 
+												"@{id1.execute}", "@{id2.inverted}",
+												"@{id3.comment}", "@{id4.timeout}",
+												"@{id5.async}", "@{id6.asyncGroup}", 
+												"@{id7.waitAsyncEnd}")),
+
+								singleton("Step1"),
+
+								cleaningTable("id0", asList("id0", "id1", "id2", "id3", "id4", "id5", "id6", "id7"))
 						}
 				};
 	}
@@ -120,6 +136,11 @@ public class MvelVarsCleaningTableBuilderTest extends BasicTestNgTest
 	}
 
 
+	private Action mockAction(String id, String stepName)
+	{
+		return mockAction(id, stepName, emptyMap());
+	}
+	
 	private Action mockAction(String id, String stepName, Map<String, String> inputParams)
 	{
 		return mockAction(id, stepName, inputParams, null);
@@ -138,6 +159,21 @@ public class MvelVarsCleaningTableBuilderTest extends BasicTestNgTest
 		when(step.getName()).thenReturn(stepName);
 		when(action.getStep()).thenReturn(step);
 
+		return action;
+	}
+	
+	@SuppressWarnings("MethodWithTooManyParameters")
+	private Action mockAction(String id, String stepName, String executable, String inverted, String comment,
+	                          String timeout, String async, String asyncGroup, String waitAsyncEnd)
+	{
+		Action action = mockAction(id, stepName);
+		when(action.getFormulaExecutable()).thenReturn(executable);
+		when(action.getFormulaInverted()).thenReturn(inverted);
+		when(action.getFormulaComment()).thenReturn(comment);
+		when(action.getFormulaTimeout()).thenReturn(timeout);
+		when(action.getFormulaAsync()).thenReturn(async);
+		when(action.getFormulaAsyncGroup()).thenReturn(asyncGroup);
+		when(action.getFormulaWaitAsyncEnd()).thenReturn(waitAsyncEnd);
 		return action;
 	}
 

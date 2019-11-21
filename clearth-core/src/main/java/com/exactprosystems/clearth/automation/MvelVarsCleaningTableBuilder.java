@@ -43,8 +43,7 @@ import static java.nio.file.Files.exists;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.io.FileUtils.readFileToString;
-import static org.apache.commons.lang.StringUtils.contains;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.*;
 
 public class MvelVarsCleaningTableBuilder
 {
@@ -123,6 +122,7 @@ public class MvelVarsCleaningTableBuilder
 			String currentId = action.getIdInMatrix();
 			result.put(currentId, currentId);
 
+			processBasicParams(action, result);
 			processInputParams(action, result, vars);
 		}
 		return result;
@@ -151,6 +151,25 @@ public class MvelVarsCleaningTableBuilder
 				processInputFileParam(paramValue, paramName, currentId, previousActionsVars, 
 						actionIdToLastReferringIdMap);
 		}
+	}
+	
+	private void processBasicParams(Action action, Map<String, String> actionIdToLastReferringIdMap)
+	{
+		String currentId = action.getIdInMatrix();
+		processBasicParamFormula(action.getFormulaExecutable(), currentId, actionIdToLastReferringIdMap);
+		processBasicParamFormula(action.getFormulaInverted(), currentId, actionIdToLastReferringIdMap);
+		processBasicParamFormula(action.getFormulaComment(), currentId, actionIdToLastReferringIdMap);
+		processBasicParamFormula(action.getFormulaTimeout(), currentId, actionIdToLastReferringIdMap);
+		processBasicParamFormula(action.getFormulaAsync(), currentId, actionIdToLastReferringIdMap);
+		processBasicParamFormula(action.getFormulaAsyncGroup(), currentId, actionIdToLastReferringIdMap);
+		processBasicParamFormula(action.getFormulaWaitAsyncEnd(), currentId, actionIdToLastReferringIdMap);
+	}
+	
+	private void processBasicParamFormula(String formula, String currentId, 
+	                                      Map<String, String> actionIdToLastReferringIdMap)
+	{
+		if (formula != null)
+			processExpression(formula, currentId, actionIdToLastReferringIdMap);
 	}
 
 	private void processExpression(String expression, String currentId, Map<String, String> actionIdToLastReferringIdMap)
