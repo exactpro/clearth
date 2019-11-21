@@ -73,12 +73,12 @@ public class ActionReport
 		this.setComment(action.getComment());
 		this.setInputParams(action.extractMatrixInputParams());
 		this.setOutputParams(action.getOutputParams());
-		this.setStatus(new ReportStatus(action));
+		this.setStatus(createReportStatus(action));
 		
 		Result result = action.getResult();
 		this.setResult(result);
 		if (result != null && result.getError() != null)
-			this.error = new ExceptionWrapper(result.getError());
+			this.error = createExceptionWrapper(result.getError());
 
 		this.setFormulaExecutable(action.getFormulaExecutable());
 		this.setFormulaInverted(action.getFormulaInverted());
@@ -107,7 +107,16 @@ public class ActionReport
 	                                        @SuppressWarnings("unused") ActionReport subActionReport) 
 	{ /* Nothing to do by default */ }
 	
-	
+	protected ReportStatus createReportStatus(Action action)
+	{
+		return new ReportStatus(action);
+	}
+
+	protected ExceptionWrapper createExceptionWrapper(Throwable error)
+	{
+		return new ExceptionWrapper(error);
+	}
+
 	private void processSubActionsData(Action action)
 	{
 		LinkedHashMap<String, SubActionData> subActionsData = action.getSubActionData();
