@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report.results.complex;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -25,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class ComparisonRow
 {
 	private String param, expected, actual, errorMessage;
-	private boolean identical, info, breaker, highlighted;
+	private boolean identical, info, breaker, highlighted, forCompareValue;
 
 	public ComparisonRow()
 	{
@@ -39,7 +40,7 @@ public class ComparisonRow
 	public ComparisonRow(String param, String expected, String actual, boolean identical)
 	{
 		this.param = param;
-		this.expected = expected;
+		setExpected(expected);
 		this.actual = actual;
 		this.identical = identical;
 		this.breaker = false;
@@ -72,9 +73,17 @@ public class ComparisonRow
 	public void setExpected(String expected)
 	{
 		this.expected = expected;
+		forCompareValue = ClearThCore.getInstance().getComparisonUtils().isForCompareValues(expected);
 	}
 
-	
+	public boolean isForCompareValue()
+	{
+		return forCompareValue;
+	}
+
+	public void setForCompareValue(boolean forCompareValue)
+	{}
+
 	public String getActual()
 	{
 		return actual;

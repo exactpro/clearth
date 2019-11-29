@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.LineBuilder;
 
 import java.io.Serializable;
@@ -26,7 +27,7 @@ import java.util.Objects;
 public class ResultDetail implements Serializable
 {
 	private String param, expected, actual, errorMessage;
-	private boolean identical, info;
+	private boolean identical, info, forCompareValue;
 	
 	public ResultDetail()
 	{
@@ -40,7 +41,7 @@ public class ResultDetail implements Serializable
 	public ResultDetail(String param, String expected, String actual, boolean identical)
 	{
 		this.param = param;
-		this.expected = expected;
+		setExpected(expected);
 		this.actual = actual;
 		this.identical = identical;
 		this.info = false;
@@ -66,9 +67,17 @@ public class ResultDetail implements Serializable
 	public void setExpected(String expected)
 	{
 		this.expected = expected;
+		forCompareValue = ClearThCore.getInstance().getComparisonUtils().isForCompareValues(expected);
 	}
-	
-	
+
+	public boolean isForCompareValue()
+	{
+		return forCompareValue;
+	}
+
+	public void setForCompareValue(boolean forCompareValue)
+	{}
+
 	public String getActual()
 	{
 		return actual;

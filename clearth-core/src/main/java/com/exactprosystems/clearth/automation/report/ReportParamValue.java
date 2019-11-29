@@ -18,7 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report;
 
-import com.exactprosystems.clearth.utils.ComparisonUtils;
+import com.exactprosystems.clearth.ClearThCore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -38,8 +38,7 @@ public class ReportParamValue
 
 	public ReportParamValue(String value)
 	{
-		this.value = value;
-		this.isSpecialValue = ComparisonUtils.SPECIAL_VALUES.contains(value);
+		setValue(value);
 	}
 
 	public String getValue()
@@ -50,6 +49,7 @@ public class ReportParamValue
 	public void setValue(String value)
 	{
 		this.value = value;
+		this.isSpecialValue = ClearThCore.getInstance().getComparisonUtils().isSpecialValue(value);
 	}
 
 	public String getFormula()
@@ -68,9 +68,7 @@ public class ReportParamValue
 	}
 
 	public void setSpecialValue(boolean specialValue)
-	{
-		isSpecialValue = specialValue;
-	}
+	{}
 
 	public static ReportParamValue createReportParamValue(String paramName,
 			Map<String, String> params,

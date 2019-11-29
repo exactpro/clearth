@@ -33,7 +33,6 @@ import java.util.List;
  * Result which can include other results.
  * @author daria.plotnikova
  */
-@JsonIgnoreProperties({ "blockView", "hasStatus", "useFailReasonColor" })
 public class ContainerResult extends Result implements Serializable
 {
 	private static final long serialVersionUID = -2015931472252216998L;
