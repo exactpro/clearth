@@ -95,6 +95,7 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	@Override
 	protected void beforeDispose()
 	{
+		super.beforeDispose();
 		Utils.closeResource(channel);
 		Utils.closeResource(contentsFile);
 	}
@@ -153,11 +154,17 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 
 
 	@Override
+	public void clearMemory()
+	{
+		memoryStorage.clearMemory();
+	}
+
+	@Override
 	public void clearPassed()
 	{
 		memoryStorage.clearPassed();
 		clearFile = true;
-		if (!writingThread.isAlive())
+		if (writingThreadInterrupted)
 			writingIteration();
 	}
 	

@@ -22,35 +22,37 @@ import java.util.Map;
 
 public interface ContentStorage<P, F>
 {
-	public void start();
+	void start();
 	
-	public void dispose();
-	
-	
-	public void insertPassed(long id, P item);
-	
-	public void insertFailed(long id, F item);
+	void dispose();
 	
 	
-	public void removePassed(P item);
+	void insertPassed(long id, P item);
 	
-	public void removePassed(long itemId);
-	
-	public void removeFailed(F item);
-	
-	public void removeFailed(long itemId);
+	void insertFailed(long id, F item);
 	
 	
-	public void clearPassed();
+	void removePassed(P item);
 	
-	public void clearFailed();
+	void removePassed(long itemId);
+	
+	void removeFailed(F item);
+	
+	void removeFailed(long itemId);
 	
 	
-	public Map<Long, P> getContentPassed();
+	void clearMemory();
 	
-	public Map<Long, P> getContentPassedAfterId(long id);
+	void clearPassed();
 	
-	public Map<Long, F> getContentFailed();
+	void clearFailed();
 	
-	public Map<Long, F> getContentFailedAfterId(long id);
+	
+	Map<Long, P> getContentPassed();
+	
+	Map<Long, P> getContentPassedAfterId(long id);
+	
+	Map<Long, F> getContentFailed();
+	
+	Map<Long, F> getContentFailedAfterId(long id);
 }

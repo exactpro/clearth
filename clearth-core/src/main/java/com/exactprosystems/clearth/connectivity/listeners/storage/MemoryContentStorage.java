@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class MemoryContentStorage<P, F> implements ContentStorage<P, F>
 {
-	private static final Logger logger = LoggerFactory.getLogger(FileContentStorage.class);
+	private static final Logger logger = LoggerFactory.getLogger(MemoryContentStorage.class);
 	
 	//Storage for parsed messages. Key - message ID in collector
 	protected final NavigableMap<Long, P> contentPassed = new ConcurrentSkipListMap<Long, P>();
@@ -45,6 +45,7 @@ public class MemoryContentStorage<P, F> implements ContentStorage<P, F>
 	public void dispose()
 	{
 		getLogger().info("Disposing content storage...");
+		clearMemory();
 	}
 	
 
@@ -54,6 +55,7 @@ public class MemoryContentStorage<P, F> implements ContentStorage<P, F>
 		contentPassed.put(id, item);
 	}
 	
+	@Override
 	public void insertFailed(long id, F item)
 	{
 		contentFailed.put(id, item);
@@ -84,6 +86,13 @@ public class MemoryContentStorage<P, F> implements ContentStorage<P, F>
 		contentFailed.remove(itemId);
 	}
 	
+
+	@Override
+	public void clearMemory()
+	{
+		clearPassed();
+		clearFailed();
+	}
 
 	@Override
 	public void clearPassed()

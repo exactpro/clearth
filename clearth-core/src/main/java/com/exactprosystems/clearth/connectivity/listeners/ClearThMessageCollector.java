@@ -209,8 +209,6 @@ public class ClearThMessageCollector extends ReceiveListener
 		active = false;
 		codec = null;
 		collectorCleaner.shutdown();
-		contentStorage.clearPassed();
-		contentStorage.clearFailed();
 		contentStorage.dispose();
 	}
 	

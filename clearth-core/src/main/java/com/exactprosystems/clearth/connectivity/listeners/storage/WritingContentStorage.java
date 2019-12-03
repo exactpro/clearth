@@ -35,7 +35,7 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 	private static final long WRITE_DELAY = 500; // millis
 	
 	protected Thread writingThread;
-	protected volatile boolean writeContent = true, writeBeforeDispose = true, interrupt = false;
+	protected volatile boolean writeContent = true, writeBeforeDispose = true, writingThreadInterrupted = false;
 	
 	
 	public WritingContentStorage()
@@ -44,22 +44,34 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 	}
 	
 	
+	@Override
 	public void start()
 	{
 		getLogger().debug("Write thread starting...");
-		interrupt = false;
+		writingThreadInterrupted = false;
 		writingThread.start();
 	}
 	
+	@Override
 	public void dispose()
 	{
-		getLogger().debug("Interrupting write thread...");
-		interrupt = true;
+		beforeDispose();
+
+		logger.debug("Disposing writing content storage...");
+		writingThread.interrupt();
+		writingThreadInterrupted = true;
+		logger.debug("Write thread has been interrupted");
+
+		clearMemory();
 	}
 	
 	protected void beforeDispose()
 	{
-		// do nothing by default
+		if (writeContent && writeBeforeDispose)
+		{
+			logger.debug("Writing content before dispose...");
+			writeContent();
+		}
 	}
 	
 	
@@ -81,38 +93,18 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 
 	protected void writingIteration()
 	{
-		if (interrupt)
-		{
-			try
-			{
-				if (writeBeforeDispose)
-				{
-					getLogger().debug("Writing before dispose...");
-					writeContent();
-				}
-			}
-			finally
-			{
-				beforeDispose();
-				writingThread.interrupt();
-				getLogger().debug("Write thread has been interrupted...");
-			}
-		}
+		if (writeContent)
+			writeContent();
 		else
+			getLogger().trace("Writing stored content is turned off");
+		
+		try
 		{
-			if (writeContent)
-				writeContent();
-			else
-				getLogger().trace("Writing stored content is turned off");
-			
-			try
-			{
-				Thread.sleep(getWriteDelay());
-			}
-			catch (InterruptedException e)
-			{
-				getLogger().error("Writing thread has been interrupted", e);
-			}
+			Thread.sleep(getWriteDelay());
+		}
+		catch (InterruptedException e)
+		{
+			getLogger().error("Writing thread has been interrupted", e);
 		}
 	}
 	
