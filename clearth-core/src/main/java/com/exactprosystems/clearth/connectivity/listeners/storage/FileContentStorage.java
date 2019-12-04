@@ -23,9 +23,12 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,16 +40,18 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	private static final Logger logger = LoggerFactory.getLogger(FileContentStorage.class);
 	private static final String STORE_THREAD_NAME = "FileContentStorage";
 	protected static final int BUFFER_SIZE = 0x100000; // 1 mb
+	protected static final byte[] MESSAGES_DELIMITER = (Utils.EOL + Utils.EOL + Utils.EOL).getBytes();
 	
 	protected MemoryContentStorage<P, F> memoryStorage;
 	
 	protected ConcurrentLinkedQueue<P> insertQueue, fileContents;
 	
+	protected final String contentsFilePath;
 	protected final RandomAccessFile contentsFile;
 	protected final FileChannel channel;
 	protected final ByteBuffer buffer;
 	
-	protected boolean rewriteFile = false, clearFile = false, storeTimestamp = false;
+	protected boolean needToRewriteFile = false, needToClearFile = false, storeTimestamp = false;
 
 
 	public FileContentStorage (String contentsFilePath) throws IOException
@@ -55,13 +60,14 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 		
 		memoryStorage = new MemoryContentStorage<P, F>();
 		
-		File contentsFile = new File(ClearThCore.rootRelative(contentsFilePath));
+		this.contentsFilePath = ClearThCore.rootRelative(contentsFilePath);
+		File contentsFile = new File(contentsFilePath);
 		if (contentsFile.exists())
 		{
 			if (contentsFile.isDirectory())
 				throw new IllegalArgumentException("Unable to use directory as contents file");
 			if (contentsFile.length() != 0)
-				clearFile = true;
+				needToClearFile = true;
 		}
 		
 		this.contentsFile = new RandomAccessFile(contentsFilePath, "rw");
@@ -86,7 +92,7 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 		
 		if (!channel.isOpen())
 		{
-			getLogger().error("File channel is closed, unable to write in file");
+			logger.error("File channel is closed, unable to write in file '{}'", contentsFilePath);
 			return;
 		}
 		super.start();
@@ -107,7 +113,7 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 		memoryStorage.insertPassed(id, item);
 		
 		if (item == null)
-			getLogger().trace("Unable to write 'null' item");
+			logger.trace("Unable to write 'null' item");
 		else
 			insertQueue.add(item);
 	}
@@ -125,12 +131,12 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 		
 		if (item == null)
 		{
-			getLogger().trace("Unable to remove 'null' item");
+			logger.trace("Unable to remove 'null' item");
 		}
 		else if (!insertQueue.remove(item))
 		{
 			if (fileContents.remove(item))
-				rewriteFile = true;
+				needToRewriteFile = true;
 		}
 	}
 	
@@ -163,7 +169,7 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	public void clearPassed()
 	{
 		memoryStorage.clearPassed();
-		clearFile = true;
+		needToClearFile = true;
 		if (writingThreadInterrupted)
 			writingIteration();
 	}
@@ -203,17 +209,16 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	@Override
 	protected void writeContent()
 	{
-		if (clearFile)
+		if (needToClearFile)
 		{
-			clearFile();
-			clearFile = false;
+			removeFileContent();
+			needToClearFile = false;
 		}
 		
-		if (rewriteFile)
+		if (needToRewriteFile)
 		{
-			fileContents.addAll(extractAll(insertQueue, true));
-			rewriteFile(extractAll(fileContents, false));
-			rewriteFile = false;
+			rewriteFile();
+			needToRewriteFile = false;
 		}
 		else if (!insertQueue.isEmpty())
 		{
@@ -221,72 +226,112 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 		}
 		else
 		{
-			getLogger().trace("Nothing to store");
+			logger.trace("Nothing to store");
 		}
 	}
 	
 	protected void appendToFile(Collection<P> appendContent)
 	{
-		if (getLogger().isTraceEnabled())
-			getLogger().trace("Appending messages to file. New message count: "+appendContent.size());
+		if (logger.isTraceEnabled())
+			logger.trace("Appending messages to file '{}'. New message count: {}", contentsFilePath, appendContent.size());
 		
 		fileContents.addAll(appendContent);
 		writeInFile(appendContent, true);
 	}
 	
+	protected void rewriteFile()
+	{
+		List<P> content = new ArrayList<>();
+		content.addAll(extractAll(fileContents, true));
+		content.addAll(extractAll(insertQueue, true));
+		rewriteFile(content);
+		fileContents.addAll(content);
+	}
+	
 	protected void rewriteFile(Collection<P> content)
 	{
-		if (getLogger().isTraceEnabled())
-			getLogger().trace("File will be rewriten. Total message count: "+content.size());
+		if (logger.isTraceEnabled())
+			logger.trace("File '{}' will be rewritten. Total message count: {}", contentsFilePath, content.size());
 		
 		writeInFile(content, false);
 	}
 	
-	protected void clearFile()
+	protected void removeFileContent()
 	{
 		fileContents.clear();
-		writeInFile(null, false);
+		makeFileEmpty();
 	}
 	
 	protected void writeInFile(Collection<P> content, boolean append)
 	{
 		if (!append)
-		{
-			getLogger().trace("Clearing file...");
-			try
-			{
-				channel.truncate(0);
-			}
-			catch (IOException e)
-			{
-				getLogger().error("Unable to clear file", e);
-			}
-		}
+			makeFileEmpty();
 		
 		if (content == null || content.isEmpty())
 			return;
 		
-		getLogger().trace("Writing in file...");
+		logger.trace("Writing in file...");
+		for (P item : content)
+		{
+			writeItemInFile(item);
+		}
+	}
+	
+	protected void makeFileEmpty()
+	{
+		logger.debug("Clearing file '{}'...", contentsFilePath);
 		try
 		{
-			for (P item : content)
-			{
-				buffer.clear();
-				if (storeTimestamp)
-                {
-                    buffer.put(extractTimestampPassed(item).getBytes());
-                    buffer.put(Utils.EOL.getBytes());
-                }
-				buffer.put(extractContentPassed(item).getBytes());
-				buffer.put("\r\n\r\n\r\n".getBytes());
-				buffer.flip();
-				channel.write(buffer);
-			}
+			channel.truncate(0);
 		}
 		catch (IOException e)
 		{
-			getLogger().error("Unable to write data in file", e);
+			logger.error("Unable to clear file", e);
 		}
+	}
+	
+	protected void writeItemInFile(P item)
+	{
+		buffer.clear();
+		if (storeTimestamp)
+			buffer.put(extractTimestampPassed(item).getBytes()).put(Utils.EOL.getBytes());
+		
+		byte[] contentBytes = extractContentPassed(item).getBytes();
+		int contentLength = contentBytes.length;
+		
+		int offset = 0, writeLength;
+		boolean delimSet = false;
+		while (offset < contentLength)
+		{
+			writeLength = Math.min(contentLength - offset, buffer.limit() - buffer.position());
+			buffer.put(contentBytes, offset, writeLength);
+			if (buffer.limit() - buffer.position() > MESSAGES_DELIMITER.length)
+			{
+				buffer.put(MESSAGES_DELIMITER);
+				delimSet = true;
+			}
+			flushBufferToFile();
+			offset += writeLength;
+		}
+		if (!delimSet)
+		{
+			buffer.put(MESSAGES_DELIMITER);
+			flushBufferToFile();
+		}
+	}
+
+	protected void flushBufferToFile()
+	{
+		buffer.flip();
+		try
+		{
+			channel.write(buffer);
+		}
+		catch (IOException e)
+		{
+			logger.error("Unable to write data in file", e);
+		}
+		buffer.clear();
 	}
 	
 	protected abstract String extractTimestampPassed(P item);
@@ -301,11 +346,5 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	protected String getWritingThreadName()
 	{
 		return STORE_THREAD_NAME;
-	}
-	
-	@Override
-	protected Logger getLogger()
-	{
-		return logger;
 	}
 }
