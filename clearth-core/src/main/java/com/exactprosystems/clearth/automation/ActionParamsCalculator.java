@@ -86,7 +86,8 @@ public class ActionParamsCalculator
 		for (Entry<String, String> param : params.entrySet())
 		{
 			String value = calculateParameter(param.getValue(), param.getKey());
-			params.put(param.getKey(), value);
+			if (value != null)
+				params.put(param.getKey(), value);
 		}
 		matrixFunctions.setCurrentTime(null);
 		

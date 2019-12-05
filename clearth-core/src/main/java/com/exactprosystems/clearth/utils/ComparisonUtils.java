@@ -225,7 +225,8 @@ public class ComparisonUtils
 
 	public boolean isSpecialValue(String value)
 	{
-		return SPECIAL_VALUES.contains(value.trim()) || StringUtils.startsWith(value, IS_TIMESTAMP_START);
+		return (value != null)
+				&& (SPECIAL_VALUES.contains(value.trim()) || StringUtils.startsWith(value, IS_TIMESTAMP_START));
 	}
 
 	public boolean isSpecialFunction(String value)
