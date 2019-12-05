@@ -18,8 +18,6 @@
 
 package com.exactprosystems.clearth.automation;
 
-import static com.exactprosystems.clearth.utils.ExceptionUtils.exceptionWrapper;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +51,15 @@ public class StepContext
 	
 	public <T> T getContext(String key)
 	{
-		return exceptionWrapper(() -> (T) context.get(key), ResultException::new);
+		try
+		{
+			//noinspection unchecked
+			return (T) context.get(key);
+		}
+		catch (ClassCastException e)
+		{
+			throw new ResultException(e);
+		}
 	}
 	
 	public void setContext(String key, Object obj)

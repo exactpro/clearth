@@ -18,8 +18,6 @@
 
 package com.exactprosystems.clearth.automation;
 
-import static com.exactprosystems.clearth.utils.ExceptionUtils.exceptionWrapper;
-
 import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,7 +65,15 @@ public class GlobalContext
 	
 	public <T> T getLoadedContext(String key)
 	{
-		return exceptionWrapper(() -> (T) loadedContext.get(key), ResultException::new);
+		try
+		{
+			//noinspection unchecked
+			return (T) loadedContext.get(key);
+		}
+		catch (ClassCastException e)
+		{
+			throw new ResultException(e);
+		}
 	}
 	
 	public void setLoadedContext(String key, Object value)

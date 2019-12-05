@@ -23,10 +23,6 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.exception.ExceptionUtils.getThrowableList;
 
 import java.util.List;
-import java.util.function.Function;
-
-import com.exactprosystems.clearth.utils.javaFunction.RunnableWithException;
-import com.exactprosystems.clearth.utils.javaFunction.SupplierWithException;
 
 public class ExceptionUtils
 {
@@ -116,27 +112,5 @@ public class ExceptionUtils
 			return false;
 		
 		return causedBy(t.getCause(), cause);
-	}
-
-	public static <E extends Exception, R extends Exception> void exceptionWrapper(RunnableWithException<E> producer, Function<Exception, R> exceptionWrapper) throws R
-	{
-		try
-		{
-			producer.run();
-		} catch (Exception e)
-		{
-			throw exceptionWrapper.apply(e);
-		}
-	}
-
-	public static <T, E extends Exception, R extends Exception> T exceptionWrapper(SupplierWithException<T, E> producer, Function<Exception, R> exceptionWrapper) throws R
-	{
-		try
-		{
-			return producer.get();
-		} catch (Exception e)
-		{
-			throw exceptionWrapper.apply(e);
-		}
 	}
 }
