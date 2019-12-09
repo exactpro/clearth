@@ -18,9 +18,9 @@
 
 package com.exactprosystems.clearth.utils;
 
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
-import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.report.results.complex.ComparisonRow;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -32,12 +32,15 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.lang.String.format;
 import static com.exactprosystems.clearth.utils.ParametersUtils.*;
+import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.*;
 
 public class ComparisonUtils
@@ -106,6 +109,8 @@ public class ComparisonUtils
 	public static final String IS_TIMESTAMP_START = "@{isTimestamp('";
 	public static final String IS_AFTER_DATE = "@{isAfterDate(";
 	public static final String IS_BEFORE_DATE = "@{isBeforeDate(";
+	public static final String IS_BETWEEN_DATES_NAME = "isBetweenDates";
+	public static final String IS_BETWEEN_DATES = "@{" + IS_BETWEEN_DATES_NAME + "(";
 	public static final String PATTERN_START = "{pattern(";
 	public static final String AS_NUMBER_NAME = "asNumber";
 	public static final String AS_NUMBER_START = "{" + AS_NUMBER_NAME + "(";
@@ -123,14 +128,20 @@ public class ComparisonUtils
 	public static final String IS_LESS_THAN = "@{" + IS_LESS_THAN_NAME + "(";
 	public static final String IS_LESS_THAN_OR_EQUAL_NAME = "isLessOrEqual";
 	public static final String IS_LESS_OR_EQUAL = "@{" + IS_LESS_THAN_OR_EQUAL_NAME + "(";
+	public static final String IS_BETWEEN_NAME = "isBetween";
+	public static final String IS_BETWEEN = "@{" + IS_BETWEEN_NAME + "(";
+	
+	public static final String INCLUDE_BOTH = "includeBoth", INCLUDE_RIGHT = "includeRight", INCLUDE_LEFT = "includeLeft";
 	
 	public static final Set<String> SPECIAL_FUNCTIONS = new HashSet<String> () {{
 		add(IS_BEFORE_DATE);
 		add(IS_AFTER_DATE);
+		add(IS_BETWEEN_DATES);
 		add(IS_GREATER_THAN);
 		add(IS_GREATER_OR_EQUAL);
 		add(IS_LESS_THAN);
 		add(IS_LESS_OR_EQUAL);
+		add(IS_BETWEEN);
 		add(PATTERN_START);
 		add(AS_ABS_NUMBER_START);
 		add(AS_NUMBER_START);
@@ -146,6 +157,8 @@ public class ComparisonUtils
 		add(IS_GRATER_OR_NULL_NAME);
 		add(IS_LESS_THAN_NAME);
 		add(IS_LESS_THAN_OR_EQUAL_NAME);
+		add(IS_BETWEEN_NAME);
+		add(IS_BETWEEN_DATES_NAME);
 	}};
 
 	public static final Pattern FLOAT_PATTERN = Pattern.compile("[+-]?\\d+[,.]\\d+");
@@ -337,8 +350,8 @@ public class ComparisonUtils
 		}
 		else if (StringUtils.startsWith(expectedValue, IS_TIMESTAMP_START))
 		{
-			int start = expectedValue.indexOf("'");
-			int end = expectedValue.lastIndexOf("'");
+			int start = expectedValue.indexOf('\'');
+			int end = expectedValue.lastIndexOf('\'');
 			return start != end && actualValue != null && isTimeStamp(actualValue, expectedValue.substring(start + 1, end));
 		}
 		else if (StringUtils.startsWith(expectedValue, IS_BEFORE_DATE))
@@ -348,6 +361,10 @@ public class ComparisonUtils
 		else if (StringUtils.startsWith(expectedValue, IS_AFTER_DATE))
 		{
 			return actualValue != null && compareDates(expectedValue, actualValue, false);
+		}
+		else if (StringUtils.startsWith(expectedValue, IS_BETWEEN_DATES))
+		{
+			return actualValue != null && isBetweenDates(expectedValue, actualValue);
 		}
 		else if (StringUtils.startsWith(expectedValue, IS_GREATER_THAN))
 		{
@@ -364,6 +381,10 @@ public class ComparisonUtils
 		else if (StringUtils.startsWith(expectedValue, IS_LESS_OR_EQUAL))
 		{
 			return isLessOrEq(expectedValue, actualValue);
+		}
+		else if (StringUtils.startsWith(expectedValue, IS_BETWEEN))
+		{
+			return isBetween(expectedValue, actualValue);
 		}
 		else if (StringUtils.startsWith(expectedValue, AS_NUMBER_START))
 		{
@@ -412,11 +433,11 @@ public class ComparisonUtils
 				return INTEGER_PATTERN.matcher(actualValue).matches();
 			}
 		}
-		else if(StringUtils.startsWith(expectedValue, IS_NOT_EQUAL_NUMBER))
+		else if (StringUtils.startsWith(expectedValue, IS_NOT_EQUAL_NUMBER))
 		{
 			return this.isNotEqualNumber(expectedValue, actualValue);
 		}
-		else if(StringUtils.startsWith(expectedValue, IS_NOT_EQUAL_TEXT))
+		else if (StringUtils.startsWith(expectedValue, IS_NOT_EQUAL_TEXT))
 		{
 			return this.isNotEqualText(expectedValue, actualValue);
 		}
@@ -481,7 +502,55 @@ public class ComparisonUtils
 
 		return actual.compareTo(expected) <= 0;
 	}
-	
+
+	/**
+	* Syntax examples of matrix function @{isBetween}: 
+	* <br>@{isBetween(2,4,'includeLeft')} ~ [2,4); @{isBetween(2,4,'includeRight')} ~ (2,4];
+	* <br>@{isBetween(2,4)} ~ (2,4); @{isBetween(2,4,'includeBoth')} ~ [2,4];
+	 */
+	public boolean isBetween(String expectedExpression, String actualValue) throws ParametersException
+	{
+		String paramsLine = prepareExpectedValue(expectedExpression);
+		//1th - LeftBoundary, 2th - RightBoundary, (Optional)3th - Boundaries inclusion
+		String[] params = split(paramsLine, ',');
+		ParametersUtils.checkNumberOfParams(IS_BETWEEN_NAME, params, 2, 3);
+		ParametersUtils.removeQuotesAndSpaces(params);
+
+		BigDecimal leftBound = getBigDecimalValue(params, 0, IS_BETWEEN_NAME, "leftBound");
+		BigDecimal rightBound = getBigDecimalValue(params, 1, IS_BETWEEN_NAME, "rightBound");
+
+		if (!isNumberWithoutQualifier(actualValue))
+		{
+			logger.warn("Unable to parse actual value '{}' in function '{}'", actualValue, IS_BETWEEN_NAME);
+			return false;
+		}
+		BigDecimal actual = new BigDecimal(StringUtils.strip(actualValue, "'"));
+
+		String inclusion = params.length == 3 ? StringUtils.strip(params[2], "'") : null;
+		
+		return isBetween(leftBound, rightBound, actual, inclusion);
+	}
+
+	private boolean isBetween(BigDecimal left, BigDecimal right, BigDecimal actual, String inclusion)
+			throws ParametersException
+	{
+		if (StringUtils.isEmpty(inclusion))
+			return actual.compareTo(left) > 0 && actual.compareTo(right) < 0;
+		
+		if (INCLUDE_LEFT.equals(inclusion))
+			return actual.compareTo(left) >= 0 && actual.compareTo(right) < 0;
+		
+		if (INCLUDE_RIGHT.equals(inclusion))
+			return actual.compareTo(left) > 0 && actual.compareTo(right) <= 0;
+		
+		if (INCLUDE_BOTH.equals(inclusion))
+			return actual.compareTo(left) >= 0 && actual.compareTo(right) <= 0;
+
+		String msg = String.format("Parameter '%s' in function '%s' is invalid", inclusion, IS_BETWEEN_NAME);
+		logger.warn(msg);
+		throw new ParametersException(msg);
+	}
+
 	protected BigDecimal getExpectedBigDecimal(String textValue, String functionName) throws ParametersException
 	{
 		String preparedValue = prepareExpectedValue(textValue);
@@ -561,22 +630,22 @@ public class ComparisonUtils
 	}
 
 	public boolean compareDates(String expectedValue, String actualValue, boolean isBefore) {
-		int start = expectedValue.indexOf("(");
-		int end = expectedValue.lastIndexOf(")");
+		int start = expectedValue.indexOf('(');
+		int end = expectedValue.lastIndexOf(')');
 		if (start == end) {
 			return false;
 		}
 		String expectedParams = expectedValue.substring(start + 1, end);
 		String dateExpStr = expectedParams.substring(0, expectedParams.indexOf(','));
 		String formatExpStr = expectedParams.substring(expectedParams.indexOf(',') + 1);
-		start = dateExpStr.indexOf("'");
-		end = dateExpStr.lastIndexOf("'");
+		start = dateExpStr.indexOf('\'');
+		end = dateExpStr.lastIndexOf('\'');
 		if (start == end) {
 			return false;
 		}
 		dateExpStr = dateExpStr.substring(start + 1, end);
-		start = formatExpStr.indexOf("'");
-		end = formatExpStr.lastIndexOf("'");
+		start = formatExpStr.indexOf('\'');
+		end = formatExpStr.lastIndexOf('\'');
 		if (start == end) {
 			return false;
 		}
@@ -590,8 +659,73 @@ public class ComparisonUtils
 			logger.warn("Compare dates. Incorrect date format", e);
 			return false;
 		}
-		return isBefore && act.before(exp) || !isBefore && act.after(exp);
+		
+		return isBefore ? act.before(exp) : act.after(exp);
+	}
 
+	/**
+	 * Syntax example of matrix function @{isBetweenDates}: 
+	 * <br>@{isBetweenDates('04.02.2003','06.02.2003','dd.MM.yyyy','includeLeft')} ~ [04.02.2003,06.02.2003);
+	 * <br>@{isBetweenDates('04.02.2003','06.02.2003','dd.MM.yyyy','includeRight')} ~ (04.02.2003,06.02.2003];
+	 * <br>@{isBetweenDates('04.02.2003','06.02.2003','dd.MM.yyyy','includeBoth')} ~ [04.02.2003,06.02.2003];
+	 * <br>@{isBetweenDates('04.02.2003','06.02.2003','dd.MM.yyyy')} ~ (04.02.2003,06.02.2003);
+	 */
+	public boolean isBetweenDates(String expectedExpression, String actualValue) throws ParametersException
+	{
+		String paramsLine = prepareExpectedValue(expectedExpression);
+		String[] params = split(paramsLine, ',');
+		ParametersUtils.checkNumberOfParams(IS_BETWEEN_DATES_NAME, params, 3, 4);
+		ParametersUtils.removeQuotesAndSpaces(params);
+		
+		int i = 3;
+		SimpleDateFormat dtf = null;
+		Date leftBound, rightBound, actual;
+		try
+		{
+			dtf = new SimpleDateFormat(params[--i]);
+			rightBound = dtf.parse(params[--i]);
+			leftBound = dtf.parse(params[--i]);
+		}
+		catch (ParseException | IllegalArgumentException e)
+		{
+			String msg = format("Parameter '%d' in function '%s' contains invalid value: '%s'.",
+					i, IS_BETWEEN_DATES_NAME, params[i]);
+			logger.warn(msg, e);
+			throw new ParametersException(msg, e);
+		}
+
+		try
+		{
+			actual = dtf.parse(StringUtils.strip(actualValue, "'"));
+		}
+		catch (Exception e)
+		{
+			logger.warn("Unable to parse actual value {} in function '{}'", actualValue, IS_BETWEEN_DATES_NAME, e);
+			return false;
+		}
+
+		return isBetweenDates(leftBound, rightBound, actual, params.length == 4 ? params[3] : null);
+	}
+
+	private boolean isBetweenDates(Date leftBound, Date rightBound, Date actual, String inclusion) 
+			throws ParametersException
+	{
+		if (StringUtils.isEmpty(inclusion))
+			return actual.after(leftBound) && actual.before(rightBound);
+
+		if (INCLUDE_LEFT.equals(inclusion))
+			return (actual.equals(leftBound) || actual.after(leftBound)) && actual.before(rightBound);
+
+		if (INCLUDE_RIGHT.equals(inclusion))
+			return actual.after(leftBound) && (actual.equals(rightBound) || actual.before(rightBound));
+
+		if (INCLUDE_BOTH.equals(inclusion))
+			return (actual.equals(leftBound) || actual.after(leftBound)) &&
+					(actual.equals(rightBound) || actual.before(rightBound));
+
+		String msg = String.format("Parameter '%s' in function '%s' is invalid", inclusion, IS_BETWEEN_DATES_NAME);
+		logger.warn(msg);
+		throw new ParametersException(msg);
 	}
 
 	public boolean isEmptyByMatrix(String matrixValue)
