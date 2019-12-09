@@ -269,6 +269,7 @@ public class ComparisonUtils
 	public boolean isTimeStamp(String value, String format)
 	{
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+		dateFormat.setLenient(false);
 		ParsePosition position = new ParsePosition(0);
 
 		Date date = dateFormat.parse(value, position);
@@ -651,6 +652,7 @@ public class ComparisonUtils
 		}
 		formatExpStr = formatExpStr.substring(start + 1, end);
 		SimpleDateFormat df = new SimpleDateFormat(formatExpStr);
+		df.setLenient(false);
 		Date exp, act;
 		try {
 			exp = df.parse(dateExpStr);
@@ -683,6 +685,7 @@ public class ComparisonUtils
 		try
 		{
 			dtf = new SimpleDateFormat(params[--i]);
+			dtf.setLenient(false);
 			rightBound = dtf.parse(params[--i]);
 			leftBound = dtf.parse(params[--i]);
 		}

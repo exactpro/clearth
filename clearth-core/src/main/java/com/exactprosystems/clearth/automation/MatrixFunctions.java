@@ -97,24 +97,24 @@ public class MatrixFunctions
 	
 
 	public String asNumber(String expected){
-		return String.format(ComparisonUtils.AS_NUMBER_START+"'%s')}", expected);
+		return String.format("%s'%s')}", ComparisonUtils.AS_NUMBER_START, expected);
 	}
 
 	public String asNumber(String expected, String precision){
-		return String.format(ComparisonUtils.AS_NUMBER_START+"'%s','%s')}", expected, precision);
+		return String.format("%s'%s','%s')}", ComparisonUtils.AS_NUMBER_START, expected, precision);
 	}
 
 	public String asAbsNumber(String expected){
-		return String.format(ComparisonUtils.AS_ABS_NUMBER_START+"'%s')}", expected);
+		return String.format("%s'%s')}", ComparisonUtils.AS_ABS_NUMBER_START, expected);
 	}
 
 	public String asAbsNumber(String expected, String precision){
-		return String.format(ComparisonUtils.AS_ABS_NUMBER_START+"'%s','%s')}", expected, precision);
+		return String.format("%s'%s','%s')}", ComparisonUtils.AS_ABS_NUMBER_START, expected, precision);
 	}
 
 	public String pattern(String value)
 	{
-		return String.format(ComparisonUtils.PATTERN_START+"'%s')}", value);
+		return String.format("%s'%s')}", ComparisonUtils.PATTERN_START, value);
 	}
 
 	
@@ -275,6 +275,7 @@ public class MatrixFunctions
 			throw new FunctionException("Offset should be in range from 0 to 100000");
 
 		SimpleDateFormat holidayDF = new SimpleDateFormat(HOLIDAY_DATE_PATTERN);
+		holidayDF.setLenient(false);
 		
 		// check if holidays set (for holiday type only)
 		if (holidayType.equals(HOLIDAY_HOLIDAY))
@@ -451,16 +452,19 @@ public class MatrixFunctions
 	public String reformat(String time, String currentFormat, String newFormat) throws FunctionException
 	{
 		Date date;
+		SimpleDateFormat sdf = new SimpleDateFormat(currentFormat);
+		sdf.setLenient(false);
 		try
 		{
-			date = new SimpleDateFormat(currentFormat).parse(time);
+			date = sdf.parse(time);
 		}
 		catch (ParseException e)
 		{
 			throw new FunctionException(String.format(ERROR_TIME_FORMAT, time, currentFormat), e);
 		}
+		sdf = new SimpleDateFormat(newFormat);
 		
-		return new SimpleDateFormat(newFormat).format(date);
+		return sdf.format(date);
 	}
 	
 	@MethodDataModel(
@@ -471,9 +475,11 @@ public class MatrixFunctions
 	)
 	public long parseDate(String time, String format) throws FunctionException
 	{
+		SimpleDateFormat sdf = new SimpleDateFormat(format);
+		sdf.setLenient(false);
 		try
 		{
-			return new SimpleDateFormat(format).parse(time).getTime();
+			return sdf.parse(time).getTime();
 		}
 		catch (ParseException e)
 		{
@@ -606,10 +612,10 @@ public class MatrixFunctions
 			valueGenerators.put(generatorId, valueGenerator);
 		}
 
-		if (pattern.length() == 0)
+		if (pattern.isEmpty())
 			return "";
 
-		String result = "";
+		StringBuilder result = new StringBuilder();
 		int len = 0;
 		for (int i = 0; i < pattern.length(); i++)
 		{
@@ -619,16 +625,16 @@ public class MatrixFunctions
 			{
 				if (len > 0)
 				{
-					result += valueGenerator.generateValue(len);
+					result.append(valueGenerator.generateValue(len));
 					len = 0;
 				}
-				result += pattern.charAt(i);
+				result.append(pattern.charAt(i));
 			}
 		}
 		if (len > 0)
-			result += valueGenerator.generateValue(len);
+			result.append(valueGenerator.generateValue(len));
 
-		return result;
+		return result.toString();
 	}
 
 	public String addZeros(String value)
@@ -681,7 +687,7 @@ public class MatrixFunctions
 	)
 	public String trimZeros(String value)
 	{
-		return value.indexOf(".") < 0 ? value : value.replaceAll("0*$", "").replaceAll("\\.$", "");
+		return !value.contains(".") ? value : value.replaceAll("0*$", "").replaceAll("\\.$", "");
 	}
 	
 	@MethodDataModel(
@@ -1248,23 +1254,27 @@ public class MatrixFunctions
 		put(PASSED_PARAM, true);
 		put(FAIL_REASON_PARAM, null);
 	}};
-	
-	protected static final Map<FailReason, Map<String, Object>> FAILED_ACTION_PARAMS = new HashMap<FailReason, Map<String, Object>>() {{
-		for (final FailReason failReason : FailReason.values())
-		{
-			put(failReason, new HashMap<String, Object>() {{
-				put(PASSED_PARAM, false);
-				put(FAIL_REASON_PARAM, failReason.name());
-			}});
-		}
-	}};
+
+	protected static final Map<FailReason, Map<String, Object>> FAILED_ACTION_PARAMS =
+			new EnumMap<FailReason, Map<String, Object>>(FailReason.class)
+			{{
+				for (FailReason failReason : FailReason.values())
+				{
+					put(failReason, new HashMap<String, Object>()
+					{{
+						put(PASSED_PARAM, false);
+						put(FAIL_REASON_PARAM, failReason.name());
+					}});
+				}
+			}};
 
 	public String milliseconds(String value, String format) throws FunctionException
 	{
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
+		SimpleDateFormat sdf = new SimpleDateFormat(format);
+		sdf.setLenient(false);
 		try
 		{
-			Date date = simpleDateFormat.parse(value);
+			Date date = sdf.parse(value);
 			return String.valueOf(date.getTime());
 		}
 		catch (ParseException e)
