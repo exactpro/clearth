@@ -87,6 +87,16 @@ public class MessageParserToolBean extends ClearThBean
 
 		handleExceptions();
 	}
+
+	public String getCurrentCodecName()
+	{
+		return messageParserTool.getCodecName();
+	}
+
+	public boolean isFormatAuto()
+	{
+		return StringUtils.equals(textToParseFormat, AUTO_FORMAT);
+	}
 	
 	protected void messageToTree(ClearThMessage<?> message, TreeNode parentNode)
 	{		

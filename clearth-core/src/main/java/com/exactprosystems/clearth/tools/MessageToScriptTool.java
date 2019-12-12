@@ -37,6 +37,7 @@ public class MessageToScriptTool
 	protected final MessageConverter messageConverter;
 	protected final Map<String, XmlMessageConverterConfig> messageConverterConfigs;
 	protected final ICodecFactory codecFactory;
+	protected String currentCodecName;
 	
 	public MessageToScriptTool()
 	{
@@ -46,12 +47,14 @@ public class MessageToScriptTool
 		codecs = cthInstance.getCodecs();
 		messageConverterConfigs = cthInstance.getMessageConverterConfigs();
 		codecFactory = cthInstance.getCodecFactory();
+		currentCodecName = "";
 	}
 	
 	public String convertMessage(String messageToConvert, String messageConvertFormat) throws Exception
 	{
 		messageConverter.resetId();
 		ICodec codec;
+		currentCodecName = "";
 
 		if (messageConvertFormat.equals("auto"))
 		{
@@ -59,8 +62,12 @@ public class MessageToScriptTool
 			{
 				try
 				{
-					codec = codecFactory.createCodec(codecs.getCodecConfig(converterConfig.getValue().getCodec()));
-					return messageConverter.convert(messageToConvert, converterConfig.getValue(), codec);
+					String codecName = converterConfig.getValue().getCodec();
+					codec = codecFactory.createCodec(codecs.getCodecConfig(codecName));
+					String convertedMessage = messageConverter.convert(messageToConvert, converterConfig.getValue(),
+							codec);
+					currentCodecName = codecName;
+					return convertedMessage;
 				}
 				catch (Exception e)
 				{
@@ -72,9 +79,18 @@ public class MessageToScriptTool
 		}
 		else
 		{
-			codec = codecFactory.createCodec(codecs.getCodecConfig(messageConverterConfigs.get(messageConvertFormat).getCodec()));
-			return messageConverter.convert(messageToConvert, messageConverterConfigs.get(messageConvertFormat), codec);
+			String codecName = messageConverterConfigs.get(messageConvertFormat).getCodec();
+			codec = codecFactory.createCodec(codecs.getCodecConfig(codecName));
+			String convertedMessage = messageConverter.convert(messageToConvert,
+					messageConverterConfigs.get(messageConvertFormat), codec);
+			currentCodecName = codecName;
+			return convertedMessage;
 		}
+	}
+
+	public String getCurrentCodecName()
+	{
+		return currentCodecName;
 	}
 
 	public CodecsStorage getCodecs()

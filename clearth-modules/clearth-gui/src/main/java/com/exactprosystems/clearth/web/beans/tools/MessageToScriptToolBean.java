@@ -26,10 +26,13 @@ import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.xmldata.XmlMessageConverterConfig;
+import org.apache.commons.lang.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
 import java.util.Set;
+
+import static com.exactprosystems.clearth.tools.MessageParserTool.AUTO_FORMAT;
 
 /**
  * Created by alexander.magomedov on 10/31/16.
@@ -60,7 +63,7 @@ public class MessageToScriptToolBean extends ClearThBean
 				return value;
 		}
 
-		return "auto";
+		return AUTO_FORMAT;
 	}
 	
 	public void convertMessage()
@@ -90,6 +93,16 @@ public class MessageToScriptToolBean extends ClearThBean
 		catch (Exception e) {
 			handleException("Error while converting message", e);
 		}
+	}
+
+	public String getCurrentCodecName()
+	{
+		return messageToScriptTool.getCurrentCodecName();
+	}
+
+	public boolean isFormatAuto()
+	{
+		return StringUtils.equals(messageConvertFormat, AUTO_FORMAT);
 	}
 
 	private void handleException(String message, Exception e) {

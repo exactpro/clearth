@@ -107,7 +107,9 @@
 								<p:commandButton value="Parse" ajax="true" actionListener="#{messageParserToolBean.parseText}" update=":MessageParser :Growl" style="width: 100px; float: right; right: 5%; margin-right: -10px;" />
 							</div>
 							<div class="ui-grid-col-6">
-								<h:outputText value="Parsed message as text:" />
+								<h:outputText value="Parsed message as text" />
+								<h:outputText rendered="#{messageParserToolBean.isFormatAuto() and !messageParserToolBean.currentCodecName.isEmpty()}" value=" (parsed as #{messageParserToolBean.currentCodecName})" />
+								<h:outputText value=":" />
 								<br />
 								<p:inputTextarea id="msgParseOutput" value="#{messageParserToolBean.parsedText}" autoResize="false" rows="22" style="resize: none; width: 100%; padding-right: 0;" readonly="true" />
 							</div>
@@ -169,7 +171,9 @@
 							<p:commandButton value="Convert" ajax="true" actionListener="#{messageToScriptToolBean.convertMessage}" update=":MessageConverter :Growl" style="width: 100px; float: right; right: 5%; margin-right: -10px;" />
 						</div>
 						<div class="ui-grid-col-6">
-							<h:outputText value="Script for message:" />
+							<h:outputText value="Script for message" />
+							<h:outputText rendered="#{messageToScriptToolBean.isFormatAuto() and !messageToScriptToolBean.currentCodecName.isEmpty()}" value=" (parsed as #{messageToScriptToolBean.currentCodecName})" />
+							<h:outputText value=":" />
 							<br />
 							<p:inputTextarea id="msgToScriptOutput" value="#{messageToScriptToolBean.convertedMessage}" autoResize="false" rows="22" style="resize: none; width: 100%; padding-right: 0;" readonly="true" />
 						</div>
