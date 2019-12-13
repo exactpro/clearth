@@ -241,23 +241,18 @@ task createProject(type: Copy,
 		description: 'Creates directory with new ClearTH-based project', 
 		dependsOn: 'updateJettyXml') {
 	
-	onlyIf {
+	doFirst {
 		if (newProjectDir == 'undef') {
-			println 'You must set "newProjectDir" property via "-PnewProjectDir=<path_to_new_project>" key'
-			false
+			throw new GradleException('You must set "newProjectDir" property via "-PnewProjectDir=<path_to_new_project>" key')
 		}
 		if (newProjectName == 'undef') {
-			println 'You must set "newProjectName" property via "-PnewProjectName=<project_name>" key'
-			false
+			throw new GradleException('You must set "newProjectName" property via "-PnewProjectName=<project_name>" key')
 		}
 		if (!newProjectName.find('^[_*\\w*\\d*]+$')) {
-			println("Project name contains illegal characters")
-			false
-		}
-		else {
-			true
+			throw new GradleException("Project name contains illegal characters")
 		}
 	}
+	
 	newProjectName = newProjectName.toLowerCase()
 	
 	outputs.upToDateWhen { false }
