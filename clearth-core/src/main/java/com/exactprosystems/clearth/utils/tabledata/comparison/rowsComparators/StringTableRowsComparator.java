@@ -16,14 +16,22 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison;
+package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
 
-import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.TableDataComparator;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 
-/**
- * Types of sources available for comparison via {@link TableDataComparator}.
- */
-public enum SourceType
+public class StringTableRowsComparator extends TableRowsComparator<String, String>
 {
-	DbQuery, DbQueryFile, CsvFile, Script, ScriptFile
+	protected final ComparisonUtils comparisonUtils;
+	
+	public StringTableRowsComparator(ComparisonUtils comparisonUtils)
+	{
+		this.comparisonUtils = comparisonUtils;
+	}
+	
+	@Override
+	public boolean compareValues(String value1, String value2, String column) throws Exception
+	{
+		return comparisonUtils.compareValues(value1, value2);
+	}
 }

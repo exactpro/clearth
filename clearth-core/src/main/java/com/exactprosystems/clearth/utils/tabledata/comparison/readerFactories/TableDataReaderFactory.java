@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
 
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 
 import java.sql.Connection;
@@ -32,5 +33,5 @@ import java.util.function.Supplier;
 public interface TableDataReaderFactory<A, B>
 {
 	BasicTableDataReader<A, B, ?> createTableDataReader(TableDataReaderSettings settings,
-			Supplier<Connection> dbConnectionSupplier) throws Exception;
+			Supplier<Connection> dbConnectionSupplier) throws ComparisonException;
 }

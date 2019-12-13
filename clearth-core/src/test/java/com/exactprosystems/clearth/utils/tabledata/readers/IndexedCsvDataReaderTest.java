@@ -21,7 +21,7 @@ import com.exactprosystems.clearth.utils.tabledata.IndexedStringTableData;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
-import com.exactprosystems.clearth.utils.tabledata.rowMatchers.DefaultStringTableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -55,10 +55,10 @@ public class IndexedCsvDataReaderTest
 		return new Object[][]
 				{
 						{
-								new DefaultStringTableRowMatcher(createKeys())
+								new StringTableRowMatcher(createKeys())
 						},
 						{
-								new DefaultStringTableRowMatcher(createKey())
+								new StringTableRowMatcher(createKey())
 						}
 				};
 	}

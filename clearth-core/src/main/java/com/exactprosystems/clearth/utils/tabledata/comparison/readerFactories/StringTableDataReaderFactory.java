@@ -20,7 +20,6 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
-import com.exactprosystems.clearth.utils.ClearThEnumUtils;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
 import com.exactprosystems.clearth.utils.scripts.ScriptUtils;
@@ -28,7 +27,7 @@ import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.comparison.SourceType;
+import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
@@ -37,35 +36,46 @@ import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class StringTableDataReaderFactory implements TableDataReaderFactory<String, String>
 {
+	public static final String DB_QUERY = "Query", DB_QUERY_FILE = "QueryFile",
+			CSV_FILE = "CsvFile", SCRIPT = "Script", SCRIPT_FILE = "ScriptFile";
+	
+	private final List<String> availableSourceTypes = new ArrayList<>(Arrays.asList(DB_QUERY, DB_QUERY_FILE, CSV_FILE, SCRIPT, SCRIPT_FILE));
+	
 	@Override
 	public BasicTableDataReader<String, String, ?> createTableDataReader(TableDataReaderSettings settings,
-			Supplier<Connection> dbConnectionSupplier) throws Exception
+			Supplier<Connection> dbConnectionSupplier) throws ComparisonException
 	{
-		switch (settings.getSourceType())
+		try
 		{
-			case DbQuery:
-			case DbQueryFile:
+			String sourceType = settings.getSourceType();
+			if (sourceType.equalsIgnoreCase(DB_QUERY) || sourceType.equalsIgnoreCase(DB_QUERY_FILE))
 				return createDbDataReader(settings, dbConnectionSupplier);
-			case CsvFile:
+			else if (sourceType.equalsIgnoreCase(CSV_FILE))
 				return createCsvDataReader(settings);
-			case Script:
-			case ScriptFile:
+			else if (sourceType.equalsIgnoreCase(SCRIPT) || sourceType.equalsIgnoreCase(SCRIPT_FILE))
 				return createScriptDataReader(settings);
-			default:
+			else
 				return createCustomTableDataReader(settings);
+		}
+		catch (Exception e)
+		{
+			throw new ComparisonException("Couldn't create table data reader.", e);
 		}
 	}
 	
 	protected BasicTableDataReader<String, String, ?> createCustomTableDataReader(TableDataReaderSettings settings) throws Exception
 	{
-		throw ResultException.failed("Unsupported format '" + settings.getSourceType() + "' has been used to initialize "
+		throw new IllegalArgumentException("Unsupported format '" + settings.getSourceType() + "' has been used to initialize "
 				+ (settings.isForExpectedData() ? "expected" : "actual") + " data reader. Acceptable ones are: "
-				+ ClearThEnumUtils.enumToTextValues(SourceType.class).stream().collect(Collectors.joining("', '", "'", "'")) + ".");
+				+ getAvailableSourceTypes().stream().collect(Collectors.joining("', '", "'", "'")) + ".");
 	}
 	
 	
@@ -73,7 +83,7 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 			Supplier<Connection> dbConnectionSupplier) throws IOException, SQLException
 	{
 		String source = settings.getSourceData();
-		ParametrizedQuery query = settings.getSourceType() == SourceType.DbQuery ? SQLUtils.parseSQLTemplate(source)
+		ParametrizedQuery query = settings.getSourceType().equalsIgnoreCase(DB_QUERY) ? SQLUtils.parseSQLTemplate(source)
 				: SQLUtils.parseSQLTemplate(new File(ClearThCore.rootRelative(source)));
 		PreparedStatement statement = query.createPreparedStatement(dbConnectionSupplier.get(), settings.getSqlQueryParams());
 		
@@ -93,7 +103,7 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	protected CsvDataReader createScriptDataReader(TableDataReaderSettings settings) throws IOException
 	{
 		boolean forExpectedData = settings.isForExpectedData();
-		String source = settings.getSourceData(), scriptResult = settings.getSourceType() == SourceType.ScriptFile ?
+		String source = settings.getSourceData(), scriptResult = settings.getSourceType().equalsIgnoreCase(SCRIPT_FILE) ?
 				executeScriptFile(ClearThCore.rootRelative(source), settings.getScriptFileParams(), forExpectedData)
 				: executeScriptCommands(source, settings.getShellName(), settings.getShellOption(), forExpectedData);
 		
@@ -125,5 +135,11 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 		builder.add("Output: ").append(scriptResult.outStr);
 		builder.add("Error text: ").append(scriptResult.errStr);
 		throw ResultException.failed(builder.toString());
+	}
+	
+	
+	protected List<String> getAvailableSourceTypes()
+	{
+		return availableSourceTypes;
 	}
 }

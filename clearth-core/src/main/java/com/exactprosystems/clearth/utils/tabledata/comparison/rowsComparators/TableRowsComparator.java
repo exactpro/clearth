@@ -26,7 +26,7 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparis
 import java.util.Objects;
 
 /**
- * Class which compares two table data rows.
+ * Class that compares two table data rows.
  * @param <A> class of column member.
  * @param <B> class of table values.
  */

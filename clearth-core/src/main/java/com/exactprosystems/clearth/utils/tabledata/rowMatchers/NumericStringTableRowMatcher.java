@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class NumericStringTableRowMatcher extends DefaultStringTableRowMatcher
+public class NumericStringTableRowMatcher extends StringTableRowMatcher
 {
 	private static final Logger logger = LoggerFactory.getLogger(NumericStringTableRowMatcher.class);
 	

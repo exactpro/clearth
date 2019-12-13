@@ -19,17 +19,19 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.result;
 
 /**
- * Detail of comparison result of 2 table rows.
+ * Comparison detail for the one table data column.
  * @param <A> class of column object.
  * @param <B> class of expected and actual values.
  */
-public class RowComparisonDetail<A, B>
+public class ColumnComparisonDetail<A, B>
 {
 	private A column;
 	private B expectedValue, actualValue;
 	private boolean identical, info;
 	
-	public RowComparisonDetail(A column, B expectedValue, B actualValue, boolean identical, boolean info)
+	public ColumnComparisonDetail() { }
+	
+	public ColumnComparisonDetail(A column, B expectedValue, B actualValue, boolean identical, boolean info)
 	{
 		this.column = column;
 		this.expectedValue = expectedValue;

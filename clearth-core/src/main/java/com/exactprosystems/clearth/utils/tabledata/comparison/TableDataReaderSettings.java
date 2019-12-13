@@ -34,8 +34,7 @@ public class TableDataReaderSettings
 	
 	// Default parameters which should be available for all types of readers
 	protected final boolean forExpectedData;
-	protected SourceType sourceType;
-	protected String sourceData;
+	protected String sourceType, sourceData;
 	
 	// Source type dependent readers' parameters
 	protected char csvDelimiter;
@@ -45,13 +44,16 @@ public class TableDataReaderSettings
 	public TableDataReaderSettings(Map<String, String> params, boolean forExpectedData) throws ParametersException
 	{
 		this.forExpectedData = forExpectedData;
-		loadSettings(params);
+		sqlQueryParams = new HashMap<>(params);
+		
+		ParametersHandler handler = new ParametersHandler(params);
+		loadSettings(handler);
+		handler.check();
 	}
 	
-	protected void loadSettings(Map<String, String> params) throws ParametersException
+	protected void loadSettings(ParametersHandler handler) throws ParametersException
 	{
-		ParametersHandler handler = new ParametersHandler(params);
-		sourceType = handler.getRequiredEnum((forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM) + SOURCE_TYPE, SourceType.class);
+		sourceType = handler.getRequiredString((forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM) + SOURCE_TYPE);
 		sourceData = handler.getRequiredString((forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM) + SOURCE_DATA);
 		
 		// Next properties are custom ones for certain types of table data readers.
@@ -74,9 +76,6 @@ public class TableDataReaderSettings
 				handler.getString(SCRIPT_SHELL_NAME + (forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM), "bash"));
 		shellOption = handler.getString(SCRIPT_SHELL_OPTION + COMMON_PARAM,
 				handler.getString(SCRIPT_SHELL_OPTION + (forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM), "-c"));
-		
-		handler.check();
-		sqlQueryParams = new HashMap<>(params);
 	}
 	
 	
@@ -85,7 +84,7 @@ public class TableDataReaderSettings
 		return forExpectedData;
 	}
 	
-	public SourceType getSourceType()
+	public String getSourceType()
 	{
 		return sourceType;
 	}

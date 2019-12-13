@@ -115,9 +115,18 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	}
 	
 	/**
-	 * Returns some table row (usually a first one) from table data storage.
-	 * Could be used to pull stored rows when sources read fully.
-	 * @param tableData {@code IndexedTableData} where to search for some row
+	 * Returns {@link TableRowMatcher} used by this indexed comparator to match rows before comparison.
+	 */
+	public TableRowMatcher<A, B, C> getRowMatcher()
+	{
+		return rowMatcher;
+	}
+	
+	
+	/**
+	 * Returns some table row (e.g. a first one) from table data storage.
+	 * Could be used to pull stored rows when sources were read completely.
+	 * @param tableData {@link IndexedTableData} where to search for some row.
 	 */
 	protected TableRow<A, B> getSomeTableRow(IndexedTableData<A, B, C> tableData)
 	{
@@ -126,7 +135,6 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 		tableData.findAndRemove(foundRow);
 		return foundRow;
 	}
-	
 	
 	/**
 	 * Creates expected table data to store non-compared yet rows.

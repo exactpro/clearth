@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
 
 import com.exactprosystems.clearth.automation.MatrixFunctions;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -27,15 +28,17 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.util.Map;
 
-public class NumericStringTableRowsComparator extends DefaultStringTableRowsComparator
+public class NumericStringTableRowsComparator extends StringTableRowsComparator
 {
 	private final static Logger logger = LoggerFactory.getLogger(NumericStringTableRowsComparator.class);
 	
 	protected final Map<String, BigDecimal> numericColumns;
 	protected final IValueTransformer bdValueTransformer;
 	
-	public NumericStringTableRowsComparator(Map<String, BigDecimal> numericColumns, IValueTransformer bdValueTransformer)
+	public NumericStringTableRowsComparator(ComparisonUtils comparisonUtils,
+			Map<String, BigDecimal> numericColumns, IValueTransformer bdValueTransformer)
 	{
+		super(comparisonUtils);
 		this.numericColumns = numericColumns;
 		this.bdValueTransformer = bdValueTransformer;
 	}

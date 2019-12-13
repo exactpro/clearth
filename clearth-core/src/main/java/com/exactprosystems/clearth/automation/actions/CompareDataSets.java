@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.MatrixContext;
@@ -26,66 +27,53 @@ import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
-import com.exactprosystems.clearth.automation.report.results.CloseableContainerResult;
-import com.exactprosystems.clearth.automation.report.results.ContainerResult;
-import com.exactprosystems.clearth.automation.report.results.CsvContainerResult;
-import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.BigDecimalValueTransformer;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.IValueTransformer;
-import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.TableRow;
-import com.exactprosystems.clearth.utils.tabledata.comparison.KeyColumnsRowsCollector;
+import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
+import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.IndexedStringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.StringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.TableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories.StringTableDataReaderFactory;
 import com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories.TableDataReaderFactory;
-import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonData;
-import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonResultType;
-import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.DefaultStringTableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.KeyColumnsRowsCollector;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.StringKeyColumnsRowsCollector;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.NumericStringTableRowsComparator;
-import com.exactprosystems.clearth.utils.tabledata.rowMatchers.DefaultStringTableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.StringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class CompareDataSets extends Action
 {
 	public static final String KEY_COLUMNS = "KeyColumns", NUMERIC_COLUMNS = "NumericColumns", CHECK_DUPLICATES = "CheckDuplicates";
-	
-	// Names for results' containers
-	public static final String CONTAINER_PASSED = "Passed rows",
-			CONTAINER_FAILED = "Failed rows",
-			CONTAINER_NOT_FOUND = "Not found rows",
-			CONTAINER_EXTRA = "Extra rows";
 	
 	protected Set<String> keyColumns = null;
 	protected Map<String, BigDecimal> numericColumns = null;
 	protected IValueTransformer bdValueTransformer = null;
 	
 	protected boolean checkDuplicates = false;
-	protected KeyColumnsRowsCollector keyColumnsRowsCollector = null;
 	
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
+		Map<String, String> actionParameters = getActionParameters();
 		getLogger().debug("Initializing special action parameters");
-		InputParamsHandler handler = new InputParamsHandler(inputParams);
+		InputParamsHandler handler = new InputParamsHandler(actionParameters);
 		initParameters(globalContext, handler);
 		handler.check();
 		
@@ -94,25 +82,31 @@ public class CompareDataSets extends Action
 		{
 			getLogger().debug("Preparing data readers");
 			TableDataReaderFactory<String, String> readerFactory = createTableDataReaderFactory();
-			expectedReader = readerFactory.createTableDataReader(createTableDataReaderSettings(true), () -> getDbConnection(true));
-			actualReader = readerFactory.createTableDataReader(createTableDataReaderSettings(false), () -> getDbConnection(false));
+			expectedReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters, true), () -> getDbConnection(true));
+			actualReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters, false), () -> getDbConnection(false));
 			
-			getLogger().debug("Data readers are ready. Starting comparison");
-			return compareTables(expectedReader, actualReader);
+			return createComparisonProcessor().compareTables(createTableDataComparator(expectedReader, actualReader),
+					checkDuplicates ? createKeyColumnsRowsCollector() : null);
 		}
-		catch (Exception e)
+		catch (ParametersException | IOException e)
 		{
-			if (e instanceof ResultException)
-				throw (ResultException)e;
-			throw ResultException.failed("Error while comparing data.", e);
+			throw ResultException.failed("Error while preparing resources for making comparison.", e);
+		}
+		catch (ComparisonException e)
+		{
+			throw ResultException.failed(e.getMessage(), (Exception)e.getCause());
 		}
 		finally
 		{
-			getLogger().debug("Closing used resources");
-			// Readers may be not closed by comparator (e.g. due to some exception)
 			Utils.closeResource(expectedReader);
 			Utils.closeResource(actualReader);
 		}
+	}
+	
+	
+	protected Map<String, String> getActionParameters()
+	{
+		return copyInputParams();
 	}
 	
 	protected void initParameters(GlobalContext globalContext, InputParamsHandler handler)
@@ -121,157 +115,6 @@ public class CompareDataSets extends Action
 		numericColumns = getNumericColumns(handler.getSet(NUMERIC_COLUMNS, ","));
 		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
 	}
-	
-	
-	protected Result compareTables(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader) throws Exception
-	{
-		ContainerResult result = null;
-		DefaultStringTableRowMatcher rowMatcher = null;
-		if (!keyColumns.isEmpty())
-		{
-			rowMatcher = createTableRowMatcher(keyColumns);
-			if (checkDuplicates)
-				keyColumnsRowsCollector = createKeyColumnsRowsCollector(keyColumns);
-		}
-		
-		try (TableDataComparator<String, String> comparator = createTableDataComparator(expectedReader, actualReader,
-				rowMatcher, createTableRowsComparator()))
-		{
-			if (!comparator.hasMoreRows())
-				return DefaultResult.passed("Both datasets are empty. Nothing to compare.");
-			
-			long comparisonStartTime = System.currentTimeMillis();
-			result = createComparisonContainerResult();
-			int rowsCount = 0, passedRowsCount = 0;
-			do
-			{
-				rowsCount++;
-				RowComparisonData<String, String> compData = comparator.compareRows();
-				if (compData.isSuccess())
-					passedRowsCount++;
-				
-				// Pass comparison errors to the logs if exist
-				List<String> compErrors = compData.getErrors();
-				if (getLogger().isWarnEnabled() && !compErrors.isEmpty())
-				{
-					LineBuilder errMsgBuilder = new LineBuilder();
-					errMsgBuilder.add("Comparison error(s) at line #").add(rowsCount).append(":");
-					compErrors.forEach(currentError -> errMsgBuilder.add("* ").append(currentError));
-					getLogger().warn(errMsgBuilder.toString());
-				}
-				
-				processCurrentRowResult(compData, getRowContainerName(compData, rowsCount), result, keyColumnsRowsCollector,
-						comparator.getCurrentRow(), rowMatcher);
-				afterRow(rowsCount, passedRowsCount);
-			}
-			while (comparator.hasMoreRows());
-			
-			getLogger().debug("Comparison finished in {} sec. Processed {} rows: {} passed / {} failed",
-					TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - comparisonStartTime), rowsCount,
-					passedRowsCount, rowsCount - passedRowsCount);
-			
-			return result;
-		}
-		finally
-		{
-			if (result instanceof AutoCloseable)
-				Utils.closeResource((AutoCloseable)result);
-			Utils.closeResource(keyColumnsRowsCollector);
-		}
-	}
-	
-	protected ContainerResult createComparisonContainerResult()
-	{
-		ContainerResult result = CloseableContainerResult.createPlainResult(null);
-		// Creating containers firstly to have them in expected order
-		result.addWrappedContainer(CONTAINER_PASSED, createComparisonNestedResult(CONTAINER_PASSED), true);
-		result.addWrappedContainer(CONTAINER_FAILED, createComparisonNestedResult(CONTAINER_FAILED), true);
-		result.addWrappedContainer(CONTAINER_NOT_FOUND, createComparisonNestedResult(CONTAINER_NOT_FOUND), true);
-		result.addWrappedContainer(CONTAINER_EXTRA, createComparisonNestedResult(CONTAINER_EXTRA), true);
-		return result;
-	}
-	
-	protected ContainerResult createComparisonNestedResult(String header)
-	{
-		return CsvContainerResult.createPlainResult(header.toLowerCase().replace(" ", "_"));
-	}
-	
-	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, DefaultStringTableRowMatcher rowMatcher,
-			DefaultStringTableRowsComparator rowsComparator) throws IOException
-	{
-		return rowMatcher == null ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
-				: new IndexedStringTableDataComparator(expectedReader, actualReader, rowMatcher, rowsComparator);
-	}
-	
-	protected void processCurrentRowResult(RowComparisonData<String, String> compData, String rowName, ContainerResult result,
-			KeyColumnsRowsCollector keyColumnsRowsCollector, TableRow<String, String> currentRow,
-			DefaultStringTableRowMatcher rowMatcher) throws IOException
-	{
-		if (keyColumnsRowsCollector != null && rowMatcher != null)
-		{
-			String primaryKey = rowMatcher.createPrimaryKey(currentRow),
-					originalRowName = keyColumnsRowsCollector.checkForDuplicatedRow(primaryKey, currentRow, rowMatcher::matchBySecondaryKey);
-			if (StringUtils.isNotBlank(originalRowName))
-			{
-				addDuplicatedRowResult(compData, rowName, originalRowName, result);
-				return;
-			}
-			// Add current row to collector only if it's not a duplicated one
-			keyColumnsRowsCollector.addRow(rowName, primaryKey, currentRow);
-		}
-		addRowComparisonResult(createBlockResult(compData, rowName), result, compData.getResultType());
-	}
-	
-	protected void addDuplicatedRowResult(RowComparisonData<String, String> compData, String rowName, String originalRowName,
-			ContainerResult result)
-	{
-		Result rowResult = createBlockResult(compData, rowName + " (duplicate of row named '" + originalRowName + "')");
-		rowResult.setSuccess(false);
-		
-		RowComparisonResultType compResultType = compData.getResultType();
-		if (compResultType == RowComparisonResultType.PASSED)
-			compResultType = RowComparisonResultType.FAILED;
-		addRowComparisonResult(rowResult, result, compResultType);
-	}
-	
-	protected void addRowComparisonResult(Result rowResult, ContainerResult result, RowComparisonResultType compResultType)
-	{
-		String nestedName = getResultTypeName(compResultType);
-		ContainerResult nestedResult = result.getContainer(nestedName);
-		if (nestedResult == null)
-		{
-			nestedResult = createComparisonNestedResult(nestedName);
-			result.addWrappedContainer(nestedName, nestedResult, true);
-		}
-		nestedResult.addDetail(rowResult);
-	}
-	
-	protected Result createBlockResult(RowComparisonData<String, String> compData, String headerMessage)
-	{
-		ContainerResult blockResult = ContainerResult.createBlockResult(headerMessage);
-		blockResult.addDetail(compData.toDetailedResult());
-		blockResult.setUseFailReasonColor(true);
-		return blockResult;
-	}
-	
-	protected String getRowContainerName(RowComparisonData<String, String> compData, int rowsCount)
-	{
-		return "Row #" + rowsCount;
-	}
-	
-	protected void afterRow(int rowNumber, int passedRowsCount)
-	{
-		if (rowNumber > 0 && (rowNumber <= 10000 && rowNumber % 1000 == 0 || rowNumber <= 100000 && rowNumber % 10000 == 0
-				|| rowNumber <= 1000000 && rowNumber % 100000 == 0 || rowNumber % 1000000 == 0))
-			getLogger().debug("Compared {} rows, {} passed", rowNumber, passedRowsCount);
-		
-		// Check if action has been interrupted (i.e. scheduler stopped) and should be finished
-		if (rowNumber % 1000 == 0 && Thread.currentThread().isInterrupted())
-			throw ResultException.failed("Action execution has been interrupted.");
-	}
-	
 	
 	protected Map<String, BigDecimal> getNumericColumns(Set<String> columnsWithScales)
 	{
@@ -303,9 +146,16 @@ public class CompareDataSets extends Action
 		return numericColumns;
 	}
 	
-	protected TableDataReaderSettings createTableDataReaderSettings(boolean forExpectedData) throws ParametersException
+	protected IValueTransformer createBigDecimalValueTransformer()
 	{
-		return new TableDataReaderSettings(inputParams, forExpectedData);
+		return new BigDecimalValueTransformer();
+	}
+	
+	
+	protected TableDataReaderSettings createTableDataReaderSettings(Map<String, String> actionParameters,
+			boolean forExpectedData) throws ParametersException
+	{
+		return new TableDataReaderSettings(actionParameters, forExpectedData);
 	}
 	
 	protected TableDataReaderFactory<String, String> createTableDataReaderFactory()
@@ -313,51 +163,45 @@ public class CompareDataSets extends Action
 		return new StringTableDataReaderFactory();
 	}
 	
-	protected DefaultStringTableRowMatcher createTableRowMatcher(Set<String> keyColumns)
-	{
-		return MapUtils.isEmpty(numericColumns) ? new DefaultStringTableRowMatcher(keyColumns)
-				:  new NumericStringTableRowMatcher(keyColumns, numericColumns, bdValueTransformer);
-	}
-	
-	protected DefaultStringTableRowsComparator createTableRowsComparator()
-	{
-		return MapUtils.isEmpty(numericColumns) ? new DefaultStringTableRowsComparator()
-				: new NumericStringTableRowsComparator(numericColumns, bdValueTransformer);
-	}
-	
-	protected IValueTransformer createBigDecimalValueTransformer()
-	{
-		return new BigDecimalValueTransformer();
-	}
-	
 	protected Connection getDbConnection(boolean forExpectedData)
 	{
 		// FIXME: here we need to obtain DB connection by using Core capabilities, once this is implemented
-		throw ResultException.failed("Could not initialize database connection. Please contact developers.");
+		throw new UnsupportedOperationException("Could not initialize database connection. Please contact developers.");
 	}
 	
-	protected KeyColumnsRowsCollector createKeyColumnsRowsCollector(Set<String> keyColumns) throws IOException
+	
+	protected StringTableRowMatcher createTableRowMatcher()
 	{
-		return new KeyColumnsRowsCollector(keyColumns);
+		return MapUtils.isEmpty(numericColumns) ? new StringTableRowMatcher(keyColumns)
+				:  new NumericStringTableRowMatcher(keyColumns, numericColumns, bdValueTransformer);
 	}
 	
-	
-	protected String getResultTypeName(RowComparisonResultType result)
+	protected StringTableRowsComparator createTableRowsComparator()
 	{
-		switch (result)
-		{
-			case PASSED:
-				return CONTAINER_PASSED;
-			case FAILED:
-				return CONTAINER_FAILED;
-			case NOT_FOUND:
-				return CONTAINER_NOT_FOUND;
-			case EXTRA:
-				return CONTAINER_EXTRA;
-			default:
-				return null;
-		}
+		ComparisonUtils comparisonUtils = ClearThCore.comparisonUtils();
+		return MapUtils.isEmpty(numericColumns) ? new StringTableRowsComparator(comparisonUtils)
+				: new NumericStringTableRowsComparator(comparisonUtils, numericColumns, bdValueTransformer);
 	}
+	
+	
+	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
+			BasicTableDataReader<String, String, ?> actualReader) throws IOException
+	{
+		StringTableRowsComparator rowsComparator = createTableRowsComparator();
+		return keyColumns.isEmpty() ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
+				: new IndexedStringTableDataComparator(expectedReader, actualReader, createTableRowMatcher(), rowsComparator);
+	}
+	
+	protected ComparisonProcessor<String, String, String> createComparisonProcessor() throws IOException
+	{
+		return new ComparisonProcessor<>();
+	}
+	
+	protected KeyColumnsRowsCollector<String, String, String> createKeyColumnsRowsCollector() throws IOException
+	{
+		return new StringKeyColumnsRowsCollector(keyColumns);
+	}
+	
 	
 	@Override
 	public void dispose()
@@ -367,6 +211,5 @@ public class CompareDataSets extends Action
 		keyColumns = null;
 		numericColumns = null;
 		bdValueTransformer = null;
-		keyColumnsRowsCollector = null;
 	}
 }

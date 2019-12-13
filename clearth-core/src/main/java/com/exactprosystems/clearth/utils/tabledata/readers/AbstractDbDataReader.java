@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -133,7 +133,7 @@ public abstract class AbstractDbDataReader<C extends BasicTableData<String, Stri
 		}
 		catch (SQLException e)
 		{
-			throw new IOException("Error occurred while executing SQL query", e);
+			throw new IOException("Error occurred while executing SQL query: " + e.getMessage(), e);
 		}
 	}
 	

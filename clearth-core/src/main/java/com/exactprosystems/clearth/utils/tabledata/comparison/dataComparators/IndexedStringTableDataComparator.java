@@ -18,11 +18,12 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators;
 
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.IndexedStringTableData;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
-import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.DefaultStringTableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.StringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
@@ -41,10 +42,10 @@ public class IndexedStringTableDataComparator extends IndexedTableDataComparator
 	}
 	
 	public IndexedStringTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher)
-			throws IOException
+			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher,
+			ComparisonUtils comparisonUtils) throws IOException
 	{
-		super(expectedReader, actualReader, rowMatcher, new DefaultStringTableRowsComparator());
+		super(expectedReader, actualReader, rowMatcher, new StringTableRowsComparator(comparisonUtils));
 	}
 	
 	

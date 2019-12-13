@@ -25,11 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class DefaultStringTableRowMatcher implements TableRowMatcher<String, String, String>
+public class StringTableRowMatcher implements TableRowMatcher<String, String, String>
 {
 	protected final Set<String> keyColumns;
 	
-	public DefaultStringTableRowMatcher(Set<String> keyColumns)
+	public StringTableRowMatcher(Set<String> keyColumns)
 	{
 		this.keyColumns = new HashSet<>(keyColumns);
 	}

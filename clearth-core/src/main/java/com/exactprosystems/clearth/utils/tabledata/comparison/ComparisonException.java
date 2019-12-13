@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,18 +16,26 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
+package com.exactprosystems.clearth.utils.tabledata.comparison;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.ComparisonUtils;
-
-public class DefaultStringTableRowsComparator extends TableRowsComparator<String, String>
+public class ComparisonException extends Exception
 {
-	protected ComparisonUtils comparisonUtils = ClearThCore.comparisonUtils();
+	private static final long serialVersionUID = 6943493622785056997L;
 	
-	@Override
-	public boolean compareValues(String value1, String value2, String column) throws Exception
+	public ComparisonException() { }
+
+	public ComparisonException(String message)
 	{
-		return comparisonUtils.compareValues(value1, value2);
+		super(message);
+	}
+
+	public ComparisonException(Throwable cause)
+	{
+		super(cause);
+	}
+
+	public ComparisonException(String message, Throwable cause)
+	{
+		super(message, cause);
 	}
 }

@@ -27,14 +27,14 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Storage of table rows comparison details.
+ * Storage of comparison details for two processed table rows.
  * @param <A> class of columns objects.
  * @param <B> class of expected and actual values.
  */
 public class RowComparisonData<A, B>
 {
-	private List<RowComparisonDetail<A, B>> compDetails;
-	private List<String> errors;
+	private final List<ColumnComparisonDetail<A, B>> compDetails;
+	private final List<String> errors;
 	private RowComparisonResultType resultType = RowComparisonResultType.PASSED;
 	
 	public RowComparisonData()
@@ -43,13 +43,13 @@ public class RowComparisonData<A, B>
 		errors = new ArrayList<>();
 	}
 	
-	public void addComparisonDetail(RowComparisonDetail<A, B> compDetail)
+	public void addComparisonDetail(ColumnComparisonDetail<A, B> compDetail)
 	{
 		compDetails.add(compDetail);
 		if (compDetail.isIdentical() || resultType == RowComparisonResultType.FAILED)
 			return;
 		
-		// Only non-identical detail could influence the result type
+		// Only non-identical details could affect the final result type
 		boolean expectedValueIsNull = compDetail.getExpectedValue() == null, actualValueIsNull = compDetail.getActualValue() == null;
 		if ((!expectedValueIsNull && !actualValueIsNull)
 				|| (expectedValueIsNull && resultType == RowComparisonResultType.NOT_FOUND)
@@ -61,12 +61,12 @@ public class RowComparisonData<A, B>
 	
 	public void addComparisonDetail(A column, B expectedValue, B actualValue, boolean identical)
 	{
-		addComparisonDetail(new RowComparisonDetail<>(column, expectedValue, actualValue, identical, false));
+		addComparisonDetail(new ColumnComparisonDetail<>(column, expectedValue, actualValue, identical, false));
 	}
 	
 	public void addInfoComparisonDetail(A column, B expectedValue, B actualValue)
 	{
-		addComparisonDetail(new RowComparisonDetail<>(column, expectedValue, actualValue, true, true));
+		addComparisonDetail(new ColumnComparisonDetail<>(column, expectedValue, actualValue, true, true));
 	}
 	
 	public void addErrorMsg(String errorMsg)
@@ -77,10 +77,10 @@ public class RowComparisonData<A, B>
 	
 	public boolean isSuccess()
 	{
-		return compDetails.stream().allMatch(RowComparisonDetail::isIdentical);
+		return compDetails.stream().allMatch(ColumnComparisonDetail::isIdentical);
 	}
 	
-	public List<RowComparisonDetail<A, B>> getCompDetails()
+	public List<ColumnComparisonDetail<A, B>> getCompDetails()
 	{
 		return Collections.unmodifiableList(compDetails);
 	}
@@ -103,7 +103,7 @@ public class RowComparisonData<A, B>
 	public DetailedResult toDetailedResult()
 	{
 		DetailedResult result = new DetailedResult();
-		for (RowComparisonDetail<A, B> compDetail : compDetails)
+		for (ColumnComparisonDetail<A, B> compDetail : compDetails)
 		{
 			ResultDetail detail = new ResultDetail();
 			detail.setParam(compDetail.getColumn().toString());
