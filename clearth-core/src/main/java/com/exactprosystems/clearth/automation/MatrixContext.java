@@ -23,11 +23,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
+import org.apache.commons.collections4.map.UnmodifiableMap;
 
 public class MatrixContext
 {
-	private Map<String, Object> context;
-	private LinkedHashMap<String, SubActionData> subActionsData;
+	protected Map<String, Object> context;
+	protected LinkedHashMap<String, SubActionData> subActionsData;
 	
 	public MatrixContext()
 	{
@@ -63,6 +64,10 @@ public class MatrixContext
 	public void setSubActionData(String id, SubActionData subActionData)
 	{
 		subActionsData.put(id, subActionData);
+	}
+	
+	public Map<String, SubActionData> getSubActionsData() {
+		return UnmodifiableMap.unmodifiableMap(this.subActionsData);
 	}
 
 	public void clearContext()
