@@ -25,7 +25,7 @@ $ ./gradlew clean build publish
 
 Create a new project that will use ClearTH Core and its GUI module by executing the following command from the repository root:
 ```
-$ ./gradlew createProject -PnewProjectDir=../PROJECTNAME
+$ ./gradlew createProject -PnewProjectDir=../PROJECTDIR -PnewProjectName=PROJECTNAME
 ```
 
 The new project will be created in the directory adjacent to the repository root.
