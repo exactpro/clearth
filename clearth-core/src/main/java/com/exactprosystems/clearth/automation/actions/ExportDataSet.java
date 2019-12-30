@@ -43,6 +43,11 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+
+import static com.exactprosystems.clearth.ClearThCore.rootRelative;
+import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /*
 	When SOURCE_FORMAT_PARAM is:
@@ -55,6 +60,9 @@ import java.sql.SQLException;
 	CSV - then DESTINATION_PARAM contains CSV file path and DST_CON_NAME_PARAM is unnecessary;
 
 	bufferSize - optional parameter. It contains number of line written at time
+	
+	CreateTableQuery or CreateTableQueryFile can be used to create destination DB table if it doesn't exist.
+	If table doesn't exist and creation query isn't specified, ResultException will be thrown.
 */
 
 public abstract class ExportDataSet extends Action
@@ -65,6 +73,8 @@ public abstract class ExportDataSet extends Action
 			DESTINATION_FORMAT_PARAM = "DestinationFormat",
 			DESTINATION_PARAM = "Destination",
 			DST_CON_NAME_PARAM = "DstConnectionName",
+			CREATE_TABLE_QUERY_PARAM = "CreateTableQuery",
+			CREATE_TABLE_QUERY_FILE_PARAM = "CreateTableQueryFile",
 			BUFFER_SIZE_PARAM = "BufferSize";
 
 	public static final int BUF_SIZE_DEF_VALUE = 100;
@@ -74,6 +84,8 @@ public abstract class ExportDataSet extends Action
 	protected DstFormat dstFormat;
 	protected String source, destination;
 	protected String srcConnectionName, dstConnectionName;
+	protected String createTableQuery;
+	protected String createTableQueryFile;
 	protected int bufferSize;
 	protected Connection dstConnection, srcConnection;
 	protected BasicTableDataReader<String, String, StringTableData> dataReader;
@@ -81,7 +93,6 @@ public abstract class ExportDataSet extends Action
 
 	protected void initParameters()
 	{
-		getLogger().debug("Initializing special action parameters");
 		InputParamsHandler handler = new InputParamsHandler(inputParams);
 		srcFormat = handler.getReqiuredEnum(SOURCE_FORMAT_PARAM, SrcFormat.class);
 		source = handler.getRequiredString(SOURCE_PARAM);
@@ -92,7 +103,11 @@ public abstract class ExportDataSet extends Action
 		if (srcFormat == SrcFormat.QUERY || srcFormat == SrcFormat.QUERYFILE)
 			srcConnectionName = handler.getRequiredString(SRC_CON_NAME_PARAM);
 		if (dstFormat == DstFormat.DB)
+		{
 			dstConnectionName = handler.getRequiredString(DST_CON_NAME_PARAM);
+			createTableQuery = handler.getString(CREATE_TABLE_QUERY_PARAM);
+			createTableQueryFile = handler.getString(CREATE_TABLE_QUERY_FILE_PARAM);
+		}
 		handler.check();
 	}
 
@@ -114,9 +129,7 @@ public abstract class ExportDataSet extends Action
 			}
 			catch (IOException e)
 			{
-				String errMessage = "Error while getting data from reader";
-				logger.error(errMessage, e);
-				throw new ResultException(errMessage, e);
+				throw new ResultException("Error while getting data from reader", e);
 			}
 
 			dataWriter = getDataWriter(header);
@@ -128,9 +141,7 @@ public abstract class ExportDataSet extends Action
 			}
 			catch (IOException | InterruptedException e)
 			{
-				String errMsg = "Error while exporting data";
-				logger.error(errMsg, e);
-				throw new ResultException(errMsg, e);
+				throw new ResultException("Error while exporting data", e);
 			}
 		}
 		finally
@@ -171,16 +182,14 @@ public abstract class ExportDataSet extends Action
 
 	protected TableDataWriter<String, String> createCsvDataWriter(TableHeader<String> header)
 	{
-		File dstFile = new File(ClearThCore.rootRelative(destination));
+		File dstFile = new File(rootRelative(destination));
 		try
 		{
 			return new CsvDataWriter(header, dstFile, true, false);
 		}
 		catch (IOException e)
 		{
-			String errMessage = "Error while CsvDataWriter from file '"+destination+"' creation";
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException(format("Error while creating writer for CSV file '%s'", destination), e);
 		}
 	}
 
@@ -192,22 +201,71 @@ public abstract class ExportDataSet extends Action
 		}
 		catch (SQLException e)
 		{
-			String errMessage = "Error on getting connection with name '" + dstConnectionName + "'";
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException(format("Error while getting connection with name '%s'", dstConnectionName), e);
 		}
 
+		checkDestinationTable(dstConnection, destination);
+		
 		try
 		{
 			return new DbDataWriter(header, dstConnection, destination);
 		}
 		catch (SQLException e)
 		{
-			String errMessage = String.format("Error on DbDataWriter instance creation error. Connection: '%s'; Table name: '%s'",
-											  dstConnectionName, destination);
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException(format("Error while creating writer for DB data. Connection: '%s'; Table name: '%s'",
+											  dstConnectionName, destination), e);
 		}
+	}
+	
+	protected void checkDestinationTable(Connection connection, String tableName)
+	{
+		if (tableExists(connection, tableName))
+			return;
+		
+		String createTableQuery = getCreateTableQuery();
+		
+		try (Statement statement = connection.createStatement())
+		{
+			statement.executeUpdate(createTableQuery);
+		}
+		catch (SQLException e)
+		{
+			throw ResultException.failed("Unable to create destination table.", e);
+		}
+	}
+	
+	protected boolean tableExists(Connection connection, String tableName)
+	{
+		try
+		{
+			return SQLUtils.tableExists(connection, tableName);
+		}
+		catch (SQLException e)
+		{
+			throw ResultException.failed(format("Error while checking if table '%s' exists.", tableName), e);
+		}
+	}
+	
+	protected String getCreateTableQuery()
+	{
+		if (isNotEmpty(createTableQuery))
+			return createTableQuery;
+		else if (isNotEmpty(createTableQueryFile))
+		{
+			try
+			{
+				return SQLUtils.loadQuery(rootRelative(createTableQueryFile));
+			}
+			catch (IOException e)
+			{
+				throw ResultException.failed(format("Error while loading query for table creation from file '%s'.",
+						createTableQueryFile), e);
+			}
+		}
+		else 
+			throw ResultException.failed(format("Destination table doesn't exist. " +
+					"Please specify '%s' or '%s' parameter to create table.",
+					CREATE_TABLE_QUERY_PARAM, CREATE_TABLE_QUERY_FILE_PARAM));
 	}
 
 	protected BasicTableDataReader<String, String, StringTableData> getDataReader()
@@ -226,16 +284,14 @@ public abstract class ExportDataSet extends Action
 
 	protected CsvDataReader createCsvDataReader()
 	{
-		File srcFile = new File(ClearThCore.rootRelative(source));
+		File srcFile = new File(rootRelative(source));
 		try
 		{
 			return new CsvDataReader(srcFile);
 		}
 		catch (FileNotFoundException e)
 		{
-			String errMessage = "Cannot read from file '"+source+"': file not found";
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException(format("Cannot read from file '%s': file not found", source), e);
 		}
 	}
 
@@ -258,21 +314,17 @@ public abstract class ExportDataSet extends Action
 		}
 		catch (SQLException e)
 		{
-			String errMessage = "Error while getting connection with name '" + srcConnectionName + "'";
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException(format("Error while getting connection with name '%s'", srcConnectionName), e);
 		}
 
 		String query;
 		try
 		{
-			query = srcFormat == SrcFormat.QUERY ? source : SQLUtils.loadQuery(ClearThCore.rootRelative(source));
+			query = srcFormat == SrcFormat.QUERY ? source : SQLUtils.loadQuery(rootRelative(source));
 		}
 		catch (IOException e)
 		{
-			String errMessage = "Error while loading query from file '" + source + "'";
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException(format("Error while loading query from file '%s'", source), e);
 		}
 
 		ParametrizedQuery paramQuery;
@@ -282,9 +334,7 @@ public abstract class ExportDataSet extends Action
 		}
 		catch (SQLException e)
 		{
-			String errMessage = "Error while query parsing'";
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException("Error while parsing query", e);
 		}
 
 
@@ -295,12 +345,27 @@ public abstract class ExportDataSet extends Action
 		}
 		catch (SQLException e)
 		{
-			String errMessage = "Error while prepared statement creating";
-			logger.error(errMessage, e);
-			throw new ResultException(errMessage, e);
+			throw new ResultException("Error while creating prepared statement", e);
 		}
 
 		return new DbDataReader(statement);
+	}
+
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		globalContext = null;
+		source = null;
+		destination = null;
+		srcConnectionName = null;
+		dstConnectionName = null;
+		createTableQuery = null;
+		createTableQueryFile = null;
+		dstConnection = null;
+		srcConnection = null;
+		dataReader = null;
+		dataWriter = null;
 	}
 
 	protected abstract Connection getConnection(String connectionName) throws SQLException;

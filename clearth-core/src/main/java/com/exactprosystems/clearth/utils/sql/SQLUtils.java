@@ -40,6 +40,8 @@ import java.net.ConnectException;
 import java.sql.*;
 import java.util.*;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 /**
  * Created by alexey.karpukhin on 7/27/15.
  */
@@ -56,6 +58,7 @@ public class SQLUtils
 			CUSTOM_BEGINNER};
 	public static final String QUERY_STARTER = "----SQL START----",
 								 QUERY_ENDER = "-----SQL END-----";
+	private static final String TABLE_NAME = "TABLE_NAME";
 
 	/**
 	 * Parses SQL template file to an instance of ParametrizedQuery which provides an ability to execute query with specified parameters
@@ -336,6 +339,24 @@ public class SQLUtils
 	public static String getDbValue(ResultSet rs, String rsColumnName) throws SQLException
 	{
 		return getDbValue(rs, rsColumnName, OBJECT_TRANSFORMER);
+	}
+	
+	public static boolean tableExists(Connection connection, String tableName) throws SQLException
+	{
+		if (isEmpty(tableName))
+			return false;
+		
+		DatabaseMetaData metaData = connection.getMetaData();
+		try (ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"}))
+		{
+			while (rs.next())
+			{
+				String nextTableName = rs.getString(TABLE_NAME);
+				if (tableName.equalsIgnoreCase(nextTableName))
+					return true;
+			}
+		}
+		return false;
 	}
 
 	/**
