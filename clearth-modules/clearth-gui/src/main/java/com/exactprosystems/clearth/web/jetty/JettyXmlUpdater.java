@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.web.beans.ClearThCoreApplicationBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -44,7 +45,7 @@ public class JettyXmlUpdater
 {
     private static final Logger log = LoggerFactory.getLogger(JettyXmlUpdater.class);
     
-    private static final String JETTY_XML_FRAGMENT =
+    protected static final String JETTY_XML_FRAGMENT =
             "<Item>\n" +
                     "    <New class=\"org.eclipse.jetty.server.handler.ContextHandler\">\n" +
                     "        <Set name=\"contextPath\">%s</Set>\n" +
@@ -126,7 +127,7 @@ public class JettyXmlUpdater
             log.warn("File jetty.xml wasn't found by path '{}'.", jettyXml);
     }
 
-    private static void insertXmlFragment(DocumentBuilder builder, Document parentDocument, Element parent, String contextPath)
+    protected static void insertXmlFragment(DocumentBuilder builder, Document parentDocument, Element parent, String contextPath)
             throws IOException, SAXException
     {
         Node fragment = builder.parse(new InputSource(new StringReader(String.format(JETTY_XML_FRAGMENT, contextPath)))).getDocumentElement();
@@ -134,16 +135,19 @@ public class JettyXmlUpdater
         parent.insertBefore(fragment, parent.getFirstChild());
     }
 
-    private static void saveJettyXml(Document jettyXmlDocument, File oldJettyXml) throws TransformerException
+    protected static void saveJettyXml(Document jettyXmlDocument, File oldJettyXml) throws TransformerException
     {
         oldJettyXml.renameTo(new File("jetty.xml.old"));
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-        transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, jettyXmlDocument.getDoctype().getPublicId());
-        transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, jettyXmlDocument.getDoctype().getSystemId());
-
+        DocumentType doctype = jettyXmlDocument.getDoctype();
+        if (doctype != null)
+        {
+            transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
+            transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
+        }
         transformer.transform(new DOMSource(jettyXmlDocument), new StreamResult(oldJettyXml));
     }
 
