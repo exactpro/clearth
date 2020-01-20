@@ -78,7 +78,6 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 	protected TypedTableData createTableData(Set<TypedTableHeaderItem> header,
 	                                         RowsListFactory<TypedTableHeaderItem, Object> rowsListFactory)
 	{
-
 		return new TypedTableData(header);
 	}
 

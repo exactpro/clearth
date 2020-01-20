@@ -53,7 +53,7 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 	{
 		try(TypedDbDataWriter writer = new TypedDbDataWriter(table.getHeader(), con, tableName))
 		{
-			List<TableRow<TypedTableHeaderItem, Object>> rows = new ArrayList<>(table.getTableRows());
+			List<TableRow<TypedTableHeaderItem, Object>> rows = new ArrayList<>(table.getRows());
 			writer.write(rows);
 		}
 	}

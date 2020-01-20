@@ -51,7 +51,7 @@ public class TypedTableRow extends TableRow<TypedTableHeaderItem, Object>
 		return (TypedTableHeader) super.getHeader();
 	}
 
-	public String getString(TypedTableHeaderItem columnName)
+	public String getString(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue == null)
@@ -79,172 +79,140 @@ public class TypedTableRow extends TableRow<TypedTableHeaderItem, Object>
 
 	public void setString(String columnName, String value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public Integer getInteger(TypedTableHeaderItem columnName)
+	public Integer getInteger(String columnName)
 	{
 		Object rowValue = getValue(columnName);
-
 		if (rowValue instanceof Integer)
-		{
 			return (Integer) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not Integer");
 	}
 
 	public void setInteger(String columnName, Integer value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public Boolean getBoolean(TypedTableHeaderItem columnName)
+	public Boolean getBoolean(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof Boolean)
-		{
 			return (Boolean) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not Boolean");
 	}
 
 	public void setBoolean(String columnName, Boolean value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public Byte getByte(TypedTableHeaderItem columnName)
+	public Byte getByte(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof Byte)
-		{
 			return (Byte) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not Byte");
 	}
 
 	public void setByte(String columnName, Byte value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public Short getShort(TypedTableHeaderItem columnName)
+	public Short getShort(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof Short)
-		{
 			return (Short) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not Short");
 	}
 
 	public void setShort(String columnName, Short value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public Long getLong(TypedTableHeaderItem columnName)
+	public Long getLong(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof Long)
-		{
 			return (Long) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not Long");
 	}
 
 	public void setLong(String columnName, Long value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public Float getFloat(TypedTableHeaderItem columnName)
+	public Float getFloat(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof Float)
-		{
 			return (Float) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not Float");
 	}
 
 	public void setFloat(String columnName, Float value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public Double getDouble(TypedTableHeaderItem columnName)
+	public Double getDouble(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof Double)
-		{
 			return (Double) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not Double");
 	}
 
 	public void setDouble(String columnName, Double value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public BigDecimal getBigDecimal(TypedTableHeaderItem columnName)
+	public BigDecimal getBigDecimal(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof BigDecimal)
-		{
 			return (BigDecimal) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not BigDecimal");
 	}
 
 	public void setBigDecimal(String columnName, BigDecimal value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public LocalDate getLocalDate(TypedTableHeaderItem columnName)
+	public LocalDate getLocalDate(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof LocalDate)
-		{
 			return (LocalDate) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not LocalDate");
 	}
 
 	public void setLocalDate(String columnName, Date value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public LocalTime getLocalTime(TypedTableHeaderItem columnName)
+	public LocalTime getLocalTime(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof LocalTime)
-		{
 			return (LocalTime) rowValue;
-		}
 		throw new IllegalArgumentException("Specified column value type is not LocalTime");
 	}
 
 	public void setLocalTime(String columnName, LocalTime value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, value);
+		setValue(columnName, value);
 	}
 
-	public LocalDateTime getDateTime(TypedTableHeaderItem columnName)
+	public LocalDateTime getDateTime(String columnName)
 	{
 		Object rowValue = getValue(columnName);
 		if (rowValue instanceof Timestamp)
@@ -257,16 +225,27 @@ public class TypedTableRow extends TableRow<TypedTableHeaderItem, Object>
 
 	public void setDateTime(String columnName, LocalDateTime value)
 	{
-		int index = getColumnIndex(columnName);
-		setValue(index, Timestamp.valueOf(value));
+		setValue(columnName, Timestamp.valueOf(value));
 	}
 
-	private int getColumnIndex(String columnName)
+	protected int getColumnIndex(String columnName)
 	{
 		int index = getHeader().getColumnIndex(columnName);
 		if (index == -1)
 			throw new IllegalArgumentException(String.format("Header doesn't contain specified column %s",
 					columnName));
 		return index;
+	}
+	
+	protected Object getValue(String columnName)
+	{
+		int index = getColumnIndex(columnName);
+		return getValue(index);
+	}
+	
+	protected void setValue(String columnName, Object value)
+	{
+		int index = getColumnIndex(columnName);
+		setValue(index, value);
 	}
 }

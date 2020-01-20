@@ -17,80 +17,39 @@
  ******************************************************************************/
 package com.exactprosystems.clearth.utils.tabledata.typing;
 
-import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
+import java.util.Set;
+
+import com.exactprosystems.clearth.utils.tabledata.TableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-public class TypedTableData extends BasicTableData<TypedTableHeaderItem,Object>
+public class TypedTableData extends TableData<TypedTableHeaderItem,Object>
 {
-	private final List<TypedTableRow> tableRows;
-	private final TypedTableHeader tableHeader;
-
 	public TypedTableData(Set<TypedTableHeaderItem> header)
 	{
 		super(header);
-		tableRows = new LinkedList<>();
-		tableHeader = new TypedTableHeader(header);
 	}
-
-	@Override
-	protected TableRow<TypedTableHeaderItem, Object> createRow(TableHeader<TypedTableHeaderItem> header)
+	
+	public TypedTableData(TypedTableHeader header)
 	{
-		return new TypedTableRow(new TypedTableHeader(getHeaderColumns(header)));
-	}
-
-	@Override
-	public void add(TableRow row) throws IllegalArgumentException
-	{
-		tableRows.add((TypedTableRow) row);
-	}
-
-	@Override
-	public void clear()
-	{
-		tableRows.clear();
-	}
-
-	@Override
-	public boolean isEmpty()
-	{
-		return tableRows.isEmpty();
-	}
-
-	@Override
-	public int size()
-	{
-		return tableRows.size();
+		super(header);
 	}
 
 	public TableDataType getType(int i, String headerKey)
 	{
-		TypedTableHeader typedTableHeader = tableRows.get(i).getHeader();
+		TypedTableHeader typedTableHeader = (TypedTableHeader) getRow(i).getHeader();
 		return typedTableHeader.getColumnType(headerKey);
 	}
-
-	public TypedTableHeader getTableHeader()
+	
+	@Override
+	protected TableHeader<TypedTableHeaderItem> createHeader(Set<TypedTableHeaderItem> header)
 	{
-		return tableHeader;
+		return new TypedTableHeader(header);
 	}
-
-	public List<TypedTableRow> getTableRows()
+	
+	@Override
+	protected TableRow<TypedTableHeaderItem, Object> createRow(TableHeader<TypedTableHeaderItem> header)
 	{
-		return tableRows;
-	}
-
-	private Set<TypedTableHeaderItem> getHeaderColumns(TableHeader<TypedTableHeaderItem> header){
-
-		Set<TypedTableHeaderItem> itemSet = new LinkedHashSet<>();
-		for (TypedTableHeaderItem item : header)
-		{
-			itemSet.add(item);
-		}
-		return itemSet;
+		return new TypedTableRow((TypedTableHeader)header);
 	}
 }

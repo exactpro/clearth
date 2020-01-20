@@ -108,6 +108,16 @@ public class TableRow<A, B> implements Iterable<B>
 	}
 	
 	/**
+	 * Gives value of row cell obtained by column index
+	 * @param columnIndex to obtain value of
+	 * @return value of row cell
+	 */
+	public B getValue(int columnIndex)
+	{
+		return values.get(columnIndex);
+	}
+	
+	/**
 	 * Stores value in given row column
 	 * @param column to store value in
 	 * @param value to store
