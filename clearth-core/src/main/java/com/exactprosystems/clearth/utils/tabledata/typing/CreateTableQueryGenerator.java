@@ -16,12 +16,11 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.exportdata;
+package com.exactprosystems.clearth.utils.tabledata.typing;
 
-public enum SrcFormat
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
+
+public interface CreateTableQueryGenerator
 {
-	QUERY,
-	QUERYFILE,
-	CSV,
-	CUSTOM
+	String generateQuery(TableHeader<TypedTableHeaderItem> header, String tableName);
 }

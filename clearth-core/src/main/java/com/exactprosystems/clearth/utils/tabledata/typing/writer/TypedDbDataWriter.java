@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,7 +44,7 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 
 	protected final PreparedStatement preparedStatement;
 
-	public TypedDbDataWriter(TableHeader header, Connection con, String tableName) throws SQLException
+	public TypedDbDataWriter(TableHeader<TypedTableHeaderItem> header, Connection con, String tableName) throws SQLException
 	{
 		super(header);
 		this.preparedStatement = createPreparedStatement(con, tableName);
@@ -59,7 +60,7 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 	}
 
 	@Override
-	protected int writeRow(TableRow row) throws IOException
+	protected int writeRow(TableRow<TypedTableHeaderItem, Object> row) throws IOException
 	{
 		try
 		{
@@ -78,7 +79,7 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 	{
 		try
 		{
-			for (TableRow r : rows)
+			for (TableRow<TypedTableHeaderItem, Object> r : rows)
 			{
 				TypedTableRow typedTableRow = (TypedTableRow) r;
 				setQueryParameters(typedTableRow, preparedStatement);
@@ -111,73 +112,42 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 		return con.prepareStatement(generateQuery(header, tableName), Statement.RETURN_GENERATED_KEYS);
 	}
 
-	protected void setQueryParameters(TableRow row, PreparedStatement ps) throws SQLException
+	protected void setQueryParameters(TableRow<TypedTableHeaderItem, Object> row, PreparedStatement ps) throws SQLException
 	{
 		int i = 0;
 		for (Object value : row)
 		{
 			i++;
 			if (value instanceof String)
-			{
 				ps.setString(i, (String) value);
-				continue;
-			}
-			if (value instanceof Integer)
-			{
+			else if (value instanceof Integer)
 				ps.setInt(i, (Integer) value);
-				continue;
-			}
-			if (value instanceof Boolean)
-			{
+			else if (value instanceof Boolean)
 				ps.setBoolean(i, (Boolean) value);
-				continue;
-			}
-			if (value instanceof Byte)
-			{
+			else if (value instanceof Byte)
 				ps.setByte(i, (Byte) value);
-				continue;
-			}
-			if (value instanceof Short)
-			{
+			else if (value instanceof Short)
 				ps.setShort(i, (Short) value);
-				continue;
-			}
-			if (value instanceof Long)
-			{
+			else if (value instanceof Long)
 				ps.setLong(i, (Long) value);
-				continue;
-			}
-			if (value instanceof Float)
-			{
+			else if (value instanceof Float)
 				ps.setFloat(i, (Float) value);
-				continue;
-			}
-			if (value instanceof Double)
-			{
+			else if (value instanceof Double)
 				ps.setDouble(i, (Double) value);
-				continue;
-			}
-			if (value instanceof BigDecimal)
-			{
+			else if (value instanceof BigDecimal)
 				ps.setBigDecimal(i, (BigDecimal) value);
-				continue;
-			}
-			if (value instanceof Date)
-			{
+			else if (value instanceof Date)
 				ps.setDate(i, (Date) value);
-				continue;
-			}
-			if (value instanceof Time)
-			{
+			else if (value instanceof Time)
 				ps.setTime(i, (Time) value);
-				continue;
-			}
-			if (value instanceof DateTime)
-			{
+			else if (value instanceof DateTime)
 				ps.setTimestamp(i, new Timestamp(((DateTime) value).getValue()));
-				continue;
-			}
-			ps.setObject(i, value);
+			else if (value instanceof LocalDateTime)
+				ps.setTimestamp(i, Timestamp.valueOf((LocalDateTime) value));
+			else if (value instanceof Timestamp)
+				ps.setTimestamp(i, (Timestamp) value);
+			else
+				ps.setObject(i, value);
 		}
 	}
 
@@ -196,7 +166,7 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 		return -1;
 	}
 
-	protected String generateQuery(TableHeader header, String tableName)
+	protected String generateQuery(TableHeader<TypedTableHeaderItem> header, String tableName)
 	{
 		TypedTableHeader typedTableHeader = (TypedTableHeader) header;
 		StringBuilder sb = new StringBuilder();

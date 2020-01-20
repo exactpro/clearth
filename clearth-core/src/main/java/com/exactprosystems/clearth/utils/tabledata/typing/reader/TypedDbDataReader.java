@@ -17,8 +17,11 @@
  ******************************************************************************/
 package com.exactprosystems.clearth.utils.tabledata.typing.reader;
 
+import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
-import com.exactprosystems.clearth.utils.tabledata.*;
+import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbRowFilter;
 import com.exactprosystems.clearth.utils.tabledata.typing.*;
 import org.slf4j.Logger;
@@ -84,14 +87,8 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 	@Override
 	public void close() throws IOException
 	{
-		try
-		{
-			statement.close();
-		}
-		catch (SQLException e)
-		{
-			throw new IOException(e);
-		}
+		Utils.closeResource(resultSet);
+		Utils.closeResource(statement);
 	}
 
 	@Override
@@ -120,7 +117,7 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 	}
 
 	@Override
-	protected void fillRow(TableRow row) throws IOException
+	protected void fillRow(TableRow<TypedTableHeaderItem, Object> row) throws IOException
 	{
 		TypedTableRow typedTableRow = (TypedTableRow) row;
 		header = (TypedTableHeader) row.getHeader();
@@ -130,43 +127,56 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 			{
 				TableDataType type = head.getType();
 				String headerName = head.getName();
+				Object rsValue = getValueFromResultSet(head.getName(), resultSet);
 				switch (type)
 				{
 					case INTEGER:
-						typedTableRow.setInteger(headerName, (Integer) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setInteger(headerName, (Integer) rsValue);
 						break;
 					case BOOLEAN:
-						typedTableRow.setBoolean(headerName, (Boolean) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setBoolean(headerName, (Boolean) rsValue);
 						break;
 					case FLOAT:
-					case LOCALDATETIME:
-						typedTableRow.setFloat(headerName, (Float) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setFloat(headerName, (Float) rsValue);
 						break;
 					case DOUBLE:
-						typedTableRow.setDouble(headerName, (Double) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setDouble(headerName, (Double) rsValue);
 						break;
 					case BYTE:
-						typedTableRow.setByte(headerName, (Byte) getValueFromResultSet(head.getName(), resultSet));
+						Byte byteValue = null;
+						if (rsValue instanceof Integer)
+							byteValue = ((Integer) rsValue).byteValue();
+						else if (rsValue instanceof Byte)
+							byteValue = (Byte) rsValue;
+						typedTableRow.setByte(headerName, byteValue);
 						break;
 					case SHORT:
-						typedTableRow.setShort(headerName, (Short) getValueFromResultSet(head.getName(), resultSet));
+						Short shortValue = null;
+						if (rsValue instanceof Integer)
+							shortValue = ((Integer) rsValue).shortValue();
+						else if (rsValue instanceof Short)
+							shortValue = (Short) rsValue;
+						typedTableRow.setShort(headerName, shortValue);
 						break;
 					case LONG:
-						typedTableRow.setLong(headerName, (Long) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setLong(headerName, (Long) rsValue);
 						break;
 					case LOCALDATE:
-						typedTableRow.setLocalDate(headerName, (Date) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setLocalDate(headerName, (Date) rsValue);
 						break;
 					case LOCALTIME:
-						typedTableRow.setLocalTime(headerName, (LocalTime) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setLocalTime(headerName, (LocalTime) rsValue);
 						break;
 					case BIGDECIMAL:
-						typedTableRow.setBigDecimal(headerName,
-								(BigDecimal) getValueFromResultSet(head.getName(), resultSet));
+						typedTableRow.setBigDecimal(headerName, (BigDecimal) rsValue);
 						break;
+					case STRING:
+						typedTableRow.setString(headerName, (String) rsValue);
+						break;
+					case LOCALDATETIME:
 					default:
-						typedTableRow.setString(headerName, (String) getValueFromResultSet(head.getName(), resultSet));
-						break;
+						if (rsValue != null)
+							typedTableRow.setString(headerName, rsValue.toString());
 				}
 			}
 			catch (SQLException e)
@@ -189,31 +199,31 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 			case INTEGER:
 				return TableDataType.INTEGER;
 			case CHAR:
-			case (VARCHAR):
-			case (LONGVARCHAR):
-			case (NCHAR):
-			case (NVARCHAR):
+			case VARCHAR:
+			case LONGVARCHAR:
+			case NCHAR:
+			case NVARCHAR:
 				return TableDataType.STRING;
-			case (BOOLEAN):
+			case BOOLEAN:
 				return TableDataType.BOOLEAN;
-			case (REAL):
+			case REAL:
 				return TableDataType.FLOAT;
 			case FLOAT:
 			case DOUBLE:
 				return TableDataType.DOUBLE;
-			case (TINYINT):
+			case TINYINT:
 				return TableDataType.BYTE;
-			case (SMALLINT):
+			case SMALLINT:
 				return TableDataType.SHORT;
-			case (BIGINT):
+			case BIGINT:
 				return TableDataType.LONG;
-			case (DATE):
+			case DATE:
 				return TableDataType.LOCALDATE;
-			case (TIME):
+			case TIME:
 				return TableDataType.LOCALTIME;
-			case (TIMESTAMP):
+			case TIMESTAMP:
 				return TableDataType.LOCALDATETIME;
-			case (NUMERIC):
+			case NUMERIC:
 				return TableDataType.BIGDECIMAL;
 		}
 		return TableDataType.OBJECT;

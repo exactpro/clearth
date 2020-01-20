@@ -21,5 +21,6 @@ package com.exactprosystems.clearth.automation.actions.exportdata;
 public enum DstFormat
 {
 	DB,
-	CSV
+	CSV,
+	CUSTOM
 }

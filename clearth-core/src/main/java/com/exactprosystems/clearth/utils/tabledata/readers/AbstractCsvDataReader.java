@@ -18,20 +18,16 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.csvreader.CsvReader;
+import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
+import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
-import com.csvreader.CsvReader;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.TableRow;
-
-public abstract class AbstractCsvDataReader<C extends BasicTableData<String, String>> extends BasicTableDataReader<String, String, C>
+public abstract class AbstractCsvDataReader<A, B, C extends BasicTableData<A, B>> extends BasicTableDataReader<A, B, C>
 {
 	protected final CsvReader reader;
 	protected CsvRowFilter csvRowFilter;
@@ -64,26 +60,11 @@ public abstract class AbstractCsvDataReader<C extends BasicTableData<String, Str
 	}
 	
 	@Override
-	protected Set<String> readHeader() throws IOException
-	{
-		if (!reader.readHeaders())
-			throw new IOException("Could not read CSV header");
-		String[] header = reader.getHeaders();
-		return new LinkedHashSet<String>(Arrays.asList(header));
-	}
-	
-	@Override
 	public boolean hasMoreData() throws IOException
 	{
 		return reader.readRecord();
 	}
 	
-	@Override
-	protected void fillRow(TableRow<String, String> row) throws IOException
-	{
-		for (String h : row.getHeader())
-			row.setValue(h, reader.get(h));
-	}
 	
 	@Override
 	public boolean filter() throws IOException

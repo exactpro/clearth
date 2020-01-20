@@ -16,12 +16,19 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.exportdata;
+package com.exactprosystems.clearth.utils.tabledata.typing;
 
-public enum SrcFormat
+public interface SqlSyntax
 {
-	QUERY,
-	QUERYFILE,
-	CSV,
-	CUSTOM
+	String getDbType(TableDataType tdType);
+
+	default boolean isValidFieldName(String fieldName)
+	{
+		return true;
+	}
+
+	default String normalizeFieldName(String fieldName)
+	{
+		return fieldName;
+	}
 }

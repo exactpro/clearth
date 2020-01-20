@@ -92,9 +92,29 @@ public class CollectionUtils
 			return Collections.singletonMap(params[0], params[1]);
 		else 
 		{
-			Map<T, T> map = new LinkedHashMap<T, T>(params.length / 2);
+			Map<T, T> map = new LinkedHashMap<>(params.length / 2);
 			for (int i = 1; i < params.length; i += 2)
+			{
 				map.put(params[i - 1], params[i]);
+			}
+			return map;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <K, V> Map<K, V> mapOf(Object... params)
+	{
+		if (params.length == 0)
+			return Collections.emptyMap();
+		else if (params.length == 2)
+			return Collections.singletonMap((K)params[0], (V)params[1]);
+		else
+		{
+			Map<K, V> map = new LinkedHashMap<>(params.length / 2);
+			for (int i = 1; i < params.length; i += 2)
+			{
+				map.put((K)params[i - 1], (V)params[i]);
+			}
 			return map;
 		}
 	}

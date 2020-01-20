@@ -938,7 +938,29 @@ public class ParametersHandler
 	{
 		return getEnum(name, enumClass, null, false);
 	}
-	
+
+	/**
+	 * <p>Gets the enum for the class, returning {@code defaultValue} if not found.</p>
+	 *
+	 * <p>This method differs from {@link ParametersHandler#getEnum} with specified defaultValue
+	 * in that it does not throw an exception for an invalid enum name.</p>
+	 *
+	 * @param <E> the type of the enumeration
+	 * @param enumClass  the class of the enum to query, not null
+	 * @param name   the parameter which contains enum name
+	 * @param defaultValue   the enum value which returns if enum name is not found 
+	 * @return the enum, defaultValue if not found
+	 */
+	public <E extends Enum<E>> E getEnumOrDefault(String name, Class<E> enumClass, E defaultValue)
+	{
+		String enumStringValue = params.get(name);
+		if (StringUtils.isEmpty(enumStringValue))
+			return defaultValue;
+		
+		E foundedValue = valueOfIgnoreCase(enumClass, enumStringValue);
+		return foundedValue == null ? defaultValue : foundedValue;
+	}
+
 	public <E extends Enum<E>> E getEnum(String name, Class<E> enumClass, E defaultValue) 
 	{
 		return getEnum(name, enumClass, defaultValue, false);

@@ -31,7 +31,7 @@ import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
  * Reader of indexed table-like data from CSV data source
  * @author vladimir.panarin
  */
-public class IndexedCsvDataReader<C> extends AbstractCsvDataReader<IndexedTableData<String, String, C>>
+public class IndexedCsvDataReader<C> extends AbstractStringCsvDataReader<IndexedTableData<String, String, C>>
 {
 	protected final TableRowMatcher<String, String, C> matcher;
 	
@@ -46,8 +46,7 @@ public class IndexedCsvDataReader<C> extends AbstractCsvDataReader<IndexedTableD
 		super(reader);
 		this.matcher = matcher;
 	}
-	
-	
+
 	@Override
 	protected IndexedTableData<String, String, C> createTableData(Set<String> header, 
 	                                                              RowsListFactory<String, String> rowsListFactory)

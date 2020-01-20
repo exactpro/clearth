@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class TypedTableHeader extends TableHeader<TypedTableHeaderItem>
 {
-	private final Map<String,TypedTableHeaderItem> typedColumns;
+	private final Map<String, TypedTableHeaderItem> typedColumns;
 
 	public TypedTableHeader(Set<TypedTableHeaderItem> typedColumns)
 	{
@@ -57,5 +57,21 @@ public class TypedTableHeader extends TableHeader<TypedTableHeaderItem>
 	public int getColumnIndex(String columnName)
 	{
 		return super.columnIndex(typedColumns.get(columnName));
+	}
+
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for (Map.Entry<String, TypedTableHeaderItem> item : typedColumns.entrySet())
+		{
+			if (first)
+				first = false;
+			else
+				sb.append(", ");
+			sb.append(item.getKey()).append('(').append(item.getValue().getType()).append(')');
+		}
+		return sb.toString();
 	}
 }

@@ -18,20 +18,20 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.StringTableData;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
-import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
-import com.exactprosystems.clearth.utils.tabledata.StringTableData;
-
 /**
  * Reader of table-like data from CSV data source
  * @author vladimir.panarin
  */
-public class CsvDataReader extends AbstractCsvDataReader<StringTableData>
+public class CsvDataReader extends AbstractStringCsvDataReader<StringTableData>
 {
 	public CsvDataReader(File f) throws FileNotFoundException
 	{

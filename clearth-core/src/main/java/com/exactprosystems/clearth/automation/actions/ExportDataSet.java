@@ -24,7 +24,6 @@ import com.exactprosystems.clearth.automation.MatrixContext;
 import com.exactprosystems.clearth.automation.StepContext;
 import com.exactprosystems.clearth.automation.actions.exportdata.DstFormat;
 import com.exactprosystems.clearth.automation.actions.exportdata.SrcFormat;
-import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
@@ -33,10 +32,11 @@ import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.*;
-import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
-import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
-import com.exactprosystems.clearth.utils.tabledata.writers.CsvDataWriter;
-import com.exactprosystems.clearth.utils.tabledata.writers.DbDataWriter;
+import com.exactprosystems.clearth.utils.tabledata.typing.*;
+import com.exactprosystems.clearth.utils.tabledata.typing.reader.TypedCsvDataReader;
+import com.exactprosystems.clearth.utils.tabledata.typing.reader.TypedDbDataReader;
+import com.exactprosystems.clearth.utils.tabledata.typing.writer.TypedCsvDataWriter;
+import com.exactprosystems.clearth.utils.tabledata.typing.writer.TypedDbDataWriter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,7 +48,6 @@ import java.sql.Statement;
 
 import static com.exactprosystems.clearth.ClearThCore.rootRelative;
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /*
 	When SOURCE_FORMAT_PARAM is:
@@ -61,9 +60,6 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 	CSV - then DESTINATION_PARAM contains CSV file path and DST_CON_NAME_PARAM is unnecessary;
 
 	bufferSize - optional parameter. It contains number of line written at time
-	
-	CreateTableQuery or CreateTableQueryFile can be used to create destination DB table if it doesn't exist.
-	If table doesn't exist and creation query isn't specified, ResultException will be thrown.
 */
 
 public abstract class ExportDataSet extends Action
@@ -74,47 +70,115 @@ public abstract class ExportDataSet extends Action
 			DESTINATION_FORMAT_PARAM = "DestinationFormat",
 			DESTINATION_PARAM = "Destination",
 			DST_CON_NAME_PARAM = "DstConnectionName",
-			CREATE_TABLE_QUERY_PARAM = "CreateTableQuery",
-			CREATE_TABLE_QUERY_FILE_PARAM = "CreateTableQueryFile",
+			MULTI_PARAMS_DELIMITER = "MultiParamsDelimiter",
 			BUFFER_SIZE_PARAM = "BufferSize";
 
 	public static final int BUF_SIZE_DEF_VALUE = 100;
 
 	protected GlobalContext globalContext;
 	protected SrcFormat srcFormat;
+	protected String customSrcFormat; 
 	protected DstFormat dstFormat;
-	protected String source, destination;
+	protected String customDstFormat;
+	protected String source, destination, multiParamsDelimiter;
 	protected String srcConnectionName, dstConnectionName;
-	protected String createTableQuery;
-	protected String createTableQueryFile;
 	protected int bufferSize;
 	protected Connection dstConnection, srcConnection;
-	protected BasicTableDataReader<String, String, StringTableData> dataReader;
-	protected TableDataWriter<String, String> dataWriter;
+	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> dataReader;
+	protected TableDataWriter<TypedTableHeaderItem, Object> dataWriter;
 
-	protected void initParameters()
+	
+	protected abstract Connection getConnection(String connectionName) throws SQLException;
+	
+	protected abstract SqlSyntax getSqlSyntax(Connection connection) throws SQLException;
+
+	
+	protected void initCustomParameters(@SuppressWarnings("unused") InputParamsHandler handler)
+	{
+		/*Nothing to init by default*/
+	}
+
+	protected String prepareQuery(String query)
+	{
+		return query;
+	}
+	
+	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> createDbDataReader(PreparedStatement statement)
+	{
+		return new TypedDbDataReader(statement);
+	}
+	
+	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> getCustomDataReader(String format)
+	{
+		throw ResultException.failed(format("Unsupported %s = '%s'.", SOURCE_FORMAT_PARAM, format));
+	}
+
+	protected TableDataWriter<TypedTableHeaderItem, Object> createDbDataWriter(TableHeader<TypedTableHeaderItem> header, 
+	                                                                           Connection connection, String tableName)
+			throws SQLException
+	{
+		return new TypedDbDataWriter(header, connection, tableName);
+	}
+
+	protected TableDataWriter<TypedTableHeaderItem, Object> getCustomDataWriter(@SuppressWarnings("unused") TableHeader<TypedTableHeaderItem> header,
+	                                                                            String format)
+	{
+		throw ResultException.failed(format("Unsupported %s = '%s'.", DESTINATION_FORMAT_PARAM, format));
+	}
+	
+	protected CreateTableQueryGenerator getCreateTableQueryGenerator(Connection connection) throws SQLException
+	{
+		return new DefaultCreateTableQueryGenerator(getSqlSyntax(connection));
+	}
+	
+	protected DataExporter<TypedTableHeaderItem, Object, TypedTableData> createDataExporter()
+	{
+		return new DataExporter<>(dataReader, dataWriter, bufferSize, createTableRowConverter());
+	}
+	
+	protected TableRowConverter<TypedTableHeaderItem, Object> createTableRowConverter()
+	{
+		return null;
+	}
+
+	/**
+	 * Override this method to return true in implementations with DB Connection Pool.
+	 * Connection will be returned to pool by calling Connection.close().
+	 *
+	 * @return true if connection should be closed after using.
+	 */
+	protected boolean isNeedCloseDbConnection()
+	{
+		return false;
+	}
+	
+
+	private void initParameters()
 	{
 		InputParamsHandler handler = new InputParamsHandler(inputParams);
-		srcFormat = handler.getReqiuredEnum(SOURCE_FORMAT_PARAM, SrcFormat.class);
+		srcFormat = handler.getEnumOrDefault(SOURCE_FORMAT_PARAM, SrcFormat.class, SrcFormat.CUSTOM);
+		if (srcFormat == SrcFormat.CUSTOM)
+			customSrcFormat = handler.getRequiredString(SOURCE_FORMAT_PARAM);
 		source = handler.getRequiredString(SOURCE_PARAM);
-		dstFormat = handler.getReqiuredEnum(DESTINATION_FORMAT_PARAM, DstFormat.class);
+		dstFormat = handler.getEnumOrDefault(DESTINATION_FORMAT_PARAM, DstFormat.class, DstFormat.CUSTOM);
+		if (dstFormat == DstFormat.CUSTOM)
+			customDstFormat = handler.getRequiredString(DESTINATION_FORMAT_PARAM);
 		destination = handler.getRequiredString(DESTINATION_PARAM);
 		bufferSize = handler.getInteger(BUFFER_SIZE_PARAM, BUF_SIZE_DEF_VALUE);
+		multiParamsDelimiter = handler.getString(MULTI_PARAMS_DELIMITER, ",");
 
 		if (srcFormat == SrcFormat.QUERY || srcFormat == SrcFormat.QUERYFILE)
 			srcConnectionName = handler.getRequiredString(SRC_CON_NAME_PARAM);
+		
 		if (dstFormat == DstFormat.DB)
-		{
 			dstConnectionName = handler.getRequiredString(DST_CON_NAME_PARAM);
-			createTableQuery = handler.getString(CREATE_TABLE_QUERY_PARAM);
-			createTableQueryFile = handler.getString(CREATE_TABLE_QUERY_FILE_PARAM);
-		}
+		
+		initCustomParameters(handler);
 		handler.check();
 	}
 
 	@Override
-	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
-			throws ResultException, FailoverException
+	protected final Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 	{
 		this.globalContext = globalContext;
 		initParameters();
@@ -122,11 +186,11 @@ public abstract class ExportDataSet extends Action
 		try
 		{
 			dataReader = getDataReader();
-			TableHeader<String> header;
+			TypedTableHeader header;
 			try
 			{
 				dataReader.start();
-				header = dataReader.getTableData().getHeader();
+				header = (TypedTableHeader) dataReader.getTableData().getHeader();
 			}
 			catch (IOException e)
 			{
@@ -136,7 +200,7 @@ public abstract class ExportDataSet extends Action
 			dataWriter = getDataWriter(header);
 			try
 			{
-				DataExporter<String, String, StringTableData> exporter = createDataExporter();
+				DataExporter<TypedTableHeaderItem, Object, TypedTableData> exporter = createDataExporter();
 				exporter.export();
 				return DefaultResult.passed("Export successfully done. "+exporter.getRowCounter()+" row(s) exported.");
 			}
@@ -162,7 +226,23 @@ public abstract class ExportDataSet extends Action
 		}
 	}
 
-	protected TableDataWriter<String, String> getDataWriter(TableHeader<String> header)
+	private void createTableIfNotExists(TableHeader<TypedTableHeaderItem> header, Connection connection, String tableName)
+			throws SQLException
+	{
+		if (SQLUtils.tableExists(connection, tableName))
+			return;
+
+		CreateTableQueryGenerator queryGenerator = getCreateTableQueryGenerator(connection);
+		String query = queryGenerator.generateQuery(header, tableName);
+		logger.debug("Query to create destination table:{}{}", Utils.EOL, query);
+		
+		try (Statement statement = connection.createStatement())
+		{
+			statement.executeUpdate(query);
+		}
+	}
+
+	private TableDataWriter<TypedTableHeaderItem, Object> getDataWriter(TableHeader<TypedTableHeaderItem> header)
 	{
 		switch (dstFormat)
 		{
@@ -171,26 +251,16 @@ public abstract class ExportDataSet extends Action
 			case CSV:
 				return createCsvDataWriter(header);
 			default:
-				throw new IllegalArgumentException("Illegal destination format");
+				return getCustomDataWriter(header, customDstFormat);
 		}
 	}
-	
-	protected DataExporter<String, String, StringTableData> createDataExporter()
-	{
-		return new DataExporter<>(dataReader, dataWriter, bufferSize, createTableRowConverter());
-	}
 
-	protected TableRowConverter<String, String> createTableRowConverter()
-	{
-		return null;
-	}
-
-	protected TableDataWriter<String, String> createCsvDataWriter(TableHeader<String> header)
+	protected TableDataWriter<TypedTableHeaderItem, Object> createCsvDataWriter(TableHeader<TypedTableHeaderItem> header)
 	{
 		File dstFile = new File(rootRelative(destination));
 		try
 		{
-			return new CsvDataWriter(header, dstFile, true, false);
+			return new TypedCsvDataWriter(header, dstFile, true, false);
 		}
 		catch (IOException e)
 		{
@@ -198,7 +268,7 @@ public abstract class ExportDataSet extends Action
 		}
 	}
 
-	protected TableDataWriter<String, String> createDbDataWriter(TableHeader<String> header)
+	private TableDataWriter<TypedTableHeaderItem, Object> createDbDataWriter(TableHeader<TypedTableHeaderItem> header)
 	{
 		try
 		{
@@ -209,11 +279,19 @@ public abstract class ExportDataSet extends Action
 			throw new ResultException(format("Error while getting connection with name '%s'", dstConnectionName), e);
 		}
 
-		checkDestinationTable(dstConnection, destination);
-		
 		try
 		{
-			return new DbDataWriter(header, dstConnection, destination);
+			createTableIfNotExists(header, dstConnection, destination);
+		}
+		catch (SQLException e)
+		{
+			throw new ResultException(
+					format("Error while creating table: '%s', connection: '%s'", destination, dstConnectionName), e);
+		}
+
+		try
+		{
+			return createDbDataWriter(header, dstConnection, destination);
 		}
 		catch (SQLException e)
 		{
@@ -222,58 +300,7 @@ public abstract class ExportDataSet extends Action
 		}
 	}
 	
-	protected void checkDestinationTable(Connection connection, String tableName)
-	{
-		if (tableExists(connection, tableName))
-			return;
-		
-		String createTableQuery = getCreateTableQuery();
-		
-		try (Statement statement = connection.createStatement())
-		{
-			statement.executeUpdate(createTableQuery);
-		}
-		catch (SQLException e)
-		{
-			throw ResultException.failed("Unable to create destination table.", e);
-		}
-	}
-	
-	protected boolean tableExists(Connection connection, String tableName)
-	{
-		try
-		{
-			return SQLUtils.tableExists(connection, tableName);
-		}
-		catch (SQLException e)
-		{
-			throw ResultException.failed(format("Error while checking if table '%s' exists.", tableName), e);
-		}
-	}
-	
-	protected String getCreateTableQuery()
-	{
-		if (isNotEmpty(createTableQuery))
-			return createTableQuery;
-		else if (isNotEmpty(createTableQueryFile))
-		{
-			try
-			{
-				return SQLUtils.loadQuery(rootRelative(createTableQueryFile));
-			}
-			catch (IOException e)
-			{
-				throw ResultException.failed(format("Error while loading query for table creation from file '%s'.",
-						createTableQueryFile), e);
-			}
-		}
-		else 
-			throw ResultException.failed(format("Destination table doesn't exist. " +
-					"Please specify '%s' or '%s' parameter to create table.",
-					CREATE_TABLE_QUERY_PARAM, CREATE_TABLE_QUERY_FILE_PARAM));
-	}
-
-	protected BasicTableDataReader<String, String, StringTableData> getDataReader()
+	private BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> getDataReader()
 	{
 		switch (srcFormat)
 		{
@@ -283,35 +310,24 @@ public abstract class ExportDataSet extends Action
 			case CSV:
 				return createCsvDataReader();
 			default:
-				throw new IllegalArgumentException("Illegal source format");
+				return getCustomDataReader(customSrcFormat);
 		}
 	}
 
-	protected CsvDataReader createCsvDataReader()
+	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> createCsvDataReader()
 	{
 		File srcFile = new File(rootRelative(source));
 		try
 		{
-			return new CsvDataReader(srcFile);
+			return new TypedCsvDataReader(srcFile);
 		}
 		catch (FileNotFoundException e)
 		{
 			throw new ResultException(format("Cannot read from file '%s': file not found", source), e);
 		}
 	}
-
-	/**
-	 * Override this method to return true in implementations with DB Connection Pool.
-	 * Connection will be returned to pool by calling Connection.close().
-	 *
-	 * @return true if connection should be closed after using.
-	 */
-	protected boolean isNeedCloseDbConnection()
-	{
-		return false;
-	}
-
-	protected DbDataReader createDbDataReader()
+	
+	private BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> createDbDataReader()
 	{
 		try
 		{
@@ -332,10 +348,12 @@ public abstract class ExportDataSet extends Action
 			throw new ResultException(format("Error while loading query from file '%s'", source), e);
 		}
 
+		query = prepareQuery(query);
+
 		ParametrizedQuery paramQuery;
 		try
 		{
-			paramQuery = SQLUtils.parseSQLTemplate(query);
+			paramQuery = SQLUtils.parseSQLTemplate(query, multiParamsDelimiter);
 		}
 		catch (SQLException e)
 		{
@@ -346,6 +364,7 @@ public abstract class ExportDataSet extends Action
 		PreparedStatement statement;
 		try
 		{
+			//noinspection resource
 			statement = paramQuery.createPreparedStatement(srcConnection, inputParams);
 		}
 		catch (SQLException e)
@@ -353,7 +372,7 @@ public abstract class ExportDataSet extends Action
 			throw new ResultException("Error while creating prepared statement", e);
 		}
 
-		return new DbDataReader(statement);
+		return createDbDataReader(statement);
 	}
 
 	@Override
@@ -365,13 +384,9 @@ public abstract class ExportDataSet extends Action
 		destination = null;
 		srcConnectionName = null;
 		dstConnectionName = null;
-		createTableQuery = null;
-		createTableQueryFile = null;
 		dstConnection = null;
 		srcConnection = null;
 		dataReader = null;
 		dataWriter = null;
 	}
-
-	protected abstract Connection getConnection(String connectionName) throws SQLException;
 }

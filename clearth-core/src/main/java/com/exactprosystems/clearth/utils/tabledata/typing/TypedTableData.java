@@ -19,6 +19,7 @@ package com.exactprosystems.clearth.utils.tabledata.typing;
 
 import java.util.Set;
 
+import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
 import com.exactprosystems.clearth.utils.tabledata.TableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
@@ -35,12 +36,17 @@ public class TypedTableData extends TableData<TypedTableHeaderItem,Object>
 		super(header);
 	}
 
+	public TypedTableData(Set<TypedTableHeaderItem> header, RowsListFactory<TypedTableHeaderItem, Object> rowsListFactory) 
+	{
+		super(header, rowsListFactory);
+	}
+
 	public TableDataType getType(int i, String headerKey)
 	{
 		TypedTableHeader typedTableHeader = (TypedTableHeader) getRow(i).getHeader();
 		return typedTableHeader.getColumnType(headerKey);
 	}
-	
+
 	@Override
 	protected TableHeader<TypedTableHeaderItem> createHeader(Set<TypedTableHeaderItem> header)
 	{

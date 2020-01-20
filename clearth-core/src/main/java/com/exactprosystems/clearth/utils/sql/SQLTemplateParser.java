@@ -19,12 +19,14 @@
 package com.exactprosystems.clearth.utils.sql;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,7 +35,7 @@ import static com.exactprosystems.clearth.utils.sql.SQLUtils.*;
 
 public class SQLTemplateParser
 {
-	private static final Pattern TEMPLATE_PARAM_PATTERN = Pattern.compile("'?[^\\\\][#$][\\w]+'?");
+	private static final Pattern TEMPLATE_PARAM_PATTERN = Pattern.compile("'?[^\\\\][#$@][\\w]+'?");
 	
 	public ParametrizedQuery parseParametrizedQueryTemplate(File templateFile) throws SQLException, IOException
 	{
@@ -42,27 +44,34 @@ public class SQLTemplateParser
 			throw new IllegalArgumentException(String.format("The file '%s' is empty", templateFile));
 		return parseParametrizedQueryTemplate(templateText);
 	}
-	
-	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText) throws SQLException
+
+	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText, String multiParamsDelimiter) throws SQLException
 	{
-		
 		Matcher paramMatcher = TEMPLATE_PARAM_PATTERN.matcher(templateText);
 		List<String> queryParams = new ArrayList<>();
-		
+		HashSet<String> multiParams = new HashSet<>();
+
 		StringBuffer queryBuilder = new StringBuffer();
 		while (paramMatcher.find())
 		{
 			String foundParam = getTemplateParamName(paramMatcher.group());
+			if (StringUtils.contains(paramMatcher.group(), "@"))
+				multiParams.add(foundParam);
+
 			queryParams.add(foundParam);
 			paramMatcher.appendReplacement(queryBuilder, "?");
 		}
 		paramMatcher.appendTail(queryBuilder);
-		if(queryBuilder != null)
-		{
-			replaceAll(queryBuilder, TABLE_NAME_WITH_DOLLAR.toString(), Character.toString(CONVERT_BEGINNER));
-			replaceAll(queryBuilder,TABLE_NAME_WITH_SHARP.toString(),Character.toString(CUSTOM_BEGINNER));
-		}
-		return new ParametrizedQuery(queryBuilder.toString(), queryParams);
+		
+		replaceAll(queryBuilder, TABLE_NAME_WITH_DOLLAR.toString(), Character.toString(CONVERT_BEGINNER));
+		replaceAll(queryBuilder,TABLE_NAME_WITH_SHARP.toString(),Character.toString(CUSTOM_BEGINNER));
+		
+		return new ParametrizedQuery(queryBuilder.toString(), queryParams, multiParams, multiParamsDelimiter);
+	}
+	
+	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText) throws SQLException
+	{
+		return parseParametrizedQueryTemplate(templateText, ",");
 	}
 
 	public static void replaceAll(StringBuffer builder, String from, String to)
@@ -81,6 +90,6 @@ public class SQLTemplateParser
 		if (templateParam.length() < 2)
 			throw new IllegalArgumentException("Template param should contain at least 2 characters.");
 		
-		return templateParam.replaceAll("[#$']*", "");
+		return templateParam.replaceAll("[#$@']*", "").trim();
 	}
 }
