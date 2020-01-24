@@ -289,7 +289,7 @@
 								&#160;
 								<a href="#{automationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report_failed.html" target="_blank">(only failed)</a>
 								&#160;
-								<a href="#{automationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/#{launchInfo.matricesInfo.get(0).name}.json" target="_blank">JSON report</a>
+								<a href="#{automationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.json" target="_blank">JSON report</a>
 							</ui:fragment>
 							<ui:fragment rendered="#{launchInfo.matricesInfo==null or launchInfo.matricesInfo.size()!=1}">
 								<p:commandLink value="Show reports" actionListener="#{automationReportsBean.extractReportsInfo(launchInfo)}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" rendered="#{launchInfo.reportsPath!=null}" />
@@ -1074,7 +1074,7 @@
 						&#160;
 						<a href="#{automationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report_failed.html" target="_blank">(only failed)</a>
 						&#160;
-						<a href="#{automationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/#{matrixInfo.name}.json" target="_blank">JSON report</a>
+						<a href="#{automationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report.json" target="_blank">JSON report</a>
 					</p:column>
 					<p:column headerText="Actions done" filterBy="#{matrixInfo}" filterFunction="#{automationReportsBean.reportFilters.filterReportsInfoByState}">
 						<f:facet name="filter">

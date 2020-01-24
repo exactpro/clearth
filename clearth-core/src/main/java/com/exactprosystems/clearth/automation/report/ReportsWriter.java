@@ -37,8 +37,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.exactprosystems.clearth.automation.report.ActionReportWriter.JSON_SUFFIX;
-
 public class ReportsWriter
 {
 	private static final Logger logger = LoggerFactory.getLogger(ReportsWriter.class);
@@ -167,7 +165,7 @@ public class ReportsWriter
 	protected void writeAutomationReport(AutomationReport automationReport, String path) throws IOException
 	{
 		new JsonMarshaller<AutomationReport>().marshal(automationReport, 
-				new File(ClearThCore.rootRelative(path), automationReport.getReportName() + JSON_SUFFIX).getAbsolutePath());
+				new File(ClearThCore.rootRelative(path), ActionReportWriter.JSON_REPORT_NAME).getAbsolutePath());
 	}
 	
 	protected void copyResultDetailsDir(Matrix matrix)

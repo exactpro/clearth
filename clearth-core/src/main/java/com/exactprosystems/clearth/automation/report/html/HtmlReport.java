@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.automation.report.html;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.ReportException;
 import com.exactprosystems.clearth.automation.report.ReportStatus;
 import com.exactprosystems.clearth.automation.report.html.template.*;
@@ -82,7 +83,7 @@ public class HtmlReport
 		File report = new File(pathToReport, matrix.getShortFileName());
 		report.mkdirs();
 		pathToFiles = report.getCanonicalPath()+"/";
-		reportFilePath = pathToFiles + reportName + ".html";
+		reportFilePath = pathToFiles + reportName + ActionReportWriter.HTML_SUFFIX;
 	}
 	
 	protected String getRevisionData()

@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.ReportsInfo;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.LogsExtractor;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
@@ -100,13 +101,13 @@ public class AutomationReportsBean extends ClearThBean {
 
 	public String getLastLaunchReportUrl()
 	{
-		return getReportPath(getLastLaunch().getReportsPath(), getLastLaunch().getMatricesInfo().get(0).getFileName(), "report.html");
+		return getReportPath(getLastLaunch().getReportsPath(), getLastLaunch().getMatricesInfo().get(0).getFileName(), ActionReportWriter.HTML_REPORT_NAME);
 	}
 
 	public String getLastLaunchJsonReportUrl()
 	{
 		XmlMatrixInfo lastLaunchInfo = getLastLaunch().getMatricesInfo().get(0);
-		return getReportPath(getLastLaunch().getReportsPath(), lastLaunchInfo.getFileName(), lastLaunchInfo.getName()+ JSON_SUFFIX);
+		return getReportPath(getLastLaunch().getReportsPath(), lastLaunchInfo.getFileName(), ActionReportWriter.JSON_REPORT_NAME);
 	}
 
 	protected String getReportPath(String reportsPath, String matrixFileName, String reportName)

@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.ReportsInfo;
+import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
@@ -81,13 +82,14 @@ public class ReportsArchiver {
 			File[] reports = dir.listFiles(file -> {
 				if (!file.isDirectory())
 					return false;
-				return new File(file, "report.html").isFile();
+				return new File(file, ActionReportWriter.HTML_REPORT_NAME).isFile();
 			});
 			if(reports == null || reports.length==0)
 				return;
 
-			//1. Take the first directory and take all files except HTML
-			File[] aux = reports[0].listFiles((dir1, name) -> !name.toLowerCase().endsWith(".html"));
+			//1. Take the first directory and take all files except for HTML and JSON report. These are just media stuff identical for all reports.
+			File[] aux = reports[0].listFiles((dir1, name) -> !name.toLowerCase().endsWith(ActionReportWriter.HTML_SUFFIX) 
+					&& !name.toLowerCase().endsWith(ActionReportWriter.JSON_SUFFIX));
 			if (aux == null)
 				return;
 
@@ -100,7 +102,7 @@ public class ReportsArchiver {
 			for (File repDir : reports)
 			{
 				//2.1 Open a file
-				File report = new File(repDir, "report.html");
+				File report = new File(repDir, ActionReportWriter.HTML_REPORT_NAME);
 				if (!report.isFile())
 				{
 					names.add(null);
@@ -145,9 +147,16 @@ public class ReportsArchiver {
 					title = title.replace(ic, '.');
 				}
 
-				title += ".html";
-				names.add(title);
+				names.add(title+ActionReportWriter.HTML_SUFFIX);
 				files.add(report);
+				
+				
+				File jsonReport = new File(repDir, ActionReportWriter.JSON_REPORT_NAME);
+				if (jsonReport.isFile())
+				{
+					names.add(title+ActionReportWriter.JSON_SUFFIX);
+					files.add(jsonReport);
+				}
 			}
 		}
 
@@ -158,7 +167,7 @@ public class ReportsArchiver {
 		List<String> filteredReports = new ArrayList<>();
 		if (realtimeSnapshot && filteredRTMatrices != null)
 			for (Matrix record : filteredRTMatrices)
-				filteredReports.add(record.getFileName());
+				filteredReports.add(record.getShortFileName());
 		if (!realtimeSnapshot && filteredReportsInfo != null)
 			for (XmlMatrixInfo record : filteredReportsInfo)
 				filteredReports.add(record.getFileName());

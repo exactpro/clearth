@@ -39,8 +39,12 @@ public class ActionReportWriter
 {
 	private static final Logger logger = LoggerFactory.getLogger(ActionReportWriter.class);
 
-	public static final String FAILED_SUFFIX = "_failed";
-    public static final String JSON_SUFFIX = ".json";
+	public static final String HTML_SUFFIX = ".html",
+    		JSON_SUFFIX = ".json",
+    		REPORT_FILENAME = "report",
+    		HTML_REPORT_NAME = REPORT_FILENAME+HTML_SUFFIX,
+    		JSON_REPORT_NAME = REPORT_FILENAME+JSON_SUFFIX,
+    		FAILED_SUFFIX = "_failed";
 
 	private int actionIndex = 0;
 	
