@@ -1,0 +1,286 @@
+{
+  "version" : "local_build",
+  "matrixName" : "CheckJsonReports1.csv",
+  "userName" : "admin",
+  "host" : "%HOST%",
+  "executionStart" : 1580126821783,
+  "executionEnd" : 1580126822273,
+  "executionTime" : "0.49 sec",
+  "result" : true,
+  "description" : "This is a test matrix for JSON reports",
+  "constants" : {
+    "Currency" : "EUR",
+    "ISIN" : "E00000187"
+  },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "started" : 1580126822098,
+      "finished" : 1580126822208,
+      "passed" : true,
+      "failReason" : "FAILED",
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "actionId" : "id1",
+      "actionName" : "Compare2Values",
+      "status" : {
+        "started" : 1580126822101,
+        "finished" : 1580126822101,
+        "startedBaseTime" : null,
+        "finishedBaseTime" : null,
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "Expected" : {
+          "value" : "EUR",
+          "specialValue" : false
+        },
+        "Actual" : {
+          "value" : "EUR",
+          "formula" : "@{matrix.Currency}",
+          "specialValue" : false
+        }
+      },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "error" : null,
+        "message" : null,
+        "comment" : null,
+        "failReason" : null,
+        "failoverData" : null,
+        "resultDetails" : [ {
+          "param" : "Value",
+          "expected" : "EUR",
+          "actual" : "EUR",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        } ],
+        "successWithoutInversionRegard" : true
+      },
+      "subActions" : [ ],
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO"
+    }
+    ,
+    {
+      "actionId" : "id2",
+      "actionName" : "Compare2Values",
+      "status" : {
+        "started" : 1580126822184,
+        "finished" : 1580126822184,
+        "startedBaseTime" : null,
+        "finishedBaseTime" : null,
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "Expected" : {
+          "value" : "E00000187",
+          "specialValue" : false
+        },
+        "Actual" : {
+          "value" : "E00000187",
+          "formula" : "@{matrix.ISIN}",
+          "specialValue" : false
+        }
+      },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "error" : null,
+        "message" : null,
+        "comment" : null,
+        "failReason" : null,
+        "failoverData" : null,
+        "resultDetails" : [ {
+          "param" : "Value",
+          "expected" : "E00000187",
+          "actual" : "E00000187",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        } ],
+        "successWithoutInversionRegard" : true
+      },
+      "subActions" : [ ],
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO"
+    }
+    ]
+
+  },{
+    "stepName" : "Step2",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "started" : 1580126822215,
+      "finished" : 1580126822265,
+      "passed" : true,
+      "failReason" : "FAILED",
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "actionId" : "id3",
+      "actionName" : "TestAction",
+      "status" : {
+        "started" : 1580126822216,
+        "finished" : 1580126822216,
+        "startedBaseTime" : null,
+        "finishedBaseTime" : null,
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "A" : {
+          "value" : "1",
+          "specialValue" : false
+        },
+        "B" : {
+          "value" : "2",
+          "specialValue" : false
+        },
+        "C" : {
+          "value" : "3",
+          "specialValue" : false
+        }
+      },
+      "outputParams" : {
+        "A" : "1",
+        "B" : "2",
+        "C" : "3"
+      },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "error" : null,
+        "message" : null,
+        "comment" : null,
+        "failReason" : null,
+        "failoverData" : null,
+        "resultDetails" : [ {
+          "param" : "A",
+          "expected" : "1",
+          "actual" : "1",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        }, {
+          "param" : "B",
+          "expected" : "2",
+          "actual" : "2",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        }, {
+          "param" : "C",
+          "expected" : "3",
+          "actual" : "3",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        } ],
+        "successWithoutInversionRegard" : true
+      },
+      "subActions" : [ ],
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO"
+    }
+    ,
+    {
+      "actionId" : "id4",
+      "actionName" : "Compare2Values",
+      "status" : {
+        "started" : 1580126822242,
+        "finished" : 1580126822242,
+        "startedBaseTime" : null,
+        "finishedBaseTime" : null,
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "Expected" : {
+          "value" : "1",
+          "specialValue" : false
+        },
+        "Actual" : {
+          "value" : "1",
+          "formula" : "@{id3.A}",
+          "specialValue" : false
+        }
+      },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "error" : null,
+        "message" : null,
+        "comment" : null,
+        "failReason" : null,
+        "failoverData" : null,
+        "resultDetails" : [ {
+          "param" : "Value",
+          "expected" : "1",
+          "actual" : "1",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        } ],
+        "successWithoutInversionRegard" : true
+      },
+      "subActions" : [ ],
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO"
+    }
+    ]
+
+  } ]
+}

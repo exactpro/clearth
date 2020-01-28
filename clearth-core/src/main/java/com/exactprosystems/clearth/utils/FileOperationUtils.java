@@ -20,9 +20,11 @@ package com.exactprosystems.clearth.utils;
 
 import static com.exactprosystems.clearth.utils.Utils.closeResource;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -467,6 +469,41 @@ public class FileOperationUtils
 		}
 
 		return count;
+	}
+
+	/* Methods Files.newBufferedReader() and Files.newBufferedWriter() create reader and writer
+	 * that can be interrupted by setting interruption flag of Thread.
+	 * If you need blocking reader or writer that can't be interrupted use methods "newBlockingBufferedReader" or
+	 * "newBlockingBufferedWriter" */
+	
+	public static BufferedReader newBlockingBufferedReader(Path path) throws IOException
+	{
+		return newBlockingBufferedReader(path.toFile());
+	}
+	
+	public static BufferedReader newBlockingBufferedReader(File path) throws IOException
+	{
+		return new BufferedReader(new InputStreamReader(new FileInputStream(path), UTF_8));
+	}
+	
+	public static BufferedWriter newBlockingBufferedWriter(Path path) throws IOException
+	{
+		return newBlockingBufferedWriter(path.toFile(), false);
+	}
+
+	public static BufferedWriter newBlockingBufferedWriter(Path path, boolean append) throws IOException
+	{
+		return newBlockingBufferedWriter(path.toFile(), append);
+	}
+
+	public static BufferedWriter newBlockingBufferedWriter(File path) throws IOException
+	{
+		return newBlockingBufferedWriter(path, false);
+	}
+	
+	public static BufferedWriter newBlockingBufferedWriter(File path, boolean append) throws IOException
+	{
+		return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path, append), UTF_8));
 	}
 
 	public static String resourceToAbsoluteFilePath(String file) throws FileNotFoundException

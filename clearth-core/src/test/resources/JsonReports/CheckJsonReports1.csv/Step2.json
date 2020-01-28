@@ -1,0 +1,131 @@
+[
+{
+  "actionId" : "id3",
+  "actionName" : "TestAction",
+  "status" : {
+    "started" : 1580126822216,
+    "finished" : 1580126822216,
+    "startedBaseTime" : null,
+    "finishedBaseTime" : null,
+    "passed" : true,
+    "failReason" : null,
+    "comments" : null,
+    "actualTimeout" : 0,
+    "waitBeforeAction" : 0
+  },
+  "inputParams" : {
+    "A" : {
+      "value" : "1",
+      "specialValue" : false
+    },
+    "B" : {
+      "value" : "2",
+      "specialValue" : false
+    },
+    "C" : {
+      "value" : "3",
+      "specialValue" : false
+    }
+  },
+  "outputParams" : {
+    "A" : "1",
+    "B" : "2",
+    "C" : "3"
+  },
+  "result" : {
+    "@c" : ".results.DetailedResult",
+    "success" : true,
+    "crashed" : false,
+    "inverted" : false,
+    "error" : null,
+    "message" : null,
+    "comment" : null,
+    "failReason" : null,
+    "failoverData" : null,
+    "resultDetails" : [ {
+      "param" : "A",
+      "expected" : "1",
+      "actual" : "1",
+      "errorMessage" : null,
+      "identical" : true,
+      "info" : false,
+      "forCompareValue" : false
+    }, {
+      "param" : "B",
+      "expected" : "2",
+      "actual" : "2",
+      "errorMessage" : null,
+      "identical" : true,
+      "info" : false,
+      "forCompareValue" : false
+    }, {
+      "param" : "C",
+      "expected" : "3",
+      "actual" : "3",
+      "errorMessage" : null,
+      "identical" : true,
+      "info" : false,
+      "forCompareValue" : false
+    } ],
+    "successWithoutInversionRegard" : true
+  },
+  "subActions" : [ ],
+  "timeout" : 0,
+  "async" : false,
+  "payloadFinished" : false,
+  "waitAsyncEnd" : "NO"
+}
+,
+{
+  "actionId" : "id4",
+  "actionName" : "Compare2Values",
+  "status" : {
+    "started" : 1580126822242,
+    "finished" : 1580126822242,
+    "startedBaseTime" : null,
+    "finishedBaseTime" : null,
+    "passed" : true,
+    "failReason" : null,
+    "comments" : null,
+    "actualTimeout" : 0,
+    "waitBeforeAction" : 0
+  },
+  "inputParams" : {
+    "Expected" : {
+      "value" : "1",
+      "specialValue" : false
+    },
+    "Actual" : {
+      "value" : "1",
+      "formula" : "@{id3.A}",
+      "specialValue" : false
+    }
+  },
+  "result" : {
+    "@c" : ".results.DetailedResult",
+    "success" : true,
+    "crashed" : false,
+    "inverted" : false,
+    "error" : null,
+    "message" : null,
+    "comment" : null,
+    "failReason" : null,
+    "failoverData" : null,
+    "resultDetails" : [ {
+      "param" : "Value",
+      "expected" : "1",
+      "actual" : "1",
+      "errorMessage" : null,
+      "identical" : true,
+      "info" : false,
+      "forCompareValue" : false
+    } ],
+    "successWithoutInversionRegard" : true
+  },
+  "subActions" : [ ],
+  "timeout" : 0,
+  "async" : false,
+  "payloadFinished" : false,
+  "waitAsyncEnd" : "NO"
+}
+]

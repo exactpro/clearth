@@ -18,24 +18,23 @@
 
 package com.exactprosystems.clearth.automation.report;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Executor;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.report.html.HtmlReport;
-import com.exactprosystems.clearth.utils.JsonMarshaller;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.automation.report.json.JsonReport;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
+import static com.exactprosystems.clearth.ClearThCore.rootRelative;
+import static com.exactprosystems.clearth.automation.report.ActionReportWriter.JSON_REPORT_NAME;
 
 public class ReportsWriter
 {
@@ -68,17 +67,18 @@ public class ReportsWriter
 	{
 		return actionsReportsPath;
 	}
-	
-	
-	protected AutomationReport createAutomationReport()
-	{
-		return new AutomationReport();
-	}
-	
+
+
 	protected HtmlReport createHtmlReport(Matrix matrix, String pathToReport, String userName, String reportName, 
 			Date startTime, Date endTime) throws IOException
 	{
 		return new HtmlReport(matrix, pathToReport, userName, reportName, startTime, endTime);
+	}
+	
+	protected JsonReport createJsonReport(Matrix matrix, Collection<Step> allSteps, Set<String> matrixStepNames,
+	                                      String userName, Date startTime, Date endTime)
+	{
+		return new JsonReport(matrix, allSteps, matrixStepNames, userName, startTime, endTime);
 	}
 	
 	protected void makeHtmlReportsEndings(HtmlReport report, HtmlReport report_failed) throws ReportException
@@ -89,16 +89,16 @@ public class ReportsWriter
 			Date startTime, Date endTime) throws IOException, ReportException
 	{
 		buildAndWriteHtmlReports(matrix, matrixSteps, userName, startTime, endTime);
-		
-		AutomationReport automationReport = buildAutomationReport(matrix, matrixSteps, userName, startTime, endTime);
-		writeAutomationReport(automationReport, Paths.get(reportsPath, matrix.getShortFileName()).toString());
-		
+		buildAndWriteJsonReports(matrix, matrixSteps, userName, startTime, endTime);
 		copyResultDetailsDir(matrix);
 	}
+	
 	
 	protected void buildAndWriteHtmlReports(Matrix matrix, List<String> matrixSteps, String userName, 
 			Date startTime, Date endTime) throws IOException, ReportException
 	{
+		logger.debug("Writing HTML reports for matrix '{}'...", matrix.getName());
+		
 		HtmlReport report = createHtmlReport(matrix, reportsPath, userName, "report", startTime, endTime);
 		HtmlReport report_failed = createHtmlReport(matrix, reportsPath, userName, "report_failed", startTime, endTime);
 		
@@ -109,65 +109,19 @@ public class ReportsWriter
 		makeHtmlReportsEndings(report, report_failed);
 	}
 	
-	protected AutomationReport buildAutomationReport(Matrix matrix, List<String> matrixSteps, String userName, 
-			Date startTime, Date endTime)
+	
+	protected void buildAndWriteJsonReports(Matrix matrix, List<String> matrixSteps, String userName,
+	                                        Date startTime, Date endTime) throws IOException
 	{
-		AutomationReport report = createAutomationReport();
-		report.setReportName(matrix.getName());
-		report.setMatrixName(matrix.getName());
-		report.setUserName(userName);
-		report.setHost(Utils.host());
-		report.setVersion(ClearThCore.getInstance().getVersion().getBuildNumber());
-		report.setExecutionStart(startTime);
-		report.setExecutionEnd(endTime);
-		report.setExecutionTime(startTime, endTime);
-		report.setResult(matrix.isSuccessful());
-		report.setDescription(matrix.getDescription());
-		report.setConstants(matrix.getConstants());
+		JsonReport report = createJsonReport(matrix, executor.getSteps(), new HashSet<>(matrixSteps),
+				userName, startTime, endTime);
+		
+		Path reportPath = Paths.get(rootRelative(reportsPath), matrix.getShortFileName(), JSON_REPORT_NAME);
+		Path actionsReportsDir = Paths.get(rootRelative(executor.getActionsReportsDir()), matrix.getShortFileName());
+		report.writeReport(reportPath, actionsReportsDir);
+	}
 
-		if (matrixSteps == null)
-			return report;
-		
-		Set<String> steps = new HashSet<String>(matrixSteps);
-		
-		String actionsReportsDir = new File(executor.getActionsReportsDir(), matrix.getShortFileName()).getAbsolutePath();
-		
-		for (Step step : executor.getSteps())
-		{
-			if (!steps.contains(step.getSafeName()))
-				continue;
-			
-			String storedActionsReports = Paths.get(actionsReportsDir, step.getSafeName() + ActionReportWriter.JSON_SUFFIX).toString();
-			try
-			{
-				buildStepReport(report, step, matrix, storedActionsReports);
-			}
-			catch (IOException e)
-			{
-				logger.error("Cannot build report for step '{}'", step.getName(), e);
-			}
-		}
-		
-		return report;
-	}
-	
-	protected void buildStepReport(AutomationReport report, Step step, Matrix matrix, String storedActionsReportsPath) throws IOException
-	{
-		StepReport stepReport = new StepReport(step, matrix);
-		
-		List<ActionReport> actionsReports = new JsonMarshaller<List<ActionReport>>().unmarshal(Paths.get(storedActionsReportsPath));
 
-		stepReport.setActionReports(actionsReports);
-		
-		report.addStepReport(stepReport);
-	}
-	
-	protected void writeAutomationReport(AutomationReport automationReport, String path) throws IOException
-	{
-		new JsonMarshaller<AutomationReport>().marshal(automationReport, 
-				new File(ClearThCore.rootRelative(path), ActionReportWriter.JSON_REPORT_NAME).getAbsolutePath());
-	}
-	
 	protected void copyResultDetailsDir(Matrix matrix)
 	{
 		File oldDetailsDir = new File(actionsReportsPath + matrix.getShortFileName(), Result.DETAILS_DIR),
