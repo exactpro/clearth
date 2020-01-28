@@ -40,10 +40,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ReportBean
 {
@@ -142,7 +139,7 @@ public class ReportBean
 	
 	private void changeNamesForLinkedMatrices(Map<String, List<String>> matricesSteps, Scheduler scheduler)
 	{
-		Set<String> matricesDirs = matricesSteps.keySet();
+		Set<String> matricesDirs = new HashSet<>(matricesSteps.keySet());
 		for (String mDir : matricesDirs)
 		{
 			if (mDir.contains(MatrixProvider.STORED_MATRIX_PREFIX))
