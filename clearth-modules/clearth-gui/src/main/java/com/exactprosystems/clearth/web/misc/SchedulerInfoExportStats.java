@@ -16,41 +16,34 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.schedulerinfo;
+package com.exactprosystems.clearth.web.misc;
 
-import java.io.File;
+import org.apache.commons.io.FileUtils;
 
-public class SchedulerInfoFile
+public class SchedulerInfoExportStats
 {
-	private final String outputPath;
-	private final File originalFile;
+	private final String type, selectedSize;
+	private final int selectedCount;
 	
-	private boolean include = true;
-	
-	public SchedulerInfoFile(String outputPath, File originalFile)
+	public SchedulerInfoExportStats(String type, int selectedCount, long selectedSize)
 	{
-		this.outputPath = outputPath;
-		this.originalFile = originalFile;
+		this.type = type;
+		this.selectedCount = selectedCount;
+		this.selectedSize = FileUtils.byteCountToDisplaySize(selectedSize);
 	}
 	
-	public String getOutputPath()
+	public String getType()
 	{
-		return outputPath;
+		return type;
 	}
 	
-	public File getOriginalFile()
+	public int getSelectedCount()
 	{
-		return originalFile;
+		return selectedCount;
 	}
 	
-	
-	public void setInclude(boolean include)
+	public String getSelectedSize()
 	{
-		this.include = include;
-	}
-	
-	public boolean isInclude()
-	{
-		return include;
+		return selectedSize;
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,20 +24,31 @@ import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoFile;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.SchedulerInfoExportStats;
 import com.exactprosystems.clearth.web.misc.WebUtils;
-import org.primefaces.model.DefaultTreeNode;
-import org.primefaces.model.TreeNode;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class SchedulerInfoExportBean extends ClearThBean
 {
 	protected AutomationBean automationBean;
 	
-	protected SchedulerInfoFile selectedSchedulerInfoFiles;
-	protected TreeNode schedulerInfoFilesRoot = new DefaultTreeNode();
-	protected TreeNode[] selectedSchedulerInfoFilesNodes;
+	protected MultiValuedMap<String, SchedulerInfoFile> storage;
+	protected String regex;
+	
+	protected List<SchedulerInfoExportStats> stats = new ArrayList<>();
+	protected int totalCount;
+	protected String totalSize;
 	
 	public SchedulerInfoExportBean()
 	{ }
@@ -53,15 +64,15 @@ public class SchedulerInfoExportBean extends ClearThBean
 	}
 	
 	
-	public void collectSchedulerInfoFiles()
+	public void collectFiles()
 	{
 		try
 		{
-			selectedSchedulerInfoFiles = ClearThCore.getInstance().getSchedulerInfoExporter().collectFiles(selectedScheduler());
-			schedulerInfoFilesRoot = new DefaultTreeNode();
-			processSchedulerInfoFile(selectedSchedulerInfoFiles, schedulerInfoFilesRoot);
+			regex = "";
+			storage = ClearThCore.getInstance().getSchedulerInfoExporter().collectFiles(selectedScheduler());
+			updateStats();
 		}
-		catch (Exception e)
+		catch (IOException e)
 		{
 			String errMsg = "Error while collecting scheduler info files";
 			getLogger().error(errMsg, e);
@@ -69,25 +80,18 @@ public class SchedulerInfoExportBean extends ClearThBean
 		}
 	}
 	
-	private void processSchedulerInfoFile(SchedulerInfoFile file, TreeNode parentNode)
+	public void applyFilter()
 	{
-		for (SchedulerInfoFile child : file.getChildren())
-		{
-			// Not showing report resource files because they always should be in the export
-			if (child.isResource())
-				continue;
-			
-			TreeNode childNode = new DefaultTreeNode(child, parentNode);
-			// Select all files by default
-			childNode.setSelected(true);
-			processSchedulerInfoFile(child, childNode);
-		}
+		// Reset all filters if regex pattern is blank
+		Pattern pattern = StringUtils.isBlank(regex) ? null : Pattern.compile(regex);
+		for (SchedulerInfoFile file : storage.values())
+			file.setInclude(pattern == null || !pattern.matcher(file.getOutputPath()).find());
+		updateStats();
 	}
 	
-	
-	public void exportSelectedSchedulerInfoFiles()
+	public void exportSelectedFiles()
 	{
-		if (selectedSchedulerInfoFilesNodes == null || selectedSchedulerInfoFilesNodes.length == 0)
+		if (totalCount == 0)
 		{
 			MessageUtils.addErrorMessage("Nothing to export", "No scheduler information file selected");
 			return;
@@ -95,49 +99,69 @@ public class SchedulerInfoExportBean extends ClearThBean
 		
 		try
 		{
-			// Mark necessary files to include in the export by its nodes
-			for (TreeNode node : selectedSchedulerInfoFilesNodes)
-			{
-				((SchedulerInfoFile)node.getData()).setInclude(true);
-				// Need to add parent files too because they may be not included in selected nodes collection
-				includeParentFiles(node);
-			}
-			
-			File exportZip = ClearThCore.getInstance().getSchedulerInfoExporter().exportSelectedZip(selectedSchedulerInfoFiles);
+			File exportZip = ClearThCore.getInstance().getSchedulerInfoExporter().exportSelectedZip(storage);
 			WebUtils.addCanCloseCallback(true);
 			WebUtils.redirectToFile(ClearThCore.getInstance().excludeRoot(exportZip.getAbsolutePath()));
 		}
 		catch (Exception e)
 		{
-			String errMsg = "Error occurred while exporting scheduler info files";
+			String errMsg = "Could not download scheduler info files";
 			getLogger().error(errMsg, e);
 			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
 		}
 	}
 	
-	private void includeParentFiles(TreeNode node)
+	
+	public void setRegex(String regex)
 	{
-		// Check if it isn't a root node
-		if (node.getParent() != null)
+		this.regex = regex;
+	}
+	
+	public String getRegex()
+	{
+		return regex;
+	}
+	
+	public List<SchedulerInfoExportStats> getStats()
+	{
+		return stats;
+	}
+	
+	public int getTotalCount()
+	{
+		return totalCount;
+	}
+	
+	public String getTotalSize()
+	{
+		return totalSize;
+	}
+	
+	
+	protected void updateStats()
+	{
+		// Collect statistics about number and sizes of files being exported
+		stats.clear();
+		totalCount = 0;
+		
+		long totalSizeLong = 0;
+		for (Map.Entry<String, Collection<SchedulerInfoFile>> type : storage.asMap().entrySet())
 		{
-			((SchedulerInfoFile)node.getData()).setInclude(true);
-			includeParentFiles(node.getParent());
+			int selectedCount = 0;
+			long selectedSize = 0;
+			for (SchedulerInfoFile file : type.getValue())
+			{
+				if (file.isInclude())
+				{
+					selectedCount++;
+					selectedSize += file.getOriginalFile().length();
+				}
+			}
+			
+			stats.add(new SchedulerInfoExportStats(type.getKey(), selectedCount, selectedSize));
+			totalCount += selectedCount;
+			totalSizeLong += selectedSize;
 		}
-	}
-	
-	
-	public TreeNode getSchedulerInfoFilesRoot()
-	{
-		return schedulerInfoFilesRoot;
-	}
-	
-	public void setSelectedSchedulerInfoFilesNodes(TreeNode[] selectedSchedulerInfoFilesNodes)
-	{
-		this.selectedSchedulerInfoFilesNodes = selectedSchedulerInfoFilesNodes;
-	}
-	
-	public TreeNode[] getSelectedSchedulerInfoFilesNodes()
-	{
-		return selectedSchedulerInfoFilesNodes;
+		totalSize = FileUtils.byteCountToDisplaySize(totalSizeLong);
 	}
 }

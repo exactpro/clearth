@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,7 +19,7 @@
 package com.exactprosystems.clearth.automation.schedulerinfo.template;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.report.html.template.*;
+import com.exactprosystems.clearth.automation.report.html.template.NodeViewDirective;
 import com.exactprosystems.clearth.templates.TemplatesProcessor;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import freemarker.template.Configuration;

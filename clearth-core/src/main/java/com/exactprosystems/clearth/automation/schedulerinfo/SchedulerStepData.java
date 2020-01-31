@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,20 +23,19 @@ import com.exactprosystems.clearth.automation.Step;
 public class SchedulerStepData
 {
 	private Step step;
-	private String stepName; //Name for displaying step on page (corrected for HTML)
-
-
+	private String stepName; // Name for displaying step on page (corrected for HTML)
+	
 	public SchedulerStepData(Step step, String stepName)
 	{
 		this.step = step;
 		this.stepName = stepName;
 	}
-
+	
 	public Step getStep()
 	{
 		return step;
 	}
-
+	
 	public String getStepName()
 	{
 		return stepName;
