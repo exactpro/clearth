@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -87,9 +88,9 @@ public class DefaultExecutor extends Executor
 	}
 
 	@Override
-  public List<String> getMatrixSteps(String matrixName)
+    public List<String> getMatrixSteps(String matrixName)
 	{
 		File actionsReports = new File(ClearThCore.appRootRelative(actionsReportsDir));
-		return getStepsByMatricesMap(actionsReports).get(matrixName);
+		return getStepsByMatricesMap(actionsReports).getOrDefault(matrixName, Collections.emptyList());
 	}
 }
