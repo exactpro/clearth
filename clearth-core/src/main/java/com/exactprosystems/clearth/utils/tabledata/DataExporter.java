@@ -27,6 +27,7 @@ public class DataExporter<A, B, C extends BasicTableData<A, B>>
 	private final TableDataWriter<A, B> dataWriter;
 
 	private int bufferSize = 100;
+	private volatile long rowCounter;
 
 	public DataExporter(BasicTableDataReader<A, B, C> dataReader,
 						TableDataWriter<A, B> dataWriter)
@@ -53,6 +54,7 @@ public class DataExporter<A, B, C extends BasicTableData<A, B>>
 	public void export() throws IOException, InterruptedException
 	{
 		Buffer<A, B> buffer = new Buffer<>(dataWriter, bufferSize);
+		rowCounter = 0;
 		while (dataReader.hasMoreData())
 		{
 			if (Thread.interrupted())
@@ -63,8 +65,15 @@ public class DataExporter<A, B, C extends BasicTableData<A, B>>
 				buffer.add(row);
 			else
 				buffer.add(tableRowConverter.convert(row));
+			
+			rowCounter++;
 		}
 		buffer.flush();
+	}
+	
+	public long getRowCounter()
+	{
+		return rowCounter;
 	}
 
 	private static class Buffer<A, B>

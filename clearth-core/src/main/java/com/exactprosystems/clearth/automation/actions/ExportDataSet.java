@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.MatrixContext;
@@ -117,7 +116,7 @@ public abstract class ExportDataSet extends Action
 	{
 		this.globalContext = globalContext;
 		initParameters();
-
+		
 		try
 		{
 			dataReader = getDataReader();
@@ -135,9 +134,9 @@ public abstract class ExportDataSet extends Action
 			dataWriter = getDataWriter(header);
 			try
 			{
-				DataExporter<String, String, StringTableData> exporter =
-						new DataExporter<>(dataReader, dataWriter, bufferSize, createTableRowConverter());
+				DataExporter<String, String, StringTableData> exporter = createDataExporter();
 				exporter.export();
+				return DefaultResult.passed("Export successfully done. "+exporter.getRowCounter()+" row(s) exported.");
 			}
 			catch (IOException | InterruptedException e)
 			{
@@ -148,7 +147,6 @@ public abstract class ExportDataSet extends Action
 		{
 			closeResources();
 		}
-		return DefaultResult.passed("Export successfully done.");
 	}
 
 	protected void closeResources()
@@ -173,6 +171,11 @@ public abstract class ExportDataSet extends Action
 			default:
 				throw new IllegalArgumentException("Illegal destination format");
 		}
+	}
+	
+	protected DataExporter<String, String, StringTableData> createDataExporter()
+	{
+		return new DataExporter<>(dataReader, dataWriter, bufferSize, createTableRowConverter());
 	}
 
 	protected TableRowConverter<String, String> createTableRowConverter()
