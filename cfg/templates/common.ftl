@@ -162,7 +162,7 @@
         ${stackTraceElement}<br>
     </#list>
     <#if error.cause??>
-        Caused by: ${error.cause.class} : <#escape x as (x!"")?html>${error.message!""}</#escape><br>
+        Caused by: ${error.cause.class} : <#escape x as (x!"")?html>${error.cause.message!""}</#escape><br>
         <@printErrorText
             error = error.cause/>
     </#if>
