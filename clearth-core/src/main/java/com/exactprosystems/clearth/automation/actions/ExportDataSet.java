@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,6 +22,8 @@ import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.MatrixContext;
 import com.exactprosystems.clearth.automation.StepContext;
+import com.exactprosystems.clearth.automation.actions.exportdata.DstFormat;
+import com.exactprosystems.clearth.automation.actions.exportdata.SrcFormat;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
@@ -372,17 +374,4 @@ public abstract class ExportDataSet extends Action
 	}
 
 	protected abstract Connection getConnection(String connectionName) throws SQLException;
-}
-
-enum SrcFormat
-{
-	QUERY,
-	QUERYFILE,
-	CSV
-}
-
-enum DstFormat
-{
-	DB,
-	CSV
 }
