@@ -29,10 +29,7 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.ContainerResult;
 import com.exactprosystems.clearth.automation.report.results.CsvContainerResult;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.IValueTransformer;
-import com.exactprosystems.clearth.utils.LineBuilder;
-import com.exactprosystems.clearth.utils.SettingsException;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
@@ -42,6 +39,7 @@ import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.DefaultStringTableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.IndexedStringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.RowComparisonData;
 import com.exactprosystems.clearth.utils.tabledata.comparison.StringTableDataComparator;
@@ -76,6 +74,10 @@ public class CompareDataSets extends Action
 	// ... and keys in mapping for them
 	protected final String ADDITIONAL_CSV_DELIMITER = "CsvDelimiter", ADDITIONAL_SCRIPT_FILE_PARAMS = "ScriptFileParams";
 	
+	private RowsNumberExecutor rowsNumberExecutor;
+	protected final String DUPLICATE_CHECK_PARAM = "CheckDuplicates";
+	private boolean checkDuplicates;
+	
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
@@ -86,6 +88,7 @@ public class CompareDataSets extends Action
 		Set<String> keyColumns = handler.getSet(KEY_COLUMNS, ",");
 		String expectedFormat = handler.getRequiredString(EXPECTED_FORMAT), expectedSource = handler.getRequiredString(EXPECTED_SOURCE),
 				actualFormat = handler.getRequiredString(ACTUAL_FORMAT), actualSource = handler.getRequiredString(ACTUAL_SOURCE);
+		checkDuplicates = handler.getBoolean(DUPLICATE_CHECK_PARAM, true);
 		handler.check();
 		
 		BasicTableDataReader<String, String, ?> expectedReader = null, actualReader = null;
@@ -149,9 +152,10 @@ public class CompareDataSets extends Action
 	
 	
 	protected Result compareTables(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, Set<String> keyColumns) throws IOException
+			BasicTableDataReader<String, String, ?> actualReader, Set<String> keyColumns) throws Exception
 	{
 		ContainerResult result = null;
+		rowsNumberExecutor = createRowsNumberExecutor();
 		try (TableDataComparator<String, String> comparator = createTableDataComparator(expectedReader, actualReader, keyColumns))
 		{
 			if (!comparator.hasMoreRows())
@@ -160,10 +164,13 @@ public class CompareDataSets extends Action
 			long comparisonStartTime = System.currentTimeMillis();
 			result = createComparisonContainerResult();
 			int rowsCount = 0, passedRowsCount = 0;
+			DefaultStringTableRowMatcher tableRowMatcher = createTableRowMatcher(keyColumns);
+			
 			do
 			{
 				rowsCount++;
 				RowComparisonData<String, String> compData = comparator.compareRows();
+				
 				if (compData.isSuccess())
 					passedRowsCount++;
 				
@@ -177,7 +184,10 @@ public class CompareDataSets extends Action
 					getLogger().warn(errMsgBuilder.toString());
 				}
 				
-				result.addDetail(createBlockResult(compData, "Row #" + rowsCount));
+				TableRow currentTableRow = comparator.getCurrentRow();
+
+				processCurrentRow(tableRowMatcher.createPrimaryKey(currentTableRow), compData, rowsCount, result);
+				
 				afterRow(rowsCount, passedRowsCount);
 			}
 			while (comparator.hasMoreRows());
@@ -185,12 +195,14 @@ public class CompareDataSets extends Action
 			getLogger().debug("Comparison finished in {} sec. Processed {} rows: {} passed / {} failed",
 					TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - comparisonStartTime), rowsCount,
 					passedRowsCount, rowsCount - passedRowsCount);
+			
 			return result;
 		}
 		finally
 		{
 			if (result instanceof AutoCloseable)
 				Utils.closeResource((AutoCloseable)result);
+			rowsNumberExecutor.close();
 		}
 	}
 	
@@ -334,5 +346,34 @@ public class CompareDataSets extends Action
 	{
 		// FIXME: here we need to obtain DB connection by using Core capabilities, once this is implemented
 		throw new SQLException("Could not initialize database connection. Please contact developers.");
+	}
+	
+	protected RowsNumberExecutor createRowsNumberExecutor() throws Exception
+	{
+		return new RowsNumberExecutor();
+	}
+	
+	protected void processCurrentRow(String rowKey, RowComparisonData<String, String> compData,
+	                                 int rowsCount, ContainerResult result) throws IOException
+	{
+		if(checkDuplicates)
+		{
+			String duplicateRow = rowsNumberExecutor.processCurrentRow(rowKey, rowsCount);
+			if(duplicateRow != null && !duplicateRow.isEmpty())
+			{
+				addDuplicateResult(compData, rowsCount, duplicateRow, result);
+				return;
+			}
+		}
+		result.addDetail(createBlockResult(compData, "Row #" + rowsCount));
+	}
+	
+	private void addDuplicateResult(RowComparisonData<String, String> compData, int rowsCount,
+	                                String duplicateRowNumber, ContainerResult result)
+	{
+		Result blockResult = createBlockResult(compData, String.format("Row #%s Duplicate of %s", rowsCount,
+				duplicateRowNumber));
+		blockResult.setSuccess(false);
+		result.addDetail(blockResult);
 	}
 }

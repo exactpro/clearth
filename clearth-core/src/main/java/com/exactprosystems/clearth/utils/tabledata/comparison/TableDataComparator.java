@@ -43,6 +43,7 @@ public class TableDataComparator<A, B> implements AutoCloseable
 	
 	protected boolean expectedReadMore, actualReadMore;
 	protected final ValuesComparator<A, B> valuesComparator;
+	protected TableRow<A,B> currentRow;
 	
 	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
 			ValuesComparator<A, B> valuesComparator) throws IOException
@@ -141,5 +142,10 @@ public class TableDataComparator<A, B> implements AutoCloseable
 			compData.addComparisonDetail(column, expectedValue, actualValue, identical);
 		}
 		return compData;
+	}
+
+	public TableRow getCurrentRow()
+	{
+		return this.currentRow;
 	}
 }

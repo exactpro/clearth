@@ -36,6 +36,7 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	protected IndexedTableData<A, B, C> expectedStorage, actualStorage;
 	protected TableRowMatcher<A, B, C> rowMatcher;
 	
+	
 	public IndexedTableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
 			TableRowMatcher<A, B, C> rowMatcher, ValuesComparator<A, B> valuesComparator) throws IOException
 	{
@@ -105,6 +106,14 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 			}
 		}
 		while ((expectedRow == null || actualRow == null) && hasMoreRows());
+		if(expectedRow != null)
+		{
+			currentRow = expectedRow;
+		}
+		else
+		{
+			currentRow = actualRow;
+		}
 		return compareCoupleOfRows(expectedRow, actualRow);
 	}
 	
