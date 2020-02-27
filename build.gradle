@@ -1,7 +1,15 @@
 ext {
 	sharedDir = file('shared')
 	coreXsdDir = file('clearth-core/xsd')
-	version = file('version').text.trim()
+
+	if (!project.hasProperty('cth_version')) {
+		cth_version = '1.0.0-SNAPSHOT'
+	}
+
+	if (!project.hasProperty('git_commit')) {
+		git_commit = ''
+	}
+	
 	if (!project.hasProperty('newProjectDir')) {
 		newProjectDir = "undef"
 	}
@@ -58,7 +66,7 @@ subprojects {
 		}
 	}
 	
-	version	 = rootProject.ext.version
+	version	 = cth_version
 	group	 = 'com.exactprosystems.clearth'
 
 	sourceSets {
@@ -151,6 +159,8 @@ subprojects {
 			if (versionMark != '')
 				attributes('Implementation-Version-Mark': "${versionMark}")
 			attributes('Implementation-Version-Date': getDate())
+			if (git_commit != '')
+				attributes('Git-Commit': "${git_commit}")
 		}
 	}
 
@@ -275,7 +285,7 @@ task createProject(type: Copy,
 		include "jetty94.xml"
 		filter( org.apache.tools.ant.filters.ReplaceTokens, tokens: ["JETTY_VERSION": jettyVersion.toString(),
 																	 "CORE_SHARED_DIR": sharedDir.toString().replace('\\', '/'),
-																	 "CORE_VERSION": rootProject.ext.version.toString()] )
+																	 "CORE_VERSION": cth_version] )
 	}
 	from (new File("${projectDir}/cfg/")) {
 		into "cfg/"
