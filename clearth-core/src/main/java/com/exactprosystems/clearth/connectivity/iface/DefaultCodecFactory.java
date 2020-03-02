@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.connectivity.iface;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.xmldata.XmlCodecConfig;
 
@@ -25,6 +27,9 @@ public class DefaultCodecFactory implements ICodecFactory
 {
 	public ICodec createCodec(XmlCodecConfig config) throws Exception
 	{
+		if (StringUtils.isEmpty(config.getDictionaryFile()))
+			return (ICodec) Class.forName(config.getCodec()).getDeclaredConstructor().newInstance();
+		
 		String xmlFile = ClearThCore.getInstance().getDictsPath()+config.getDictionaryFile();
 		
 		Object dictionary = Class.forName(config.getDictionary()).getDeclaredConstructor(String.class).newInstance(xmlFile);
