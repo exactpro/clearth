@@ -105,7 +105,7 @@ public class ReportFilters {
 			Integer filterValue = (Integer)filter;
 			Matrix matrix = (Matrix)value;
 			switch(filterValue) {
-				case 1:
+				case 1: //Passed
 					if(rtSelectedSteps.isEmpty())
 					{
 						return matrix.isSuccessful();
@@ -114,9 +114,9 @@ public class ReportFilters {
 					{
 						return !hasFailedSelectedSteps(rtSelectedSteps, matrix);
 					}
-				case 2:
+				case 2: //Started
 					return matrix.getActionsDone() > 0;
-				case 3:
+				case 3: //Failed
 					if(rtSelectedSteps.isEmpty())
 					{
 						return !matrix.isSuccessful();
@@ -125,8 +125,11 @@ public class ReportFilters {
 					{
 						return hasFailedSelectedSteps(rtSelectedSteps, matrix);
 					}
-				case 4:
+				case 4: //Started and failed
 					return matrix.getActionsDone() > 0 && !matrix.isSuccessful();
+				case 5: //Finished
+					int done = matrix.getActionsDone();
+					return done > 0 && (matrix.getActions().size() - matrix.getNonExecutableActions().size()) == done;
 				default:
 					return true;
 			}
