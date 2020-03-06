@@ -58,26 +58,29 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	
 	protected File tempReportFile = null;
 	private CsvWriter csvWriter = null;
+	private final String name;
 	
 	// Empty constructor is required for JSON-reports
-	public CsvContainerResult()
+	public CsvContainerResult(String name)
 	{
 		super();
+		this.name = name;
 	}
 	
-	protected CsvContainerResult(String header, boolean isBlockView)
+	protected CsvContainerResult(String header, boolean isBlockView, String name)
 	{
 		super(header, isBlockView);
+		this.name = name;
 	}
 	
-	public static CsvContainerResult createPlainResult()
+	public static CsvContainerResult createPlainResult(String name)
 	{
-		return new CsvContainerResult(null, false);
+		return new CsvContainerResult(null, false, name);
 	}
 	
-	public static CsvContainerResult createBlockResult(String header)
+	public static CsvContainerResult createBlockResult(String header, String name)
 	{
-		return new CsvContainerResult(header, true);
+		return new CsvContainerResult(header, true, name);
 	}
 	
 	
@@ -114,8 +117,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	@Override
 	public void processDetails(File reportDir, Action linkedAction)
 	{
-		String headerMsg = "Total rows: " + totalRowsCount + " / Displayed: " + Math.min(totalRowsCount, maxDisplayedRowsCount) +
-				"<br>Passed: " + passedRowsCount + " / Failed: " + (totalRowsCount - passedRowsCount);
+		String headerMsg = buildHeader();
 		
 		if (tempReportFile != null)
 		{
@@ -150,6 +152,11 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		Utils.closeResource(csvWriter);
 	}
 	
+	
+	protected String buildHeader()
+	{
+		return "Total rows: " + totalRowsCount + " / Displayed: " + Math.min(totalRowsCount, maxDisplayedRowsCount);
+	}
 	
 	protected void writeDetailToReportFile(Result detail)
 	{
@@ -207,7 +214,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		File detailsDir = new File(reportDir, DETAILS_DIR);
 		detailsDir.mkdirs();
 		return Files.createTempFile(detailsDir.toPath(), (linkedAction != null ? linkedAction.getStepName() + "_" + linkedAction.getIdInMatrix() + "_" + linkedAction.getName()
-				: "noStep_noId_noAction") + "_", "_" + (this.isSuccess() ? "PASSED" : "FAILED") + (onlyFailedInCsv ? "_(onlyfailed)" : "") + ".csv");
+				: "noStep_noId_noAction") + "_", "_" + name + (onlyFailedInCsv ? "_(onlyfailed)" : "") + ".csv");
 	}
 	
 	protected String processWrittenFile(File writtenFile) throws IOException
@@ -269,5 +276,11 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	public int getPassedRowsCount()
 	{
 		return passedRowsCount;
+	}
+	
+	
+	public String getName()
+	{
+		return name;
 	}
 }

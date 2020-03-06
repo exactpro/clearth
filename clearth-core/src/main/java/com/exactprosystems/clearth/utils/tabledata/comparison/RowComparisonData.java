@@ -33,6 +33,7 @@ public class RowComparisonData<A, B>
 {
 	private List<RowComparisonDetail<A, B>> compDetails;
 	private List<String> errors;
+	private RowComparisonResult result = RowComparisonResult.PASSED;
 	
 	public RowComparisonData()
 	{
@@ -42,6 +43,29 @@ public class RowComparisonData<A, B>
 	
 	public void addComparisonDetail(A column, B expectedValue, B actualValue, boolean identical)
 	{
+		if (result != RowComparisonResult.FAILED)
+		{
+			if (expectedValue == null || actualValue == null)
+			{
+				if (expectedValue == null)
+				{
+					if (result == RowComparisonResult.NOT_FOUND)
+						result = RowComparisonResult.FAILED;
+					else
+						result = RowComparisonResult.EXTRA;
+				}
+				
+				if (actualValue == null)
+				{
+					if (result == RowComparisonResult.EXTRA)
+						result = RowComparisonResult.FAILED;
+					else
+						result = RowComparisonResult.NOT_FOUND;
+				}
+			}
+			else if (!identical)
+				result = RowComparisonResult.FAILED;
+		}
 		compDetails.add(new RowComparisonDetail<>(column, expectedValue, actualValue, false, identical));
 	}
 	
@@ -90,5 +114,10 @@ public class RowComparisonData<A, B>
 	public List<String> getErrors()
 	{
 		return errors;
+	}
+	
+	public RowComparisonResult getResult()
+	{
+		return result;
 	}
 }

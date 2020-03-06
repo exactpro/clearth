@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,18 +27,24 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.collections4.list.UnmodifiableList;
 
 /**
  * Result which can include other results.
  * @author daria.plotnikova
  */
+@JsonIgnoreProperties({"containers"})
 public class ContainerResult extends Result implements Serializable
 {
 	private static final long serialVersionUID = -2015931472252216998L;
 	
 	protected ContainerResult parentResult = null;
 	protected final List<Result> details;
+	protected final Map<String, ContainerResult> containers;
 	protected String header;
 	protected boolean blockView = false, hasStatus = true, useFailReasonColor = false;
 	
@@ -46,6 +52,7 @@ public class ContainerResult extends Result implements Serializable
 	{
 		super();
 		this.details = new ArrayList<>();
+		this.containers = new HashMap<>();
 	}
 	
 	protected ContainerResult(String header, boolean isBlockView)
@@ -53,6 +60,7 @@ public class ContainerResult extends Result implements Serializable
 		this.header = header;
 		this.blockView = isBlockView;
 		this.details = new ArrayList<>();
+		this.containers = new HashMap<>();
 	}
 	
 	protected ContainerResult(String header, boolean isBlockView, List<Result> details)
@@ -101,19 +109,71 @@ public class ContainerResult extends Result implements Serializable
 	
 	
 	/**
-	 * Adds new result into the container.
+	 * Adds nested container result, assigning it a name for further use in {@link #addDetail(String, Result)}.
+	 * Container can be wrapped in a named container block
+	 * @param name to assign to nested container
+	 * @param container to add
+	 * @param wrap flag that indicates if container needs to be wrapped in a named container block
+	 */
+	public void addContainer(String name, ContainerResult container, boolean wrap)
+	{
+		ContainerResult wrapper = wrap ? createContainerWrapper(name) : null;
+		if (wrapper != null)
+		{
+			addDetail(wrapper);
+			wrapper.addDetail(container);
+		}
+		else
+			addDetail(container);
+		containers.put(name, container);
+	}
+	
+	/**
+	 * Provides access to nested container with specified name
+	 * @param name of container to get
+	 * @return nested container with specified name, if exists, null otherwise
+	 */
+	public ContainerResult getContainer(String name)
+	{
+		return containers.get(name);
+	}
+	
+	/**
+	 * Adds new result into the container
+	 * @param detail to add
 	 */
 	public void addDetail(Result detail)
 	{
 		details.add(detail);
 		initDetail(detail);
 	}
-
+	
+	/**
+	 * Adds new result into nested container found by given name. If container with given name doesn't exist, throws NullPointerException
+	 * @param containerName name of container to add result to
+	 * @param detail to add to nested container
+	 */
+	public void addDetail(String containerName, Result detail)
+	{
+		ContainerResult container = containers.get(containerName);
+		if (container == null)
+			throw new NullPointerException("No container with name '"+containerName+"'");
+		
+		container.addDetail(detail);
+	}
+	
+	
 	protected void initDetail(Result detail)
 	{
 		if (detail instanceof ContainerResult)
 			((ContainerResult) detail).parentResult = this;
 	}
+	
+	protected ContainerResult createContainerWrapper(String header)
+	{
+		return ContainerResult.createBlockResult(header);
+	}
+	
 
 	@Override
 	public boolean isSuccessWithoutInversionRegard()
@@ -147,6 +207,7 @@ public class ContainerResult extends Result implements Serializable
 	public void clearDetails()
 	{
 		details.clear();
+		containers.clear();
 	}
 	
 	@Override
@@ -186,7 +247,7 @@ public class ContainerResult extends Result implements Serializable
 	
 	public List<Result> getDetails()
 	{
-		return details;
+		return UnmodifiableList.unmodifiableList(details);  //This prevents changes in the list that will make details and containers not linked
 	}
 	
 	public void setHeader(String header)

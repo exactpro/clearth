@@ -26,6 +26,7 @@ import com.exactprosystems.clearth.automation.StepContext;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.automation.report.results.CloseableContainerResult;
 import com.exactprosystems.clearth.automation.report.results.ContainerResult;
 import com.exactprosystems.clearth.automation.report.results.CsvContainerResult;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
@@ -42,6 +43,7 @@ import com.exactprosystems.clearth.utils.tabledata.DefaultStringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.IndexedStringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.RowComparisonData;
+import com.exactprosystems.clearth.utils.tabledata.comparison.RowComparisonResult;
 import com.exactprosystems.clearth.utils.tabledata.comparison.StringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
@@ -66,7 +68,12 @@ public class CompareDataSets extends Action
 	
 	// Formats of sources available for comparison
 	public static final String FORMAT_DB_QUERY = "Query", FORMAT_DB_QUERY_FILE = "QueryFile", FORMAT_CSV_FILE = "CsvFile",
-			FORMAT_SCRIPT = "Script", FORMAT_SCRIPT_FILE = "ScriptFile";
+			FORMAT_SCRIPT = "Script", FORMAT_SCRIPT_FILE = "ScriptFile",
+			
+			CONTAINER_PASSED = "Passed rows",
+			CONTAINER_FAILED = "Failed rows",
+			CONTAINER_NOT_FOUND = "Not found rows",
+			CONTAINER_EXTRA = "Extra rows";
 	
 	// Matrix params names for additional ones to initialize data readers (0 - common, 1 - expected, 2 - actual)
 	public static final String[] CSV_DELIMITER = new String[] { "CsvDelimiterCommon", "CsvDelimiterExpected", "CsvDelimiterActual"},
@@ -208,7 +215,18 @@ public class CompareDataSets extends Action
 	
 	protected ContainerResult createComparisonContainerResult()
 	{
-		return CsvContainerResult.createPlainResult();
+		ContainerResult result = CloseableContainerResult.createPlainResult(null);
+		//Creating containers firstly to have them in expected order
+		result.addContainer(CONTAINER_PASSED, createComparisonNestedResult(CONTAINER_PASSED), true);
+		result.addContainer(CONTAINER_FAILED, createComparisonNestedResult(CONTAINER_FAILED), true);
+		result.addContainer(CONTAINER_NOT_FOUND, createComparisonNestedResult(CONTAINER_NOT_FOUND), true);
+		result.addContainer(CONTAINER_EXTRA, createComparisonNestedResult(CONTAINER_EXTRA), true);
+		return result;
+	}
+	
+	protected ContainerResult createComparisonNestedResult(String header)
+	{
+		return CsvContainerResult.createPlainResult(header.toLowerCase().replace(" ", "_"));
 	}
 	
 	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
@@ -353,6 +371,19 @@ public class CompareDataSets extends Action
 		return new RowsNumberExecutor();
 	}
 	
+	protected void addComparisonData(Result comparisonData, RowComparisonResult comparisonResult, ContainerResult result)
+	{
+		String nestedName = getResultName(comparisonResult);
+		
+		ContainerResult nestedResult = result.getContainer(nestedName);
+		if (nestedResult == null)
+		{
+			nestedResult = createComparisonNestedResult(nestedName);
+			result.addContainer(nestedName, nestedResult, true);
+		}
+		nestedResult.addDetail(comparisonData);
+	}
+	
 	protected void processCurrentRow(String rowKey, RowComparisonData<String, String> compData,
 	                                 int rowsCount, ContainerResult result) throws IOException
 	{
@@ -365,15 +396,35 @@ public class CompareDataSets extends Action
 				return;
 			}
 		}
-		result.addDetail(createBlockResult(compData, "Row #" + rowsCount));
+		
+		addComparisonData(createBlockResult(compData, "Row #" + rowsCount),
+				compData.getResult(), 
+				result);
+	}
+	
+	
+	
+	private String getResultName(RowComparisonResult result)
+	{
+		switch (result)
+		{
+		case PASSED : return CONTAINER_PASSED;
+		case FAILED : return CONTAINER_FAILED;
+		case NOT_FOUND : return CONTAINER_NOT_FOUND;
+		case EXTRA : return CONTAINER_EXTRA;
+		}
+		return null;
 	}
 	
 	private void addDuplicateResult(RowComparisonData<String, String> compData, int rowsCount,
 	                                String duplicateRowNumber, ContainerResult result)
 	{
-		Result blockResult = createBlockResult(compData, String.format("Row #%s Duplicate of %s", rowsCount,
-				duplicateRowNumber));
+		Result blockResult = createBlockResult(compData, String.format("Row #"+rowsCount+" (duplicate of "+duplicateRowNumber+")"));
 		blockResult.setSuccess(false);
-		result.addDetail(blockResult);
+		
+		RowComparisonResult compResult = compData.getResult();
+		if (compResult == RowComparisonResult.PASSED)
+			compResult = RowComparisonResult.FAILED;
+		addComparisonData(blockResult, compResult, result);
 	}
 }
