@@ -357,6 +357,7 @@ public abstract class ActionGenerator
 				else
 				{
 					actionSettings.setStep(steps.get(value));
+					actionSettings.setStepName(value);
 					matrixStepName = value;
 				}
 			}
@@ -518,7 +519,7 @@ public abstract class ActionGenerator
 
 		if (actionSettings.getStep() == null) {
 			allSuccessful = false;
-			String message = "Action '" + actionSettings.getActionId() + "' (line " + lineNumber + ") is included in nonexistent step, it won't be executed";
+			String message = "Action '" + actionSettings.getActionId() + "' (line " + lineNumber + ") is included in " + "nonexistent step '" + actionSettings.getStepName() + "', it won't be executed";
 			logger.warn(message);
 			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.NONEXISTENT_GLOBALSTEP, message);
 		}

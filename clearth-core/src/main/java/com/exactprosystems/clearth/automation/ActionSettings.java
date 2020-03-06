@@ -50,6 +50,7 @@ public class ActionSettings
 	
 	private Matrix matrix = null;
 	private Step step = null;
+	private String stepName = null;
 
 	public String getActionId()
 	{
@@ -72,6 +73,16 @@ public class ActionSettings
 		this.step = step;
 	}
 
+	public String getStepName()
+	{
+		return step == null ? stepName : step.getName();
+	}
+
+	public void setStepName(String stepName)
+	{
+		this.stepName = stepName;
+	}
+	
 	public String getActionName()
 	{
 		return actionName;
