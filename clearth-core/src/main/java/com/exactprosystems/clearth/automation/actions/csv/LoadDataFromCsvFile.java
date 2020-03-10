@@ -69,7 +69,7 @@ public class LoadDataFromCsvFile extends Action implements ContextWriter {
 
 		saveDataToContext(tableData, stepContext, matrixContext, globalContext, getInputParam(DATA_CONTEXT, MATRIXCONTEXT));
 
-		return DefaultResult.passed("Data were loaded successfully");
+		return DefaultResult.passed("Data was loaded successfully");
 	}
 
 	private void saveDataToContext(StringTableData tableData, StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext, String saveTo) throws ResultException

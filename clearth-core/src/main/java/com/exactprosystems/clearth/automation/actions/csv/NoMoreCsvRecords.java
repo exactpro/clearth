@@ -42,7 +42,7 @@ public class NoMoreCsvRecords extends Action implements ContextReader {
 		int uncheckedRecords = tableData.getRows().size();
 		if(uncheckedRecords != 0)
 		{
-			return DefaultResult.failed(uncheckedRecords + " records weren`t checked");
+			return DefaultResult.failed(uncheckedRecords + " record(s) weren`t checked");
 		}
 		return DefaultResult.passed("All records were checked");
 	}
