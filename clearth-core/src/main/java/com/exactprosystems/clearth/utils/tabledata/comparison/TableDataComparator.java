@@ -108,6 +108,8 @@ public class TableDataComparator<A, B> implements AutoCloseable
 		if (expectedRow == null && actualRow == null)
 			throw new IllegalArgumentException("Both table row objects are null. Could not make comparison.");
 		
+		currentRow = expectedRow != null ? expectedRow : actualRow;
+		
 		RowComparisonData<A, B> compData = new RowComparisonData<>();
 		if (expectedRow == null || actualRow == null)
 		{
@@ -144,7 +146,7 @@ public class TableDataComparator<A, B> implements AutoCloseable
 		return compData;
 	}
 
-	public TableRow getCurrentRow()
+	public TableRow<A,B> getCurrentRow()
 	{
 		return this.currentRow;
 	}

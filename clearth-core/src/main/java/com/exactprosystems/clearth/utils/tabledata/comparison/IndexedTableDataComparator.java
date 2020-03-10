@@ -106,14 +106,7 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 			}
 		}
 		while ((expectedRow == null || actualRow == null) && hasMoreRows());
-		if(expectedRow != null)
-		{
-			currentRow = expectedRow;
-		}
-		else
-		{
-			currentRow = actualRow;
-		}
+		
 		return compareCoupleOfRows(expectedRow, actualRow);
 	}
 	
