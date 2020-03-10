@@ -58,13 +58,23 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	
 	protected File tempReportFile = null;
 	private CsvWriter csvWriter = null;
-	private final String name;
+	private String name;
 	
 	// Empty constructor is required for JSON-reports
+	public CsvContainerResult()
+	{
+		super();
+	}
+
 	public CsvContainerResult(String name)
 	{
 		super();
 		this.name = name;
+	}
+
+	protected CsvContainerResult(String header, boolean isBlockView)
+	{
+		super(header, isBlockView);
 	}
 	
 	protected CsvContainerResult(String header, boolean isBlockView, String name)
@@ -72,10 +82,20 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		super(header, isBlockView);
 		this.name = name;
 	}
+
+	public static CsvContainerResult createPlainResult()
+	{
+		return new CsvContainerResult();
+	}
 	
 	public static CsvContainerResult createPlainResult(String name)
 	{
 		return new CsvContainerResult(null, false, name);
+	}
+
+	public static CsvContainerResult createBlockResult(String header)
+	{
+		return new CsvContainerResult(header, true);
 	}
 	
 	public static CsvContainerResult createBlockResult(String header, String name)
@@ -282,5 +302,10 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	public String getName()
 	{
 		return name;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
 	}
 }
