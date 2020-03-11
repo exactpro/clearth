@@ -126,7 +126,7 @@ public class TableDataComparator<A, B> implements AutoCloseable
 			// Check if it's "unexpected" column which should be marked as 'INFO' in comparison results
 			if (!expectedHeader.containsColumn(column))
 			{
-				compData.addInfoComparisonDetail(column, actualRow.getValue(column));
+				compData.addInfoComparisonDetail(column, expectedRow.getValue(column), actualRow.getValue(column));
 				continue;
 			}
 			

@@ -69,9 +69,9 @@ public class RowComparisonData<A, B>
 		compDetails.add(new RowComparisonDetail<>(column, expectedValue, actualValue, false, identical));
 	}
 	
-	public void addInfoComparisonDetail(A column, B actualValue)
+	public void addInfoComparisonDetail(A column, B expectedValue, B actualValue)
 	{
-		compDetails.add(new RowComparisonDetail<>(column, null, actualValue, true, true));
+		compDetails.add(new RowComparisonDetail<>(column, expectedValue, actualValue, true, true));
 	}
 	
 	public void addErrorMsg(String errorMsg)
