@@ -171,8 +171,11 @@ public class CompareDataSets extends Action
 			long comparisonStartTime = System.currentTimeMillis();
 			result = createComparisonContainerResult();
 			int rowsCount = 0, passedRowsCount = 0;
-			DefaultStringTableRowMatcher tableRowMatcher = createTableRowMatcher(keyColumns);
-			
+			DefaultStringTableRowMatcher tableRowMatcher = null;
+			if (!keyColumns.isEmpty())
+			{
+				tableRowMatcher = createTableRowMatcher(keyColumns);
+			}
 			do
 			{
 				rowsCount++;
@@ -192,8 +195,9 @@ public class CompareDataSets extends Action
 				}
 				
 				TableRow currentTableRow = comparator.getCurrentRow();
-
-				processCurrentRow(tableRowMatcher.createPrimaryKey(currentTableRow), compData, rowsCount, result);
+				String rowKey = tableRowMatcher != null ? tableRowMatcher.createPrimaryKey(currentTableRow) : null;
+				
+				processCurrentRow(rowKey, compData, rowsCount, result);
 				
 				afterRow(rowsCount, passedRowsCount);
 			}
@@ -387,7 +391,7 @@ public class CompareDataSets extends Action
 	protected void processCurrentRow(String rowKey, RowComparisonData<String, String> compData,
 	                                 int rowsCount, ContainerResult result) throws IOException
 	{
-		if(checkDuplicates)
+		if(checkDuplicates && rowKey != null && !rowKey.isEmpty())
 		{
 			String duplicateRow = rowsNumberExecutor.processCurrentRow(rowKey, rowsCount);
 			if(duplicateRow != null && !duplicateRow.isEmpty())
