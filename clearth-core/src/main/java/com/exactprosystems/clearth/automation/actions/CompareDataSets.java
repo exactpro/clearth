@@ -162,8 +162,14 @@ public class CompareDataSets extends Action
 			BasicTableDataReader<String, String, ?> actualReader, Set<String> keyColumns) throws Exception
 	{
 		ContainerResult result = null;
-		rowsNumberExecutor = createRowsNumberExecutor();
-		try (TableDataComparator<String, String> comparator = createTableDataComparator(expectedReader, actualReader, keyColumns))
+		DefaultStringTableRowMatcher tableRowMatcher = null;
+		if (!keyColumns.isEmpty())
+		{
+			tableRowMatcher = createTableRowMatcher(keyColumns);
+			rowsNumberExecutor = createRowsNumberExecutor();
+		}
+		try (TableDataComparator<String, String> comparator = createTableDataComparator(expectedReader, actualReader,
+				tableRowMatcher))
 		{
 			if (!comparator.hasMoreRows())
 				return DefaultResult.passed("Both datasets are empty. Nothing to compare.");
@@ -171,11 +177,7 @@ public class CompareDataSets extends Action
 			long comparisonStartTime = System.currentTimeMillis();
 			result = createComparisonContainerResult();
 			int rowsCount = 0, passedRowsCount = 0;
-			DefaultStringTableRowMatcher tableRowMatcher = null;
-			if (!keyColumns.isEmpty())
-			{
-				tableRowMatcher = createTableRowMatcher(keyColumns);
-			}
+			
 			do
 			{
 				rowsCount++;
@@ -213,7 +215,8 @@ public class CompareDataSets extends Action
 		{
 			if (result instanceof AutoCloseable)
 				Utils.closeResource((AutoCloseable)result);
-			rowsNumberExecutor.close();
+			if(rowsNumberExecutor != null)
+				rowsNumberExecutor.close();
 		}
 	}
 	
@@ -234,10 +237,10 @@ public class CompareDataSets extends Action
 	}
 	
 	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, Set<String> keyColumns) throws IOException
+			BasicTableDataReader<String, String, ?> actualReader, DefaultStringTableRowMatcher tableRowMatcher) throws IOException
 	{
-		return keyColumns.isEmpty() ? new StringTableDataComparator(expectedReader, actualReader)
-				: new IndexedStringTableDataComparator(expectedReader, actualReader, createTableRowMatcher(keyColumns));
+		return tableRowMatcher == null ? new StringTableDataComparator(expectedReader, actualReader)
+				: new IndexedStringTableDataComparator(expectedReader, actualReader, tableRowMatcher);
 	}
 	
 	protected Result createBlockResult(RowComparisonData<String, String> compData, String headerMessage)
