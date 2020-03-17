@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,7 +16,9 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata;
+package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
+
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
 /**
  * Interface to match table-like data rows. 

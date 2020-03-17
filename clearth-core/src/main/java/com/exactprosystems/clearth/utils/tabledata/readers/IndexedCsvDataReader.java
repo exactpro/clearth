@@ -25,7 +25,7 @@ import java.util.Set;
 
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
-import com.exactprosystems.clearth.utils.tabledata.TableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 /**
  * Reader of indexed table-like data from CSV data source

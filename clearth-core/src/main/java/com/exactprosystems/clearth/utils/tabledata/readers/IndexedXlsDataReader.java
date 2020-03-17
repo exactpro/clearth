@@ -29,7 +29,7 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
-import com.exactprosystems.clearth.utils.tabledata.TableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 public class IndexedXlsDataReader<C> extends AbstractExcelDataReader<IndexedTableData<String, String, C>> {
 

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 import org.apache.commons.collections4.list.UnmodifiableList;
 
 /**

@@ -24,7 +24,7 @@ import java.util.Set;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
-import com.exactprosystems.clearth.utils.tabledata.TableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 public class IndexedClearThMessageReader<C> extends AbstractClearThMessageReader<IndexedTableData<String, String, C>>
 {

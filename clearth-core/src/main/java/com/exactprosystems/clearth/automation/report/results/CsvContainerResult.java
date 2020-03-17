@@ -28,6 +28,7 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,16 +39,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
-@JsonIgnoreProperties({ "logger", "failReason", "tempReportFile", "csvWriter" })
+@JsonIgnoreProperties({ "serialVersionUID", "logger", "tempReportFile", "csvWriter" })
 public class CsvContainerResult extends ContainerResult implements AutoCloseable
 {
 	private static final long serialVersionUID = 5699150687216722251L;
-	
-	protected static final Logger logger = LoggerFactory.getLogger(CsvContainerResult.class);
+	private static final Logger logger = LoggerFactory.getLogger(CsvContainerResult.class);
 	
 	@JsonIgnore
 	protected final String COLUMN_COMPARISON_NAME = "Comparison name",
@@ -55,23 +54,23 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	
 	protected int maxDisplayedRowsCount = 50, totalRowsCount = 0, passedRowsCount = 0;
 	protected boolean writeCsvReportAnyway = false, onlyFailedInHtml = false, onlyFailedInCsv = false;
+	protected String name;
 	
 	protected File tempReportFile = null;
 	private CsvWriter csvWriter = null;
-	private String name;
 	
 	// Empty constructor is required for JSON-reports
 	public CsvContainerResult()
 	{
 		super();
 	}
-
+	
 	public CsvContainerResult(String name)
 	{
 		super();
 		this.name = name;
 	}
-
+	
 	protected CsvContainerResult(String header, boolean isBlockView)
 	{
 		super(header, isBlockView);
@@ -82,7 +81,8 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		super(header, isBlockView);
 		this.name = name;
 	}
-
+	
+	
 	public static CsvContainerResult createPlainResult()
 	{
 		return new CsvContainerResult();
@@ -92,7 +92,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		return new CsvContainerResult(null, false, name);
 	}
-
+	
 	public static CsvContainerResult createBlockResult(String header)
 	{
 		return new CsvContainerResult(header, true);
@@ -138,11 +138,10 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	public void processDetails(File reportDir, Action linkedAction)
 	{
 		String headerMsg = buildHeader();
-		
 		if (tempReportFile != null)
 		{
-			if (writeCsvReportAnyway || (onlyFailedInHtml && (totalRowsCount - passedRowsCount > maxDisplayedRowsCount || passedRowsCount != 0))
-					|| totalRowsCount > maxDisplayedRowsCount)
+			if (writeCsvReportAnyway || (onlyFailedInHtml && (totalRowsCount - passedRowsCount > maxDisplayedRowsCount
+					|| passedRowsCount != 0)) || totalRowsCount > maxDisplayedRowsCount)
 			{
 				try
 				{
@@ -152,14 +151,13 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 				}
 				catch (IOException e)
 				{
-					logger.error("Couldn't move written CSV report file to necessary path", e);
+					getLogger().error("Couldn't move written CSV report file to necessary path", e);
 					headerMsg += "<br>Error occurred while saving CSV report file. Please, see logs for details.";
 				}
 			}
 			else
-				tempReportFile.delete();
+				FileUtils.deleteQuietly(tempReportFile);
 		}
-		
 		setHeader(headerMsg);
 	}
 	
@@ -173,30 +171,21 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	}
 	
 	
-	protected String buildHeader()
-	{
-		return "Total rows: " + totalRowsCount + " / Displayed: " + Math.min(totalRowsCount, maxDisplayedRowsCount);
-	}
-	
 	protected void writeDetailToReportFile(Result detail)
 	{
 		try
 		{
 			csvWriter = getCsvReportWriter();
 			ContainerResult mainContainer = (ContainerResult)detail;
-			DetailedResult detailedResult = (DetailedResult)mainContainer.getDetails().get(0);
+			List<Result> mainContainerDetails = mainContainer.getDetails();
+			if (mainContainerDetails.isEmpty())
+				return;
+			DetailedResult detailedResult = (DetailedResult)mainContainerDetails.get(0);
 			List<ResultDetail> resultDetails = detailedResult.getResultDetails();
 			
 			// Write header only if it's a first comparison row in file
 			if (!onlyFailedInCsv && totalRowsCount == 1 || onlyFailedInCsv && totalRowsCount - passedRowsCount == 1)
-			{
-				csvWriter.write(COLUMN_COMPARISON_NAME);
-				csvWriter.write(COLUMN_COMPARISON_RESULT);
-				csvWriter.write(COLUMN_ROW_KIND);
-				for (ResultDetail rd : resultDetails)
-					csvWriter.write(rd.getParam());
-				csvWriter.endRecord();
-			}
+				writeHeaderToReportFile(resultDetails, csvWriter);
 			String compResult = detailedResult.isSuccess() ? "PASSED" : "FAILED";
 			// Write expected comparison data
 			csvWriter.write(mainContainer.getHeader());
@@ -215,33 +204,49 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		}
 		catch (IOException e)
 		{
-			logger.error("Error occurred while writing next result detail to the CSV report file", e);
+			getLogger().error("Error occurred while writing next result detail to the CSV report file", e);
 		}
+	}
+	
+	protected void writeHeaderToReportFile(List<ResultDetail> resultDetails, CsvWriter csvWriter) throws IOException
+	{
+		csvWriter.write(COLUMN_COMPARISON_NAME);
+		csvWriter.write(COLUMN_COMPARISON_RESULT);
+		csvWriter.write(COLUMN_ROW_KIND);
+		for (ResultDetail rd : resultDetails)
+			csvWriter.write(rd.getParam());
+		csvWriter.endRecord();
 	}
 	
 	protected CsvWriter getCsvReportWriter() throws IOException
 	{
 		if (tempReportFile == null || csvWriter == null)
 		{
-			tempReportFile = Files.createTempFile(Paths.get(ClearThCore.tempPath()), "csvcontainerresult_report_", ".csv").toFile();
+			tempReportFile = File.createTempFile("csvcontainerresult_report_", ".csv", new File(ClearThCore.tempPath()));
 			csvWriter = new CsvWriter(new BufferedWriter(new FileWriter(tempReportFile)), ',');
 		}
 		return csvWriter;
+	}
+	
+	protected String buildHeader()
+	{
+		return "Total rows: " + totalRowsCount + " / Displayed: " + Math.min(totalRowsCount, maxDisplayedRowsCount);
 	}
 	
 	protected Path createTargetFilePath(File reportDir, Action linkedAction) throws IOException
 	{
 		File detailsDir = new File(reportDir, DETAILS_DIR);
 		detailsDir.mkdirs();
-		return Files.createTempFile(detailsDir.toPath(), (linkedAction != null ? linkedAction.getStepName() + "_" + linkedAction.getIdInMatrix() + "_" + linkedAction.getName()
-				: "noStep_noId_noAction") + "_", "_" + name + (onlyFailedInCsv ? "_(onlyfailed)" : "") + ".csv");
+		return Files.createTempFile(detailsDir.toPath(), (linkedAction != null ? linkedAction.getStepName()
+				+ "_" + linkedAction.getIdInMatrix() + "_" + linkedAction.getName() : "noStep_noId_noAction") + "_",
+				"_" + name + (onlyFailedInCsv ? "_(onlyfailed)" : "") + ".csv");
 	}
 	
 	protected String processWrittenFile(File writtenFile) throws IOException
 	{
 		File archivedResult = new File(writtenFile.getParentFile(), FilenameUtils.removeExtension(writtenFile.getName()) + ".zip");
 		FileOperationUtils.zipFiles(archivedResult, new File[] { writtenFile });
-		writtenFile.delete();
+		FileUtils.deleteQuietly(writtenFile);
 		return "<br>Zip-archive with CSV report inside could be downloaded " +
 				"<a href=\"" + archivedResult.getParentFile().getName() + File.separator + archivedResult.getName() + "\">here</a>";
 	}
@@ -287,6 +292,16 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		return onlyFailedInCsv;
 	}
 	
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+	
+	public String getName()
+	{
+		return name;
+	}
+	
 	
 	public int getTotalRowsCount()
 	{
@@ -299,13 +314,8 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	}
 	
 	
-	public String getName()
+	protected Logger getLogger()
 	{
-		return name;
-	}
-
-	public void setName(String name)
-	{
-		this.name = name;
+		return logger;
 	}
 }

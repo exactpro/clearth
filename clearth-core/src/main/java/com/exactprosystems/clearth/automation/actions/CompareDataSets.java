@@ -30,7 +30,10 @@ import com.exactprosystems.clearth.automation.report.results.CloseableContainerR
 import com.exactprosystems.clearth.automation.report.results.ContainerResult;
 import com.exactprosystems.clearth.automation.report.results.CsvContainerResult;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.*;
+import com.exactprosystems.clearth.utils.IValueTransformer;
+import com.exactprosystems.clearth.utils.LineBuilder;
+import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
@@ -39,17 +42,19 @@ import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.DefaultStringTableRowMatcher;
-import com.exactprosystems.clearth.utils.tabledata.TableRow;
-import com.exactprosystems.clearth.utils.tabledata.comparison.IndexedStringTableDataComparator;
-import com.exactprosystems.clearth.utils.tabledata.comparison.RowComparisonData;
-import com.exactprosystems.clearth.utils.tabledata.comparison.RowComparisonResult;
-import com.exactprosystems.clearth.utils.tabledata.comparison.StringTableDataComparator;
-import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.*;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.NumericValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.DefaultStringTableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -64,7 +69,9 @@ import java.util.stream.Stream;
 public class CompareDataSets extends Action
 {
 	public static final String EXPECTED_FORMAT = "ExpectedFormat", ACTUAL_FORMAT = "ActualFormat",
-			EXPECTED_SOURCE = "ExpectedSource", ACTUAL_SOURCE = "ActualSource", KEY_COLUMNS = "KeyColumns";
+			EXPECTED_SOURCE = "ExpectedSource", ACTUAL_SOURCE = "ActualSource",
+			KEY_COLUMNS = "KeyColumns", NUMERIC_COLUMNS = "NumericColumns",
+			CHECK_DUPLICATES = "CheckDuplicates";
 	
 	// Formats of sources available for comparison
 	public static final String FORMAT_DB_QUERY = "Query", FORMAT_DB_QUERY_FILE = "QueryFile", FORMAT_CSV_FILE = "CsvFile",
@@ -81,8 +88,8 @@ public class CompareDataSets extends Action
 	// ... and keys in mapping for them
 	protected final String ADDITIONAL_CSV_DELIMITER = "CsvDelimiter", ADDITIONAL_SCRIPT_FILE_PARAMS = "ScriptFileParams";
 	
+	protected Map<String, Integer> numericColumns;
 	private RowsNumberExecutor rowsNumberExecutor;
-	protected final String DUPLICATE_CHECK_PARAM = "CheckDuplicates";
 	private boolean checkDuplicates;
 	
 	@Override
@@ -90,12 +97,11 @@ public class CompareDataSets extends Action
 			throws ResultException, FailoverException
 	{
 		getLogger().debug("Initializing special action parameters");
-		initParameters(globalContext);
 		InputParamsHandler handler = new InputParamsHandler(inputParams);
+		initParameters(globalContext, handler);
 		Set<String> keyColumns = handler.getSet(KEY_COLUMNS, ",");
 		String expectedFormat = handler.getRequiredString(EXPECTED_FORMAT), expectedSource = handler.getRequiredString(EXPECTED_SOURCE),
 				actualFormat = handler.getRequiredString(ACTUAL_FORMAT), actualSource = handler.getRequiredString(ACTUAL_SOURCE);
-		checkDuplicates = handler.getBoolean(DUPLICATE_CHECK_PARAM, false);
 		handler.check();
 		
 		BasicTableDataReader<String, String, ?> expectedReader = null, actualReader = null;
@@ -124,9 +130,10 @@ public class CompareDataSets extends Action
 		}
 	}
 	
-	protected void initParameters(GlobalContext globalContext)
+	protected void initParameters(GlobalContext globalContext, InputParamsHandler handler)
 	{
-	
+		numericColumns = getNumericColumns(handler.getSet(NUMERIC_COLUMNS, ","));
+		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
 	}
 	
 	protected Map<String, Object> getAdditionalParamsToInitReader(String formatName, boolean forExpectedData)
@@ -168,8 +175,9 @@ public class CompareDataSets extends Action
 			tableRowMatcher = createTableRowMatcher(keyColumns);
 			rowsNumberExecutor = createRowsNumberExecutor();
 		}
+		
 		try (TableDataComparator<String, String> comparator = createTableDataComparator(expectedReader, actualReader,
-				tableRowMatcher))
+				tableRowMatcher, createValuesComparator()))
 		{
 			if (!comparator.hasMoreRows())
 				return DefaultResult.passed("Both datasets are empty. Nothing to compare.");
@@ -177,12 +185,10 @@ public class CompareDataSets extends Action
 			long comparisonStartTime = System.currentTimeMillis();
 			result = createComparisonContainerResult();
 			int rowsCount = 0, passedRowsCount = 0;
-			
 			do
 			{
 				rowsCount++;
 				RowComparisonData<String, String> compData = comparator.compareRows();
-				
 				if (compData.isSuccess())
 					passedRowsCount++;
 				
@@ -196,9 +202,7 @@ public class CompareDataSets extends Action
 					getLogger().warn(errMsgBuilder.toString());
 				}
 				
-				TableRow currentTableRow = comparator.getCurrentRow();
-				String rowKey = tableRowMatcher != null ? tableRowMatcher.createPrimaryKey(currentTableRow) : null;
-				
+				String rowKey = tableRowMatcher != null ? tableRowMatcher.createPrimaryKey(comparator.getCurrentRow()) : null;
 				processCurrentRow(rowKey, compData, rowsCount, result);
 				
 				afterRow(rowsCount, passedRowsCount);
@@ -215,8 +219,7 @@ public class CompareDataSets extends Action
 		{
 			if (result instanceof AutoCloseable)
 				Utils.closeResource((AutoCloseable)result);
-			if(rowsNumberExecutor != null)
-				rowsNumberExecutor.close();
+			Utils.closeResource(rowsNumberExecutor);
 		}
 	}
 	
@@ -237,10 +240,11 @@ public class CompareDataSets extends Action
 	}
 	
 	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, DefaultStringTableRowMatcher tableRowMatcher) throws IOException
+			BasicTableDataReader<String, String, ?> actualReader, DefaultStringTableRowMatcher tableRowMatcher,
+			StringValuesComparator valuesComparator) throws IOException
 	{
-		return tableRowMatcher == null ? new StringTableDataComparator(expectedReader, actualReader)
-				: new IndexedStringTableDataComparator(expectedReader, actualReader, tableRowMatcher);
+		return tableRowMatcher == null ? new StringTableDataComparator(expectedReader, actualReader, valuesComparator)
+				: new IndexedStringTableDataComparator(expectedReader, actualReader, tableRowMatcher, valuesComparator);
 	}
 	
 	protected Result createBlockResult(RowComparisonData<String, String> compData, String headerMessage)
@@ -352,14 +356,48 @@ public class CompareDataSets extends Action
 		}
 		finally
 		{
-			tempScript.delete();
+			FileUtils.deleteQuietly(tempScript);
 		}
 	}
 	
 	
+	protected Map<String, Integer> getNumericColumns(Set<String> columnsWithScales)
+	{
+		if (CollectionUtils.isEmpty(columnsWithScales))
+			return null;
+		
+		Map<String, Integer> numericColumns = new HashMap<>();
+		for (String columnWithScale : columnsWithScales)
+		{
+			String[] columnAndScale = columnWithScale.split(":", 2);
+			String column = columnAndScale[0];
+			Integer scale = null;
+			if (columnAndScale.length == 2)
+			{
+				try
+				{
+					scale = new BigDecimal(columnAndScale[1]).stripTrailingZeros().scale();
+				}
+				catch (Exception e)
+				{
+					throw ResultException.failed("Numeric column '" + column + "' with specified precision '"
+							+ columnAndScale[1] + "' couldn't be obtained due to error.", e);
+				}
+			}
+			numericColumns.put(column, scale);
+		}
+		return numericColumns;
+	}
+	
 	protected DefaultStringTableRowMatcher createTableRowMatcher(Set<String> keyColumns)
 	{
-		return new DefaultStringTableRowMatcher(keyColumns);
+		return MapUtils.isEmpty(numericColumns) ? new DefaultStringTableRowMatcher(keyColumns)
+				:  new NumericStringTableRowMatcher(keyColumns, numericColumns);
+	}
+	
+	protected StringValuesComparator createValuesComparator()
+	{
+		return MapUtils.isEmpty(numericColumns) ? new StringValuesComparator() : new NumericValuesComparator(numericColumns);
 	}
 	
 	protected IValueTransformer createValueTransformer()
@@ -405,7 +443,7 @@ public class CompareDataSets extends Action
 		}
 		
 		addComparisonData(createBlockResult(compData, "Row #" + rowsCount),
-				compData.getResult(), 
+				compData.getResult(),
 				result);
 	}
 	

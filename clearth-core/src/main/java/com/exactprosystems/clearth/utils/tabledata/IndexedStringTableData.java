@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
+
 import java.util.Set;
 
 /**

@@ -21,7 +21,7 @@ package com.exactprosystems.clearth.utils.tabledata.readers;
 import com.exactprosystems.clearth.connectivity.flat.FlatMessageDesc;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
-import com.exactprosystems.clearth.utils.tabledata.TableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.File;
 import java.io.IOException;

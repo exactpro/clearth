@@ -29,7 +29,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
-import com.exactprosystems.clearth.utils.tabledata.TableRowMatcher;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 public class IndexedXlsxDataReader<C> extends AbstractExcelDataReader<IndexedTableData<String, String, C>> {
 	

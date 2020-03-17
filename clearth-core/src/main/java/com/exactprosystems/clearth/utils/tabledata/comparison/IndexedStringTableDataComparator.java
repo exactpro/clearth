@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.utils.tabledata.comparison;
 import com.exactprosystems.clearth.utils.tabledata.*;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.IOException;
 
