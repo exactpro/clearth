@@ -95,7 +95,7 @@ public class CompareDataSets extends Action
 		Set<String> keyColumns = handler.getSet(KEY_COLUMNS, ",");
 		String expectedFormat = handler.getRequiredString(EXPECTED_FORMAT), expectedSource = handler.getRequiredString(EXPECTED_SOURCE),
 				actualFormat = handler.getRequiredString(ACTUAL_FORMAT), actualSource = handler.getRequiredString(ACTUAL_SOURCE);
-		checkDuplicates = handler.getBoolean(DUPLICATE_CHECK_PARAM, true);
+		checkDuplicates = handler.getBoolean(DUPLICATE_CHECK_PARAM, false);
 		handler.check();
 		
 		BasicTableDataReader<String, String, ?> expectedReader = null, actualReader = null;
