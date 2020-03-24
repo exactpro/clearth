@@ -18,7 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison;
 
-public enum RowComparisonResult
+public enum RowComparisonResultType
 {
 	PASSED,
 	FAILED,

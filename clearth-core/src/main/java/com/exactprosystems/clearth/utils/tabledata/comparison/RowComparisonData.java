@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,7 +34,7 @@ public class RowComparisonData<A, B>
 {
 	private List<RowComparisonDetail<A, B>> compDetails;
 	private List<String> errors;
-	private RowComparisonResult result = RowComparisonResult.PASSED;
+	private RowComparisonResultType resultType = RowComparisonResultType.PASSED;
 	
 	public RowComparisonData()
 	{
@@ -43,28 +44,28 @@ public class RowComparisonData<A, B>
 	
 	public void addComparisonDetail(A column, B expectedValue, B actualValue, boolean identical)
 	{
-		if (result != RowComparisonResult.FAILED)
+		if (resultType != RowComparisonResultType.FAILED)
 		{
 			if (expectedValue == null || actualValue == null)
 			{
 				if (expectedValue == null)
 				{
-					if (result == RowComparisonResult.NOT_FOUND)
-						result = RowComparisonResult.FAILED;
+					if (resultType == RowComparisonResultType.NOT_FOUND)
+						resultType = RowComparisonResultType.FAILED;
 					else
-						result = RowComparisonResult.EXTRA;
+						resultType = RowComparisonResultType.EXTRA;
 				}
 				
 				if (actualValue == null)
 				{
-					if (result == RowComparisonResult.EXTRA)
-						result = RowComparisonResult.FAILED;
+					if (resultType == RowComparisonResultType.EXTRA)
+						resultType = RowComparisonResultType.FAILED;
 					else
-						result = RowComparisonResult.NOT_FOUND;
+						resultType = RowComparisonResultType.NOT_FOUND;
 				}
 			}
 			else if (!identical)
-				result = RowComparisonResult.FAILED;
+				resultType = RowComparisonResultType.FAILED;
 		}
 		compDetails.add(new RowComparisonDetail<>(column, expectedValue, actualValue, false, identical));
 	}
@@ -79,9 +80,25 @@ public class RowComparisonData<A, B>
 		errors.add(errorMsg);
 	}
 	
+	
 	public boolean isSuccess()
 	{
 		return compDetails.stream().allMatch(RowComparisonDetail::isIdentical);
+	}
+	
+	public List<RowComparisonDetail<A, B>> getCompDetails()
+	{
+		return Collections.unmodifiableList(compDetails);
+	}
+	
+	public List<String> getErrors()
+	{
+		return Collections.unmodifiableList(errors);
+	}
+	
+	public RowComparisonResultType getResultType()
+	{
+		return resultType;
 	}
 	
 	
@@ -103,21 +120,6 @@ public class RowComparisonData<A, B>
 			detail.setIdentical(compDetail.isIdentical());
 			result.addResultDetail(detail);
 		}
-		return result;
-	}
-
-	public List<RowComparisonDetail<A, B>> getCompDetails()
-	{
-		return compDetails;
-	}
-
-	public List<String> getErrors()
-	{
-		return errors;
-	}
-	
-	public RowComparisonResult getResult()
-	{
 		return result;
 	}
 }

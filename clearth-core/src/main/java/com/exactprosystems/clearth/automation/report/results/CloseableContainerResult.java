@@ -27,7 +27,7 @@ import com.exactprosystems.clearth.automation.report.Result;
 public class CloseableContainerResult extends ContainerResult implements AutoCloseable
 {
 	private static final long serialVersionUID = -8529020779935525633L;
-
+	
 	protected CloseableContainerResult(String header, boolean isBlockView)
 	{
 		super(header, isBlockView);

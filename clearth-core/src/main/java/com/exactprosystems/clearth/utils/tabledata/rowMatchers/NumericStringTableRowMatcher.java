@@ -18,52 +18,66 @@
 
 package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 
+import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class NumericStringTableRowMatcher extends DefaultStringTableRowMatcher
 {
-	protected final Map<String, Integer> numericColumns;
+	private static final Logger logger = LoggerFactory.getLogger(NumericStringTableRowMatcher.class);
 	
-	public NumericStringTableRowMatcher(Set<String> keyColumns, Map<String, Integer> numericColumns)
+	protected final Map<String, BigDecimal> numericKeyColumns;
+	protected final IValueTransformer bdValueTransformer;
+	
+	public NumericStringTableRowMatcher(Set<String> keyColumns, Map<String, BigDecimal> numericColumns,
+			IValueTransformer bdValueTransformer)
 	{
 		super(keyColumns);
-		this.numericColumns = numericColumns;
+		this.bdValueTransformer = bdValueTransformer;
+		
+		// Separate simple key columns from numeric ones
+		numericKeyColumns = new HashMap<>();
+		for (Iterator<String> keyColumnIter = super.keyColumns.iterator(); keyColumnIter.hasNext(); )
+		{
+			String column = keyColumnIter.next();
+			if (numericColumns.containsKey(column))
+			{
+				numericKeyColumns.put(column, numericColumns.get(column));
+				keyColumnIter.remove();
+			}
+		}
 	}
 	
 	@Override
-	public String createPrimaryKey(TableRow<String, String> row)
+	public boolean matchBySecondaryKey(TableRow<String, String> row1, TableRow<String, String> row2)
 	{
-		List<String> keyValues = new ArrayList<>();
-		for (String keyColumn : keyColumns)
+		for (String numericKeyColumn : numericKeyColumns.keySet())
 		{
-			String value = Optional.ofNullable(row.getValue(keyColumn)).orElse("");
-			if (numericColumns.containsKey(keyColumn))
+			String value1 = row1.getValue(numericKeyColumn), value2 = row2.getValue(numericKeyColumn);
+			try
 			{
-				try
-				{
-					BigDecimal bdValue = new BigDecimal(transformValue(value));
-					// Apply precision (scale) if needed
-					Integer precision = numericColumns.get(keyColumn);
-					if (precision != null)
-						bdValue = bdValue.setScale(precision, RoundingMode.HALF_UP);
-					value = bdValue.toPlainString();
-				}
-				catch (Exception e)
-				{
-					// Couldn't represent such value as BigDecimal so don't modify it
-				}
+				BigDecimal bdValue1 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value1) : value1),
+						bdValue2 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value2) : value2),
+						precision = numericKeyColumns.getOrDefault(numericKeyColumn, BigDecimal.ZERO);
+				if (bdValue1.subtract(bdValue2).abs().compareTo(precision) > 0)
+					return false;
 			}
-			keyValues.add(value);
+			catch (Exception e)
+			{
+				logger.trace("Couldn't present values '{}' and '{}' for numeric key column '{}' as BigDecimal." +
+						" They will be compared by default as strings", value1, value2, numericKeyColumn, e);
+				if (!StringUtils.equals(value1, value2))
+					return false;
+			}
 		}
-		return String.join(",", keyValues);
-	}
-	
-	protected String transformValue(String originalValue)
-	{
-		return originalValue.replace(',', '.');
+		return true;
 	}
 }

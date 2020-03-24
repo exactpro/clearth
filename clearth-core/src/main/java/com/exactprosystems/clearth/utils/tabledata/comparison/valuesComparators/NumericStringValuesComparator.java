@@ -19,23 +19,25 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
 
 import com.exactprosystems.clearth.automation.MatrixFunctions;
+import com.exactprosystems.clearth.utils.IValueTransformer;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Map;
 
-public class NumericValuesComparator extends StringValuesComparator
+public class NumericStringValuesComparator extends StringValuesComparator
 {
-	private final static Logger logger = LoggerFactory.getLogger(NumericValuesComparator.class);
+	private final static Logger logger = LoggerFactory.getLogger(NumericStringValuesComparator.class);
 	
-	protected final Map<String, Integer> columnsWithScales;
+	protected final Map<String, BigDecimal> numericColumns;
+	protected final IValueTransformer bdValueTransformer;
 	
-	public NumericValuesComparator(Map<String, Integer> columnsWithScales)
+	public NumericStringValuesComparator(Map<String, BigDecimal> numericColumns, IValueTransformer bdValueTransformer)
 	{
-		this.columnsWithScales = columnsWithScales;
+		this.numericColumns = numericColumns;
+		this.bdValueTransformer = bdValueTransformer;
 	}
 	
 	@Override
@@ -45,37 +47,21 @@ public class NumericValuesComparator extends StringValuesComparator
 		// value1 is usually expected one and could contain formula from ComparisonUtils.
 		// So need to process it like not-numeric value in default way
 		if (StringUtils.isNotBlank(value1) && StringUtils.isNotBlank(value2)
-				&& !value1.startsWith(MatrixFunctions.FORMULA_START) && columnsWithScales.containsKey(column))
+				&& !value1.startsWith(MatrixFunctions.FORMULA_START) && numericColumns.containsKey(column))
 		{
 			try
 			{
-				BigDecimal bdValue1 = new BigDecimal(transformValue(value1)),
-						bdValue2 = new BigDecimal(transformValue(value2));
-				// Apply scales for values if exist
-				Integer scale = columnsWithScales.get(column);
-				if (scale != null)
-				{
-					bdValue1 = bdValue1.setScale(scale, RoundingMode.HALF_UP);
-					bdValue2 = bdValue2.setScale(scale, RoundingMode.HALF_UP);
-				}
-				return bdValue1.compareTo(bdValue2) == 0;
+				BigDecimal bdValue1 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value1) : value1),
+						bdValue2 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value2) : value2),
+						precision = numericColumns.getOrDefault(column, BigDecimal.ZERO);
+				return bdValue1.subtract(bdValue2).abs().compareTo(precision) <= 0;
 			}
 			catch (Exception e)
 			{
-				getLogger().trace("Couldn't present values '{}' and '{}' as BigDecimal." +
-						" They will be compared by default as strings", value1, value2, e);
+				logger.trace("Couldn't present values '{}' and '{}' for numeric column '{}' as BigDecimal." +
+						" They will be compared by default as strings", value1, value2, column, e);
 			}
 		}
 		return super.compareValues(value1, value2, column);
-	}
-	
-	protected String transformValue(String originalValue)
-	{
-		return originalValue.replace(',', '.');
-	}
-	
-	protected Logger getLogger()
-	{
-		return logger;
 	}
 }
