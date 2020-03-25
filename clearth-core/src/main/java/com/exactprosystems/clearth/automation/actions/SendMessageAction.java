@@ -29,11 +29,11 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.EncodeException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
-import com.exactprosystems.clearth.messages.ClearThMessageSender;
-import com.exactprosystems.clearth.messages.MessageSender;
-import com.exactprosystems.clearth.messages.ConnectionFinder;
-import com.exactprosystems.clearth.messages.StringMessageSender;
+import com.exactprosystems.clearth.messages.*;
 import com.exactprosystems.clearth.utils.Stopwatch;
+import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
+
+import java.io.File;
 
 public abstract class SendMessageAction<T extends ClearThMessage<T>> extends MessageAction<T> implements TimeoutAwaiter
 {
@@ -99,15 +99,30 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		return new ConnectionFinder();
 	}
 	
-	protected StringMessageSender getStringSender()
+	protected StringMessageSender getStringSender(GlobalContext globalContext)
 	{
-		return getConnectionFinder().findConnection(inputParams);
+		if (!getInputParam(CONNECTIONNAME, "").isEmpty())
+			return getConnectionFinder().findConnection(getInputParams());
+		if (!getInputParam(FILENAME, "").isEmpty())
+			return getFileSender();
+
+		StringMessageSender result = getCustomMessageSender(globalContext);
+		if (result == null)
+			throw ResultException.failed("No '"+CONNECTIONNAME+"' and '"+FILENAME+"' parameters specified");
+
+		return result;
 	}
-	
+
+	private StringMessageSender getFileSender()
+	{
+		File file = InputParamsUtils.getRequiredFile(getInputParams(), FILENAME);
+		return new StringMessageFileSender(file);
+	}
+
 	protected MessageSender<T> getMessageSender(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 	{
 		ICodec codec = getCodec(globalContext);
-		StringMessageSender stringSender = getStringSender();
+		StringMessageSender stringSender = getStringSender(globalContext);
 		return new ClearThMessageSender<T>(codec, stringSender);
 	}
 	
@@ -117,6 +132,11 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 	
 	protected void afterSend(T msg, String answer, StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException
 	{
+	}
+
+	protected StringMessageSender getCustomMessageSender(GlobalContext globalContext)
+	{
+		return null;
 	}
 	
 	protected Result createResult(T msg, String sendingResult)

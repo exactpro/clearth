@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
+import static com.exactprosystems.clearth.automation.actions.MessageAction.CONNECTIONNAME;
+import static com.exactprosystems.clearth.automation.actions.MessageAction.FILENAME;
 import static com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector.MESSAGE;
 
 import com.exactprosystems.clearth.automation.Action;
@@ -29,8 +31,11 @@ import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.messages.ConnectionFinder;
+import com.exactprosystems.clearth.messages.StringMessageFileSender;
 import com.exactprosystems.clearth.messages.StringMessageSender;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
+
+import java.io.File;
 
 public class SendPlainMessage extends Action
 {
@@ -51,9 +56,29 @@ public class SendPlainMessage extends Action
 		
 		return null;
 	}
-	
+
 	protected StringMessageSender getMessageSender(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 	{
-		return new ConnectionFinder().findConnection(getInputParams());
+		if (!getInputParam(CONNECTIONNAME, "").isEmpty())
+			return new ConnectionFinder().findConnection(getInputParams());
+		if (!getInputParam(FILENAME, "").isEmpty())
+			return getFileSender();
+
+		StringMessageSender result = getCustomMessageSender(globalContext);
+		if (result == null)
+			throw ResultException.failed("No '"+CONNECTIONNAME+"' and '"+FILENAME+"' parameters specified");
+
+		return result;
+	}
+
+	private StringMessageSender getFileSender()
+	{
+		File file = InputParamsUtils.getRequiredFile(getInputParams(), FILENAME);
+		return new StringMessageFileSender(file);
+	}
+
+	protected StringMessageSender getCustomMessageSender(GlobalContext globalContext)
+	{
+		return null;
 	}
 }

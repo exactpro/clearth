@@ -1,0 +1,3 @@
+#id,#GlobalStep,#Action,#Execute,#timeout,#Comment,#FileName,#Message
+"id1",Step1,"SendPlainMessage",y,0,,temp/plain_file.csv,"This is a test message"
+"id2",Step2,"ReceivePlainMessage",y,0,,temp/plain_file.csv,"This is a test message"
