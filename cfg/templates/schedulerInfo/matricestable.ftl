@@ -10,7 +10,7 @@
 			<#list matricesData as matrixData>
 				<tr>
 					<td>
-						<a href="matrices/${matrixData.name}">${matrixData.name}</a>
+						<a href="matrices/${matrixData.file.name}">${matrixData.name}</a>
 					</td>
 					<td>
 						<#if matrixData.uploadDate??>
