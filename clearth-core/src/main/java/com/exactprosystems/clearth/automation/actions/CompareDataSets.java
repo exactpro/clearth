@@ -41,8 +41,8 @@ import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.*;
-import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.NumericStringValuesComparator;
-import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.NumericStringTableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.DefaultStringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.DefaultStringTableRowMatcher;
@@ -178,7 +178,7 @@ public class CompareDataSets extends Action
 		}
 		
 		try (TableDataComparator<String, String> comparator = createTableDataComparator(expectedReader, actualReader,
-				rowMatcher, createValuesComparator()))
+				rowMatcher, createTableRowsComparator()))
 		{
 			if (!comparator.hasMoreRows())
 				return DefaultResult.passed("Both datasets are empty. Nothing to compare.");
@@ -203,7 +203,7 @@ public class CompareDataSets extends Action
 					getLogger().warn(errMsgBuilder.toString());
 				}
 				
-				processCurrentRowResult(compData, getRowContainerName(rowsCount), result, keyColumnsRowsCollector,
+				processCurrentRowResult(compData, getRowContainerName(compData, rowsCount), result, keyColumnsRowsCollector,
 						comparator.getCurrentRow(), rowMatcher);
 				afterRow(rowsCount, passedRowsCount);
 			}
@@ -240,11 +240,11 @@ public class CompareDataSets extends Action
 	}
 	
 	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, DefaultStringTableRowMatcher tableRowMatcher,
-			StringValuesComparator valuesComparator) throws IOException
+			BasicTableDataReader<String, String, ?> actualReader, DefaultStringTableRowMatcher rowMatcher,
+			DefaultStringTableRowsComparator rowsComparator) throws IOException
 	{
-		return tableRowMatcher == null ? new StringTableDataComparator(expectedReader, actualReader, valuesComparator)
-				: new IndexedStringTableDataComparator(expectedReader, actualReader, tableRowMatcher, valuesComparator);
+		return rowMatcher == null ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
+				: new IndexedStringTableDataComparator(expectedReader, actualReader, rowMatcher, rowsComparator);
 	}
 	
 	protected void processCurrentRowResult(RowComparisonData<String, String> compData, String rowName, ContainerResult result,
@@ -297,7 +297,7 @@ public class CompareDataSets extends Action
 		return blockResult;
 	}
 	
-	protected String getRowContainerName(int rowsCount)
+	protected String getRowContainerName(RowComparisonData<String, String> compData, int rowsCount)
 	{
 		return "Row #" + rowsCount;
 	}
@@ -420,7 +420,7 @@ public class CompareDataSets extends Action
 		{
 			String[] columnAndScale = columnWithScale.split(":", 2);
 			String column = columnAndScale[0];
-			BigDecimal precision = null;
+			BigDecimal precision = BigDecimal.ZERO;
 			if (columnAndScale.length == 2)
 			{
 				try
@@ -445,10 +445,10 @@ public class CompareDataSets extends Action
 				:  new NumericStringTableRowMatcher(keyColumns, numericColumns, bdValueTransformer);
 	}
 	
-	protected StringValuesComparator createValuesComparator()
+	protected DefaultStringTableRowsComparator createTableRowsComparator()
 	{
-		return MapUtils.isEmpty(numericColumns) ? new StringValuesComparator()
-				: new NumericStringValuesComparator(numericColumns, bdValueTransformer);
+		return MapUtils.isEmpty(numericColumns) ? new DefaultStringTableRowsComparator()
+				: new NumericStringTableRowsComparator(numericColumns, bdValueTransformer);
 	}
 	
 	protected IValueTransformer createBigDecimalValueTransformer()
@@ -472,6 +472,7 @@ public class CompareDataSets extends Action
 		return new KeyColumnsRowsCollector(keyColumns);
 	}
 	
+	
 	protected String getResultTypeName(RowComparisonResultType result)
 	{
 		switch (result)
@@ -487,5 +488,15 @@ public class CompareDataSets extends Action
 			default:
 				return null;
 		}
+	}
+	
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		
+		numericColumns = null;
+		bdValueTransformer = null;
+		keyColumnsRowsCollector = null;
 	}
 }

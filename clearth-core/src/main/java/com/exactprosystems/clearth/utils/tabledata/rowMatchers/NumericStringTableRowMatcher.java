@@ -66,7 +66,7 @@ public class NumericStringTableRowMatcher extends DefaultStringTableRowMatcher
 			{
 				BigDecimal bdValue1 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value1) : value1),
 						bdValue2 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value2) : value2),
-						precision = numericKeyColumns.getOrDefault(numericKeyColumn, BigDecimal.ZERO);
+						precision = numericKeyColumns.get(numericKeyColumn);
 				if (bdValue1.subtract(bdValue2).abs().compareTo(precision) > 0)
 					return false;
 			}

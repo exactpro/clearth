@@ -42,32 +42,24 @@ public class RowComparisonData<A, B>
 		errors = new ArrayList<>();
 	}
 	
+	public void addComparisonDetail(RowComparisonDetail<A, B> compDetail)
+	{
+		compDetails.add(compDetail);
+		if (compDetail.isInfo() || resultType == RowComparisonResultType.FAILED)
+			return;
+		
+		boolean expectedValueIsNull = compDetail.getExpectedValue() == null, actualValueIsNull = compDetail.getActualValue() == null;
+		if ((!expectedValueIsNull && !actualValueIsNull && !compDetail.isIdentical())
+				|| (expectedValueIsNull && resultType == RowComparisonResultType.NOT_FOUND)
+				|| (actualValueIsNull && resultType == RowComparisonResultType.EXTRA))
+			resultType = RowComparisonResultType.FAILED;
+		else if (expectedValueIsNull || actualValueIsNull)
+			resultType = expectedValueIsNull ? RowComparisonResultType.EXTRA : RowComparisonResultType.NOT_FOUND;
+	}
+	
 	public void addComparisonDetail(A column, B expectedValue, B actualValue, boolean identical)
 	{
-		if (resultType != RowComparisonResultType.FAILED)
-		{
-			if (expectedValue == null || actualValue == null)
-			{
-				if (expectedValue == null)
-				{
-					if (resultType == RowComparisonResultType.NOT_FOUND)
-						resultType = RowComparisonResultType.FAILED;
-					else
-						resultType = RowComparisonResultType.EXTRA;
-				}
-				
-				if (actualValue == null)
-				{
-					if (resultType == RowComparisonResultType.EXTRA)
-						resultType = RowComparisonResultType.FAILED;
-					else
-						resultType = RowComparisonResultType.NOT_FOUND;
-				}
-			}
-			else if (!identical)
-				resultType = RowComparisonResultType.FAILED;
-		}
-		compDetails.add(new RowComparisonDetail<>(column, expectedValue, actualValue, false, identical));
+		addComparisonDetail(new RowComparisonDetail<>(column, expectedValue, actualValue, false, identical));
 	}
 	
 	public void addInfoComparisonDetail(A column, B expectedValue, B actualValue)

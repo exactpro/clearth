@@ -18,16 +18,15 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison;
 
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
-import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.DefaultValuesComparator;
-import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Basic class of table data comparator.
@@ -38,19 +37,18 @@ import java.util.LinkedHashSet;
 public class TableDataComparator<A, B> implements AutoCloseable
 {
 	protected final BasicTableDataReader<A, B, ?> expectedReader, actualReader;
-	protected final TableHeader<A> expectedHeader, actualHeader;
-	protected final LinkedHashSet<A> commonHeader;
+	protected final TableHeader<A> expectedHeader, actualHeader, commonHeader;
+	protected TableRow<A, B> currentRow;
 	
 	protected boolean expectedReadMore, actualReadMore;
-	protected final ValuesComparator<A, B> valuesComparator;
-	protected TableRow<A,B> currentRow;
+	protected final TableRowsComparator<A, B> rowsComparator;
 	
 	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
-			ValuesComparator<A, B> valuesComparator) throws IOException
+			TableRowsComparator<A, B> rowsComparator) throws IOException
 	{
 		this.expectedReader = expectedReader;
 		this.actualReader = actualReader;
-		this.valuesComparator = valuesComparator;
+		this.rowsComparator = rowsComparator;
 		
 		this.expectedReader.start();
 		this.actualReader.start();
@@ -58,14 +56,16 @@ public class TableDataComparator<A, B> implements AutoCloseable
 		actualHeader = actualReader.getTableData().getHeader();
 		
 		// Create a common header which contains columns to read from expected and actual data sources
-		commonHeader = new LinkedHashSet<>();
-		expectedHeader.forEach(commonHeader::add);
-		actualHeader.forEach(commonHeader::add);
+		Set<A> commonHeaderSet = new LinkedHashSet<>();
+		expectedHeader.forEach(commonHeaderSet::add);
+		actualHeader.forEach(commonHeaderSet::add);
+		commonHeader = new TableHeader<>(commonHeaderSet);
 	}
 	
-	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader) throws IOException
+	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader)
+			throws IOException
 	{
-		this(expectedReader, actualReader, new DefaultValuesComparator<>());
+		this(expectedReader, actualReader, new TableRowsComparator<>());
 	}
 	
 	/**
@@ -81,7 +81,7 @@ public class TableDataComparator<A, B> implements AutoCloseable
 	
 	/**
 	 * Reads and compares next pair of rows from expected and actual sources.
-	 * @return {@code RowComparisonData} object presents result of comparing pair of rows.
+	 * @return {@link RowComparisonData} object presents result of comparing pair of rows.
 	 * @throws IOException if any I/O error occurred while reading/storing rows from the sources.
 	 */
 	public RowComparisonData<A, B> compareRows() throws IOException
@@ -89,7 +89,14 @@ public class TableDataComparator<A, B> implements AutoCloseable
 		// readRow() doesn't write rows to table data, so we needn't to remove them after comparison
 		TableRow<A, B> expectedRow = expectedReadMore ? expectedReader.readRow() : null,
 				actualRow = actualReadMore ? actualReader.readRow() : null;
-		return compareCoupleOfRows(expectedRow, actualRow);
+		
+		currentRow = expectedRow != null ? expectedRow : actualRow;
+		return rowsComparator.compareRows(expectedRow, actualRow, commonHeader);
+	}
+	
+	public TableRow<A, B> getCurrentRow()
+	{
+		return currentRow;
 	}
 	
 	/**
@@ -100,54 +107,5 @@ public class TableDataComparator<A, B> implements AutoCloseable
 	{
 		Utils.closeResource(expectedReader);
 		Utils.closeResource(actualReader);
-	}
-	
-	
-	protected RowComparisonData<A, B> compareCoupleOfRows(TableRow<A, B> expectedRow, TableRow<A, B> actualRow) throws IllegalArgumentException
-	{
-		if (expectedRow == null && actualRow == null)
-			throw new IllegalArgumentException("Both table row objects are null. Could not make comparison.");
-		
-		currentRow = expectedRow != null ? expectedRow : actualRow;
-		
-		RowComparisonData<A, B> compData = new RowComparisonData<>();
-		if (expectedRow == null || actualRow == null)
-		{
-			for (A column : commonHeader)
-			{
-				compData.addComparisonDetail(column, expectedRow != null ? expectedRow.getValue(column) : null,
-						actualRow != null ? actualRow.getValue(column) : null, false);
-			}
-			return compData;
-		}
-		
-		for (A column : commonHeader)
-		{
-			// Check if it's "unexpected" column which should be marked as 'INFO' in comparison results
-			if (!expectedHeader.containsColumn(column))
-			{
-				compData.addInfoComparisonDetail(column, expectedRow.getValue(column), actualRow.getValue(column));
-				continue;
-			}
-			
-			B expectedValue = expectedRow.getValue(column), actualValue = actualRow.getValue(column);
-			boolean identical;
-			try
-			{
-				identical = valuesComparator.compareValues(expectedValue, actualValue, column);
-			}
-			catch (Exception e)
-			{
-				identical = false;
-				compData.addErrorMsg(ExceptionUtils.getDetailedMessage(e));
-			}
-			compData.addComparisonDetail(column, expectedValue, actualValue, identical);
-		}
-		return compData;
-	}
-
-	public TableRow<A,B> getCurrentRow()
-	{
-		return this.currentRow;
 	}
 }

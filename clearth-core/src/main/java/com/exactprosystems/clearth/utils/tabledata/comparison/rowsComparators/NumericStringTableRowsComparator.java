@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
+package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
 
 import com.exactprosystems.clearth.automation.MatrixFunctions;
 import com.exactprosystems.clearth.utils.IValueTransformer;
@@ -27,14 +27,14 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.util.Map;
 
-public class NumericStringValuesComparator extends StringValuesComparator
+public class NumericStringTableRowsComparator extends DefaultStringTableRowsComparator
 {
-	private final static Logger logger = LoggerFactory.getLogger(NumericStringValuesComparator.class);
+	private final static Logger logger = LoggerFactory.getLogger(NumericStringTableRowsComparator.class);
 	
 	protected final Map<String, BigDecimal> numericColumns;
 	protected final IValueTransformer bdValueTransformer;
 	
-	public NumericStringValuesComparator(Map<String, BigDecimal> numericColumns, IValueTransformer bdValueTransformer)
+	public NumericStringTableRowsComparator(Map<String, BigDecimal> numericColumns, IValueTransformer bdValueTransformer)
 	{
 		this.numericColumns = numericColumns;
 		this.bdValueTransformer = bdValueTransformer;
@@ -53,7 +53,7 @@ public class NumericStringValuesComparator extends StringValuesComparator
 			{
 				BigDecimal bdValue1 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value1) : value1),
 						bdValue2 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value2) : value2),
-						precision = numericColumns.getOrDefault(column, BigDecimal.ZERO);
+						precision = numericColumns.get(column);
 				return bdValue1.subtract(bdValue2).abs().compareTo(precision) <= 0;
 			}
 			catch (Exception e)

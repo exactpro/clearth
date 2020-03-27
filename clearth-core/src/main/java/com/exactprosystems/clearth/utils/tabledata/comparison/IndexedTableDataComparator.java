@@ -18,9 +18,11 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison;
 
-import com.exactprosystems.clearth.utils.tabledata.*;
-import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.DefaultValuesComparator;
-import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.IOException;
@@ -37,11 +39,10 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	protected IndexedTableData<A, B, C> expectedStorage, actualStorage;
 	protected TableRowMatcher<A, B, C> rowMatcher;
 	
-	
 	public IndexedTableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
-			TableRowMatcher<A, B, C> rowMatcher, ValuesComparator<A, B> valuesComparator) throws IOException
+			TableRowMatcher<A, B, C> rowMatcher, TableRowsComparator<A, B> rowsComparator) throws IOException
 	{
-		super(expectedReader, actualReader, valuesComparator);
+		super(expectedReader, actualReader, rowsComparator);
 		this.rowMatcher = rowMatcher;
 		
 		expectedStorage = createExpectedStorage(expectedHeader, rowMatcher);
@@ -51,7 +52,7 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	public IndexedTableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
 			TableRowMatcher<A, B, C> rowMatcher) throws IOException
 	{
-		this(expectedReader, actualReader, rowMatcher, new DefaultValuesComparator<>());
+		this(expectedReader, actualReader, rowMatcher, new TableRowsComparator<>());
 	}
 	
 	/**
@@ -108,7 +109,8 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 		}
 		while ((expectedRow == null || actualRow == null) && hasMoreRows());
 		
-		return compareCoupleOfRows(expectedRow, actualRow);
+		currentRow = expectedRow != null ? expectedRow : actualRow;
+		return rowsComparator.compareRows(expectedRow, actualRow, commonHeader);
 	}
 	
 	/**

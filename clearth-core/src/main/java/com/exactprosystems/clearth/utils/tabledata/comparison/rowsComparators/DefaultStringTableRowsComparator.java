@@ -16,18 +16,18 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
+package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
 
-/**
- * Default implementation of {@code ValuesComparator} which compares values as objects by {@code equals()} method.
- * @param <A> class of column member.
- * @param <B> class of table values.
- */
-public class DefaultValuesComparator<A, B> implements ValuesComparator<A, B>
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
+
+public class DefaultStringTableRowsComparator extends TableRowsComparator<String, String>
 {
+	protected ComparisonUtils comparisonUtils = ClearThCore.comparisonUtils();
+	
 	@Override
-	public boolean compareValues(B value1, B value2, A column) throws Exception
+	public boolean compareValues(String value1, String value2, String column) throws Exception
 	{
-		return value1.equals(value2);
+		return comparisonUtils.compareValues(value1, value2);
 	}
 }
