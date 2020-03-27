@@ -79,8 +79,8 @@ public class SchedulerInfoExporter
 		
 		// Create and fill up the storage with all files could be exported
 		MultiValuedMap<String, SchedulerInfoFile> storage = new HashSetValuedHashMap<>();
-		storage.put(SUMMARY_FILE, createSummaryFile(scheduler.getSteps(), scheduler.getMatricesData(), matricesInfo));
-		storage.putAll(MATRICES, collectMatrices(scheduler.getMatricesData()));
+		storage.put(SUMMARY_FILE, createSummaryFile(scheduler.getSteps(), scheduler.getExecutedMatricesData(), matricesInfo));
+		storage.putAll(MATRICES, collectMatrices(scheduler.getExecutedMatricesData()));
 		storage.putAll(REPORTS, collectReports(reportsPath));
 		storage = collectOtherFiles(storage, scheduler);
 		return MultiMapUtils.unmodifiableMultiValuedMap(storage);

@@ -18,34 +18,26 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.UnmarshalException;
-
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
-import com.exactprosystems.clearth.utils.TagUtils;
-import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.XmlUtils;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.UnmarshalException;
+import java.io.*;
+import java.nio.file.Files;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -93,7 +85,10 @@ public abstract class SchedulerData
 	private final File stateDir;
 	private final File repDir;
 	private final File schedulerDir;
-	
+
+	private List<MatrixData> executedMatrices = null;
+
+
 	public SchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir, StepFactory stepFactory) throws Exception
 	{
 		this.forUser = schedulerDirName;
@@ -888,5 +883,15 @@ public abstract class SchedulerData
 	public int matrixFileIndex(File matrixFile)
 	{
 		return matrixFileIndex(matrixFile, matrices);
+	}
+
+	public void setExecutedMatrices(List<MatrixData> matrices)
+	{
+		executedMatrices = matrices;
+	}
+
+	public List<MatrixData> getExecutedMatrices()
+	{
+		return executedMatrices;
 	}
 }

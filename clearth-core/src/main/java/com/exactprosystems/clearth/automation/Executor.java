@@ -18,25 +18,12 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
-
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
-import com.exactprosystems.clearth.automation.report.ReportsWriter;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.report.ReportException;
+import com.exactprosystems.clearth.automation.report.ReportsWriter;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.automation.steps.AskForContinue;
@@ -47,6 +34,21 @@ import com.exactprosystems.clearth.utils.ObjectWrapper;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -55,7 +57,9 @@ public abstract class Executor extends Thread
 {
 	protected static final String format = "HH:mm:ss",
 			REPORTDIR_COMPLETED = "completed",
-			REPORTDIR_ACTIONS = "actions";
+			REPORTDIR_ACTIONS = "actions",
+			EXECUTED_MATRICES_DIR = "executed";
+
 	protected static final SimpleDateFormat hmsFormatter = new SimpleDateFormat(format);
 
 	protected final Scheduler scheduler;
@@ -83,7 +87,8 @@ public abstract class Executor extends Thread
 	
 	private Date started, ended;
 	private final SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-	protected String reportsDir, specificDir, completedReportsDir, actionsReportsDir, realTimeReportsDir;
+	protected String reportsDir, specificDir, completedReportsDir, actionsReportsDir;
+	protected Path executedMatricesPath;
 	protected ReportsInfo lastReportsInfo = null;
 	private Object executionMonitor = null;
 	protected File storedActionsReportsDir;
@@ -137,11 +142,8 @@ public abstract class Executor extends Thread
 			ended = null;
 			
 			//Let's put reports into public directory: all images inside a report will be downloadable
-			specificDir = scheduler.getForUser() + "/" + scheduler.getName() + "/" + df.format(started) + "/";
-			reportsDir = ClearThCore.getInstance().getReportsPath() + specificDir; //Not File.separator, because browser will transform "\" into unexpected character
-			completedReportsDir = reportsDir + REPORTDIR_COMPLETED + "/";
-			actionsReportsDir = reportsDir + REPORTDIR_ACTIONS + "/";
-			
+			setOutputPaths();
+
 			new File(ClearThCore.appRootRelative(reportsDir)).mkdirs();  //Explicitly creating directory for parts of reports so that it will be available in all further calls
 			
 			getLogger().info("Version: " + ClearThCore.getInstance().getVersion());
@@ -167,7 +169,10 @@ public abstract class Executor extends Thread
 
 			for (Matrix matrix : matrices)
 				evaluateMatrixInfo(matrix);
-			
+
+			// Remove unused executed matrices from directory
+			removeUnusedExecutedMatrices(matrices);
+
 			if (!interrupted.get())
 			{
 				status.add("Executing steps and actions...");
@@ -359,7 +364,10 @@ public abstract class Executor extends Thread
 			status.add("Making reports...");
 			makeReports(completedReportsDir, actionsReportsDir);
 			status.add("Reports made");
-			
+
+			// Storing executed matrices in scheduler
+			saveExecutedMatrices(scheduler, matrices);
+
 			//Storing info about this launch to make user able to access it from GUI
 			Date finished = Calendar.getInstance().getTime();
 			globalContext.setFinished(finished);
@@ -403,6 +411,15 @@ public abstract class Executor extends Thread
 			}
 			Utils.closeResource(actionExecutor);
 		}
+	}
+
+	private void setOutputPaths()
+	{
+		specificDir = scheduler.getForUser() + "/" + scheduler.getName() + "/" + df.format(started) + "/";
+		reportsDir = ClearThCore.getInstance().getReportsPath() + specificDir; //Not File.separator, because browser will transform "\" into unexpected character
+		completedReportsDir = reportsDir + REPORTDIR_COMPLETED + "/";
+		actionsReportsDir = reportsDir + REPORTDIR_ACTIONS + "/";
+		executedMatricesPath = Paths.get(scheduler.scriptsDir, EXECUTED_MATRICES_DIR);
 	}
 
 	protected void stepFinished(Step step)
@@ -1161,6 +1178,85 @@ public abstract class Executor extends Thread
 				suspension.setTimeout(false);
 				if (!suspension.isSuspended()) {
 					suspension.notify();
+				}
+			}
+		}
+	}
+
+	private void saveExecutedMatrices(Scheduler scheduler, List<Matrix> matrices) throws IOException, AutomationException
+	{
+		Files.createDirectories(executedMatricesPath);
+		List<MatrixData> executedMatrices = new ArrayList<>(matrices.size());
+		MatrixDataFactory matrixDataFactory = ClearThCore.getInstance().getMatrixDataFactory();
+
+		try
+		{
+			for (Matrix matrix : matrices)
+			{
+				MatrixData matrixData = matrix.getMatrixData();
+				File matrixFile = matrixData.getFile();
+
+				Path executedMatrix = Files.copy(matrixFile.toPath(), executedMatricesPath.resolve(matrixFile.getName()));
+
+				MatrixData createdMatrix = matrixDataFactory.createMatrixData(
+						executedMatrix.toFile(),
+						matrixData.getUploadDate(),
+						matrixData.isExecute(),
+						matrixData.isTrim());
+
+				executedMatrices.add(createdMatrix);
+			}
+		}
+		catch (IOException e)
+		{
+			String errorMessage = "Could not save executed matrices";
+			getLogger().error(errorMessage, e);
+			removeExecutedMatrices(executedMatrices);
+			throw new AutomationException(errorMessage, e);
+		}
+
+		scheduler.setExecutedMatrices(executedMatrices);
+	}
+
+	private void removeExecutedMatrices(List<MatrixData> matrices)
+	{
+		for (MatrixData matrix : matrices)
+		{
+			try
+			{
+				Files.delete(matrix.getFile().toPath());
+			}
+			catch (IOException e)
+			{
+				getLogger().error(String.format("Could not remove copy of executed matrix: '%s'", matrix.getFile().getName()), e);
+			}
+		}
+	}
+
+	private void removeUnusedExecutedMatrices(List<Matrix> matrices)
+	{
+		File[] files = executedMatricesPath.toFile().listFiles();
+
+		if (files == null || files.length == 0)
+		{
+			return;
+		}
+
+		Set<String> matricesFilesNames = matrices.stream()
+				.map(Matrix::getFileName)
+				.collect(Collectors.toSet());
+
+		for (File file : files)
+		{
+			if (!matricesFilesNames.contains(file.getName()))
+			{
+				try
+				{
+					Files.delete(file.toPath());
+				}
+				catch (IOException e)
+				{
+					getLogger().error(String.format("Could not remove previously saved matrix: '%s'", file.getName()), e);
 				}
 			}
 		}

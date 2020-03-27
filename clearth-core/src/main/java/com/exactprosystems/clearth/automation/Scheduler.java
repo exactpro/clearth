@@ -34,7 +34,6 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -86,6 +85,7 @@ public abstract class Scheduler
 	public Scheduler(String name, String configsRoot, String schedulerDirName, ExecutorFactory executorFactory, StepFactory stepFactory) throws Exception
 	{
 		scriptsDir = ClearThCore.scriptsPath() + schedulerDirName + File.separator + name + File.separator;
+
 		this.executorFactory = executorFactory;
 		this.stepFactory = stepFactory;
 		schedulerData = createSchedulerData(name, configsRoot, schedulerDirName, scriptsDir);
@@ -565,6 +565,11 @@ public abstract class Scheduler
 	public List<MatrixData> getMatricesData()
 	{
 		return schedulerData.getMatrices();
+	}
+
+	public List<MatrixData> getExecutedMatricesData()
+	{
+		return schedulerData.getExecutedMatrices();
 	}
 	
 	protected void doRemoveMatrix(MatrixData matrix)
@@ -1480,5 +1485,10 @@ public abstract class Scheduler
 
 	protected Class<? extends StepImpl> getStepImplClassEx(String label) {
 		return null;
+	}
+
+	public void setExecutedMatrices(List<MatrixData> matrices)
+	{
+		schedulerData.setExecutedMatrices(matrices);
 	}
 }
