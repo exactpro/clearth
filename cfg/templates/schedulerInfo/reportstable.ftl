@@ -9,7 +9,7 @@
 			<#list reportsData as reportData>
 				<tr class='${reportData.successful?then("", "failed")}'>
 					<td>
-						<a href="reports/${reportData.fileName}/report.html">${reportData.fileName}</a>
+						<a href="reports/${reportData.fileName}/report.html">${reportData.name}</a>
 						<a href="reports/${reportData.fileName}/report_failed.html">(only failed)</a>
 					</td>
 					<td>${reportData.actionsDone}</td>
