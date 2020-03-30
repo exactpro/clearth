@@ -18,18 +18,13 @@
 
 package com.exactprosystems.clearth.web.beans;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.regex.Pattern;
-
-import javax.activation.MimetypesFileTypeMap;
-
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.ExceptionUtils;
+import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.KeyValueUtils;
+import com.exactprosystems.clearth.utils.ThreadDumpGenerator;
+import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
@@ -39,10 +34,16 @@ import org.apache.log4j.PropertyConfigurator;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.*;
-import com.exactprosystems.clearth.web.misc.MessageUtils;
-import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import javax.activation.MimetypesFileTypeMap;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 public class LogsBean extends ClearThBean
 {
@@ -106,7 +107,16 @@ public class LogsBean extends ClearThBean
 		this.selectedLogsList = selectedLogsList;
 	}
 
-	
+	public void selectAllLogs()
+	{
+		this.selectedLogsList = getAllLogsList();
+	}
+
+	public void deselectAllLogs()
+	{
+		this.selectedLogsList = Collections.emptyList();
+	}
+
 	public StreamedContent getLogsZip()
 	{
 		if (selectedLogsList.size()==0)
