@@ -38,8 +38,8 @@
 					<p:selectOneButton rendered="#{toolsBean.favoriteTools.size() > 0}" value="#{toolsBean.favoriteActiveTab}">
 						<f:selectItems value="#{toolsBean.favoriteTools}" var="ft"
 							itemValue="#{ft}" itemLabel="#{toolsBean.getToolName(ft)}"/>
-				<p:ajax update=":Container :OperationsMenu" />
-			</p:selectOneButton>
+						<p:ajax update=":Container :OperationsMenu" />
+					</p:selectOneButton>
 				</div>
 				<div class="upperRightContainer">
 					All tools: 

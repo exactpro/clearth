@@ -25,7 +25,8 @@ import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 
 public class ToolsBean extends ClearThBean
 {
@@ -49,6 +50,11 @@ public class ToolsBean extends ClearThBean
 		allTools = toolsManager.getToolsInfo();
 		username = UserInfoUtils.getUserName();
 		favoriteTools = toolsManager.getUserFavoriteTools(username);
+
+		if (!favoriteTools.isEmpty())
+		{
+			activeTab = favoriteActiveTab = favoriteTools.iterator().next();
+		}
 	}
 
 	
