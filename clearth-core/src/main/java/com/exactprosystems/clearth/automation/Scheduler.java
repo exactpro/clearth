@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,27 @@
 
 package com.exactprosystems.clearth.automation;
 
+import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
+
+import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
@@ -34,26 +55,6 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.xml.bind.JAXBException;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
-
-import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
 
 public abstract class Scheduler
 {
@@ -291,38 +292,9 @@ public abstract class Scheduler
 	synchronized public void setBusinessDay(Date businessDay) throws IOException
 	{
 		schedulerData.setBusinessDay(businessDay);
-		
-		try
-		{
-			schedulerData.setUseCurrentDate(false);
-			schedulerData.saveBusinessDay();
-		}
-		catch (IOException e)
-		{
-			String msg = "Error while saving scheduler business day after setting it";
-			logger.error(msg, e);
-			throw new IOException(msg, e);
-		}
-		
 		init();
 	}
-	
-	synchronized public void useCurrentDate() throws IOException
-	{
-		new File(schedulerData.getBusinessDayName()).delete();
-		try
-		{
-			schedulerData.setUseCurrentDate(true);
-			schedulerData.setBusinessDay(schedulerData.loadBusinessDay());
-		}
-		catch (Exception e)
-		{
-			logger.warn("Error while loading business day when using current date");
-		}
-		
-		init();
-	}
-	
+
 	synchronized public void setBaseTime(Date baseTime) throws IOException
 	{
 		schedulerData.setBaseTime(baseTime);

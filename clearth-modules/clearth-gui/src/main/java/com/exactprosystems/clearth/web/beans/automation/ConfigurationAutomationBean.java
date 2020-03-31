@@ -29,7 +29,6 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.UploadedFile;
 
-import javax.faces.bean.ManagedProperty;
 import javax.faces.event.AjaxBehaviorEvent;
 import java.io.File;
 import java.io.IOException;
@@ -199,12 +198,8 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	{
 		try
 		{
-			if (useCurrentDate)
-				selectedScheduler().useCurrentDate();
-			else
-				selectedScheduler().setBusinessDay(new Date());
-
-			getLogger().info("toggled usage of current date to "+useCurrentDate);
+			selectedScheduler().setBusinessDay(useCurrentDate ? null : new Date());
+			getLogger().info("toggled usage of current date to " + useCurrentDate);
 		}
 		catch (IOException e)
 		{

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,31 +18,34 @@
 
 package com.exactprosystems.clearth.automation;
 
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.UnmarshalException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.LoggerFactory;
+
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.XmlUtils;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.LoggerFactory;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.UnmarshalException;
-import java.io.*;
-import java.nio.file.Files;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public abstract class SchedulerData
 {
@@ -66,12 +69,15 @@ public abstract class SchedulerData
 			AUTO_RELOAD = "AutoReload";
 	
 	public static final String SCH_LAUNCHES = "SchedulerLaunches";
-	
+
 	protected static final DateFormat businessDayFormat = new SimpleDateFormat("yyyyMMdd"),
 			baseTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
-	private final String forUser, name, matricesDir, launchesName, configName, businessDayName, baseTimeName, 
+	private final String forUser, name, matricesDir, launchesName, configName, baseTimeName,
 			weekendHolidayName, holidaysName, matricesName, configDataName;
+
+	private final Path businessDayFilePath;
+
 	private final StepFactory stepFactory;
 	private final XmlSchedulerLaunches launches;
 	private final List<Step> steps;
@@ -100,7 +106,7 @@ public abstract class SchedulerData
 		Files.createDirectories(schedulerDir.toPath());  //Creating parent folder for scheduler data files
 		launchesName = getLaunchesName(cfgDir, name);
 		configName = getConfigName(cfgDir, name);
-		businessDayName = getBusinessDayName(cfgDir, name);
+		businessDayFilePath = getBusinessDayFilePath(cfgDir, name);
 		baseTimeName = getBaseTimeName(cfgDir, name);
 		weekendHolidayName = getWeekendHolidayName(cfgDir, name);
 		holidaysName = getHolidaysName(cfgDir, name);
@@ -149,9 +155,9 @@ public abstract class SchedulerData
 		return configsRoot+schedulerName+File.separator+HOLIDAYS_FILENAME;
 	}
 	
-	public static String getBusinessDayName(String configsRoot, String schedulerName)
+	public static Path getBusinessDayFilePath(String configsRoot, String schedulerName)
 	{
-		return configsRoot+schedulerName+File.separator+BUSINESSDAY_FILENAME;
+		return Paths.get(configsRoot, schedulerName, BUSINESSDAY_FILENAME);
 	}
 	
 	public static String getBaseTimeName(String configsRoot, String schedulerName)
@@ -350,51 +356,47 @@ public abstract class SchedulerData
 	{
 		saveHolidays(holidaysName, holidays);
 	}
-	
-	
-	public static Date loadBusinessDay(String fileName) throws IOException, ParseException
+
+	public static Date loadBusinessDay(Path filePath) throws IOException, ParseException
 	{
-		File f = new File(fileName);
-		if (!f.isFile())
-			return new Date();
-		
-		BufferedReader reader = null;
-		try
+		File businessDayFile = filePath.toFile();
+		if (!businessDayFile.isFile() || businessDayFile.length() == 0)
+			return null;
+
+		try (BufferedReader reader = new BufferedReader(new FileReader(businessDayFile)))
 		{
-			reader = new BufferedReader(new FileReader(fileName));
 			return businessDayFormat.parse(reader.readLine());
 		}
-		finally
-		{
-			if (reader!=null)
-				reader.close();
-		}
 	}
-	
-	public static void saveBusinessDay(String fileName, Date businessDay) throws IOException
+
+	public static void saveBusinessDay(Path filePath, Date businessDay) throws IOException
 	{
-		PrintWriter writer = null;
-		try
+		try (PrintWriter writer = new PrintWriter(filePath.toFile()))
 		{
-			writer = new PrintWriter(fileName);
 			writer.println(businessDayFormat.format(businessDay));
 			writer.flush();
 		}
-		finally
-		{
-			if (writer!=null)
-				writer.close();
-		}
 	}
-	
+
 	public Date loadBusinessDay() throws IOException, ParseException
 	{
-		return loadBusinessDay(businessDayName);
+		Date businessDay = loadBusinessDay(businessDayFilePath);
+
+		if (businessDay == null)
+		{
+			setUseCurrentDate(true);
+			return new Date();
+		}
+		else
+		{
+			setUseCurrentDate(false);
+			return businessDay;
+		}
 	}
-	
+
 	public void saveBusinessDay() throws IOException
 	{
-		saveBusinessDay(businessDayName, businessDay);
+		saveBusinessDay(businessDayFilePath, businessDay);
 	}
 	
 	
@@ -739,9 +741,9 @@ public abstract class SchedulerData
 		return holidaysName;
 	}
 	
-	public String getBusinessDayName()
+	public Path getBusinessDayFilePath()
 	{
-		return businessDayName;
+		return businessDayFilePath;
 	}
 	
 	public String getBaseTimeName()
@@ -782,13 +784,30 @@ public abstract class SchedulerData
 	{
 		return businessDay;
 	}
-	
-	public void setBusinessDay(Date businessDay)
+
+	public void setBusinessDay(Date businessDay) throws IOException
 	{
-		this.businessDay = businessDay;
+		try
+		{
+			if (businessDay == null)
+			{
+				new PrintWriter(getBusinessDayFilePath().toFile()).close();
+				this.businessDay = new Date();
+			}
+			else
+			{
+				this.businessDay = businessDay;
+				saveBusinessDay();
+			}
+		}
+		catch (IOException e)
+		{
+			String msg = "Error while saving scheduler business day after setting it";
+			logger.error(msg, e);
+			throw new IOException(msg, e);
+		}
 	}
-	
-	
+
 	public Date getBaseTime()
 	{
 		return baseTime;
