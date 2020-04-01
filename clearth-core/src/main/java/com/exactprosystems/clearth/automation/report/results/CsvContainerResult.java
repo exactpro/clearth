@@ -119,19 +119,19 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		if (!onlyFailedInCsv || !detail.isSuccess())
 			writeDetailToReportFile(detail);
 	}
-	
+
 	@Override
 	protected boolean checkDetails()
 	{
 		return success = passedRowsCount == totalRowsCount;
 	}
-	
+
 	@Override
 	public FailReason getFailReason()
 	{
 		return failReason;
 	}
-	
+
 	@Override
 	public void processDetails(File reportDir, Action linkedAction)
 	{
