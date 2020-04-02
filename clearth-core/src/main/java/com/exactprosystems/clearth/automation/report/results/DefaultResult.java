@@ -28,23 +28,6 @@ public class DefaultResult extends Result
 	public void clearDetails()
 	{
 	}
-
-	@Deprecated
-	public static Result failedWithComment(String comment)
-	{
-		Result r = new DefaultResult();
-		r.setSuccess(false);
-		r.setComment(comment);
-		return r;
-	}
-
-	@Deprecated
-	public static Result failedWithException(Exception e)
-	{
-		Result r = new DefaultResult();
-		r.setError(e);
-		return r;
-	}
 	
 	public static Result failed(String comment)
 	{

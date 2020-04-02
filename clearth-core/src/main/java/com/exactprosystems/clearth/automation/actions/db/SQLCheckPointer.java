@@ -69,15 +69,16 @@ public abstract class SQLCheckPointer extends SelectSQLAction
 	{
 		ResultSetMetaData md = rs.getMetaData();
 		if (!rs.next()) //No data found
-			return DefaultResult.failedWithComment("No data returned, CheckPointer not set. Please, check query that gets data for CheckPointer");
+			return DefaultResult.failed("No data returned, CheckPointer not set. " +
+					"Please, check query that gets data for CheckPointer");
 		
 		Map<String, String> cp = new LinkedHashMap<String, String>();
 		for (int i=0; i<md.getColumnCount(); i++)
 			cp.put(md.getColumnName(i+1), rs.getString(i+1));
 		
 		getMatrixContext().setContext(getCPName(idInMatrix), cp);
-		
-		logger.info(idInMatrix+" has successfully set CheckPointer");
+
+		logger.info("{} has successfully set CheckPointer", idInMatrix);
 		return null;
 	}
 
