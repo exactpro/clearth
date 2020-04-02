@@ -54,6 +54,11 @@ public class MatrixContext
 	{
 		context.put(key, value);
 	}
+
+	public void removeContext(String key)
+	{
+		context.remove(key);
+	}
 	
 	
 	public SubActionData getSubActionData(String subActionId)
