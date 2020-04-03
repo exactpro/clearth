@@ -19,7 +19,6 @@
 package com.exactprosystems.clearth.utils.sql;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,10 +31,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.exactprosystems.clearth.utils.sql.SQLUtils.*;
+import static org.apache.commons.lang.StringUtils.contains;
 
 public class SQLTemplateParser
 {
-	private static final Pattern TEMPLATE_PARAM_PATTERN = Pattern.compile("'?[^\\\\][#$@][\\w]+'?");
+	private static final Pattern TEMPLATE_PARAM_PATTERN = Pattern.compile("'?(?<![\\\\])[#$@][\\w]+'?");
+	private static final String MULTI_PARAM_BEGINNER = "@";
+	
 	
 	public ParametrizedQuery parseParametrizedQueryTemplate(File templateFile) throws SQLException, IOException
 	{
@@ -55,7 +57,7 @@ public class SQLTemplateParser
 		while (paramMatcher.find())
 		{
 			String foundParam = getTemplateParamName(paramMatcher.group());
-			if (StringUtils.contains(paramMatcher.group(), "@"))
+			if (contains(paramMatcher.group(), MULTI_PARAM_BEGINNER))
 				multiParams.add(foundParam);
 
 			queryParams.add(foundParam);
@@ -65,6 +67,7 @@ public class SQLTemplateParser
 		
 		replaceAll(queryBuilder, TABLE_NAME_WITH_DOLLAR.toString(), Character.toString(CONVERT_BEGINNER));
 		replaceAll(queryBuilder,TABLE_NAME_WITH_SHARP.toString(),Character.toString(CUSTOM_BEGINNER));
+		replaceAll(queryBuilder, "\\" + MULTI_PARAM_BEGINNER, MULTI_PARAM_BEGINNER);
 		
 		return new ParametrizedQuery(queryBuilder.toString(), queryParams, multiParams, multiParamsDelimiter);
 	}
