@@ -15,6 +15,16 @@ ClearTH Core provides basic functionality to execute test scenarios, some automa
 
 Applications that use ClearTH are built on top of ClearTH Core, optionally including its modules.
 
+## Tutorials
+
+Here are the links to the tutorial videos introducing you to the main features of ClearTH and helping you get set up.
+
+  - Getting Started:
+    https://youtu.be/pAGXzRbOE24
+  - Project Overview:
+    https://youtu.be/DbBpV-rWAVE
+  - Automation Script:
+    https://youtu.be/-RcZJZLrRrE
 
 ## How to build
 
