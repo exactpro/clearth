@@ -24,7 +24,7 @@ Here are the links to the tutorial videos introducing you to the main features o
   - Project Overview:
     https://youtu.be/DbBpV-rWAVE
   - Automation Script:
-    https://youtu.be/-RcZJZLrRrE
+    https://youtu.be/HPN64NgWriU
 
 ## How to build
 
