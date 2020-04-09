@@ -1,0 +1,57 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "send_plain_message_matrix.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "id1",
+        "actionName" : "SendPlainMessage",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Message" : {
+            "value" : "This is a test message"
+          },
+          "FileName" : {
+            "value" : "temp/plain_file.csv"
+          }
+        }
+      }
+    ]
+  },{
+    "stepName" : "Step2",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "id2",
+        "actionName" : "ReceivePlainMessage",
+        "status" : {
+          "passed" : true,
+          "comments" : [ "Message found" ]
+        },
+        "inputParams" : {
+          "Message" : {
+            "value" : "This is a test message"
+          },
+          "FileName" : {
+            "value" : "temp/plain_file.csv"
+          }
+        },
+        "result" : {
+          "success" : true
+        }
+      }
+    ]
+  } ]
+}

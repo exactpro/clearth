@@ -1,0 +1,9 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "bad_matrix.csv",
+  "userName" : "test",
+  "result" : true,
+  "description" : "",
+  "constants" : { },
+  "stepReports" : [ ]
+}

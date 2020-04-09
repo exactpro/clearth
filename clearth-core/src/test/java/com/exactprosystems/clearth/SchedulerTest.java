@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,6 +22,9 @@ import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
+
+import com.exactprosystems.clearth.helpers.JsonAssert;
+import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -34,7 +37,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,6 +50,16 @@ import static org.junit.Assert.assertNotNull;
 public class SchedulerTest
 {
 	private static final Path TEST_CONFIG_DIR = USER_DIR.resolve("src/test/resources/SchedulerTestData");
+	private static final String REPORTS_DIR = USER_DIR.getParent().resolve(ApplicationManager.TEST_REPORT_DIR)
+			.resolve("automation").resolve("reports").toString();
+
+	private static final Map<String, Set<String>> REPLACED_PATH_PARAMS = Collections.unmodifiableMap(
+			new HashMap<String, Set<String>>()
+			{{
+				put("stepReports", new HashSet<String>(Collections.singletonList("stepName")));
+				put("actionReports", new HashSet<String>(Arrays.asList("actionId", "actionName")));
+			}}
+	);
 
 	private final String userName = "test", schedulerName = "Test";
 
@@ -93,7 +106,9 @@ public class SchedulerTest
 		if (launchesInfo == null || launchesInfo.isEmpty())
 			throw new ClearThException("Launches data is not found");
 
-		allSuccessVerify(launchesInfo.get(0));
+		XmlSchedulerLaunchInfo currentLaunch = launchesInfo.get(0);
+		allSuccessVerify(currentLaunch);
+		checkReports(currentLaunch.getReportsPath());
 	}
 
 	@BeforeClass
@@ -148,5 +163,36 @@ public class SchedulerTest
 		{
 			return false;
 		}
+	}
+
+	private void checkReports(String reportPath) throws ClearThException
+	{
+		File[] reportPaths = Paths.get(REPORTS_DIR, reportPath).toFile().listFiles(File::isDirectory);
+		assertNotNull("Report paths is empty", reportPaths);
+
+		for (File path : reportPaths)
+		{
+			String fileName = FilenameUtils.removeExtension(path.getName());
+
+			File actualReport = path.toPath().resolve("report.json").toFile();
+			File expectedReport = getExpectedReport(fileName);
+			try
+			{
+				new JsonAssert().setReplacedPathParams(REPLACED_PATH_PARAMS).assertEquals(expectedReport, actualReport);
+			}
+			catch (IOException e)
+			{
+				throw new ClearThException(e);
+			}
+		}
+	}
+
+	private File getExpectedReport(String fileName)
+	{
+		Path reports = testConfigPath.resolve("reports");
+		File[] files = reports.toFile().listFiles((dir, name) -> name.equals(fileName + "_report.json"));
+		assertNotNull("Actual report file not found", files);
+
+		return files[0];
 	}
 }

@@ -1,0 +1,116 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "macro_matrix.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "MacroAction",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "ma1",
+        "actionName" : "MacroAction",
+        "status" : {
+          "passed" : true,
+          "comments" : [ "Nested actions executed successfully." ]
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "1"
+          },
+          "B" : {
+            "value" : "2"
+          },
+          "C" : {
+            "value" : "3"
+          },
+          "MacroFileName" : {
+            "value" : "clearth-core/src/test/resources/SchedulerTestData/MacroMatrix/matrices/nested-matrices/nested_matrix.csv"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "comment" : "Nested actions executed successfully."
+        },
+        "nestedActions" : [ {
+          "actionId" : "id0",
+          "actionName" : "SetStatic",
+          "status" : {
+            "passed" : true
+          },
+          "inputParams" : {
+            "A" : {
+              "value" : "1"
+            },
+            "B" : {
+              "value" : "2"
+            },
+            "C" : {
+              "value" : "3"
+            }
+          }
+        }, {
+          "actionId" : "id1",
+          "actionName" : "Compare2Values",
+          "status" : {
+            "passed" : true
+          },
+          "inputParams" : {
+            "Expected" : {
+              "value" : "1",
+              "formula" : "@{macro.A}"
+            },
+            "Actual" : {
+              "value" : "1",
+              "formula" : "@{id0.A}"
+            }
+          },
+          "result" : {
+            "success" : true
+          }
+        }, {
+          "actionId" : "id2",
+          "actionName" : "Compare2Values",
+          "status" : {
+            "passed" : true
+          },
+          "inputParams" : {
+            "Expected" : {
+              "value" : "2",
+              "formula" : "@{macro.B}"
+            },
+            "Actual" : {
+              "value" : "2",
+              "formula" : "@{id0.B}"
+            }
+          },
+          "result" : {
+            "success" : true
+          }
+        }, {
+          "actionId" : "id3",
+          "actionName" : "Compare2Values",
+          "status" : {
+            "passed" : true
+          },
+          "inputParams" : {
+            "Expected" : {
+              "value" : "3",
+              "formula" : "@{macro.C}"
+            },
+            "Actual" : {
+              "value" : "3",
+              "formula" : "@{id0.C}"
+            }
+          },
+          "result" : {
+            "success" : true
+          }
+        } ]
+      }
+    ]
+  } ]
+}
