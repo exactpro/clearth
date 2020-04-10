@@ -45,7 +45,8 @@ public abstract class Step
 
 	protected Date started, finished;
 	protected ActionsExecutionProgress executionProgress = new ActionsExecutionProgress();
-	protected boolean successful = true, interrupted = false, paused = false;
+	protected boolean interrupted = false, paused = false;
+	protected AtomicBoolean successful = new AtomicBoolean(true);
 	protected SchedulerSuspension suspension = null;
 	protected Map<Matrix, StepContext> stepContexts = null;
 	protected String statusComment = null;
@@ -303,12 +304,12 @@ public abstract class Step
 	
 	public boolean isSuccessful()
 	{
-		return successful;
+		return successful.get();
 	}
 	
 	public void setSuccessful(boolean successful)
 	{
-		this.successful = successful;
+		this.successful.set(successful);
 	}
 	
 	

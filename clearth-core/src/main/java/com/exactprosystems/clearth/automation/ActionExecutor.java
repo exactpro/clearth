@@ -317,6 +317,8 @@ public class ActionExecutor implements Closeable
 		action.setFinished(actionData.getFinished());
 		action.setResult(result);
 		applyActionResult(action, false);
+		applyStepSuccess(action);
+
 		reportWriter.updateReports(action, actionsReportsDir, action.getStep().getSafeName());
 		processActionResult(action);
 		
@@ -324,6 +326,15 @@ public class ActionExecutor implements Closeable
 		// because all async actions are treated as passed on start of their executions
 		if (result != null && !result.isSuccess())
 			action.getStep().getExecutionProgress().decrementSuccessful();
+	}
+
+	/**
+	 * Update step success before it ends.
+	 */
+	protected void applyStepSuccess(Action action)
+	{
+		Step step = action.getStep();
+		step.setSuccessful(step.isSuccessful() && action.isPassed());
 	}
 
 	protected void afterAsyncAction(@SuppressWarnings("unused") Action action) { /* Nothing to do by default*/ }
@@ -457,7 +468,8 @@ public class ActionExecutor implements Closeable
 		}
 		else
 		{
-			action.setPassed(true);
+			// If action has null result and it is not inverted it is supposed to be passed.
+			action.setPassed(!action.isInverted());
 			if (!action.isSubaction() && countSuccess)
 			{
 				executionProgress.incrementSuccessful();
@@ -651,6 +663,8 @@ public class ActionExecutor implements Closeable
 		}
 		
 		applyActionResult(action, true);
+		applyStepSuccess(action);
+
 		if (!action.isSubaction())
 		{
 			actionToMvel(action);

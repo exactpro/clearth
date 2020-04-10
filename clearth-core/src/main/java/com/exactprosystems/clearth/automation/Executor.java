@@ -77,7 +77,7 @@ public abstract class Executor extends Thread
 	private AtomicBoolean terminated = new AtomicBoolean(false), //Must be set on interruption: on terminate() method call and on throw of InterruptedException
 			interrupted = new AtomicBoolean(false),
 			paused = new AtomicBoolean(false);
-	
+
 	private final SchedulerSuspension suspension = new SchedulerSuspension(false, false, false);
 	private Step currentStep;
 	private boolean restored = false;

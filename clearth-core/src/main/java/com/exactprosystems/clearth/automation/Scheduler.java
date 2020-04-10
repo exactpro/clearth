@@ -50,6 +50,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
@@ -77,7 +78,8 @@ public abstract class Scheduler
 	protected ExecutorStateInfo stateInfo;
 	protected boolean testMode;
 	private Date executorStartedTime;
-	
+	private final AtomicBoolean stoppedByUser = new AtomicBoolean(false);
+
 	protected MatrixProviderHolder matrixProviderHolder;
 
 //	protected Map<String, ActionMetaData> actionsMapping;
@@ -477,6 +479,11 @@ public abstract class Scheduler
 		return buildMatrices(stepsContainer, matricesContainer, preparableActions, matricesData, true);
 	}
 
+	public boolean isStoppedByUser()
+	{
+		return stoppedByUser.get();
+	}
+
 	protected Map<String, List<ActionGeneratorMessage>> buildMatrices(List<Step> stepsContainer,
 																	  List<Matrix> matricesContainer,
 																	  Map<String, Preparable> preparableActions,
@@ -830,7 +837,20 @@ public abstract class Scheduler
 		else
 			return seqExec.isExecutionInterrupted();
 	}
-	
+
+	public boolean isSuccessful()
+	{
+		for (Step step : getSteps())
+		{
+			if (!step.isSuccessful())
+				return false;
+			// Supposed that current step is taken from step list.
+			if (step == getCurrentStep())
+				return step.isSuccessful();
+		}
+		return true;
+	}
+
 	public boolean init()
 	{
 		if (isRunning())
@@ -843,6 +863,7 @@ public abstract class Scheduler
 			businessDay = schedulerData.loadBusinessDay();
 			baseTime = schedulerData.loadBaseTime();
 			weekendHoliday = schedulerData.loadWeekendHoliday();
+			stoppedByUser.set(false);
 			initEx();
 		}
 		catch (Exception e)
@@ -1009,6 +1030,7 @@ public abstract class Scheduler
 				seqExec.interruptWholeExecution();
 		}
 
+		stoppedByUser.set(true);
 //		matrices.clear();
 	}
 
