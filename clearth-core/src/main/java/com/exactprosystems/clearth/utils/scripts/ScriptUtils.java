@@ -37,41 +37,38 @@ import com.exactprosystems.clearth.utils.Utils;
 public class ScriptUtils extends Utils
 {
 	private static final Logger logger = LoggerFactory.getLogger(ScriptUtils.class);
-	
-	public static ScriptResult executeScript(String commandLineString, String[] args, int[] exitValues) throws IOException
+
+	public static ScriptResult executeScript(String commandLineString, String[] args, int[] exitValues)
+			throws IOException
 	{
 		logger.debug("Command line to execute: {}. Parameters: {} ", commandLineString, args);
 
 		CommandLine commandLine = CommandLine.parse(commandLineString, EnvironmentUtils.getProcEnvironment());
-		if (args != null)
-			commandLine.addArguments(args, false);
 
-		Executor executor = new DefaultExecutor();
-		executor.setExitValues(exitValues);
-
-		ByteArrayOutputStream outWriter = new ByteArrayOutputStream();
-		ByteArrayOutputStream errWriter = new ByteArrayOutputStream();
-		executor.setStreamHandler(new PumpStreamHandler(new PrintStream(outWriter), new PrintStream(errWriter)));
-
-		long startTime = System.currentTimeMillis();
-		int result = executor.execute(commandLine);
-		logger.debug("Script execution duration: {}", formatDurationHMS(System.currentTimeMillis() - startTime));
-
-		return new ScriptResult(result, outWriter.toString(), errWriter.toString());
+		return execute(commandLine, args, exitValues);
 	}
-	
+
 	public static ScriptResult executeScript(String commandLineString, int[] exitValues) throws IOException
 	{
 		return executeScript(commandLineString, null, exitValues);
 	}
-	
+
 	public static ScriptResult executeScript(String commandLineString) throws IOException
 	{
 		return executeScript(commandLineString, new int[]{0});
 	}
-	
 
-	public static void executeScriptAsync(String commandLineString, String[] args, int[] exitValues, String messageComplete, String messageFail) throws IOException
+	public static ScriptResult executeScript(String command, String executableName, String shellOption, String[] args,
+	                                         int[] exitValues) throws IOException
+	{
+		CommandLine commandLine =
+				CommandLine.parse(executableName, EnvironmentUtils.getProcEnvironment())
+						.addArgument(shellOption).addArgument(command, false);
+		return execute(commandLine, args, exitValues);
+	}
+
+	public static void executeScriptAsync(String commandLineString, String[] args, int[] exitValues,
+	                                      String messageComplete, String messageFail) throws IOException
 	{
 		logger.debug("Command line to execute: {}. Parameters: {} ", commandLineString, args);
 
@@ -79,27 +76,69 @@ public class ScriptUtils extends Utils
 		if (args != null)
 			commandLine.addArguments(args, false);
 
-		Executor executor = new DefaultExecutor();
-		executor.setExitValues(exitValues);
-
-		ByteArrayOutputStream outWriter = new ByteArrayOutputStream();
-		ByteArrayOutputStream errWriter = new ByteArrayOutputStream();
-		executor.setStreamHandler(new PumpStreamHandler(new PrintStream(outWriter), new PrintStream(errWriter)));
-
-		ScriptResultHandler scriptResultHandler = new ScriptResultHandler(outWriter, errWriter);
-		scriptResultHandler.setMessageComplete(messageComplete);
-		scriptResultHandler.setMessageFail(messageFail);
-
-		executor.execute(commandLine, scriptResultHandler);
+		executeAsync(commandLine, exitValues, messageComplete, messageFail);
 	}
-	
-	public static void executeScriptAsync(String commandLineString, int[] exitValues, String messageComplete, String messageFail) throws IOException
+
+	public static void executeScriptAsync(String commandLineString, int[] exitValues, String messageComplete,
+	                                      String messageFail) throws IOException
 	{
 		executeScriptAsync(commandLineString, null, exitValues, messageComplete, messageFail);
 	}
-	
-	public static void executeScriptAsync(String commandLineString, String messageComplete, String messageFail) throws IOException
+
+	public static void executeScriptAsync(String commandLineString, String messageComplete, String messageFail)
+			throws IOException
 	{
 		executeScriptAsync(commandLineString, new int[]{0}, messageComplete, messageFail);
+	}
+
+	public static void executeScriptAsync(String command, String executableName, String shellOption, int[] exitValues,
+	                                      String messageComplete, String messageFail) throws IOException
+	{
+		CommandLine commandLine =
+				CommandLine.parse(executableName, EnvironmentUtils.getProcEnvironment())
+						.addArgument(shellOption).addArgument(command, false);
+		executeAsync(commandLine, exitValues, messageComplete, messageFail);
+	}
+
+	private static ScriptResult execute(CommandLine commandLine, String[] args, int[] exitValues) throws IOException
+	{
+		Executor executor = new DefaultExecutor();
+		if (args != null)
+			commandLine.addArguments(args, false);
+
+		if (exitValues != null)
+			executor.setExitValues(exitValues);
+		else
+			executor.setExitValue(0);
+
+		try (ByteArrayOutputStream outWriter = new ByteArrayOutputStream();
+		     ByteArrayOutputStream errWriter = new ByteArrayOutputStream())
+		{
+			executor.setStreamHandler(new PumpStreamHandler(new PrintStream(outWriter), new PrintStream(errWriter)));
+			long startTime = System.currentTimeMillis();
+			int result = executor.execute(commandLine);
+			logger.debug("Script execution duration: {}", formatDurationHMS(System.currentTimeMillis() - startTime));
+			return new ScriptResult(result, outWriter.toString(), errWriter.toString());
+		}
+	}
+
+	private static void executeAsync(CommandLine commandLine, int[] exitValues, String messageComplete,
+	                                 String messageFail) throws IOException
+	{
+		Executor executor = new DefaultExecutor();
+		executor.setExitValues(exitValues);
+
+		try (ByteArrayOutputStream outWriter = new ByteArrayOutputStream();
+		     ByteArrayOutputStream errWriter = new ByteArrayOutputStream())
+		{
+			executor.setStreamHandler(new PumpStreamHandler(new PrintStream(outWriter), new PrintStream(errWriter)));
+
+			ScriptResultHandler scriptResultHandler = new ScriptResultHandler(outWriter, errWriter);
+
+			scriptResultHandler.setMessageComplete(messageComplete);
+			scriptResultHandler.setMessageFail(messageFail);
+
+			executor.execute(commandLine, scriptResultHandler);
+		}
 	}
 }

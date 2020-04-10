@@ -18,14 +18,13 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
-import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.*;
 import org.apache.commons.lang.StringUtils;
 
 import com.exactprosystems.clearth.ClearThCore;
@@ -49,7 +48,11 @@ public class ExecuteScript extends Action {
 			ASYNC = "Async",
 			OUTPUT = "Output",
 			FAIL_ON_ERROR_OUTPUT = "FailOnErrorOutput",
-			SUCCESS_RESULT_CODES = "SuccessResultCodes";
+			SUCCESS_RESULT_CODES = "SuccessResultCodes",
+			SCRIPT_TEXT_PARAM = "ScriptText",
+			EXECUTABLE_NAME_PARAM = "ExecutableName",
+			SHELL_OPTION_PARAM = "ShellOption";
+	protected String executableName, shellOption;
 
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException
@@ -57,7 +60,7 @@ public class ExecuteScript extends Action {
 		if (inputParams.size() == 0)
 			return noParametersResult();
 
-		String command = buildScriptPath(getInputParams());
+		String command = buildCommand(getInputParams());
 		String parameters = buildScriptParameters(getInputParams());
 		if (logger.isDebugEnabled())
 			logger.debug("Script location: " + command + ". Parameters: " + parameters);
@@ -75,8 +78,15 @@ public class ExecuteScript extends Action {
 				+ "Required parameter: %s. Optional parameters: %s, %s, %s.", SCRIPT_FILE_NAME, SCRIPT_DIRECTORY, PARAMETERS, ASYNC));
 	}
 	
-	protected String buildScriptPath(Map<String, String> parameters) throws ResultException
+	protected String buildCommand(Map<String, String> parameters) throws ResultException
 	{
+		String scriptTextCommand = InputParamsUtils.getStringOrDefault(parameters, SCRIPT_TEXT_PARAM, null);
+		if (scriptTextCommand != null)
+		{
+			executableName = InputParamsUtils.getRequiredString(parameters, EXECUTABLE_NAME_PARAM);
+			shellOption = InputParamsUtils.getStringOrDefault(parameters, SHELL_OPTION_PARAM, "-c");
+			return scriptTextCommand;
+		}
 		String scriptName = InputParamsUtils.getRequiredString(parameters, SCRIPT_FILE_NAME),
 				scriptDir = InputParamsUtils.getStringOrDefault(parameters, SCRIPT_DIRECTORY, null);
 		
@@ -171,7 +181,22 @@ public class ExecuteScript extends Action {
 	
 	protected Result executeScriptSync(String command)
 	{
-		ScriptResult res = doExecuteScript(command);
+		ScriptResult res;
+		if (executableName == null)
+		{
+			res = doExecuteScript(command);
+		}
+		else 
+		{
+			try
+			{
+				res = ScriptUtils.executeScript(command, executableName, shellOption, null, null);
+			}
+			catch (IOException e)
+			{
+				throw ResultException.failed(String.format("Script '%s' was not launched", command), e);
+			}
+		}
 		processScriptResult(res);
 		return buildActionResult(res);
 	}
@@ -184,7 +209,14 @@ public class ExecuteScript extends Action {
 		                                   command, getIdInMatrix(), getMatrix().getName());
 		try
 		{
-			ScriptUtils.executeScriptAsync(command, null, messageComplete, messageFail);
+			if (executableName != null)
+			{
+				ScriptUtils.executeScriptAsync(command, executableName, shellOption, null, messageComplete, messageFail);
+			}
+			else
+			{
+				ScriptUtils.executeScriptAsync(command, null, messageComplete, messageFail);
+			}
 		}
 		catch (IOException e)
 		{
