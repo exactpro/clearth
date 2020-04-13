@@ -18,8 +18,6 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
-import static com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector.MESSAGE;
-
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
@@ -27,6 +25,7 @@ import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerType;
 import com.exactprosystems.clearth.connectivity.ReceiveListener;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
@@ -41,6 +40,8 @@ import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 
 import java.io.File;
 import java.io.IOException;
+
+import static com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector.MESSAGE;
 
 public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 {
@@ -123,22 +124,29 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 		return new StringFileMessageSource(file);
 	}
 	
-	protected StringMessageSource getCollectorMessageSource() 
+	protected StringMessageSource getCollectorMessageSource() throws FailoverException
 	{
 		ConnectionFinder finder = getConnectionFinder();
 		String conName = finder.getConnectionName(getInputParams());
 		
-		ClearThMessageConnection<?, ?> connection = finder.findConnection(conName);
-		ReceiveListener collector = connection.findListener(ListenerType.Collector.getLabel());
-		if (collector == null)
-			throw ResultException.failed("No collector defined for connection '"+conName+"'");
-
-		if (collector instanceof ClearThMessageCollector)
-			return createCollectorSource((ClearThMessageCollector)collector);
-		throw ResultException.failed("Collector is an instance of unexpected class '"+collector.getClass().getName()+"'");
+		try
+		{
+			ClearThMessageConnection<?, ?> connection = finder.findConnection(conName);
+			ReceiveListener collector = connection.findListener(ListenerType.Collector.getLabel());
+			if (collector == null)
+				throw ResultException.failed("No collector defined for connection '" + conName + "'");
+			
+			if (collector instanceof ClearThMessageCollector)
+				return createCollectorSource((ClearThMessageCollector)collector);
+			throw ResultException.failed("Collector is an instance of unexpected class '" + collector.getClass().getName() + "'");
+		}
+		catch (ConnectivityException e)
+		{
+			throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+		}
 	}
 	
-	protected StringMessageSource getMessageSource()
+	protected StringMessageSource getMessageSource() throws FailoverException
 	{
 		if (!getInputParam(MessageAction.CONNECTIONNAME, "").isEmpty())
 			return getCollectorMessageSource();

@@ -633,6 +633,7 @@ public class ActionExecutor implements Closeable
 							failoverStatus.failover = true;
 							failoverStatus.actionType = action.getActionType();
 							failoverStatus.reason = e.getReason();
+							failoverStatus.reasonString = e.getMessage();
 							failoverStatus.needRestartAction = true;
 							failoverStatus.connection = e.getConnection();
 							failoverStatus.setFailoverInfo(action, e);

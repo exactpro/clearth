@@ -785,7 +785,15 @@ public abstract class Executor extends Thread
 		
 		return failoverStatus.reason;
 	}
-
+	
+	public String getFailoverReasonString()
+	{
+		if (!failoverStatus.failover)
+			return null;
+		
+		return failoverStatus.reasonString;
+	}
+	
 	public int getFailoverActionType()
 	{
 		if (!failoverStatus.failover)

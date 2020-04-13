@@ -18,24 +18,22 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
-import static com.exactprosystems.clearth.automation.actions.MessageAction.CONNECTIONNAME;
-import static com.exactprosystems.clearth.automation.actions.MessageAction.FILENAME;
-import static com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector.MESSAGE;
-
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.StepContext;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.messages.ConnectionFinder;
 import com.exactprosystems.clearth.messages.StringMessageFileSender;
 import com.exactprosystems.clearth.messages.StringMessageSender;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 
 import java.io.File;
+
+import static com.exactprosystems.clearth.automation.actions.MessageAction.CONNECTIONNAME;
+import static com.exactprosystems.clearth.automation.actions.MessageAction.FILENAME;
+import static com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector.MESSAGE;
 
 public class SendPlainMessage extends Action
 {
@@ -58,16 +56,26 @@ public class SendPlainMessage extends Action
 	}
 
 	protected StringMessageSender getMessageSender(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
+			throws FailoverException
 	{
 		if (!getInputParam(CONNECTIONNAME, "").isEmpty())
-			return new ConnectionFinder().findConnection(getInputParams());
+		{
+			try
+			{
+				return new ConnectionFinder().findConnection(getInputParams());
+			}
+			catch (ConnectivityException e)
+			{
+				throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+			}
+		}
 		if (!getInputParam(FILENAME, "").isEmpty())
 			return getFileSender();
-
+		
 		StringMessageSender result = getCustomMessageSender(globalContext);
 		if (result == null)
-			throw ResultException.failed("No '"+CONNECTIONNAME+"' and '"+FILENAME+"' parameters specified");
-
+			throw ResultException.failed("No '" + CONNECTIONNAME + "' or '" + FILENAME + "' parameters specified");
+		
 		return result;
 	}
 

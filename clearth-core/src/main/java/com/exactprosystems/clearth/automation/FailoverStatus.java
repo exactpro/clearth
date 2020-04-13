@@ -19,7 +19,6 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
-import com.exactprosystems.clearth.connectivity.MQConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 
 public class FailoverStatus
@@ -27,6 +26,7 @@ public class FailoverStatus
 	public boolean failover = false;
 	public int actionType = ActionType.NONE;
 	public int reason = FailoverReason.NONE;
+	public String reasonString = null;
 	public boolean needRestartAction = false;
 	public ClearThConnection<?,?> connection = null;
 	

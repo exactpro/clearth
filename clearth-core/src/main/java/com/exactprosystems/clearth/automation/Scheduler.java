@@ -1137,7 +1137,18 @@ public abstract class Scheduler
 		else
 			return seqExec.getFailoverReason();
 	}
-
+	
+	public String getFailoverReasonString()
+	{
+		if (!isFailover())
+			return null;
+		
+		if (!sequentialRun)
+			return executor.getFailoverReasonString();
+		else
+			return seqExec.getFailoverReasonString();
+	}
+	
 	public int getFailoverActionType()
 	{
 		if (!isFailover())

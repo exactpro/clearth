@@ -18,14 +18,12 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.StepContext;
-import com.exactprosystems.clearth.automation.TimeoutAwaiter;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.EncodeException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
@@ -99,17 +97,26 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		return new ConnectionFinder();
 	}
 	
-	protected StringMessageSender getStringSender(GlobalContext globalContext)
+	protected StringMessageSender getStringSender(GlobalContext globalContext) throws FailoverException
 	{
 		if (!getInputParam(CONNECTIONNAME, "").isEmpty())
-			return getConnectionFinder().findConnection(getInputParams());
+		{
+			try
+			{
+				return getConnectionFinder().findConnection(getInputParams());
+			}
+			catch (ConnectivityException e)
+			{
+				throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+			}
+		}
 		if (!getInputParam(FILENAME, "").isEmpty())
 			return getFileSender();
-
+		
 		StringMessageSender result = getCustomMessageSender(globalContext);
 		if (result == null)
-			throw ResultException.failed("No '"+CONNECTIONNAME+"' and '"+FILENAME+"' parameters specified");
-
+			throw ResultException.failed("No '" + CONNECTIONNAME + "' or '" + FILENAME + "' parameters specified");
+		
 		return result;
 	}
 
@@ -120,6 +127,7 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 	}
 
 	protected MessageSender<T> getMessageSender(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
+			throws FailoverException
 	{
 		ICodec codec = getCodec(globalContext);
 		StringMessageSender stringSender = getStringSender(globalContext);

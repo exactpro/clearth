@@ -1312,13 +1312,19 @@
 			</h:form>
 		</p:dialog>
 		<!-- Failover dialog -->
-		<p:dialog header="Connection failed" widgetVar="failoverDialog"
-				  resizable="false" id="failoverDlg" width="500" modal="false" visible="#{automationSchedulerBean.failover}" closable="false">
-			<h:outputText value="#{automationSchedulerBean.failoverReasonString}. Scripts execution suspended in this scheduler." />
-			<br />
+		<p:dialog header="Connection failed" visible="#{automationSchedulerBean.failover}" closable="false"
+		          id="failoverDlg" widgetVar="failoverDialog" width="580" resizable="false" modal="false">
+			<h:outputText value="Scripts execution suspended in this scheduler." />
+			<h:outputText value=" Reason: #{automationSchedulerBean.failoverReasonString}."
+			              rendered="#{automationSchedulerBean.failoverReasonString != null}" />
+			<br/><br/>
 			<h:form id="Failover">
-				<h:outputText value="Select what to do now: try to reconnect or to interrupt scheduler execution" />
-				<br />
+				<h:outputText value="Select what to do now: restart action, try another option or interrupt scheduler execution." />
+				<br/>
+				<p:commandButton value="Restart action" update=":SchedulerSteps"
+				                 actionListener="#{automationSchedulerBean.setFailoverRestartAction(true)}"
+				                 oncomplete="PF('failoverDialog').hide();"
+				                 icon="ui-icon ui-icon-refresh" />
 				<p:commandButton value="Try to reconnect" update=":SchedulerSteps"
 								 actionListener="#{automationSchedulerBean.tryAgainMain}"
 								 oncomplete="saveExecScrollPos(); PF('failoverDialog').hide();"

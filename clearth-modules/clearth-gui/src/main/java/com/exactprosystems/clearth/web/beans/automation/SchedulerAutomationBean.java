@@ -162,12 +162,12 @@ public class SchedulerAutomationBean extends ClearThBean {
 	{
 		return selectedScheduler().isFailover();
 	}
-
+	
 	public String getFailoverReasonString()
 	{
-		return "";
+		return selectedScheduler().getFailoverReasonString();
 	}
-
+	
 	public void tryAgainMain()
 	{
 		selectedScheduler().tryAgainMain();
@@ -177,12 +177,12 @@ public class SchedulerAutomationBean extends ClearThBean {
 	{
 		selectedScheduler().tryAgainAlt();
 	}
-
-	public void setFailoverRestartAction(boolean needRestart)  //Can be used in Failover dialog implementation, but not in version of that dialog which comes with Core
+	
+	public void setFailoverRestartAction(boolean needRestart)
 	{
 		selectedScheduler().setFailoverRestartAction(needRestart);
 	}
-
+	
 	public List<String> getStatus()
 	{
 		return selectedScheduler().getStatus().get();

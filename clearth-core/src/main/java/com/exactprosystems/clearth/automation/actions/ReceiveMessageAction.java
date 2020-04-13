@@ -18,37 +18,26 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.StepContext;
-import com.exactprosystems.clearth.automation.TimeoutAwaiter;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
-import com.exactprosystems.clearth.messages.AllKeyFieldsData;
-import com.exactprosystems.clearth.messages.CollectorMessageSource;
-import com.exactprosystems.clearth.messages.ConnectionFinder;
-import com.exactprosystems.clearth.messages.FileMessageSource;
-import com.exactprosystems.clearth.messages.KeyFieldsData;
-import com.exactprosystems.clearth.messages.MatchesByMainAndRgsKeys;
-import com.exactprosystems.clearth.messages.MatchesByMainKeys;
-import com.exactprosystems.clearth.messages.MessageFinder;
-import com.exactprosystems.clearth.messages.MessageKeyField;
-import com.exactprosystems.clearth.messages.MessageMatcher;
-import com.exactprosystems.clearth.messages.MessageSource;
-import com.exactprosystems.clearth.messages.RgKeyFieldNames;
-import com.exactprosystems.clearth.utils.*;
+import com.exactprosystems.clearth.messages.*;
+import com.exactprosystems.clearth.utils.CommaBuilder;
+import com.exactprosystems.clearth.utils.KeyValueUtils;
+import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
+import org.apache.commons.lang.StringUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
-
-import org.apache.commons.lang.StringUtils;
 
 import static com.exactprosystems.clearth.utils.inputparams.InputParamsUtils.getBooleanOrDefault;
 import static java.util.Collections.unmodifiableSet;
@@ -132,7 +121,7 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 	
 	//*** Getters for objects to work with messages ***
 	
-	protected MessageSource getMessageSource(GlobalContext globalContext)
+	protected MessageSource getMessageSource(GlobalContext globalContext) throws FailoverException
 	{
 		if (!getInputParam(CONNECTIONNAME, "").isEmpty())
 			return getCollectorMessageSource(globalContext);
@@ -150,9 +139,16 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 		return new ConnectionFinder();
 	}
 	
-	protected CollectorMessageSource getCollectorMessageSource(GlobalContext globalContext)
+	protected CollectorMessageSource getCollectorMessageSource(GlobalContext globalContext) throws FailoverException
 	{
-		return new CollectorMessageSource(getConnectionFinder().findCollector(inputParams), !isReverseOrder());
+		try
+		{
+			return new CollectorMessageSource(getConnectionFinder().findCollector(inputParams), !isReverseOrder());
+		}
+		catch (ConnectivityException e)
+		{
+			throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+		}
 	}
 	
 	protected FileMessageSource getFileMessageSource(GlobalContext globalContext)

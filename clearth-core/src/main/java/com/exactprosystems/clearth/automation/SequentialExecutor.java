@@ -18,14 +18,10 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import org.slf4j.Logger;
+
+import java.io.File;
+import java.util.*;
 
 public abstract class SequentialExecutor extends Thread
 {
@@ -310,7 +306,17 @@ public abstract class SequentialExecutor extends Thread
 			return currentExecutor.getFailoverReason();
 		}
 	}
-
+	
+	public String getFailoverReasonString()
+	{
+		synchronized (ceMonitor)
+		{
+			if (currentExecutor == null)
+				return null;
+			return currentExecutor.getFailoverReasonString();
+		}
+	}
+	
 	public int getFailoverActionType()
 	{
 		synchronized (ceMonitor)

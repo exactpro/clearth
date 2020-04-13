@@ -18,8 +18,6 @@
 
 package com.exactprosystems.clearth.messages;
 
-import java.util.Map;
-
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.actions.MessageAction;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
@@ -30,6 +28,8 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
+
+import java.util.Map;
 
 /**
  * Class that finds connections and collectors by given name or action parameters.
@@ -42,23 +42,16 @@ public class ConnectionFinder
 		return InputParamsUtils.getRequiredString(inputParams, MessageAction.CONNECTIONNAME);
 	}
 	
-	public ClearThMessageConnection<?,?> findConnection(String connectionName) throws ResultException
+	public ClearThMessageConnection<?,?> findConnection(String connectionName) throws ResultException, ConnectivityException
 	{
-		try
-		{
-			ClearThConnection<?,?> con = ClearThCore.connectionStorage().findRunningConnection(connectionName);
-			if (ClearThMessageConnection.isMessageConnection(con))
-				return (ClearThMessageConnection<?,?>)con;
-			else
-				throw ResultException.failed("Connection '" + connectionName + "' is not suitable for processing messages!");
-		}
-		catch (ConnectivityException e)
-		{
-			throw ResultException.failed(e.getMessage());
-		}
+		ClearThConnection<?,?> con = ClearThCore.connectionStorage().findRunningConnection(connectionName);
+		if (ClearThMessageConnection.isMessageConnection(con))
+			return (ClearThMessageConnection<?,?>)con;
+		else
+			throw ResultException.failed("Connection '" + connectionName + "' is not suitable for processing messages!");
 	}
 	
-	public ClearThMessageConnection<?,?> findConnection(Map<String, String> inputParams) throws ResultException
+	public ClearThMessageConnection<?,?> findConnection(Map<String, String> inputParams) throws ResultException, ConnectivityException
 	{
 		String conName = getConnectionName(inputParams);
 		return findConnection(conName);
@@ -75,7 +68,7 @@ public class ConnectionFinder
 		return (ClearThMessageCollector)listener;
 	}
 	
-	public ClearThMessageCollector findCollector(Map<String, String> inputParams) throws ResultException
+	public ClearThMessageCollector findCollector(Map<String, String> inputParams) throws ResultException, ConnectivityException
 	{
 		ClearThMessageConnection<?,?> con = findConnection(inputParams);
 		return findCollector(con);
