@@ -14,7 +14,7 @@ import java.util.Map;
 
 import static com.exactprosystems.clearth.utils.CollectionUtils.mapOf;
 
-public class SQLTemplateParserTest extends Assert
+public class ParametrizedQueryTest extends Assert
 {
 	static String[] paramValues = {"A", "B", "C" , "D" , "E", "F" , "G"};
 	static String createDbTemplate = "CREATE TABLE T(PARAM TEXT);" +
