@@ -41,15 +41,14 @@ import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.*;
-import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.NumericStringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.DefaultStringTableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.NumericStringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.DefaultStringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
@@ -82,10 +81,13 @@ public class CompareDataSets extends Action
 			CONTAINER_EXTRA = "Extra rows";
 	
 	// Matrix params names for additional ones to initialize data readers (0 - common, 1 - expected, 2 - actual)
-	public static final String[] CSV_DELIMITER = new String[] { "CsvDelimiterCommon", "CsvDelimiterExpected", "CsvDelimiterActual"},
+	public static final String[] CSV_DELIMITER = new String[] { "CsvDelimiterCommon", "CsvDelimiterExpected", "CsvDelimiterActual" },
+			SCRIPT_SHELL_NAME = new String[] { "ScriptShellNameCommon", "ScriptShellNameExpected", "ScriptShellNameActual" },
+			SCRIPT_SHELL_OPTION = new String[] { "ScriptShellOptionCommon", "ScriptShellOptionExpected", "ScriptShellOptionActual" },
 			SCRIPT_FILE_PARAMS = new String[] { "ScriptFileParamsCommon", "ScriptFileParamsExpected", "ScriptFileParamsActual" };
 	// ... and keys in mapping for them
-	protected final String ADDITIONAL_CSV_DELIMITER = "CsvDelimiter", ADDITIONAL_SCRIPT_FILE_PARAMS = "ScriptFileParams";
+	protected final String ADDITIONAL_CSV_DELIMITER = "CsvDelimiter", ADDITIONAL_SCRIPT_SHELL_NAME = "ScriptShellName",
+			ADDITIONAL_SCRIPT_SHELL_OPTION = "ScriptShellOption", ADDITIONAL_SCRIPT_FILE_PARAMS = "ScriptFileParams";
 	
 	protected Map<String, BigDecimal> numericColumns = null;
 	protected IValueTransformer bdValueTransformer = null;
@@ -142,7 +144,12 @@ public class CompareDataSets extends Action
 		if (FORMAT_CSV_FILE.equals(formatName) || FORMAT_SCRIPT.equals(formatName) || FORMAT_SCRIPT_FILE.equals(formatName))
 		{
 			additionalParams.put(ADDITIONAL_CSV_DELIMITER, getCsvDelimiter(forExpectedData));
-			if (FORMAT_SCRIPT_FILE.equals(formatName))
+			if (FORMAT_SCRIPT.equals(formatName))
+			{
+				additionalParams.put(ADDITIONAL_SCRIPT_SHELL_NAME, getScriptShellName(forExpectedData));
+				additionalParams.put(ADDITIONAL_SCRIPT_SHELL_OPTION, getScriptShellOption(forExpectedData));
+			}
+			else if (FORMAT_SCRIPT_FILE.equals(formatName))
 				additionalParams.put(ADDITIONAL_SCRIPT_FILE_PARAMS, getScriptFileParameters(forExpectedData));
 		}
 		return additionalParams;
@@ -150,18 +157,30 @@ public class CompareDataSets extends Action
 	
 	protected char getCsvDelimiter(boolean forExpectedData)
 	{
-		String paramToUse = inputParams.containsKey(CSV_DELIMITER[0]) ? CSV_DELIMITER[0] : forExpectedData ? CSV_DELIMITER[1] : CSV_DELIMITER[2],
-				delimiter = InputParamsUtils.getStringOrDefault(inputParams, paramToUse, "").replace("\\t", "\t");
-		if (delimiter.length() <= 1)
-			return delimiter.isEmpty() ? ',' : delimiter.charAt(0);
+		String paramToUse = inputParams.containsKey(CSV_DELIMITER[0]) ? CSV_DELIMITER[0] : CSV_DELIMITER[forExpectedData ? 1 : 2],
+				delimiter = InputParamsUtils.getStringOrDefault(inputParams, paramToUse, ",").replace("\\t", "\t");
+		if (delimiter.length() == 1)
+			return delimiter.charAt(0);
 		else
 			throw ResultException.failed("CSV delimiter specified in parameter '" + paramToUse + "' has invalid format: it should be 1 character in length.");
 	}
 	
+	protected String getScriptShellName(boolean forExpectedData)
+	{
+		return InputParamsUtils.getStringOrDefault(inputParams, inputParams.containsKey(SCRIPT_SHELL_NAME[0]) ?
+				SCRIPT_SHELL_NAME[0] : SCRIPT_SHELL_NAME[forExpectedData ? 1 : 2], "bash");
+	}
+	
+	protected String getScriptShellOption(boolean forExpectedData)
+	{
+		return InputParamsUtils.getStringOrDefault(inputParams, inputParams.containsKey(SCRIPT_SHELL_OPTION[0]) ?
+				SCRIPT_SHELL_OPTION[0] : SCRIPT_SHELL_OPTION[forExpectedData ? 1 : 2], "-c");
+	}
+	
 	protected String getScriptFileParameters(boolean forExpectedData)
 	{
-		return InputParamsUtils.getStringOrDefault(inputParams, inputParams.containsKey(SCRIPT_FILE_PARAMS[0]) ? SCRIPT_FILE_PARAMS[0]
-				: forExpectedData ? SCRIPT_FILE_PARAMS[1] : SCRIPT_FILE_PARAMS[2], "");
+		return InputParamsUtils.getStringOrDefault(inputParams, inputParams.containsKey(SCRIPT_FILE_PARAMS[0]) ?
+				SCRIPT_FILE_PARAMS[0] : SCRIPT_FILE_PARAMS[forExpectedData ? 1 : 2], "");
 	}
 	
 	
@@ -328,8 +347,11 @@ public class CompareDataSets extends Action
 				return csvFileReader;
 			case FORMAT_SCRIPT:
 			case FORMAT_SCRIPT_FILE:
-				String scriptResult = formatName.equals(FORMAT_SCRIPT) ? executeAndDeleteScript(createScriptFile(source, forExpectedData), forExpectedData)
-						: executeScript(ClearThCore.rootRelative(source) + " " + additionalParams.get(ADDITIONAL_SCRIPT_FILE_PARAMS), forExpectedData);
+				String scriptResult = formatName.equals(FORMAT_SCRIPT) ?
+						executeScriptCommands(source, (String)additionalParams.get(ADDITIONAL_SCRIPT_SHELL_NAME),
+								(String)additionalParams.get(ADDITIONAL_SCRIPT_SHELL_OPTION), forExpectedData)
+						: executeScriptFile(ClearThCore.rootRelative(source),
+								(String)additionalParams.get(ADDITIONAL_SCRIPT_FILE_PARAMS), forExpectedData);
 				CsvDataReader scriptResultReader = new CsvDataReader(new StringReader(scriptResult));
 				scriptResultReader.setDelimiter((char)additionalParams.get(ADDITIONAL_CSV_DELIMITER));
 				return scriptResultReader;
@@ -359,53 +381,27 @@ public class CompareDataSets extends Action
 		return reader;
 	}
 	
-	protected String executeScript(String command, boolean forExpectedData) throws IOException
+	protected String executeScriptCommands(String commands, String shellName, String shellOption, boolean forExpectedData) throws IOException
 	{
-		ScriptResult scriptResult = ScriptUtils.executeScript(command, null);
-		if (scriptResult.result != 0)
-		{
-			throw ResultException.failed("Error occurred while executing " + (forExpectedData ? "expected" : "actual") + " script." + Utils.EOL
-					+ "Exit code: " + scriptResult.result + Utils.EOL
-					+ "Output: " + scriptResult.outStr + Utils.EOL
-					+ "Error text: " + scriptResult.errStr);
-		}
-		else
+		return processScriptResult(ScriptUtils.executeScript(commands, shellName, shellOption, null, null), forExpectedData);
+	}
+	
+	protected String executeScriptFile(String scriptPath, String args, boolean forExpectedData) throws IOException
+	{
+		return processScriptResult(ScriptUtils.executeScript(scriptPath + " " + args, null), forExpectedData);
+	}
+	
+	protected String processScriptResult(ScriptResult scriptResult, boolean forExpectedData)
+	{
+		if (scriptResult.result == 0)
 			return scriptResult.outStr;
-	}
-	
-	protected File createScriptFile(String commands, boolean forExpected) throws IOException
-	{
-		File tempScript = File.createTempFile(this.getClass().getSimpleName() + "_TempScript", ".sh", new File(ClearThCore.tempPath()));
-		// Write commands to temporary file
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempScript, false)))
-		{
-			writer.write(commands);
-		}
 		
-		// Try to make written file executable
-		try
-		{
-			ScriptUtils.executeScript("chmod u+x " + tempScript.getAbsolutePath());
-		}
-		catch (IOException e)
-		{
-			// Catch exception only here because command below may be unsupported in some OSs
-			// or script file could be executed without making it executable
-			getLogger().warn("Couldn't make temporary written script file executable for {} commands", forExpected ? "expected" : "actual", e);
-		}
-		return tempScript;
-	}
-	
-	protected String executeAndDeleteScript(File tempScript, boolean forExpectedData) throws IOException
-	{
-		try
-		{
-			return executeScript(tempScript.getAbsolutePath(), forExpectedData);
-		}
-		finally
-		{
-			FileUtils.deleteQuietly(tempScript);
-		}
+		LineBuilder builder = new LineBuilder();
+		builder.add("Error occurred while executing ").add(forExpectedData ? "expected" : "actual").append(" script.");
+		builder.add("Exit code: ").append(scriptResult.result);
+		builder.add("Output: ").append(scriptResult.outStr);
+		builder.add("Error text: ").append(scriptResult.errStr);
+		throw ResultException.failed(builder.toString());
 	}
 	
 	
