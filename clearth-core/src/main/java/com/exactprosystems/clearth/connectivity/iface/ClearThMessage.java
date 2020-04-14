@@ -18,15 +18,14 @@
 
 package com.exactprosystems.clearth.connectivity.iface;
 
-import static java.util.Collections.emptySet;
-
-import java.util.*;
-
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import org.apache.commons.lang.ObjectUtils;
+
+import java.util.*;
+
+import static java.util.Collections.emptySet;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
 public abstract class ClearThMessage<T extends ClearThMessage<T>>
@@ -76,11 +75,17 @@ public abstract class ClearThMessage<T extends ClearThMessage<T>>
 	
 	/**
 	 * Get set of message fields
-	 * @return set of message fields
+	 * @return unmodifiable set of message fields
 	 */
 	@JsonIgnore
-	public abstract Set<String> getFieldNames();
-	
+	public Set<String> getFieldNames()
+	{
+		return Collections.unmodifiableSet(getFieldsKeySet());
+	}
+
+	@JsonIgnore
+	protected abstract Set<String> getFieldsKeySet();
+
 	/**
 	 * Get copy of message
 	 * @return new IMessage with copied fields

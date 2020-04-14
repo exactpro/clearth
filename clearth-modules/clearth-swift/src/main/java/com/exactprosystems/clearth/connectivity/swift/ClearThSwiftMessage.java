@@ -22,11 +22,7 @@ import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 {
@@ -111,12 +107,11 @@ public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 
 	@JsonIgnore
 	@Override
-	public Set<String> getFieldNames()
+	protected Set<String> getFieldsKeySet()
 	{
 		return tags.keySet();
 	}
-	
-	
+
 	public void addFieldIfNotPresent(String name, String value)
 	{
 		if (!isFieldSet(name))

@@ -81,7 +81,7 @@ public class SimpleClearThMessage extends ClearThMessage<SimpleClearThMessage>
 	}
 
 	@Override
-	public Set<String> getFieldNames()
+	protected Set<String> getFieldsKeySet()
 	{
 		return fields.keySet();
 	}

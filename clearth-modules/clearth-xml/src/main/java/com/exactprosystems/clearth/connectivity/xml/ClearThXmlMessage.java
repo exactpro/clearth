@@ -18,15 +18,14 @@
 
 package com.exactprosystems.clearth.connectivity.xml;
 
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -121,7 +120,7 @@ public class ClearThXmlMessage extends ClearThMessage<ClearThXmlMessage>
 	}
 
 	@Override
-	public Set<String> getFieldNames()
+	protected Set<String> getFieldsKeySet()
 	{
 		return fields.keySet();
 	}
