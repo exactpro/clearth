@@ -29,6 +29,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
+
 public class ParametrizedQuery
 {
 	private static final Logger log = LoggerFactory.getLogger(ParametrizedQuery.class);
@@ -38,27 +40,25 @@ public class ParametrizedQuery
 	private final Map<String, Object[]> multiParams = new HashMap<>();
 	private String multiParamsDelimiter = ",";
 
-	public ParametrizedQuery(String query) throws SQLException
+	public ParametrizedQuery(String query)
 	{
 		this(query, new ArrayList<String>());
 	}
 
-	public ParametrizedQuery(String query, List<String> queryParams) throws SQLException 
+	public ParametrizedQuery(String query, List<String> queryParams)
 	{
 		this(query, queryParams, new HashSet<String>());
 	}
 
 	public ParametrizedQuery(String query, List<String> queryParams, Set<String> multiParams, String multiParamsDelimiter)
-			throws SQLException
 	{
 		this(query, queryParams, multiParams);
 		this.multiParamsDelimiter = multiParamsDelimiter;
 	}
 
-	public ParametrizedQuery(String query, List<String> queryParams, Set<String> multiParams) throws SQLException
+	public ParametrizedQuery(String query, List<String> queryParams, Set<String> multiParams)
 	{
-		if (query == null) 
-			throw new SQLException("Null query statement");
+		requireNonNull(query, "Query is null.");
 
 		this.query = query;
 		if (queryParams != null)

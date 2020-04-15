@@ -21,8 +21,6 @@ package com.exactprosystems.clearth.utils.sql;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.sql.SQLException;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.testng.Assert.*;
@@ -30,7 +28,7 @@ import static org.testng.Assert.*;
 public class SQLTemplateParserTest
 {
 	@DataProvider
-	public Object[][] createParameters() throws SQLException
+	public Object[][] createParameters()
 	{
 		return new Object[][]
 				{
@@ -100,7 +98,6 @@ public class SQLTemplateParserTest
 	
 	@Test(dataProvider = "createParameters")
 	public void testParseParametrizedQueryTemplate(String queryTemplate, ParametrizedQuery expectedQuery) 
-			throws SQLException
 	{
 		SQLTemplateParser parser = new SQLTemplateParser();
 		ParametrizedQuery actualQuery = parser.parseParametrizedQueryTemplate(queryTemplate);

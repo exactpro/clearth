@@ -23,7 +23,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,15 +38,15 @@ public class SQLTemplateParser
 	private static final String MULTI_PARAM_BEGINNER = "@";
 	
 	
-	public ParametrizedQuery parseParametrizedQueryTemplate(File templateFile) throws SQLException, IOException
+	public ParametrizedQuery parseParametrizedQueryTemplate(File templateFile) throws IOException
 	{
 		String templateText = FileUtils.readFileToString(templateFile, Charset.defaultCharset());
-		if(templateText.isEmpty())
-			throw new IllegalArgumentException(String.format("The file '%s' is empty", templateFile));
+		if (templateText.isEmpty())
+			throw new IOException(String.format("The file '%s' is empty", templateFile));
 		return parseParametrizedQueryTemplate(templateText);
 	}
 
-	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText, String multiParamsDelimiter) throws SQLException
+	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText, String multiParamsDelimiter)
 	{
 		Matcher paramMatcher = TEMPLATE_PARAM_PATTERN.matcher(templateText);
 		List<String> queryParams = new ArrayList<>();
@@ -72,7 +71,7 @@ public class SQLTemplateParser
 		return new ParametrizedQuery(queryBuilder.toString(), queryParams, multiParams, multiParamsDelimiter);
 	}
 	
-	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText) throws SQLException
+	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText)
 	{
 		return parseParametrizedQueryTemplate(templateText, ",");
 	}

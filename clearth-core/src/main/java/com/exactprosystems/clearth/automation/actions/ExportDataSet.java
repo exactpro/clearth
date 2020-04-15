@@ -350,17 +350,7 @@ public abstract class ExportDataSet extends Action
 
 		query = prepareQuery(query);
 
-		ParametrizedQuery paramQuery;
-		try
-		{
-			paramQuery = SQLUtils.parseSQLTemplate(query, multiParamsDelimiter);
-		}
-		catch (SQLException e)
-		{
-			throw new ResultException("Error while parsing query", e);
-		}
-
-
+		ParametrizedQuery paramQuery = SQLUtils.parseSQLTemplate(query, multiParamsDelimiter);
 		PreparedStatement statement;
 		try
 		{

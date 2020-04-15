@@ -63,7 +63,7 @@ public class SQLUtils
 	/**
 	 * Parses SQL template file to an instance of ParametrizedQuery which provides an ability to execute query with specified parameters
 	 */
-	public static ParametrizedQuery parseSQLTemplate(File templateFile) throws IOException, SQLException
+	public static ParametrizedQuery parseSQLTemplate(File templateFile) throws IOException
 	{
 		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateFile);
 	}
@@ -71,13 +71,13 @@ public class SQLUtils
 	/**
 	 * Parses SQL template text to an instance of ParametrizedQuery which provides an ability to execute query with specified parameters
 	 */
-	public static ParametrizedQuery parseSQLTemplate(String templateText, String multiParamsDelimiter) throws SQLException
+	public static ParametrizedQuery parseSQLTemplate(String templateText, String multiParamsDelimiter)
 	{
 		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateText, multiParamsDelimiter);
 	}
 
 	
-	public static ParametrizedQuery parseSQLTemplate(String templateText) throws SQLException
+	public static ParametrizedQuery parseSQLTemplate(String templateText)
 	{
 		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateText, ",");
 	}
