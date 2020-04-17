@@ -45,15 +45,16 @@ public class RowComparisonData<A, B>
 	public void addComparisonDetail(RowComparisonDetail<A, B> compDetail)
 	{
 		compDetails.add(compDetail);
-		if (compDetail.isInfo() || resultType == RowComparisonResultType.FAILED)
+		if (compDetail.isIdentical() || resultType == RowComparisonResultType.FAILED)
 			return;
 		
+		// Only non-identical detail could influence the result type
 		boolean expectedValueIsNull = compDetail.getExpectedValue() == null, actualValueIsNull = compDetail.getActualValue() == null;
-		if ((!expectedValueIsNull && !actualValueIsNull && !compDetail.isIdentical())
+		if ((!expectedValueIsNull && !actualValueIsNull)
 				|| (expectedValueIsNull && resultType == RowComparisonResultType.NOT_FOUND)
 				|| (actualValueIsNull && resultType == RowComparisonResultType.EXTRA))
 			resultType = RowComparisonResultType.FAILED;
-		else if (expectedValueIsNull || actualValueIsNull)
+		else
 			resultType = expectedValueIsNull ? RowComparisonResultType.EXTRA : RowComparisonResultType.NOT_FOUND;
 	}
 	

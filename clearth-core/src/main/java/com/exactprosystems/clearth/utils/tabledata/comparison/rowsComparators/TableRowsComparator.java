@@ -23,6 +23,8 @@ import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.RowComparisonData;
 
+import java.util.Objects;
+
 /**
  * Class which compares two table data rows.
  * @param <A> class of column member.
@@ -94,6 +96,6 @@ public class TableRowsComparator<A, B>
 	
 	protected boolean compareValues(B value1, B value2, A column) throws Exception
 	{
-		return value1 != null && value1.equals(value2);
+		return Objects.equals(value1, value2);
 	}
 }
