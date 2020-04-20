@@ -21,10 +21,7 @@ package com.exactprosystems.clearth.utils;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.collections4.MapUtils;
 
@@ -116,6 +113,21 @@ public class CollectionUtils
 				map.put((K)params[i - 1], (V)params[i]);
 			}
 			return map;
+		}
+	}
+	
+	public static <E> Set<E> setOf(E... elements)
+	{
+		int count = elements.length;
+		if (count == 0)
+			return Collections.emptySet();
+		else if (count == 1)
+			return Collections.singleton(elements[0]);
+		else 
+		{
+			Set<E> set = new LinkedHashSet<>(count);
+			Collections.addAll(set, elements);
+			return set;
 		}
 	}
 }

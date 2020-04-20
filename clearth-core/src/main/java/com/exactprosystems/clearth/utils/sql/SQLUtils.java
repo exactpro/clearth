@@ -678,6 +678,26 @@ public class SQLUtils
 	}
 
 	/**
+	 * Method for extraction columns names from ResultSet
+	 * @param resultSet database result set
+	 * @return linked set of columns names
+	 * @throws SQLException
+	 */
+	public static Set<String> getColumnNamesSet(ResultSet resultSet) throws SQLException
+	{
+		ResultSetMetaData metaData = resultSet.getMetaData();
+		int columnCount = metaData.getColumnCount();
+		Set<String> queryColumns = new LinkedHashSet<>(columnCount);
+
+		for (int i = 1; i <= columnCount; i++)
+		{
+			queryColumns.add(metaData.getColumnLabel(i));
+		}
+
+		return queryColumns;
+	}
+
+	/**
 	 * @deprecated substituted by ParametrizedQuery
 	 */
 	@Deprecated
