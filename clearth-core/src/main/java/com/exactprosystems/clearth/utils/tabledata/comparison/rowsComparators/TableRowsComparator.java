@@ -21,7 +21,7 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
-import com.exactprosystems.clearth.utils.tabledata.comparison.RowComparisonData;
+import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonData;
 
 import java.util.Objects;
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison;
+package com.exactprosystems.clearth.utils.tabledata.comparison.result;
 
 public enum RowComparisonResultType
 {

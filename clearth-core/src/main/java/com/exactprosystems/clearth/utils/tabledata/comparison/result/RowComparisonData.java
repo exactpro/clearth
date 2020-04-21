@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison;
+package com.exactprosystems.clearth.utils.tabledata.comparison.result;
 
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
@@ -61,12 +61,12 @@ public class RowComparisonData<A, B>
 	
 	public void addComparisonDetail(A column, B expectedValue, B actualValue, boolean identical)
 	{
-		addComparisonDetail(new RowComparisonDetail<>(column, expectedValue, actualValue, false, identical));
+		addComparisonDetail(new RowComparisonDetail<>(column, expectedValue, actualValue, identical, false));
 	}
 	
 	public void addInfoComparisonDetail(A column, B expectedValue, B actualValue)
 	{
-		compDetails.add(new RowComparisonDetail<>(column, expectedValue, actualValue, true, true));
+		addComparisonDetail(new RowComparisonDetail<>(column, expectedValue, actualValue, true, true));
 	}
 	
 	public void addErrorMsg(String errorMsg)
@@ -110,8 +110,8 @@ public class RowComparisonData<A, B>
 			B expectedValue = compDetail.getExpectedValue(), actualValue = compDetail.getActualValue();
 			detail.setExpected(expectedValue != null ? expectedValue.toString() : null);
 			detail.setActual(actualValue != null ? actualValue.toString() : null);
-			detail.setInfo(compDetail.isInfo());
 			detail.setIdentical(compDetail.isIdentical());
+			detail.setInfo(compDetail.isInfo());
 			result.addResultDetail(detail);
 		}
 		if (resultType == RowComparisonResultType.NOT_FOUND || resultType == RowComparisonResultType.EXTRA)

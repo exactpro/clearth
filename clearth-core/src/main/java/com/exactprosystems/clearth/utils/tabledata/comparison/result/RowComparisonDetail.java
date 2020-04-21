@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,8 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison;
-
+package com.exactprosystems.clearth.utils.tabledata.comparison.result;
 
 /**
  * Detail of comparison result of 2 table rows.
@@ -28,64 +27,64 @@ public class RowComparisonDetail<A, B>
 {
 	private A column;
 	private B expectedValue, actualValue;
-	private boolean info, identical;
-
-	public RowComparisonDetail(A column, B expectedValue, B actualValue, boolean info, boolean identical)
+	private boolean identical, info;
+	
+	public RowComparisonDetail(A column, B expectedValue, B actualValue, boolean identical, boolean info)
 	{
 		this.column = column;
 		this.expectedValue = expectedValue;
 		this.actualValue = actualValue;
-		this.info = info;
 		this.identical = identical;
+		this.info = info;
+	}
+	
+	public void setColumn(A column)
+	{
+		this.column = column;
 	}
 	
 	public A getColumn()
 	{
 		return column;
 	}
-
-	public void setColumn(A column)
-	{
-		this.column = column;
-	}
-
-	public B getExpectedValue()
-	{
-		return expectedValue;
-	}
-
+	
 	public void setExpectedValue(B expectedValue)
 	{
 		this.expectedValue = expectedValue;
 	}
-
-	public B getActualValue()
+	
+	public B getExpectedValue()
 	{
-		return actualValue;
+		return expectedValue;
 	}
-
+	
 	public void setActualValue(B actualValue)
 	{
 		this.actualValue = actualValue;
 	}
-
-	public boolean isInfo()
+	
+	public B getActualValue()
 	{
-		return info;
+		return actualValue;
 	}
-
-	public void setInfo(boolean info)
+	
+	public void setIdentical(boolean identical)
 	{
-		this.info = info;
+		this.identical = identical;
 	}
-
+	
 	public boolean isIdentical()
 	{
 		return identical;
 	}
-
-	public void setIdentical(boolean identical)
+	
+	public void setInfo(boolean info)
 	{
-		this.identical = identical;
+		this.info = info;
+	}
+	
+	public boolean isInfo()
+	{
+		return info;
 	}
 }

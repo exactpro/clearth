@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,11 +18,15 @@
 
 package com.exactprosystems.clearth.utils.inputparams;
 
-import static java.util.Collections.addAll;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.split;
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.CommaBuilder;
+import com.exactprosystems.clearth.utils.KeyValueUtils;
+import com.exactprosystems.clearth.utils.Pair;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,16 +38,10 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
-import com.exactprosystems.clearth.automation.exceptions.ParametersException;
-import com.exactprosystems.clearth.utils.*;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
-
-import com.exactprosystems.clearth.ClearThCore;
-import static com.exactprosystems.clearth.utils.ClearThEnumUtils.valueOfIgnoreCase;
 import static com.exactprosystems.clearth.utils.ClearThEnumUtils.enumToTextValues;
-
-import java.io.File;
+import static com.exactprosystems.clearth.utils.ClearThEnumUtils.valueOfIgnoreCase;
+import static java.util.Collections.addAll;
+import static org.apache.commons.lang.StringUtils.*;
 /**
  * Use case:
  * 
@@ -966,7 +964,7 @@ public class ParametersHandler
 		return getEnum(name, enumClass, defaultValue, false);
 	}
 	
-	public <E extends Enum<E>> E getReqiuredEnum(String name, Class<E> enumClass) 
+	public <E extends Enum<E>> E getRequiredEnum(String name, Class<E> enumClass) 
 	{
 		return getEnum(name, enumClass, null, true);
 	}
