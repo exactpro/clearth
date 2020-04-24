@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.automation.actions.macro;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
+import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
@@ -126,10 +127,8 @@ public class MacroAction extends Action implements Preparable
 	
 	protected NestedActionExecutor createActionExecutor()
 	{
-		ActionParamsCalculator paramsCalculator = new ActionParamsCalculator(globalContext.getMatrixFunctions());
-		return new NestedActionExecutor(globalContext, paramsCalculator, getNestedActionsReportFilePath());
+		return new NestedActionExecutor(globalContext, createParamsCalculator(), createReportWriter());
 	}
-	
 	
 	public List<NestedAction> getNestedActions()
 	{
@@ -144,5 +143,15 @@ public class MacroAction extends Action implements Preparable
 	public ActionsExecutionProgress getExecutionProgress()
 	{
 		return executionProgress;
+	}
+
+	protected ActionParamsCalculator createParamsCalculator()
+	{
+		return new ActionParamsCalculator(globalContext.getMatrixFunctions());
+	}
+
+	protected ActionReportWriter createReportWriter()
+	{
+		return new NestedActionReportWriter(getNestedActionsReportFilePath());
 	}
 }

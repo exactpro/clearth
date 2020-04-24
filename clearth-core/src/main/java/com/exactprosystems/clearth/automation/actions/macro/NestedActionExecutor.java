@@ -19,6 +19,8 @@
 package com.exactprosystems.clearth.automation.actions.macro;
 
 import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.report.ActionReportWriter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +30,9 @@ public class NestedActionExecutor extends ActionExecutor
 {
 	private static final Logger logger = LoggerFactory.getLogger(NestedActionExecutor.class);
 	
-	public NestedActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, String nestedActionsReportFilePath)
+	public NestedActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, ActionReportWriter reportWriter)
 	{
-		super(globalContext, calculator, new NestedActionReportWriter(nestedActionsReportFilePath), new FailoverStatus());
+		super(globalContext, calculator, reportWriter, new FailoverStatus());
 	}
 	
 	public void executeAction(Action action, StepContext stepContext, boolean writeReport)
