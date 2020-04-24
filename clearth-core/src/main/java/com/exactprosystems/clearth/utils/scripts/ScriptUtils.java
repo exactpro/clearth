@@ -106,10 +106,7 @@ public class ScriptUtils extends Utils
 		if (args != null)
 			commandLine.addArguments(args, false);
 
-		if (exitValues != null)
-			executor.setExitValues(exitValues);
-		else
-			executor.setExitValue(0);
+		executor.setExitValues(exitValues);
 
 		try (ByteArrayOutputStream outWriter = new ByteArrayOutputStream();
 		     ByteArrayOutputStream errWriter = new ByteArrayOutputStream())
