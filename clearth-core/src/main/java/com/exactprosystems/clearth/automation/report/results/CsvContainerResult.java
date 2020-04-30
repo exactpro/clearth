@@ -27,7 +27,6 @@ import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -42,13 +41,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
-@JsonIgnoreProperties({ "serialVersionUID", "logger", "tempReportFile", "csvWriter" })
 public class CsvContainerResult extends ContainerResult implements AutoCloseable
 {
 	private static final long serialVersionUID = 5699150687216722251L;
 	private static final Logger logger = LoggerFactory.getLogger(CsvContainerResult.class);
 	
-	@JsonIgnore
 	protected final String COLUMN_COMPARISON_NAME = "Comparison name",
 			COLUMN_COMPARISON_RESULT = "Comparison result", COLUMN_ROW_KIND = "Row kind";
 	
@@ -56,7 +53,9 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	protected boolean writeCsvReportAnyway = false, onlyFailedInHtml = false, onlyFailedInCsv = false;
 	protected String name;
 	
+	@JsonIgnore
 	protected File tempReportFile = null;
+	@JsonIgnore
 	private CsvWriter csvWriter = null;
 	
 	// Empty constructor is required for JSON-reports
@@ -110,8 +109,9 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		totalRowsCount++;
 		if (detail.isSuccess())
 			passedRowsCount++;
-		else if (totalRowsCount - passedRowsCount == 1)
-			setFailReason(detail.getFailReason());
+		else if (totalRowsCount - passedRowsCount == 1 // The first failed detail
+				|| failReason.ordinal() > detail.getFailReason().ordinal())
+			failReason = detail.getFailReason();
 		
 		if ((!onlyFailedInHtml && totalRowsCount <= maxDisplayedRowsCount)
 				|| (onlyFailedInHtml && !detail.isSuccess() && totalRowsCount - passedRowsCount <= maxDisplayedRowsCount))
@@ -123,9 +123,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	@Override
 	protected boolean checkDetails()
 	{
-		if (success)
-			setSuccess(passedRowsCount == totalRowsCount);
-		return success;
+		return success = passedRowsCount == totalRowsCount;
 	}
 	
 	@Override

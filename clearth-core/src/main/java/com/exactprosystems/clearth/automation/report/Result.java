@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,7 +21,7 @@ package com.exactprosystems.clearth.automation.report;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.utils.LineBuilder;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.Serializable;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.MINIMAL_CLASS)
-@JsonIgnoreProperties({"error", "successWithoutInversionRegard"})
 public abstract class Result implements Serializable
 {
 	public static final String DETAILS_DIR = "details/";
@@ -37,6 +36,7 @@ public abstract class Result implements Serializable
 	protected boolean success = true,
 			crashed = false,
 			inverted = false;
+	@JsonIgnore
 	private Throwable error = null;
 	private String message = null,
 			comment = null;
@@ -46,6 +46,7 @@ public abstract class Result implements Serializable
 	/* default constructor is required for all types of results to have ability to deserialize them from JSON */
 	public Result() {}
 
+	@JsonIgnore
 	public boolean isSuccessWithoutInversionRegard()
 	{
 		return success;

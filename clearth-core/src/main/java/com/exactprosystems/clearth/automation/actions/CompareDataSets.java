@@ -246,10 +246,10 @@ public class CompareDataSets extends Action
 	{
 		ContainerResult result = CloseableContainerResult.createPlainResult(null);
 		// Creating containers firstly to have them in expected order
-		result.addContainer(CONTAINER_PASSED, createComparisonNestedResult(CONTAINER_PASSED), true);
-		result.addContainer(CONTAINER_FAILED, createComparisonNestedResult(CONTAINER_FAILED), true);
-		result.addContainer(CONTAINER_NOT_FOUND, createComparisonNestedResult(CONTAINER_NOT_FOUND), true);
-		result.addContainer(CONTAINER_EXTRA, createComparisonNestedResult(CONTAINER_EXTRA), true);
+		result.addWrappedContainer(CONTAINER_PASSED, createComparisonNestedResult(CONTAINER_PASSED), true);
+		result.addWrappedContainer(CONTAINER_FAILED, createComparisonNestedResult(CONTAINER_FAILED), true);
+		result.addWrappedContainer(CONTAINER_NOT_FOUND, createComparisonNestedResult(CONTAINER_NOT_FOUND), true);
+		result.addWrappedContainer(CONTAINER_EXTRA, createComparisonNestedResult(CONTAINER_EXTRA), true);
 		return result;
 	}
 	
@@ -304,7 +304,7 @@ public class CompareDataSets extends Action
 		if (nestedResult == null)
 		{
 			nestedResult = createComparisonNestedResult(nestedName);
-			result.addContainer(nestedName, nestedResult, true);
+			result.addWrappedContainer(nestedName, nestedResult, true);
 		}
 		nestedResult.addDetail(rowResult);
 	}
@@ -313,6 +313,7 @@ public class CompareDataSets extends Action
 	{
 		ContainerResult blockResult = ContainerResult.createBlockResult(headerMessage);
 		blockResult.addDetail(compData.toDetailedResult());
+		blockResult.setUseFailReasonColor(true);
 		return blockResult;
 	}
 	

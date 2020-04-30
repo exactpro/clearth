@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison;
 
+import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 
@@ -96,7 +97,7 @@ public class RowComparisonData<A, B>
 	
 	
 	/**
-	 * Converts this {@code RowComparisonData} instance to {@code DetailedResult} one.
+	 * Converts this {@link RowComparisonData} instance to {@link DetailedResult} one.
 	 * @return result of conversion.
 	 */
 	public DetailedResult toDetailedResult()
@@ -113,6 +114,8 @@ public class RowComparisonData<A, B>
 			detail.setIdentical(compDetail.isIdentical());
 			result.addResultDetail(detail);
 		}
+		if (resultType == RowComparisonResultType.NOT_FOUND || resultType == RowComparisonResultType.EXTRA)
+			result.setFailReason(FailReason.FAILED);
 		return result;
 	}
 }

@@ -22,7 +22,8 @@ import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.LineBuilder;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.collections4.list.UnmodifiableList;
 
 import java.io.File;
 import java.io.Serializable;
@@ -31,22 +32,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.list.UnmodifiableList;
-
 /**
  * Result which can include other results.
  * @author daria.plotnikova
  */
-@JsonIgnoreProperties({"containers"})
 public class ContainerResult extends Result implements Serializable
 {
 	private static final long serialVersionUID = -2015931472252216998L;
 	
+	@JsonIgnore
 	protected ContainerResult parentResult = null;
-	protected final List<Result> details;
+	@JsonIgnore
 	protected final Map<String, ContainerResult> containers;
+	protected final List<Result> details;
+	
 	protected String header;
 	protected boolean blockView = false, hasStatus = true, useFailReasonColor = false;
+	
+	// This should be used for manual selection of success status and fail reason
+	@JsonIgnore
+	protected Boolean successManual;
+	@JsonIgnore
+	protected FailReason failReasonManual;
 	
 	public ContainerResult()
 	{
@@ -67,12 +74,9 @@ public class ContainerResult extends Result implements Serializable
 	{
 		this(header, isBlockView);
 		
-		// Add details one by one to check their successes and fail reasons
+		// Add details one by one to set their parent if needed
 		if (details != null)
-		{
-			for (Result detail : details)
-				addDetail(detail);
-		}
+			details.forEach(this::addDetail);
 	}
 	
 	/**
@@ -110,21 +114,28 @@ public class ContainerResult extends Result implements Serializable
 	
 	/**
 	 * Adds nested container result, assigning it a name for further use in {@link #addDetail(String, Result)}.
-	 * Container can be wrapped in a named container block
-	 * @param name to assign to nested container
-	 * @param container to add
-	 * @param wrap flag that indicates if container needs to be wrapped in a named container block
+	 * @param name to assign to nested container.
+	 * @param container to add.
 	 */
-	public void addContainer(String name, ContainerResult container, boolean wrap)
+	public void addContainer(String name, ContainerResult container)
 	{
-		ContainerResult wrapper = wrap ? createContainerWrapper(name) : null;
-		if (wrapper != null)
-		{
-			addDetail(wrapper);
-			wrapper.addDetail(container);
-		}
-		else
-			addDetail(container);
+		addDetail(container);
+		containers.put(name, container);
+	}
+	
+	/**
+	 * Adds wrapped nested container result, assigning it a name for further use in {@link #addDetail(String, Result)}.
+	 * @param name to assign to nested container and define a header for wrapper.
+	 * @param container to wrap and add to the result.
+	 * @param useWrapperFailReasonColor flat that indicates if wrapper should use fail reason color.
+	 */
+	public void addWrappedContainer(String name, ContainerResult container, boolean useWrapperFailReasonColor)
+	{
+		ContainerResult wrapper = createContainerWrapper(name);
+		wrapper.addDetail(container);
+		wrapper.setUseFailReasonColor(useWrapperFailReasonColor);
+		
+		addDetail(wrapper);
 		containers.put(name, container);
 	}
 	
@@ -166,35 +177,12 @@ public class ContainerResult extends Result implements Serializable
 	protected void initDetail(Result detail)
 	{
 		if (detail instanceof ContainerResult)
-			((ContainerResult) detail).parentResult = this;
+			((ContainerResult)detail).parentResult = this;
 	}
 	
 	protected ContainerResult createContainerWrapper(String header)
 	{
 		return ContainerResult.createBlockResult(header);
-	}
-	
-
-	@Override
-	public boolean isSuccessWithoutInversionRegard()
-	{
-		return checkDetails();
-	}
-
-	protected boolean checkDetails()
-	{
-		if (!success)
-			return false;
-		for (Result detail : details)
-		{
-			if (!detail.isSuccess())
-			{
-				setSuccess(false);
-				setFailReason(detail.getFailReason());
-				return false;
-			}
-		}
-		return true;
 	}
 	
 	@Override
@@ -210,28 +198,53 @@ public class ContainerResult extends Result implements Serializable
 		containers.clear();
 	}
 	
+	
 	@Override
 	public void setSuccess(boolean success)
 	{
-		super.setSuccess(success);
-		if (parentResult != null && !success)
-			parentResult.setSuccess(false);
+		successManual = success;
+	}
+	
+	@Override
+	public boolean isSuccessWithoutInversionRegard()
+	{
+		return successManual == null ? checkDetails() : successManual;
 	}
 	
 	@Override
 	public void setFailReason(FailReason failReason)
 	{
-		this.failReason = failReason;
-		if (parentResult != null)
-			parentResult.setFailReason(failReason);
+		failReasonManual = failReason;
 	}
 	
 	@Override
 	public FailReason getFailReason()
 	{
+		if (failReasonManual != null)
+			return failReasonManual;
+		
 		checkDetails();
 		return failReason;
 	}
+	
+	protected boolean checkDetails()
+	{
+		if (!success && failReason == FailReason.FAILED)
+			return false;
+		
+		for (Result detail : details)
+		{
+			if (!detail.isSuccess())
+			{
+				if (success && failReason == FailReason.FAILED // Perhaps, the first failed detail has been added and status doesn't changed yet
+						|| failReason.ordinal() > detail.getFailReason().ordinal()) // Need to obtain the worst fail reason of all details
+					failReason = detail.getFailReason();
+				success = false;
+			}
+		}
+		return success;
+	}
+	
 	
 	@Override
 	public LineBuilder toLineBuilder(LineBuilder builder, String prefix)
@@ -244,10 +257,14 @@ public class ContainerResult extends Result implements Serializable
 		return builder;
 	}
 	
+	public ContainerResult getParentResult()
+	{
+		return parentResult;
+	}
 	
 	public List<Result> getDetails()
 	{
-		return UnmodifiableList.unmodifiableList(details);  //This prevents changes in the list that will make details and containers not linked
+		return UnmodifiableList.unmodifiableList(details);  // This prevents changes in the list that will make details and containers not linked
 	}
 	
 	public void setHeader(String header)
