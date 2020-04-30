@@ -35,7 +35,7 @@ public class Matrix
 
 	private List<Action> actions = new ArrayList<Action>();
 	private MvelVariables mvelVars;
-	private Map<String, Boolean> stepSuccess = new HashMap<String, Boolean>();
+	private Map<String, Boolean> stepSuccessMap = new HashMap<>();
 	private Map<String, List<String>> stepStatusComments = new HashMap<String, List<String>>();
 	private Map<String, String> constants = new LinkedHashMap<String, String>();
 	private Map<String, String> formulas = null;
@@ -155,27 +155,33 @@ public class Matrix
 	
 	public void setStepSuccessful(String stepName, boolean success)
 	{
-		stepSuccess.put(stepName, success);
-		if ((!success) && (isSuccessful()))
-			setSuccessful(false);
+		// We are not able to make Step or Matrix successful if they are already not.
+		Boolean stepSuccess = stepSuccessMap.get(stepName);
+		if (stepSuccess != null && !stepSuccess)
+			return;
+
+		stepSuccessMap.put(stepName, success);
+
+		if (!success && isSuccessful())
+			 setSuccessful(false);
 	}
 	
 	public boolean isStepSuccessful(String stepName)
 	{
-		Boolean success = stepSuccess.get(stepName);
+		Boolean success = stepSuccessMap.get(stepName);
 		return success == null ? true : success;
 	}
 	
 	/* Method for MatrixState*/
 	public Map<String, Boolean> getStepSuccess()
 	{
-		return stepSuccess;
+		return stepSuccessMap;
 	}
 	
 	/* Method for MatrixState */
-	public void setStepSuccess(Map<String, Boolean> stepSuccess)
+	public void setStepSuccess(Map<String, Boolean> stepSuccessMap)
 	{
-		this.stepSuccess = stepSuccess;
+		this.stepSuccessMap = stepSuccessMap;
 	}
 	
 	

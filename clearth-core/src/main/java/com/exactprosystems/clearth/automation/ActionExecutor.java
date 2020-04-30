@@ -334,7 +334,7 @@ public class ActionExecutor implements Closeable
 	protected void applyStepSuccess(Action action)
 	{
 		Step step = action.getStep();
-		step.setSuccessful(step.isSuccessful() && action.isPassed());
+		step.setAnyActionFailed(step.isAnyActionFailed() || !action.isPassed());
 	}
 
 	protected void afterAsyncAction(@SuppressWarnings("unused") Action action) { /* Nothing to do by default*/ }
@@ -664,7 +664,6 @@ public class ActionExecutor implements Closeable
 		}
 		
 		applyActionResult(action, true);
-		applyStepSuccess(action);
 
 		if (!action.isSubaction())
 		{
@@ -681,6 +680,7 @@ public class ActionExecutor implements Closeable
 		}
 		
 		processActionResult(action);
+		applyStepSuccess(action);
 		
 		if (getLogger().isDebugEnabled())
 			getLogger().debug("Finished{}", actionDesc != null ? actionDesc : action.getDescForLog(""));

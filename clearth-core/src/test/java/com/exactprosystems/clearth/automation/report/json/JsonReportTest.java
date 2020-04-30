@@ -108,7 +108,7 @@ public class JsonReportTest extends BasicTestNgTest
 		when(step.getName()).thenReturn(name);
 		when(step.getSafeName()).thenReturn(name);
 		when(step.getKind()).thenReturn(CoreStepKind.Default.getLabel());
-		when(step.isSuccessful()).thenReturn(true);
+		when(step.isFailedDueToError()).thenReturn(false);
 		when(step.getStarted()).thenReturn(startTime);
 		when(step.getFinished()).thenReturn(endTime);
 		return step;

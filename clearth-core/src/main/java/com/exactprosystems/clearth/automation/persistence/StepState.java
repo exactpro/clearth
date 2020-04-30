@@ -31,13 +31,15 @@ public abstract class StepState
 	private String comment;
 	private Date started = null, finished = null;
 	private ActionsExecutionProgress executionProgress;
-	private boolean successful = true;  //interrupted flag can't be set without interrupting a step, no need to store its value
+	private boolean anyActionFailed = false;
+	//interrupted flag can't be set without interrupting a step, no need to store its value
 	private Map<String, StepContext> stepContexts = null;
 	private String statusComment = null;
 	private Throwable error = null;
 	private StartAtType startAtType = StartAtType.DEFAULT;
 	private boolean waitNextDay = false;
-	
+	private boolean failedDueToError = false;
+
 	public StepState()
 	{
 	}
@@ -59,8 +61,10 @@ public abstract class StepState
 		this.finished = step.getFinished();
 		
 		this.executionProgress = step.getExecutionProgress();
-		
-		this.successful = step.isSuccessful();
+
+		this.failedDueToError = step.isFailedDueToError();
+		this.anyActionFailed = step.isAnyActionFailed();
+
 		if (step.getStepContexts() != null)
 		{
 			this.stepContexts = new LinkedHashMap<String, StepContext>();
@@ -91,8 +95,8 @@ public abstract class StepState
 		this.finished = stepState.getFinished();
 		
 		this.executionProgress = stepState.getExecutionProgress();
-		
-		this.successful = stepState.isSuccessful();
+
+		this.anyActionFailed = stepState.hasAnyActionFailed();
 		this.stepContexts = stepState.getStepContexts();
 		this.statusComment = stepState.getStatusComment();
 		this.error = stepState.getError();
@@ -109,8 +113,8 @@ public abstract class StepState
 		result.setFinished(finished);
 		
 		result.setExecutionProgress(executionProgress);
-		
-		result.setSuccessful(successful);
+
+		result.setFailedDueToError(failedDueToError);
 		result.setStatusComment(statusComment);
 		result.setError(error);
 		
@@ -242,19 +246,19 @@ public abstract class StepState
 	{
 		this.executionProgress = executionProgress;
 	}
-	
-	
-	public boolean isSuccessful()
+
+
+	public boolean hasAnyActionFailed()
 	{
-		return successful;
+		return anyActionFailed;
 	}
-	
-	public void setSuccessful(boolean successful)
+
+	public void setAnyActionFailed(boolean anyActionFailed)
 	{
-		this.successful = successful;
+		this.anyActionFailed = anyActionFailed;
 	}
-	
-	
+
+
 	public Map<String, StepContext> getStepContexts()
 	{
 		return stepContexts;
@@ -319,5 +323,15 @@ public abstract class StepState
 	public void setError(Throwable error)
 	{
 		this.error = error;
+	}
+
+	public boolean isFailedDueToError()
+	{
+		return failedDueToError;
+	}
+
+	public void setFailedDueToError(boolean failedDueToError)
+	{
+		this.failedDueToError = failedDueToError;
 	}
 }

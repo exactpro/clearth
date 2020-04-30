@@ -55,7 +55,7 @@ public class StepReport
 	
 	private void processStatus(Step step, Matrix matrix)
 	{
-		ReportStatus stepStatus = new ReportStatus(step.isSuccessful() && matrix.isStepSuccessful(step.getName()));
+		ReportStatus stepStatus = new ReportStatus(!step.isFailedDueToError() && matrix.isStepSuccessful(step.getName()));
 		stepStatus.setStarted(step.getStarted());
 		stepStatus.setFinished(step.getFinished());
 		if (!isEmpty(step.getComment()))

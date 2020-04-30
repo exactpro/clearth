@@ -46,7 +46,8 @@ public abstract class Step
 	protected Date started, finished;
 	protected ActionsExecutionProgress executionProgress = new ActionsExecutionProgress();
 	protected boolean interrupted = false, paused = false;
-	protected AtomicBoolean successful = new AtomicBoolean(true);
+	protected AtomicBoolean anyActionFailed = new AtomicBoolean(false);
+	protected AtomicBoolean failedDueToError = new AtomicBoolean(false);
 	protected SchedulerSuspension suspension = null;
 	protected Map<Matrix, StepContext> stepContexts = null;
 	protected String statusComment = null;
@@ -300,19 +301,28 @@ public abstract class Step
 	{
 		this.executionProgress = executionProgress;
 	}
-	
-	
-	public boolean isSuccessful()
+
+	public boolean isAnyActionFailed()
 	{
-		return successful.get();
+		return anyActionFailed.get();
 	}
-	
-	public void setSuccessful(boolean successful)
+
+	public void setAnyActionFailed(boolean anyActionFailed)
 	{
-		this.successful.set(successful);
+		this.anyActionFailed.set(isAnyActionFailed() || anyActionFailed);
 	}
-	
-	
+
+	public boolean isFailedDueToError()
+	{
+		return failedDueToError.get();
+	}
+
+	public void setFailedDueToError(boolean failedDueToError)
+	{
+		// If Step failed once it cannot be not failed anymore.
+		this.failedDueToError.set(isFailedDueToError() || failedDueToError);
+	}
+
 	public void interruptExecution()
 	{
 		interrupted = true;
@@ -355,8 +365,7 @@ public abstract class Step
 		this.error = error;
 		if(error != null)
 		{
-			if (isSuccessful())
-				setSuccessful(false);
+			setFailedDueToError(true);
 		}
 	}
 

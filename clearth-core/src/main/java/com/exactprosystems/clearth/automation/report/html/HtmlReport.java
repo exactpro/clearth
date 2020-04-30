@@ -185,7 +185,7 @@ public class HtmlReport
 				String stepFileName = step.getSafeName();
 				if (matrixSteps.contains(stepFileName))
 				{
-					if (!onlyFailed || !step.isSuccessful() || !matrix.isStepSuccessful(stepName))
+					if (!onlyFailed || step.isFailedDueToError() || !matrix.isStepSuccessful(stepName))
 					{
 						
 						File stepActionsFile = new File(actionsReportsDir,
@@ -217,7 +217,7 @@ public class HtmlReport
 
 	protected ReportStatus createStepStatus(Step step, Matrix matrix)
 	{
-		boolean success = step.isSuccessful() && matrix.isStepSuccessful(step.getName());
+		boolean success = !step.isFailedDueToError() && matrix.isStepSuccessful(step.getName());
 		List<String> comments = new ArrayList<String>(),
 				matrixComments = matrix.getStepStatusComments(step.getName());
 		if (matrixComments!=null)

@@ -840,13 +840,14 @@ public abstract class Scheduler
 
 	public boolean isSuccessful()
 	{
+		// If any Step has one action failed at least than the Scheduler is not successful.
 		for (Step step : getSteps())
 		{
-			if (!step.isSuccessful())
+			if (step.isAnyActionFailed() || step.isFailedDueToError())
 				return false;
 			// Supposed that current step is taken from step list.
 			if (step == getCurrentStep())
-				return step.isSuccessful();
+				return !step.isAnyActionFailed() && !step.isFailedDueToError();
 		}
 		return true;
 	}
@@ -1306,7 +1307,7 @@ public abstract class Scheduler
 		return schedulerData;
 	}
 	
-	public Step getCurrentStep()
+	public synchronized Step getCurrentStep()
 	{
 		if (!isRunning())
 			return null;

@@ -289,20 +289,19 @@ public abstract class Executor extends Thread
 						step.setFinished(Calendar.getInstance().getTime());
 						if (stepResult!=null)
 						{
-							step.setSuccessful(stepResult.isSuccess());
+							step.setFailedDueToError(stepResult.isSuccess());
 							step.setStatusComment(stepResult.getComment());
 							step.setResult(stepResult);
 							if ((stepResult.getError()!=null) && (!(stepResult.getError() instanceof InterruptedException)))
 								step.setError(stepResult.getError());
 							
 							if (!stepResult.isSuccess())
-								for (Matrix m : matrices)
-									for (Action action : m.getActions())
-										if (step.getActions().contains(action))
-										{
-											m.setStepSuccessful(step.getName(), false);
-											break;
-										}
+							{
+								for (Action action : step.getActions())
+								{
+									action.getMatrix().setStepSuccessful(step.getName(), false);
+								}
+							}
 						}
 						
 						if ((stepResult!=null) && (stepResult.getError()!=null) && (stepResult.getError() instanceof InterruptedException))
