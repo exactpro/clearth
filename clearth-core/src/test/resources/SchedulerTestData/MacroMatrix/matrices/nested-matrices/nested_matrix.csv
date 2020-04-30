@@ -1,0 +1,6 @@
+#id,#Action,#A,#B,#C
+id0,SetStatic,1,2,3
+#id,#Action,#Expected,#Actual
+id1,Compare2Values,@{macro.A},@{id0.A}
+id2,Compare2Values,@{macro.B},@{id0.B}
+id3,Compare2Values,@{macro.C},@{id0.C}

@@ -1,0 +1,2 @@
+#id,#GlobalStep,#Action,#MacroFileName,#A,#B,#C
+ma1,MacroAction,MacroAction,clearth-core/src/test/resources/SchedulerTestData/MacroMatrix/matrices/nested-matrices/nested_matrix.csv,1,2,3
