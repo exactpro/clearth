@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,31 +18,27 @@
 
 package com.exactprosystems.clearth.utils;
 
-import static com.exactprosystems.clearth.utils.Utils.closeResource;
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import com.exactprosystems.clearth.ClearThCore;
+import com.csvreader.CsvWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 
-import com.csvreader.CsvWriter;
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+
+import static com.exactprosystems.clearth.utils.Utils.closeResource;
+import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class FileOperationUtils
 {
@@ -514,5 +510,34 @@ public class FileOperationUtils
 			throw new FileNotFoundException(format("file '%s' not found", file));
 
 		return compiledFile.getAbsolutePath();
+	}
+
+	public static File storeToFile(InputStream is, File storageDir, String prefix, String suffix) throws IOException
+	{
+		File result = File.createTempFile(prefix, suffix, storageDir);
+		return storeToFile(is, result);
+	}
+
+	public static File storeToFile(InputStream is, File storageDir, String fileName) throws IOException
+	{
+		File result = new File(storageDir, fileName);
+		return storeToFile(is, result);
+	}
+
+	public static File storeToFile(InputStream is, File storageFile) throws IOException
+	{
+		try (BufferedInputStream bis = new BufferedInputStream(is);
+		     BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(storageFile)))
+		{
+			byte[] bytes = new byte[1024 * 4];
+			int read;
+			while ((read = bis.read(bytes)) != -1)
+			{
+				bos.write(bytes, 0, read);
+			}
+			bos.flush();
+
+			return storageFile;
+		}
 	}
 }

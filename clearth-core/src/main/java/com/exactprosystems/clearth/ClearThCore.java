@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -763,7 +763,7 @@ public abstract class ClearThCore
 	{
 		return createDBConnection(url, user, password, null);
 	}
-	
+
 	public static Connection createDBConnection(String url, String user, String password, GlobalContext globalContext)
 			throws SQLException
 	{
@@ -939,7 +939,7 @@ public abstract class ClearThCore
 	{
 		return matrixFunctionsFactory.createMatrixFunctions(scheduler, getSchedulerFactory());
 	}
-	
+
 
 	public String getRepositoryPath()
 	{

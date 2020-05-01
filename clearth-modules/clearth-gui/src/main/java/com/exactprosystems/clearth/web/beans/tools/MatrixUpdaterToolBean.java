@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,6 +27,7 @@ import com.exactprosystems.clearth.tools.matrixupdater.settings.UpdateType;
 import com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterPathHandler;
 import com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterUtils;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
+import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
@@ -139,7 +140,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		File created = toStore.resolve(file.getFileName()).toFile();
 		created.createNewFile();
 
-		return WebUtils.storeInputStream(file.getInputstream(), created);
+		return FileOperationUtils.storeToFile(file.getInputstream(), created);
 	}
 
 	private Cell createCell(String column, String value)

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,33 +18,28 @@
 
 package com.exactprosystems.clearth.web.beans.automation;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.*;
+
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.ActionGeneratorMessage;
-import com.exactprosystems.clearth.automation.ActionGeneratorMessageKind;
-import com.exactprosystems.clearth.automation.MatrixData;
-import com.exactprosystems.clearth.automation.MatrixDataFactory;
-import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.tools.ConfigMakerTool;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.CommaBuilder;
+import com.exactprosystems.clearth.utils.MatrixUploadHandler;
+import com.exactprosystems.clearth.utils.exception.MatrixUploadHandlerException;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.beans.tools.ConfigMakerToolBean;
 import com.exactprosystems.clearth.web.misc.MatrixIssue;
-import com.exactprosystems.clearth.web.misc.MatrixUploadHandler;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
-import org.primefaces.event.FileUploadEvent;
-import org.slf4j.Logger;
-
-import javax.faces.bean.ManagedProperty;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static com.exactprosystems.clearth.ClearThCore.configFiles;
 
@@ -66,7 +61,8 @@ public class MatricesAutomationBean extends ClearThBean {
 	
 
 
-	public MatricesAutomationBean() {
+	public MatricesAutomationBean()
+	{
 		this.selectedMatrices = new ArrayList<>();
 		this.matrixUploadHandler = createMatrixUploadHandler();
 		this.createLinkedMatrix();
@@ -83,10 +79,10 @@ public class MatricesAutomationBean extends ClearThBean {
 		this.automationBean = automationBean;
 	}
 
-	protected MatrixUploadHandler createMatrixUploadHandler() {
+	protected MatrixUploadHandler createMatrixUploadHandler()
+	{
 		return new MatrixUploadHandler(new File(ClearThCore.automationStoragePath()));
 	}
-	
 
 
 	/* Matrices management */
@@ -133,7 +129,32 @@ public class MatricesAutomationBean extends ClearThBean {
 
 	public void uploadMatrix(FileUploadEvent event)
 	{
-		matrixUploadHandler.handleUploadedFile(event.getFile(), selectedScheduler());
+		UploadedFile uploadedFile = event.getFile();
+
+		if (uploadedFile.getContents().length == 0)
+		{
+			MessageUtils.addErrorMessage("Invalid file content", "Uploaded file is empty");
+			return;
+		}
+
+		String uploadedFileName = uploadedFile.getFileName();
+
+		try
+		{
+			matrixUploadHandler.handleUploadedFile(uploadedFile.getInputstream(), uploadedFileName, selectedScheduler());
+			String details = MessageFormat.format("File '{0}' is uploaded", uploadedFileName);
+			MessageUtils.addInfoMessage("Success", details);
+		}
+		catch (MatrixUploadHandlerException e)
+		{
+			MessageUtils.addErrorMessage(e.getMessage(), e.getDetails());
+		}
+		catch (IOException e)
+		{
+			String errorMessage = MessageFormat.format("Unexpected error occurred. File '{0}' cannot be opened",
+					uploadedFileName);
+			WebUtils.logAndGrowlException(errorMessage, e, getLogger());
+		}
 	}
 
 

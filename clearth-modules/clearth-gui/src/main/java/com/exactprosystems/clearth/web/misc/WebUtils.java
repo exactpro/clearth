@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,17 +18,12 @@
 
 package com.exactprosystems.clearth.web.misc;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.List;
-
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -77,37 +72,6 @@ public class WebUtils
 		finally
 		{
 			Utils.closeResource(input);
-			Utils.closeResource(output);
-		}
-	}
-
-	public static File storeInputStream(InputStream is, File storageDir, String prefix, String suffix) throws IOException
-	{
-		File result = File.createTempFile(prefix, suffix, storageDir);
-		return storeInputStream(is, result);
-	}
-
-	public static File storeInputStream(InputStream is, File storageDir, String fileName) throws IOException
-	{
-		File result = new File(storageDir, fileName);
-		return storeInputStream(is, result);
-	}
-
-	public static File storeInputStream(InputStream is, File storageFile) throws IOException
-	{
-		FileOutputStream output = null;
-		try
-		{
-			output = new FileOutputStream(storageFile);
-			int read;
-			byte[] bytes = new byte[1024];
-
-			while ((read = is.read(bytes)) != -1)
-				output.write(bytes, 0, read);
-			return storageFile;
-		}
-		finally
-		{
 			Utils.closeResource(output);
 		}
 	}
