@@ -840,7 +840,7 @@ public abstract class Scheduler
 
 	public boolean isSuccessful()
 	{
-		// If any Step has one action failed at least than the Scheduler is not successful.
+		// If any Step has at least one failed action then the Scheduler is not successful.
 		for (Step step : getSteps())
 		{
 			if (step.isAnyActionFailed() || step.isFailedDueToError())
