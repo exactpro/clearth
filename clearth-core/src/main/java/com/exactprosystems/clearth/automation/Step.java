@@ -648,4 +648,51 @@ public abstract class Step
 			return value;
 		}
 	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		Step step = (Step) o;
+
+		if (askForContinue != step.askForContinue)
+			return false;
+		if (askIfFailed != step.askIfFailed)
+			return false;
+		if (execute != step.execute)
+			return false;
+		if (waitNextDay != step.waitNextDay)
+			return false;
+		if (!Objects.equals(name, step.name))
+			return false;
+		if (!Objects.equals(kind, step.kind))
+			return false;
+		if (!Objects.equals(startAt, step.startAt))
+			return false;
+		if (!Objects.equals(parameter, step.parameter))
+			return false;
+		if (!Objects.equals(comment, step.comment))
+			return false;
+		return startAtType == step.startAtType;
+	}
+
+	@Override
+	public int hashCode()
+	{
+		int result = Objects.hashCode(name);
+		result = 31 * result + Objects.hashCode(kind);
+		result = 31 * result + Objects.hashCode(startAt);
+		result = 31 * result + Objects.hashCode(parameter);
+		result = 31 * result + (askForContinue ? 1 : 0);
+		result = 31 * result + (askIfFailed ? 1 : 0);
+		result = 31 * result + (execute ? 1 : 0);
+		result = 31 * result + Objects.hashCode(comment);
+		result = 31 * result + Objects.hashCode(startAtType);
+		result = 31 * result + (waitNextDay ? 1 : 0);
+		return result;
+	}
 }

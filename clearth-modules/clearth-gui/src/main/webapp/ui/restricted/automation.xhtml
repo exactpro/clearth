@@ -158,7 +158,7 @@
 					<div class="upperRightContainer">
 						<h:form id="ExportSchedulerInfo">
 							<p:commandButton value="Export scheduler info" icon="ui-icon-arrowthickstop-1-s" action="#{schedulerInfoExportBean.collectFiles}"
-									update=":Growl :ExportSchedulerInfoDlg" oncomplete="PF('exportSchedulerInfoDialog').show()" />
+											 update=":Growl :ExportSchedulerInfoDlg" oncomplete="PF('exportSchedulerInfoDialog').show()" />
 						</h:form>
 					</div>
 				</div>
@@ -205,9 +205,9 @@
 												title="#{step.comment}"/>
 								<div style="float: right">
 									<p:outputLabel style="padding: 2px 4px; color:white; background-color:#0075d2; border-radius: 2px; font-size:10px;"
-											value="ASYNC"
-											rendered="#{step.isAsync()}"
-											title="Asynchronous actions have been started in this step"/>
+												   value="ASYNC"
+												   rendered="#{step.isAsync()}"
+												   title="Asynchronous actions have been started in this step"/>
 								</div>
 							</p:column>
 							<p:column headerText="Kind" priority="1" style="width: 20%">
@@ -406,7 +406,7 @@
 
 					<div class="tableContainer fullWidth" id="SchedulerConfig">
 						<p:dataTable id="schedulerConfigStepsTable" var="step" value="#{automationConfigBean.steps.steps}" styleClass="responsiveTable toBottom"
-									 selectionMode="multiple" selection="#{automationConfigBean.steps.selectedSteps}" rowKey="#{step.name}"
+									 selectionMode="multiple" selection="#{automationConfigBean.steps.selectedSteps}" rowKey="#{step.hashCode()}"
 									 draggableRows="#{automationConfigBean.steps.stepsReordering}" scrollable="true" scrollHeight="7"
 									 resizableColumns="true" liveResize="true">
 							<p:ajax event="rowReorder" listener="#{automationConfigBean.steps.saveStepsPositions()}" update=":Steps"
@@ -671,7 +671,7 @@
 
 					<div class="tableContainer fullWidth" id="SavedStateSteps">
 						<p:dataTable id="stepsTable" var="step" value="#{automationStateBean.stateInfo.steps}" styleClass="responsiveTable toBottom"
-									 selectionMode="single" selection="#{automationStateBean.selectedStepState}" rowKey="#{step.name}"
+									 selectionMode="single" selection="#{automationStateBean.selectedStepState}" rowKey="#{step.hashCode()}"
 									 draggableRows="false" scrollable="true" scrollHeight="7" resizableColumns="true" liveResize="true">
 							<p:ajax event="rowSelect" update=":SavedStateInfo:StepStateOperations" />
 							<p:ajax event="rowUnselect" update=":SavedStateInfo:StepStateOperations" />
@@ -846,7 +846,7 @@
 				<br/>
 				<p:outputPanel layout="block" style="text-align: right;">
 					<p:commandButton value="Download" update=":Growl" actionListener="#{schedulerInfoExportBean.exportSelectedFiles}"
-					                 oncomplete="if (args.canClose) PF('exportSchedulerInfoDialog').hide();" icon="ui-icon-arrowthickstop-1-s" />
+									 oncomplete="if (args.canClose) PF('exportSchedulerInfoDialog').hide();" icon="ui-icon-arrowthickstop-1-s" />
 					<p:commandButton value="Cancel" onclick="PF('exportSchedulerInfoDialog').hide();" icon="ui-icon ui-icon-close" type="button" />
 				</p:outputPanel>
 			</h:form>
@@ -1153,7 +1153,7 @@
 				</p:remoteCommand>
 				<div id="rtReportsContainer" style="display:flex; height:75%; width:100%;">
 					<p:panel id="sPanel"
-							 style="height:100%; width:40%; padding:none; margin:none; 
+							 style="height:100%; width:40%; padding:none; margin:none;
 									border: none; border-radius:0px; border-right: 1px solid #e0edf6;"
 							 styleClass="tableScrollFix">
 						<p:dataTable id="stepsTable"
@@ -1162,7 +1162,7 @@
 									 var="step"
 									 filteredValue="#{automationReportsBean.filteredRTSteps}"
 									 selection="#{automationReportsBean.rtSelectedSteps}"
-									 rowKey="#{step.name}"
+									 rowKey="#{step.hashCode()}"
 									 styleClass="table-no-select-all"
 									 scrollable="true" style="height:100%; max-height:100%">
 							<p:ajax event="rowSelectCheckbox"
@@ -1313,18 +1313,18 @@
 		</p:dialog>
 		<!-- Failover dialog -->
 		<p:dialog header="Connection failed" visible="#{automationSchedulerBean.failover}" closable="false"
-		          id="failoverDlg" widgetVar="failoverDialog" width="580" resizable="false" modal="false">
+				  id="failoverDlg" widgetVar="failoverDialog" width="580" resizable="false" modal="false">
 			<h:outputText value="Scripts execution suspended in this scheduler." />
 			<h:outputText value=" Reason: #{automationSchedulerBean.failoverReasonString}."
-			              rendered="#{automationSchedulerBean.failoverReasonString != null}" />
+						  rendered="#{automationSchedulerBean.failoverReasonString != null}" />
 			<br/><br/>
 			<h:form id="Failover">
 				<h:outputText value="Select what to do now: restart action, try another option or interrupt scheduler execution." />
 				<br/>
 				<p:commandButton value="Restart action" update=":SchedulerSteps"
-				                 actionListener="#{automationSchedulerBean.setFailoverRestartAction(true)}"
-				                 oncomplete="PF('failoverDialog').hide();"
-				                 icon="ui-icon ui-icon-refresh" />
+								 actionListener="#{automationSchedulerBean.setFailoverRestartAction(true)}"
+								 oncomplete="PF('failoverDialog').hide();"
+								 icon="ui-icon ui-icon-refresh" />
 				<p:commandButton value="Try to reconnect" update=":SchedulerSteps"
 								 actionListener="#{automationSchedulerBean.tryAgainMain}"
 								 oncomplete="saveExecScrollPos(); PF('failoverDialog').hide();"
