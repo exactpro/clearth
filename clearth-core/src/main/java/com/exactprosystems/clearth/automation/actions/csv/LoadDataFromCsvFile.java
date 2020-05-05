@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,17 +18,7 @@
 
 package com.exactprosystems.clearth.automation.actions.csv;
 
-import static com.exactprosystems.clearth.automation.actions.MessageAction.FILENAME;
-
-import java.io.File;
-
-import org.apache.commons.lang.StringUtils;
-
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.ContextWriter;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.StepContext;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
@@ -36,6 +26,11 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
+import org.apache.commons.lang.StringUtils;
+
+import java.io.File;
+
+import static com.exactprosystems.clearth.automation.actions.MessageAction.FILENAME;
 
 public class LoadDataFromCsvFile extends Action implements ContextWriter {
 
@@ -49,11 +44,12 @@ public class LoadDataFromCsvFile extends Action implements ContextWriter {
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException, FailoverException
 	{
 		InputParamsHandler handler = new InputParamsHandler(inputParams);
-		String fileName;
+		File loadedDataFile;
 		try
 		{
-			fileName = handler.getRequiredString(FILENAME);
-		} finally
+			loadedDataFile = handler.getRequiredFile(FILENAME);
+		}
+		finally
 		{
 			handler.check();
 		}
@@ -61,8 +57,9 @@ public class LoadDataFromCsvFile extends Action implements ContextWriter {
 		StringTableData tableData;
 		try
 		{
-			tableData = CsvDataReader.read(new File(fileName));
-		} catch (Exception e)
+			tableData = CsvDataReader.read(loadedDataFile);
+		}
+		catch (Exception e)
 		{
 			return DefaultResult.failed("Couldn`t load data from file", e);
 		}
