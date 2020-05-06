@@ -1,0 +1,2 @@
+#ID,#GlobalStep,#Action,#Async,#WaitAsyncEnd,#ScriptName
+id1,Step1,SetStatic,true,Step,@{1 + 2}

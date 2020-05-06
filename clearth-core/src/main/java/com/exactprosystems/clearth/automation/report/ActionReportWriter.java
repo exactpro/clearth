@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,7 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.exactprosystems.clearth.ClearThCore.rootRelative;
-import static com.exactprosystems.clearth.automation.report.ReportFormat.*;
+import static com.exactprosystems.clearth.automation.report.ReportFormat.HTML;
+import static com.exactprosystems.clearth.automation.report.ReportFormat.JSON;
 
 public class ActionReportWriter
 {
@@ -90,9 +91,17 @@ public class ActionReportWriter
 			ActionReport actionReport = createActionReport(action);
 			String jsonActionReport = new JsonMarshaller<ActionReport>().marshal(actionReport);
 
-			writePreReportData(writer, action, JSON);
-			writer.println(jsonActionReport);
-			writePostReportData(writer, action, JSON);
+
+			if (!action.isAsync() || action.isPayloadFinished())
+			{
+				writer.println(jsonActionReport);
+			}
+			else
+			{
+				writePreReportData(writer, action, JSON);
+				writer.println(jsonActionReport);
+				writePostReportData(writer, action, JSON);
+			}
 		}
 		catch (IOException e)
 		{
@@ -271,23 +280,17 @@ public class ActionReportWriter
 			default: return "";
 		}
 	}
-	
+
 	protected void writePreReportData(PrintWriter writer, Action action, ReportFormat reportFormat)
 	{
-		if (!action.isAsync())
-			return;
-		
 		writer.println(buildAsyncActionStartComment(action, reportFormat));
 	}
-	
+
 	protected void writePostReportData(PrintWriter writer, Action action, ReportFormat reportFormat)
 	{
-		if (!action.isAsync())
-			return;
-		
 		writer.println(buildAsyncActionEndComment(action, reportFormat));
 	}
-	
+
 	protected void writeHtmlActionReport(Action action, String actionsReportsDir, String actionsReportFile, boolean onlyFailed)
 	{
 		if (getLogger().isTraceEnabled())
@@ -300,9 +303,17 @@ public class ActionReportWriter
 		{
 			writer = createReportWriter(reportFile);
 			HtmlActionReport report = createHtmlActionReport();
-			writePreReportData(writer, action, HTML);
-			report.write(writer, action, resultId, reportDir, onlyFailed);
-			writePostReportData(writer, action, HTML);
+
+			if (!action.isAsync() || action.isPayloadFinished())
+			{
+				report.write(writer, action, resultId, reportDir, onlyFailed);
+			}
+			else
+			{
+				writePreReportData(writer, action, HTML);
+				report.write(writer, action, resultId, reportDir, onlyFailed);
+				writePostReportData(writer, action, HTML);
+			}
 		}
 		catch (IOException e)
 		{

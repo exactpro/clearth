@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -431,8 +431,16 @@ public class ActionExecutor implements Closeable
 			actionResult.setSuccess(false);
 			actionResult.setFailReason(FailReason.CALCULATION);
 			actionResult.setComment(comment.toString());
-			
 			action.setResult(actionResult);
+			if (action.isAsync())
+			{
+				/*
+					if the calculated parameters have an error message and action is async,
+					then we cannot create AsyncActionsManager and shouldn't write pre/post report data
+				 */
+				action.setPayloadFinished(true);
+				action.getStep().refreshAsyncFlag(action);
+			}
 		}
 		else
 			subActionData.setFailedComment(comment.toString());
