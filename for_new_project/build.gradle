@@ -88,3 +88,7 @@ task buildRelease(type: Zip, group: 'ClearTH',
 	
 	destinationDirectory = file("$buildDir/dist")
 }
+
+wrapper {
+	gradleVersion = '5.5'
+}

@@ -307,3 +307,7 @@ task createProject(type: Copy,
 	}
 	into newProjectDir
 }
+
+wrapper {
+	gradleVersion = '5.5'
+}
