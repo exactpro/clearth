@@ -212,6 +212,16 @@ public class TypedTableRow extends TableRow<TypedTableHeaderItem, Object>
 		setValue(columnName, value);
 	}
 
+	public Object getObject(String columnName)
+	{
+		return getValue(columnName);	
+	}
+	
+	public void setObject(String columnName, Object value)
+	{
+		setValue(columnName, value);
+	}
+
 	public LocalDateTime getDateTime(String columnName)
 	{
 		Object rowValue = getValue(columnName);

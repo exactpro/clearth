@@ -33,10 +33,14 @@ import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.*;
 import com.exactprosystems.clearth.utils.tabledata.typing.*;
+import com.exactprosystems.clearth.utils.tabledata.typing.converter.DbTypesConverter;
+import com.exactprosystems.clearth.utils.tabledata.typing.converter.GenericDbTypesConverter;
+import com.exactprosystems.clearth.utils.tabledata.typing.converter.SqliteTypesConverter;
 import com.exactprosystems.clearth.utils.tabledata.typing.reader.TypedCsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.typing.reader.TypedDbDataReader;
 import com.exactprosystems.clearth.utils.tabledata.typing.writer.TypedCsvDataWriter;
 import com.exactprosystems.clearth.utils.tabledata.typing.writer.TypedDbDataWriter;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -102,10 +106,11 @@ public abstract class ExportDataSet extends Action
 	{
 		return query;
 	}
-	
-	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> createDbDataReader(PreparedStatement statement)
+
+	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> createDbDataReader(PreparedStatement statement, 
+																									DbTypesConverter dbTypesConverter)
 	{
-		return new TypedDbDataReader(statement);
+		return new TypedDbDataReader(statement, dbTypesConverter);
 	}
 	
 	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> getCustomDataReader(String format)
@@ -329,9 +334,11 @@ public abstract class ExportDataSet extends Action
 	
 	private BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> createDbDataReader()
 	{
+		DbTypesConverter dbTypesConverter;
 		try
 		{
 			srcConnection = getConnection(srcConnectionName);
+			dbTypesConverter = getDbTypesConverter(srcConnection);
 		}
 		catch (SQLException e)
 		{
@@ -362,7 +369,16 @@ public abstract class ExportDataSet extends Action
 			throw new ResultException("Error while creating prepared statement", e);
 		}
 
-		return createDbDataReader(statement);
+		return createDbDataReader(statement, dbTypesConverter);
+	}
+
+	protected DbTypesConverter getDbTypesConverter(Connection connection) throws SQLException
+	{
+		String url = connection.getMetaData().getURL();
+		if (StringUtils.startsWith(url,"jdbc:sqlite"))
+			return new SqliteTypesConverter();
+
+		return new GenericDbTypesConverter();
 	}
 
 	@Override
