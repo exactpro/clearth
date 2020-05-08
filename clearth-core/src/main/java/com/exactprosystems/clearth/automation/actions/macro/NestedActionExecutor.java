@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,10 +20,10 @@ package com.exactprosystems.clearth.automation.actions.macro;
 
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NestedActionExecutor extends ActionExecutor
@@ -32,7 +32,7 @@ public class NestedActionExecutor extends ActionExecutor
 	
 	public NestedActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, ActionReportWriter reportWriter)
 	{
-		super(globalContext, calculator, reportWriter, new FailoverStatus());
+		super(globalContext, calculator, reportWriter, new FailoverStatus(), Collections.emptySet());
 	}
 	
 	public void executeAction(Action action, StepContext stepContext, boolean writeReport)

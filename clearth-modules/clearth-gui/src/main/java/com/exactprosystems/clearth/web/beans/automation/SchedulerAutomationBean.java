@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -168,6 +168,11 @@ public class SchedulerAutomationBean extends ClearThBean {
 		return selectedScheduler().getFailoverReasonString();
 	}
 	
+	public String getFailoverConnectionName()
+	{
+		return selectedScheduler().getFailoverConnectionName();
+	}
+	
 	public void tryAgainMain()
 	{
 		selectedScheduler().tryAgainMain();
@@ -178,9 +183,18 @@ public class SchedulerAutomationBean extends ClearThBean {
 		selectedScheduler().tryAgainAlt();
 	}
 	
-	public void setFailoverRestartAction(boolean needRestart)
+	public void restartActionOnFailover()
 	{
-		selectedScheduler().setFailoverRestartAction(needRestart);
+		getLogger().info("Restarting current action due to decision in failover dialog");
+		selectedScheduler().setFailoverRestartAction(true);
+	}
+	
+	public void skipConnectionFailure(boolean skipAllTheSame)
+	{
+		getLogger().info("Skipping current action due to decision in failover dialog");
+		if (skipAllTheSame)
+			selectedScheduler().addConnectionToIgnoreFailuresByRun(getFailoverConnectionName());
+		selectedScheduler().setFailoverSkipAction(true);
 	}
 	
 	public List<String> getStatus()

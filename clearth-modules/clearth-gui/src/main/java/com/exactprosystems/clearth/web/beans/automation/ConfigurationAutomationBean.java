@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,6 +21,8 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.SchedulerData;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
@@ -32,9 +34,7 @@ import org.primefaces.model.UploadedFile;
 import javax.faces.event.AjaxBehaviorEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.ClearThCore.configFiles;
@@ -289,7 +289,59 @@ public class ConfigurationAutomationBean extends ClearThBean {
 			MessageUtils.addErrorMessage("Could not save changes in business day", ExceptionUtils.getDetailedMessage(e));
 		}
 	}
-
+	
+	
+	public List<String> getAllConnections()
+	{
+		return ClearThCore.connectionStorage().getConnections().stream().map(ClearThConnection::getName).collect(Collectors.toList());
+	}
+	
+	public void setSelectedConnectionsToIgnoreFailures(List<String> selectedConnectionsToIgnoreFailures)
+	{
+		// This will be called once on saving connections names to the config file
+		selectedScheduler().getSchedulerData().setConnectionsToIgnoreFailures(new HashSet<>(selectedConnectionsToIgnoreFailures));
+	}
+	
+	public List<String> getSelectedConnectionsToIgnoreFailures()
+	{
+		return new ArrayList<>(selectedScheduler().getSchedulerData().getConnectionsToIgnoreFailures());
+	}
+	
+	public String getConnectionsToIgnoreFailuresString()
+	{
+		Set<String> connections = selectedScheduler().getSchedulerData().getConnectionsToIgnoreFailures();
+		if (connections.isEmpty())
+			return "No connection failures will be ignored";
+		
+		Iterator<String> connectionsIter = connections.iterator();
+		CommaBuilder builder = new CommaBuilder();
+		int shownCount = 0;
+		while (connectionsIter.hasNext() && shownCount < 2)
+		{
+			builder.append("'").add(connectionsIter.next()).add("'");
+			shownCount++;
+		}
+		String result = "Connection failures will be ignored for " + builder.toString();
+		if (connections.size() > shownCount)
+			result += " and " + (connections.size() - shownCount) + " more";
+		return result;
+	}
+	
+	public void saveConnectionsToIgnoreFailures()
+	{
+		try
+		{
+			selectedScheduler().getSchedulerData().saveConnectionsToIgnoreFailures();
+			WebUtils.addCanCloseCallback(true);
+			MessageUtils.addInfoMessage("Success", "Connections to ignore failures have been saved to the file");
+		}
+		catch (IOException e)
+		{
+			MessageUtils.addErrorMessage("Could not save selected connections to ignore failures", ExceptionUtils.getDetailedMessage(e));
+		}
+	}
+	
+	
 	public UploadedFile getSchedulerConfigurationUploadedFile() {
 		return schedulerConfigurationUploadedFile;
 	}

@@ -307,7 +307,7 @@
 						<h:form>
 							<p:fileUpload fileUploadListener="#{automationConfigBean.uploadSchedulerSettings}" allowTypes="/(\.|\/)(zip)$/" label="Upload configuration"
 										  mode="advanced" auto="true" showButtons="false" multiple="false"
-										  update=":BusinessDay :WeekendIsHoliday :ConfigFile :Steps :Growl" styleClass="simple">
+										  update=":BusinessDay :WeekendIsHoliday :ConfigFile :ConnectionsToIgnoreFailures :Steps :Growl" styleClass="simple">
 							</p:fileUpload>
 							&#160;&#160;
 							<p:commandButton value="Download configuration" ajax="false" actionListener="#{automationConfigBean.downloadSchedulerSettings}" action="automation?faces-redirect=true"/>
@@ -355,7 +355,15 @@
 							<p:commandButton value="Holidays setup" update=":HolidaysDialog" oncomplete="PF('holidaysDialog').show();" style="vertical-align: top;" />
 						</h:form>
 					</div>
+					
+					<h:form id="ConnectionsToIgnoreFailures">
+						<h:outputLabel value="#{automationConfigBean.connectionsToIgnoreFailuresString}" />
+						&#160;
+						<p:commandButton value="Setup" oncomplete="PF('connectionsToIgnoreFailuresDialog').show();"
+						                 update=":ConnectionsToIgnoreFailuresDialog" disabled="#{automationSchedulerBean.running}" />
+					</h:form>
 				</div>
+				
 				<h:form id="ConfigFile" style="vertical-align:bottom;">
 					<label class="pageTitle" style="margin-right:5px;">Steps</label>
 					<h:outputText value="Config file for scheduler: " style="color:#b0cce0;" />
@@ -1311,31 +1319,37 @@
 								 icon="ui-icon ui-icon-close" />
 			</h:form>
 		</p:dialog>
-		<!-- Failover dialog -->
-		<p:dialog header="Connection failed" visible="#{automationSchedulerBean.failover}" closable="false"
-				  id="failoverDlg" widgetVar="failoverDialog" width="580" resizable="false" modal="false">
-			<h:outputText value="Scripts execution suspended in this scheduler." />
-			<h:outputText value=" Reason: #{automationSchedulerBean.failoverReasonString}."
-						  rendered="#{automationSchedulerBean.failoverReasonString != null}" />
+		<!-- Connection failure dialog -->
+		<p:dialog header="Connection '#{automationSchedulerBean.failoverConnectionName}' failed"
+		          visible="#{automationSchedulerBean.failover}" closable="false" resizable="false" modal="false"
+		          id="connectionFailureDlg" widgetVar="connectionFailureDialog" width="610">
+			<h:outputText value="Scripts execution suspended in this scheduler due to failure with connection '#{automationSchedulerBean.failoverConnectionName}'." />
+            <br/>
+			<h:outputText value="Reason: #{automationSchedulerBean.failoverReasonString}"
+			              rendered="#{automationSchedulerBean.failoverReasonString != null}" />
 			<br/><br/>
-			<h:form id="Failover">
-				<h:outputText value="Select what to do now: restart action, try another option or interrupt scheduler execution." />
+			<h:form id="ConnectionFailure">
+				<h:outputText value="Select what to do now: restart action, skip or interrupt scheduler execution." />
 				<br/>
 				<p:commandButton value="Restart action" update=":SchedulerSteps"
-								 actionListener="#{automationSchedulerBean.setFailoverRestartAction(true)}"
-								 oncomplete="PF('failoverDialog').hide();"
-								 icon="ui-icon ui-icon-refresh" />
-				<p:commandButton value="Try to reconnect" update=":SchedulerSteps"
-								 actionListener="#{automationSchedulerBean.tryAgainMain}"
-								 oncomplete="saveExecScrollPos(); PF('failoverDialog').hide();"
-								 icon="ui-icon ui-icon-check" />
-				<p:commandButton value="Try with alternative" update=":SchedulerSteps"
-								 actionListener="#{automationSchedulerBean.tryAgainAlt}"
-								 oncomplete="saveExecScrollPos(); PF('failoverDialog').hide();"
-								 icon="ui-icon ui-icon-check" />
+				                 actionListener="#{automationSchedulerBean.restartActionOnFailover()}"
+				                 action="automation?faces-redirect=true"
+				                 oncomplete="PF('connectionFailureDialog').hide();"
+				                 icon="ui-icon ui-icon-refresh" />
+				<p:commandButton value="Skip for now" update=":SchedulerSteps"
+				                 actionListener="#{automationSchedulerBean.skipConnectionFailure(false)}"
+				                 action="automation?faces-redirect=true"
+				                 oncomplete="PF('connectionFailureDialog').hide();"
+				                 icon="ui-icon ui-icon-play" />
+				<p:commandButton value="Skip for current connection" update=":SchedulerSteps"
+				                 actionListener="#{automationSchedulerBean.skipConnectionFailure(true)}"
+				                 action="automation?faces-redirect=true"
+				                 oncomplete="PF('connectionFailureDialog').hide();"
+				                 icon="ui-icon ui-icon-arrowthickstop-1-e" />
 				<p:commandButton value="Stop scheduler" update=":SchedulerSteps :History"
 								 actionListener="#{automationSchedulerBean.stop}"
-								 oncomplete="PF('failoverDialog').hide();"
+								 action="automation?faces-redirect=true"
+								 oncomplete="PF('connectionFailureDialog').hide();"
 								 icon="ui-icon ui-icon-close" />
 			</h:form>
 		</p:dialog>
@@ -1401,6 +1415,26 @@
 									 icon="ui-icon ui-icon-close"
 									 type="button" />
 				</div>
+			</h:form>
+		</p:dialog>
+		<!-- Setup connections to ignore failures dialog -->
+		<p:dialog header="Select connections to ignore failures" widgetVar="connectionsToIgnoreFailuresDialog"
+				width="400" resizable="false" closeOnEscape="true" modal="true">
+			<h:form id="ConnectionsToIgnoreFailuresDialog">
+				<h:outputLabel value="If failure occurs for any connection selected below, scheduler execution won't be suspended but relevant actions will be failed." />
+				<p:dataTable value="#{automationConfigBean.allConnections}" var="connection" rowKey="#{connection}"
+				             selection="#{automationConfigBean.selectedConnectionsToIgnoreFailures}">
+					<p:column selectionMode="multiple" style="width: 20px; text-align: center;" />
+					<p:column headerText="Connection" style="text-align: center;">
+						<h:outputText value="#{connection}" />
+					</p:column>
+				</p:dataTable>
+				<br/>
+				<p:outputPanel layout="block" style="text-align: right;">
+					<p:commandButton value="Save" update=":Growl :ConnectionsToIgnoreFailures" actionListener="#{automationConfigBean.saveConnectionsToIgnoreFailures()}"
+					                 oncomplete="if (args.canClose) PF('connectionsToIgnoreFailuresDialog').hide();" icon="ui-icon ui-icon-check" />
+					<p:commandButton value="Cancel" onclick="PF('connectionsToIgnoreFailuresDialog').hide();" icon="ui-icon ui-icon-close" type="button" />
+				</p:outputPanel>
 			</h:form>
 		</p:dialog>
 		<!-- Matrices dialog for Saved State -->
@@ -1510,7 +1544,7 @@
 
 		<!-- Timer -->
 		<h:form id="ExecutionTimer">
-			<p:poll interval="1" update=":Start :Stop :Pause :SchedulerStatus :SchedulerSteps :History :Suspended :suspendedDlg :Failover :failoverDlg :Realtime :ReportsDialog"
+			<p:poll interval="1" update=":Start :Stop :Pause :SchedulerStatus :SchedulerSteps :History :Suspended :suspendedDlg :ConnectionFailure :connectionFailureDlg :Realtime :ReportsDialog"
 					widgetVar="schedulerPoll"
 					autoStart="#{automationSchedulerBean.running}"
 					listener="#{automationBean.onTimer}" stop="#{!automationSchedulerBean.running or automationSchedulerBean.suspended or automationSchedulerBean.failover}"

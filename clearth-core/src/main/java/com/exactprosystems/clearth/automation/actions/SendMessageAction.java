@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -99,15 +99,16 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 	
 	protected StringMessageSender getStringSender(GlobalContext globalContext) throws FailoverException
 	{
-		if (!getInputParam(CONNECTIONNAME, "").isEmpty())
+		String connName = getInputParam(CONNECTIONNAME, "");
+		if (!connName.isEmpty())
 		{
 			try
 			{
-				return getConnectionFinder().findConnection(getInputParams());
+				return getConnectionFinder().findConnection(connName);
 			}
 			catch (ConnectivityException e)
 			{
-				throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+				throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR, connName);
 			}
 		}
 		if (!getInputParam(FILENAME, "").isEmpty())
@@ -116,7 +117,6 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		StringMessageSender result = getCustomMessageSender(globalContext);
 		if (result == null)
 			throw ResultException.failed("No '" + CONNECTIONNAME + "' or '" + FILENAME + "' parameters specified");
-		
 		return result;
 	}
 

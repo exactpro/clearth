@@ -55,6 +55,7 @@ public class ActionExecutor implements Closeable
 	private final ActionParamsCalculator calculator;
 	private final ActionReportWriter reportWriter;
 	private final FailoverStatus failoverStatus;
+	private final Set<String> connectionsToIgnoreFailures;
 	private AsyncActionsManager asyncManager;
 	
 	private ActionsExecutionProgress executionProgress;
@@ -62,12 +63,13 @@ public class ActionExecutor implements Closeable
 	private boolean interrupted = false;
 	
 	public ActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, ActionReportWriter reportWriter,
-			FailoverStatus failoverStatus)
+			FailoverStatus failoverStatus, Set<String> connectionsToIgnoreFailures)
 	{
 		this.globalContext = globalContext;
 		this.calculator = calculator;
 		this.reportWriter = reportWriter;
 		this.failoverStatus = failoverStatus;
+		this.connectionsToIgnoreFailures = connectionsToIgnoreFailures;
 		this.asyncManager = null;
 	}
 	
@@ -641,10 +643,14 @@ public class ActionExecutor implements Closeable
 				}
 				catch (FailoverException e)
 				{
-					passed = false;
+					if (connectionsToIgnoreFailures.contains(e.getConnectionName()))
+					{
+						action.setResult(DefaultResult.failed("Action has been skipped" 
+								+ " as user decided to ignore all failures for connection '" + e.getConnectionName() + "'.", e));
+						continue;
+					}
 					
-					action.getStep().actionFailover(action, e, stepContext, matrixContext, globalContext);  //Disposing connections according to action type, if needed
-					
+					action.getStep().actionFailover(action, e, stepContext, matrixContext, globalContext);  // Disposing connections according to action type, if needed
 					try
 					{
 						synchronized (failoverStatus)
@@ -653,11 +659,23 @@ public class ActionExecutor implements Closeable
 							failoverStatus.actionType = action.getActionType();
 							failoverStatus.reason = e.getReason();
 							failoverStatus.reasonString = e.getMessage();
+							failoverStatus.connectionName = e.getConnectionName();
 							failoverStatus.needRestartAction = true;
-							failoverStatus.connection = e.getConnection();
+							failoverStatus.needSkipAction = false;
 							failoverStatus.setFailoverInfo(action, e);
-							failoverStatus.wait(); // failoverStatus.needRestartAction may be changed in automationBean
-							passed = !failoverStatus.needRestartAction;
+							failoverStatus.wait(); // needRestartAction and needSkipAction may be changed in automationBean
+							
+							if (failoverStatus.needSkipAction)
+							{
+								action.setResult(DefaultResult.failed("Action has been skipped as user decided to ignore current failure.", e));
+								getLogger().info("Skipping{}", actionDesc);
+							}
+							else
+							{
+								passed = !failoverStatus.needRestartAction;
+								if (!passed)
+									getLogger().info("Restarting{}", actionDesc);
+							}
 						}
 					}
 					catch (InterruptedException e1)

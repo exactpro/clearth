@@ -54,7 +54,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
 import static com.exactprosystems.clearth.automation.MatrixFileExtensions.isExtensionSupported;
 import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
 import static java.lang.String.format;
@@ -78,6 +77,7 @@ public abstract class Scheduler
 			baseTime = null;
 	protected boolean weekendHoliday = false;
 	protected Map<String, Boolean> holidays = new HashMap<String, Boolean>();
+	protected Set<String> connectionsToIgnoreFailuresByRun = new HashSet<>();
 	protected ExecutorStateInfo stateInfo;
 	protected boolean testMode;
 	private Date executorStartedTime;
@@ -630,40 +630,37 @@ public abstract class Scheduler
 		InputStream input = null;
 		try
 		{
-		Map<String, Object> params = new HashMap<String, Object>();
-		MatrixProvider provider = getMatrixProviderHolder().getMatrixProvider(link, type, params);
-		matrix.setName(provider.getName());
-		for (MatrixData m: getMatricesData()) // check duplicated matrix names
-		{
-			if (!StringUtils.equals(matrix.getLink(), m.getLink())
-					&& StringUtils.equals(matrix.getName(), m.getName())
-					&& isNewMatrix)
-				throw new ClearThException(
-						format("'%s' matrix already exists. Please use unique matrix names.", matrix.getName()));
-		}
-
-		input = provider.getMatrix();
-
-		FileOutputStream output = null;
-		try
-		{
-			File tempDir = new File(ClearThCore.automationStoragePath());
-			if(isExtensionSupported(matrixFileExtension))
+			Map<String, Object> params = new HashMap<String, Object>();
+			MatrixProvider provider = getMatrixProviderHolder().getMatrixProvider(link, type, params);
+			matrix.setName(provider.getName());
+			for (MatrixData m : getMatricesData()) // check duplicated matrix names
 			{
-				tempFile = File.createTempFile("matrix_", matrixFileExtension, tempDir);
+				if (!StringUtils.equals(matrix.getLink(), m.getLink())
+						&& StringUtils.equals(matrix.getName(), m.getName())
+						&& isNewMatrix)
+					throw new ClearThException(
+							format("'%s' matrix already exists. Please use unique matrix names.", matrix.getName()));
 			}
-			else
+			input = provider.getMatrix();
+			
+			FileOutputStream output = null;
+			try
 			{
-				throw new ClearThException(format("Matrix file '%s' has unexpected type. Only %s are" +
-						" supported.", matrix.getName(), MatrixFileExtensions.supportedExtensionsAsString));
-			}
-			output = new FileOutputStream(tempFile);
-			output.write(IOUtils.toByteArray(input));
-		}
-			finally
+				File tempDir = new File(ClearThCore.automationStoragePath());
+				if (isExtensionSupported(matrixFileExtension))
+					tempFile = File.createTempFile("matrix_", matrixFileExtension, tempDir);
+				else
 				{
-					IOUtils.closeQuietly(output);
+					throw new ClearThException(format("Matrix file '%s' has unexpected type. Only %s are"
+							+ " supported.", matrix.getName(), MatrixFileExtensions.supportedExtensionsAsString));
 				}
+				output = new FileOutputStream(tempFile);
+				output.write(IOUtils.toByteArray(input));
+			}
+			finally
+			{
+				IOUtils.closeQuietly(output);
+			}
 		}
 		finally
 		{
@@ -970,7 +967,9 @@ public abstract class Scheduler
 	
 	protected void doBeforeStartExecution() throws AutomationException
 	{
-		//Do something here
+		connectionsToIgnoreFailuresByRun = new HashSet<>(schedulerData.getConnectionsToIgnoreFailures());
+		if (!connectionsToIgnoreFailuresByRun.isEmpty())
+			logger.info("Failures will be ignored for the following connections: {}", connectionsToIgnoreFailuresByRun);
 	}
 	
 	synchronized public boolean restoreState(String userName) throws IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
@@ -1115,6 +1114,17 @@ public abstract class Scheduler
 				seqExec.tryAgainAlt();
 	}
 	
+	public int getFailoverActionType()
+	{
+		if (!isFailover())
+			return ActionType.NONE;
+		
+		if (!sequentialRun)
+			return executor.getFailoverActionType();
+		else
+			return seqExec.getFailoverActionType();
+	}
+	
 	public int getFailoverReason()
 	{
 		if (!isFailover())
@@ -1137,15 +1147,15 @@ public abstract class Scheduler
 			return seqExec.getFailoverReasonString();
 	}
 	
-	public int getFailoverActionType()
+	public String getFailoverConnectionName()
 	{
 		if (!isFailover())
-			return ActionType.NONE;
+			return null;
 		
 		if (!sequentialRun)
-			return executor.getFailoverActionType();
+			return executor.getFailoverConnectionName();
 		else
-			return seqExec.getFailoverActionType();
+			return seqExec.getFailoverConnectionName();
 	}
 	
 	public void setFailoverRestartAction(boolean needRestart)
@@ -1157,6 +1167,28 @@ public abstract class Scheduler
 			executor.setFailoverRestartAction(needRestart);
 		else
 			seqExec.setFailoverRestartAction(needRestart);
+	}
+	
+	public void setFailoverSkipAction(boolean needSkipAction)
+	{
+		if (!isFailover())
+			return;
+		
+		if (!sequentialRun)
+			executor.setFailoverSkipAction(needSkipAction);
+		else
+			seqExec.setFailoverSkipAction(needSkipAction);
+	}
+	
+	public void addConnectionToIgnoreFailuresByRun(String connectionName)
+	{
+		connectionsToIgnoreFailuresByRun.add(connectionName);
+		logger.info("All next failures during current run will be ignored for connection '{}'", connectionName);
+	}
+	
+	public Set<String> getConnectionsToIgnoreFailuresByRun()
+	{
+		return Collections.unmodifiableSet(connectionsToIgnoreFailuresByRun);
 	}
 	
 	
@@ -1504,6 +1536,7 @@ public abstract class Scheduler
 		schedulerData.setBusinessDay(SchedulerData.loadBusinessDay(schedulerData.getBusinessDayFilePath()));
 		schedulerData.setWeekendHoliday(schedulerData.loadWeekendHoliday());
 		schedulerData.loadHolidays(schedulerData.getHolidays());
+		schedulerData.setConnectionsToIgnoreFailures(schedulerData.loadConnectionsToIgnoreFailures());
 		init();
 	}
 

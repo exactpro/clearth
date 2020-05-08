@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,22 +18,17 @@
 
 package com.exactprosystems.clearth.automation.actions.db;
 
-import java.sql.Connection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import com.exactprosystems.clearth.utils.IValueTransformer;
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.ActionType;
-import com.exactprosystems.clearth.automation.FailoverReason;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.StepContext;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
+
+import java.sql.Connection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public abstract class SQLAction extends Action
 {
@@ -65,7 +60,7 @@ public abstract class SQLAction extends Action
 		{
 			getLogger().error("Error while running action", e);
 			if (SQLUtils.isConnectException(e))
-				throw new FailoverException("Error while running action", e, FailoverReason.CONNECTION_ERROR);
+				throw new FailoverException("Error while running action", e, FailoverReason.CONNECTION_ERROR, "database");
 			return DefaultResult.failed(e);
 		}
 	}

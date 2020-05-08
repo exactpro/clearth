@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -70,7 +70,11 @@ public class ConnectionFinder
 	
 	public ClearThMessageCollector findCollector(Map<String, String> inputParams) throws ResultException, ConnectivityException
 	{
-		ClearThMessageConnection<?,?> con = findConnection(inputParams);
-		return findCollector(con);
+		return findCollector(findConnection(inputParams));
+	}
+	
+	public ClearThMessageCollector findCollector(String connectionName) throws ResultException, ConnectivityException
+	{
+		return findCollector(findConnection(connectionName));
 	}
 }

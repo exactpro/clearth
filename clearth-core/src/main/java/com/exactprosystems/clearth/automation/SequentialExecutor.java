@@ -305,6 +305,16 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	public int getFailoverActionType()
+	{
+		synchronized (ceMonitor)
+		{
+			if (currentExecutor == null)
+				return ActionType.NONE;
+			return currentExecutor.getFailoverActionType();
+		}
+	}
+	
 	public int getFailoverReason()
 	{
 		synchronized (ceMonitor)
@@ -325,16 +335,16 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
-	public int getFailoverActionType()
+	public String getFailoverConnectionName()
 	{
 		synchronized (ceMonitor)
 		{
-			if (currentExecutor==null)
-				return ActionType.NONE;
-			return currentExecutor.getFailoverActionType();
+			if (currentExecutor == null)
+				return null;
+			return currentExecutor.getFailoverConnectionName();
 		}
 	}
-
+	
 	public void setFailoverRestartAction(boolean needRestart)
 	{
 		synchronized (ceMonitor)
@@ -344,6 +354,17 @@ public abstract class SequentialExecutor extends Thread
 			currentExecutor.setFailoverRestartAction(needRestart);
 		}
 	}
+	
+	public void setFailoverSkipAction(boolean needSkipAction)
+	{
+		synchronized (ceMonitor)
+		{
+			if (currentExecutor == null)
+				return;
+			currentExecutor.setFailoverSkipAction(needSkipAction);
+		}
+	}
+	
 	
 	public String getReportsDir()
 	{

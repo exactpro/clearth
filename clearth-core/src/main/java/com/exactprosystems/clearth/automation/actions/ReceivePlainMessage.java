@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -142,7 +142,7 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 		}
 		catch (ConnectivityException e)
 		{
-			throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+			throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR, conName);
 		}
 	}
 	

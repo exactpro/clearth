@@ -18,10 +18,18 @@
 
 package com.exactprosystems.clearth.automation;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import com.csvreader.CsvReader;
+import com.csvreader.CsvWriter;
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.ClearThException;
+import com.exactprosystems.clearth.utils.DateTimeUtils;
+import com.exactprosystems.clearth.utils.KeyValueUtils;
+import com.exactprosystems.clearth.utils.XmlUtils;
+import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
+import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.UnmarshalException;
@@ -34,19 +42,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.LoggerFactory;
-
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.ClearThException;
-import com.exactprosystems.clearth.utils.DateTimeUtils;
-import com.exactprosystems.clearth.utils.KeyValueUtils;
-import com.exactprosystems.clearth.utils.XmlUtils;
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public abstract class SchedulerData
 {
@@ -58,6 +57,7 @@ public abstract class SchedulerData
 			BUSINESSDAY_FILENAME = "businessday.txt",
 			BASETIME_FILENAME = "basetime.txt",
 			WEEKEND_FILENAME = "weekend.txt",
+			CONNECTIONS_TO_IGNORE_FAILURES_FILENAME = "connections_to_ignore_failures.txt",
 			MATRICES_FILENAME = "matrices.csv",
 			STEP_INFO_DATA_FILENAME = "executed_steps.csv",
 			CONFIGDATA_FILENAME = "configdata.cfg",
@@ -75,8 +75,8 @@ public abstract class SchedulerData
 	protected static final DateFormat businessDayFormat = new SimpleDateFormat("yyyyMMdd"),
 			baseTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
-	private final String forUser, name, matricesDir, launchesName, configName, baseTimeName,
-			weekendHolidayName, holidaysName, matricesName, configDataName;
+	private final String forUser, name, matricesDir, launchesName, configName, baseTimeName, weekendHolidayName,
+			holidaysName, connectionsToIgnoreFailuresName, matricesName, configDataName;
 
 	private final Path businessDayFilePath, executedStepsDataFilePath;
 
@@ -87,7 +87,8 @@ public abstract class SchedulerData
 			baseTime;
 	private boolean useCurrentDate;
 	private boolean weekendHoliday;
-	private final Map<String, Boolean>  holidays;
+	private final Map<String, Boolean> holidays;
+	private Set<String> connectionsToIgnoreFailures;
 	private final List<MatrixData> matrices;
 	private final ConfigData configData;
 	private final File stateDir;
@@ -115,6 +116,7 @@ public abstract class SchedulerData
 		baseTimeName = getBaseTimeName(cfgDir, name);
 		weekendHolidayName = getWeekendHolidayName(cfgDir, name);
 		holidaysName = getHolidaysName(cfgDir, name);
+		connectionsToIgnoreFailuresName = getConnectionsToIgnoreFailuresName(cfgDir, name);
 		matricesName = getMatricesName(cfgDir, name);
 		configDataName = getConfigDataName(cfgDir, name);
 		this.stepFactory = stepFactory;
@@ -132,6 +134,7 @@ public abstract class SchedulerData
 		baseTime = loadBaseTime();
 		weekendHoliday = loadWeekendHoliday();
 		holidays = loadHolidays();
+		connectionsToIgnoreFailures = loadConnectionsToIgnoreFailures();
 		matrices = loadMatrices();
 		configData = loadConfigData();
 		stateDir = new File(getStateDirName(cfgDir, name));
@@ -181,6 +184,11 @@ public abstract class SchedulerData
 	public static String getWeekendHolidayName(String configsRoot, String schedulerName)
 	{
 		return configsRoot+schedulerName+File.separator+WEEKEND_FILENAME;
+	}
+	
+	public static String getConnectionsToIgnoreFailuresName(String configsRoot, String schedulerName)
+	{
+		return configsRoot + schedulerName + File.separator + CONNECTIONS_TO_IGNORE_FAILURES_FILENAME;
 	}
 	
 	public static String getMatricesName(String configsRoot, String schedulerName)
@@ -550,7 +558,33 @@ public abstract class SchedulerData
 	{
 		saveWeekendHoliday(weekendHolidayName, weekendHoliday);
 	}
-
+	
+	
+	public Set<String> loadConnectionsToIgnoreFailures() throws IOException
+	{
+		Set<String> result = new HashSet<>();
+		File file = new File(connectionsToIgnoreFailuresName);
+		if (file.isFile())
+		{
+			try (BufferedReader reader = new BufferedReader(new FileReader(file)))
+			{
+				String line;
+				while ((line = reader.readLine()) != null)
+					result.add(line);
+			}
+		}
+		return result;
+	}
+	
+	public void saveConnectionsToIgnoreFailures() throws IOException
+	{
+		try (PrintWriter writer = new PrintWriter(connectionsToIgnoreFailuresName))
+		{
+			connectionsToIgnoreFailures.forEach(writer::println);
+		}
+	}
+	
+	
 	protected XmlSchedulerLaunches loadLaunches() throws JAXBException, IOException
 	{
 		try
@@ -881,6 +915,17 @@ public abstract class SchedulerData
 	public void setWeekendHoliday(boolean weekendHoliday)
 	{
 		this.weekendHoliday = weekendHoliday;
+	}
+	
+	
+	public void setConnectionsToIgnoreFailures(Set<String> connectionsToIgnoreFailures)
+	{
+		this.connectionsToIgnoreFailures = connectionsToIgnoreFailures;
+	}
+	
+	public Set<String> getConnectionsToIgnoreFailures()
+	{
+		return connectionsToIgnoreFailures;
 	}
 	
 	

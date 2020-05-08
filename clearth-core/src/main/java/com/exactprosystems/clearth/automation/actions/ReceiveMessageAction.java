@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -141,13 +141,15 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 	
 	protected CollectorMessageSource getCollectorMessageSource(GlobalContext globalContext) throws FailoverException
 	{
+		ConnectionFinder connFinder = getConnectionFinder();
+		String connName = connFinder.getConnectionName(inputParams);
 		try
 		{
-			return new CollectorMessageSource(getConnectionFinder().findCollector(inputParams), !isReverseOrder());
+			return new CollectorMessageSource(connFinder.findCollector(connName), !isReverseOrder());
 		}
 		catch (ConnectivityException e)
 		{
-			throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+			throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR, connName);
 		}
 	}
 	

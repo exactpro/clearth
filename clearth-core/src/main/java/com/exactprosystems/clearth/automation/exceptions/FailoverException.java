@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,45 +18,41 @@
 
 package com.exactprosystems.clearth.automation.exceptions;
 
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
-
 @SuppressWarnings("serial")
 public class FailoverException extends Exception
 {
-	private ClearThConnection<?,?> connection = null;
-	private int reason;
+	private final int reason;
+	private final String connectionName;
 	
-	public FailoverException(String message, int reason)
+	public FailoverException(String message, int reason, String connectionName)
 	{
 		super(message);
 		this.reason = reason;
+		this.connectionName = connectionName;
 	}
 
-	public FailoverException(Throwable cause, int reason)
+	public FailoverException(Throwable cause, int reason, String connectionName)
 	{
 		super(cause);
 		this.reason = reason;
+		this.connectionName = connectionName;
 	}
 	
-	public FailoverException(String message, Throwable cause, int reason)
+	public FailoverException(String message, Throwable cause, int reason, String connectionName)
 	{
 		super(message, cause);
 		this.reason = reason;
+		this.connectionName = connectionName;
 	}
-
 	
-	public ClearThConnection<?,?> getConnection()
-	{
-		return connection;
-	}
-
-	public void setConnection(ClearThConnection<?,?> connection)
-	{
-		this.connection = connection;
-	}
 	
 	public int getReason()
 	{
 		return reason;
+	}
+	
+	public String getConnectionName()
+	{
+		return connectionName;
 	}
 }

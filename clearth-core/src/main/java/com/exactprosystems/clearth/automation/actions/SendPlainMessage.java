@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -58,15 +58,16 @@ public class SendPlainMessage extends Action
 	protected StringMessageSender getMessageSender(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws FailoverException
 	{
-		if (!getInputParam(CONNECTIONNAME, "").isEmpty())
+		String connName = getInputParam(CONNECTIONNAME, "");
+		if (!connName.isEmpty())
 		{
 			try
 			{
-				return new ConnectionFinder().findConnection(getInputParams());
+				return new ConnectionFinder().findConnection(connName);
 			}
 			catch (ConnectivityException e)
 			{
-				throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR);
+				throw new FailoverException(e.getMessage(), FailoverReason.CONNECTION_ERROR, connName);
 			}
 		}
 		if (!getInputParam(FILENAME, "").isEmpty())
@@ -75,7 +76,6 @@ public class SendPlainMessage extends Action
 		StringMessageSender result = getCustomMessageSender(globalContext);
 		if (result == null)
 			throw ResultException.failed("No '" + CONNECTIONNAME + "' or '" + FILENAME + "' parameters specified");
-		
 		return result;
 	}
 

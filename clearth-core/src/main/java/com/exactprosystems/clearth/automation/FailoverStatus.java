@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,18 +19,15 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 
 public class FailoverStatus
 {
 	public boolean failover = false;
 	public int actionType = ActionType.NONE;
 	public int reason = FailoverReason.NONE;
-	public String reasonString = null;
-	public boolean needRestartAction = false;
-	public ClearThConnection<?,?> connection = null;
+	public String reasonString = null, connectionName = null;
+	public boolean needRestartAction = false, needSkipAction = false;
 	
 	public void setFailoverInfo(Action action, FailoverException e)
-	{
-	}
+	{ }
 }

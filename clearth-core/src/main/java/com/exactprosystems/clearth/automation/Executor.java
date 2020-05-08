@@ -517,7 +517,8 @@ public abstract class Executor extends Thread
 	
 	protected ActionExecutor createActionExecutor()
 	{
-		return new ActionExecutor(globalContext, paramsCalculator, createReportWriter(), failoverStatus);
+		return new ActionExecutor(globalContext, paramsCalculator, createReportWriter(), failoverStatus,
+				scheduler.getConnectionsToIgnoreFailuresByRun());
 	}
 	
 	protected void waitForAsyncActions()
@@ -796,6 +797,14 @@ public abstract class Executor extends Thread
 		}
 	}
 	
+	public int getFailoverActionType()
+	{
+		if (!failoverStatus.failover)
+			return ActionType.NONE;
+		
+		return failoverStatus.actionType;
+	}
+	
 	public int getFailoverReason()
 	{
 		if (!failoverStatus.failover)
@@ -812,12 +821,12 @@ public abstract class Executor extends Thread
 		return failoverStatus.reasonString;
 	}
 	
-	public int getFailoverActionType()
+	public String getFailoverConnectionName()
 	{
 		if (!failoverStatus.failover)
-			return ActionType.NONE;
+			return null;
 		
-		return failoverStatus.actionType;
+		return failoverStatus.connectionName;
 	}
 	
 	public void setFailoverRestartAction(boolean needRestart)
@@ -828,6 +837,16 @@ public abstract class Executor extends Thread
 			tryAgain();
 		}
 	}
+	
+	public void setFailoverSkipAction(boolean needSkipAction)
+	{
+		synchronized (failoverStatus)
+		{
+			failoverStatus.needSkipAction = needSkipAction;
+			tryAgain();
+		}
+	}
+	
 	
 	public boolean isRestored()
 	{
