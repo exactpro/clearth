@@ -51,8 +51,6 @@ subprojects {
 
 	defaultTasks 'build'
 
-	sourceCompatibility = 1.8 //Java version compatibility to use when compiling Java source.
-	targetCompatibility = 1.8 //Java version to generate classes for.
 	compileJava.options.debugOptions.debugLevel = 'source,lines,vars' // Include debug information
 	
 	ext {
@@ -131,6 +129,9 @@ subprojects {
 		testCompile 'org.testng:testng:6.14.3'
 		testCompile 'org.xerial:sqlite-jdbc:3.28.0'
 		testCompile 'org.assertj:assertj-core:3.15.0'
+
+		if(JavaVersion.current() > JavaVersion.VERSION_1_8)
+			compile 'javax.annotation:javax.annotation-api:1.2'
 
 		if (project.getParent().getName() == 'clearth-modules')
 			compile project(':clearth-core')
