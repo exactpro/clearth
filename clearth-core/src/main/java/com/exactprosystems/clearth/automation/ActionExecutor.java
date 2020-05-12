@@ -468,8 +468,7 @@ public class ActionExecutor implements Closeable
 		}
 		else
 		{
-			// If action has null result and it is not inverted it is supposed to be passed.
-			action.setPassed(!action.isInverted());
+			action.setPassed(true);
 			if (!action.isSubaction() && countSuccess)
 			{
 				executionProgress.incrementSuccessful();
