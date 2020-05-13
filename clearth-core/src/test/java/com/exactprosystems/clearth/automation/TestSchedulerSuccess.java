@@ -16,9 +16,10 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth;
+package com.exactprosystems.clearth.automation;
 
 import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
+import static com.exactprosystems.clearth.ApplicationManager.waitForSchedulerToStop;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -26,22 +27,19 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.ClearThCore;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.SchedulersManager;
-import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
-import com.exactprosystems.clearth.utils.Stopwatch;
 
 public class TestSchedulerSuccess
 {
@@ -101,25 +99,5 @@ public class TestSchedulerSuccess
 	public static void disposeTestApp() throws IOException
 	{
 		if (clearThManager != null) clearThManager.dispose();
-	}
-
-	private static void waitForSchedulerToStop(Scheduler scheduler, long delay, long timeout)
-	{
-		try
-		{
-			Stopwatch s = Stopwatch.createAndStart(timeout);
-			while (scheduler.isRunning())
-			{
-				if (s.isExpired())
-					fail("Too long to wait for Scheduler to finish.");
-
-				TimeUnit.MILLISECONDS.sleep(delay);
-			}
-		}
-		catch (InterruptedException e)
-		{
-			Thread.currentThread().interrupt();
-			fail("Waiting for Scheduler to stop is interrupted.");
-		}
 	}
 }

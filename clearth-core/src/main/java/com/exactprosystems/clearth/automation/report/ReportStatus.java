@@ -103,7 +103,7 @@ public class ReportStatus
 		}
 		else
 		{
-			this.passed = true;
+			this.passed = action.isPassed();
 		}
 		this.started = action.getStarted();
 		this.finished = action.getFinished();

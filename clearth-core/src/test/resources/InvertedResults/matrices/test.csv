@@ -1,0 +1,4 @@
+#Id,#GlobalStep,#Action,#Execute,#Comment,#Invert
+"id1",Step1,SetStatic,y,"This action will be marked as PASSED",false
+"id2",Step1,SetStatic,y,"This action will be marked as INVERTED TO FAILED",true
+"id3",Step1,TestAction,y,"This action will be marked as INVERTED TO FAILED",true

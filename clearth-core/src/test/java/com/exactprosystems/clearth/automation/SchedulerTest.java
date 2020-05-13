@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.exactprosystems.clearth;
+package com.exactprosystems.clearth.automation;
 
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.SchedulersManager;
+import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
+import static com.exactprosystems.clearth.ApplicationManager.waitForSchedulerToStop;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
@@ -88,19 +89,9 @@ public class SchedulerTest
 		if (!warnings.isEmpty())
 			throw new AutomationException("Steps loading errors:" + warnings);
 		loadMatricesForExecuteTest(scheduler);
-		scheduler.start(userName);
 
-		try
-		{
-			while (scheduler.isRunning())
-			{
-				TimeUnit.SECONDS.sleep(1);
-			}
-		}
-		catch (InterruptedException e)
-		{
-			throw new ClearThException(e);
-		}
+		scheduler.start(userName);
+		waitForSchedulerToStop(scheduler, 1, 2000);
 
 		List<XmlSchedulerLaunchInfo> launchesInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
 		if (launchesInfo == null || launchesInfo.isEmpty())

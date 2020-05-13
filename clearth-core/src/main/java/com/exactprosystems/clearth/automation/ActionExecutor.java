@@ -458,33 +458,46 @@ public class ActionExecutor implements Closeable
 			
 			if (result.isSuccess())
 			{
-				if (!action.isSubaction() && countSuccess)
-				{
-					executionProgress.incrementSuccessful();
-					matrix.incActionsSuccess();
-				}
+				incSuccessful(action, countSuccess, matrix);
 			}
 			else
 			{
 				// If verification is not successful - mark this matrix and step as FAILED
-				String stepName = action.getStepName();
-				matrix.setStepSuccessful(stepName, false);
-				matrix.addStepStatusComment(stepName, "One or more actions failed");
+				markAsFailed(action, matrix);
 			}
 			
 			action.setPassed(result.isSuccess());
 		}
 		else
 		{
-			action.setPassed(true);
-			if (!action.isSubaction() && countSuccess)
+			if(!action.isInverted())
 			{
-				executionProgress.incrementSuccessful();
-				matrix.incActionsSuccess();
+				incSuccessful(action, countSuccess, matrix);
 			}
+			else
+			{
+				markAsFailed(action, matrix);
+			}
+			action.setPassed(!action.isInverted());
 		}
 	}
-	
+
+	private void markAsFailed(Action action, Matrix matrix)
+	{
+		String stepName = action.getStepName();
+		matrix.setStepSuccessful(stepName, false);
+		matrix.addStepStatusComment(stepName, "One or more actions failed");
+	}
+
+	private void incSuccessful(Action action, boolean countSuccess, Matrix matrix)
+	{
+		if (!action.isSubaction() && countSuccess)
+		{
+			executionProgress.incrementSuccessful();
+			matrix.incActionsSuccess();
+		}
+	}
+
 	protected void processActionResult(Action action)
 	{
 		Result result = action.getResult();

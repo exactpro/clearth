@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth;
 
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doAnswer;
@@ -36,9 +37,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.exactprosystems.clearth.utils.Stopwatch;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.mockito.Matchers;
@@ -171,6 +174,26 @@ public class ApplicationManager
 		}
 	}
 
+	public static void waitForSchedulerToStop(Scheduler scheduler, long delay, long timeout)
+	{
+		try
+		{
+			Stopwatch s = Stopwatch.createAndStart(timeout);
+			while (scheduler.isRunning())
+			{
+				if (s.isExpired())
+					fail("Too long to wait for Scheduler to finish.");
+
+				TimeUnit.MILLISECONDS.sleep(delay);
+			}
+		}
+		catch (InterruptedException e)
+		{
+			Thread.currentThread().interrupt();
+			fail("Waiting for Scheduler to stop is interrupted.");
+		}
+	}
+	
 	protected ConfigFiles getConfigFiles()
 	{
 		ConfigFiles cfg = new ConfigFiles("clearth.cfg");
