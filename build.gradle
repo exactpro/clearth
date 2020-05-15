@@ -128,6 +128,7 @@ subprojects {
 		testCompile 'org.mockito:mockito-all:2.0.2-beta'
 		testCompile 'org.testng:testng:6.14.3'
 		testCompile 'org.xerial:sqlite-jdbc:3.28.0'
+		testCompile group: 'com.h2database', name: 'h2', version: '1.4.200'
 		testCompile 'org.assertj:assertj-core:3.15.0'
 
 		if(JavaVersion.current() > JavaVersion.VERSION_1_8)
