@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.SubActionData;
 import com.exactprosystems.clearth.automation.async.WaitAsyncEnd;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,6 +32,7 @@ import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties({"actionReportWriter"})
+@JsonTypeInfo(use= JsonTypeInfo.Id.MINIMAL_CLASS)
 public class ActionReport
 {
 	private ActionReportWriter actionReportWriter;
