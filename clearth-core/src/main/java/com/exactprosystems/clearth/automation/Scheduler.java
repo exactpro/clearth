@@ -1469,7 +1469,7 @@ public abstract class Scheduler
 	{
 		schedulerData.loadMatrices(schedulerData.getMatrices());
 		schedulerData.reloadSteps(null);
-		schedulerData.setBusinessDay(schedulerData.loadBusinessDay());
+		schedulerData.setBusinessDay(SchedulerData.loadBusinessDay(schedulerData.getBusinessDayFilePath()));
 		schedulerData.setWeekendHoliday(schedulerData.loadWeekendHoliday());
 		schedulerData.loadHolidays(schedulerData.getHolidays());
 		init();

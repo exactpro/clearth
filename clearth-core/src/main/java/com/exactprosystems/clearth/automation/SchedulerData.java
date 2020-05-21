@@ -369,12 +369,12 @@ public abstract class SchedulerData
 		}
 	}
 
-	public static void saveBusinessDay(Path filePath, Date businessDay) throws IOException
+	public void saveBusinessDay(Path filePath, Date businessDay) throws IOException
 	{
 		try (PrintWriter writer = new PrintWriter(filePath.toFile()))
 		{
-			writer.println(businessDayFormat.format(businessDay));
-			writer.flush();
+			if (businessDay != null)
+				writer.println(businessDayFormat.format(businessDay));
 		}
 	}
 
@@ -394,12 +394,7 @@ public abstract class SchedulerData
 		}
 	}
 
-	public void saveBusinessDay() throws IOException
-	{
-		saveBusinessDay(businessDayFilePath, businessDay);
-	}
-	
-	
+
 	public static Date loadBaseTime(String fileName) throws IOException, ParseException
 	{
 		File f = new File(fileName);
@@ -789,16 +784,8 @@ public abstract class SchedulerData
 	{
 		try
 		{
-			if (businessDay == null)
-			{
-				new PrintWriter(getBusinessDayFilePath().toFile()).close();
-				this.businessDay = new Date();
-			}
-			else
-			{
-				this.businessDay = businessDay;
-				saveBusinessDay();
-			}
+			this.businessDay = businessDay == null ? new Date() : businessDay;
+			saveBusinessDay(businessDayFilePath, businessDay);
 		}
 		catch (IOException e)
 		{
