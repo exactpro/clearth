@@ -36,12 +36,10 @@
 <#macro showDetails result>
 	<#list result.details as detail>
 		<div>
-			<#if result.blockView>
-				<@showAdditionalInfo
-					result = result
-					detail = detail
-				/>
-			</#if>
+			<@showAdditionalInfo
+				result = result
+				detail = detail
+			/>
 			<@resultTemplate.printComparisonTable
 				result = detail
 				resultId = "resultId_" + statics["java.lang.System"].nanoTime()

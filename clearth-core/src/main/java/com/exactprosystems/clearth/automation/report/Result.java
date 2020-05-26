@@ -90,9 +90,10 @@ public abstract class Result implements Serializable
 	public void setError(Throwable error)
 	{
 		this.error = error;
-		if (error != null && isSuccess())
+		if (error != null)
 		{
-			setSuccess(false);
+			if (isSuccess())
+				setSuccess(false);
 			setFailReason(FailReason.EXCEPTION);
 		}
 	}
