@@ -29,6 +29,12 @@ Here are the links to the tutorial videos introducing you to the main features o
     https://youtu.be/gOYakNgS5c4
   - Automation Example (Part 2):
     https://youtu.be/7iI43EMenrQ
+  - Custom Actions (Part 1):
+    https://youtu.be/l1gl26aEg1g
+  - Custom Actions (Part 2):
+    https://youtu.be/VjC7GCWw_B8
+
+
 
 ## How to build
 
