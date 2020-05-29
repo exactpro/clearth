@@ -144,9 +144,10 @@ public abstract class Executor extends Thread
 			//Let's put reports into public directory: all images inside a report will be downloadable
 			setOutputPaths();
 
-			new File(ClearThCore.appRootRelative(reportsDir)).mkdirs();  //Explicitly creating directory for parts of reports so that it will be available in all further calls
-			
-			getLogger().info("Version: " + ClearThCore.getInstance().getVersion());
+			//Explicitly creating directory for parts of reports so that it will be available in all further calls
+			Files.createDirectories(Paths.get(ClearThCore.appRootRelative(reportsDir)));
+
+			getLogger().info("Version: {}", ClearThCore.getInstance().getVersion());
 			
 			if (!createConnections())
 				return;
@@ -186,7 +187,7 @@ public abstract class Executor extends Thread
 					
 					startTimeStep = 0L;
 					if (logger.isTraceEnabled()) {
-						logger.trace("Step " + step.getName() + " started");
+						logger.trace("Step {} started", step.getName());
 					}
 					
 					currentStep = step;
@@ -246,7 +247,7 @@ public abstract class Executor extends Thread
 								}
 								catch (Exception e)
 								{
-									logger.error(format("Step '%s' (kind: %s) preparation failed.", step.getName(), step.getKind()), e);
+									logger.error("Step '{}' (kind: {}) preparation failed.", step.getName(), step.getKind(), e);
 									if (e instanceof AutomationException)
 										status.add(format("Step '%s' preparation failed: %s", step.getName(), e.getMessage()));
 									else // RuntimeException
@@ -281,7 +282,7 @@ public abstract class Executor extends Thread
 							}
 							catch (Exception e)
 							{
-								getLogger().warn("Step '" + step.getName() + "' thrown exception during execution", e);
+								getLogger().warn("Step '{}' thrown exception during execution", step.getName(), e);
 								stepResult = DefaultResult.failed(e);
 							}
 						}
@@ -289,7 +290,7 @@ public abstract class Executor extends Thread
 						step.setFinished(Calendar.getInstance().getTime());
 						if (stepResult!=null)
 						{
-							step.setFailedDueToError(stepResult.isSuccess());
+							step.setFailedDueToError(!stepResult.isSuccess());
 							step.setStatusComment(stepResult.getComment());
 							step.setResult(stepResult);
 							if ((stepResult.getError()!=null) && (!(stepResult.getError() instanceof InterruptedException)))
@@ -337,7 +338,7 @@ public abstract class Executor extends Thread
 					step.setFinished(Calendar.getInstance().getTime());
 					
 					if (logger.isDebugEnabled()) {
-						logger.debug("Step " + step.getName() + " finished");
+						logger.debug("Step {} finished", step.getName());
 					}
 					
 					if (interrupted.get())
@@ -455,6 +456,7 @@ public abstract class Executor extends Thread
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void evaluateMatrixInfo(Matrix matrix) throws Exception
 	{
 		MatrixFunctions functions = globalContext.getMatrixFunctions();
@@ -472,7 +474,7 @@ public abstract class Executor extends Thread
 			}
 			catch (Exception e)
 			{
-				throw new ParametersException("Could not calculate expressions in description of matrix '" + matrix.getName() + "'", e);
+				throw new ParametersException(format("Could not calculate expressions in description of matrix '%s'",matrix.getName()), e);
 			}
 		}
 		
@@ -492,7 +494,7 @@ public abstract class Executor extends Thread
 			}
 			catch (Exception e)
 			{
-				throw new ParametersException("Could not calculate value of '" + f.getKey() + "' constant in matrix '" + matrix.getName() + "'", e);
+				throw new ParametersException(format("Could not calculate value of '%s' constant in matrix '%s'",f.getKey(),matrix.getName()), e);
 			}
 		}
 	}
@@ -878,9 +880,12 @@ public abstract class Executor extends Thread
 			if (!target.exists())
 				target.mkdirs();
 
-			File entries[] = source.listFiles();
-			for (File entry : entries) 
-				backupDir(entry, new File(target, entry.getName()));
+			File[] entries = source.listFiles();
+			if (entries != null)
+			{
+				for (File entry : entries) 
+					backupDir(entry, new File(target, entry.getName()));
+			}
 		}
 		else
 			com.exactprosystems.clearth.utils.FileOperationUtils.copyFile(source.getCanonicalPath(), target.getCanonicalPath());
@@ -898,7 +903,8 @@ public abstract class Executor extends Thread
 		}
 		catch (IOException e)
 		{
-			getLogger().warn("Could not store step names list to '"+stepNamesFile.getAbsolutePath()+"'. Automatic report restoration won't work for this run", e);
+			getLogger().warn("Could not store step names list to '{}'. Automatic report restoration won't work for this run",
+					stepNamesFile.getAbsolutePath(), e);
 		}
 		finally
 		{
@@ -942,7 +948,6 @@ public abstract class Executor extends Thread
 		{
 			Calendar now = Calendar.getInstance(), 
 					startTime = Calendar.getInstance();
-			Logger logger = getLogger();
 
 			try
 			{
@@ -1000,18 +1005,18 @@ public abstract class Executor extends Thread
 					else
 					{
 						disableWait = true;
-						logger.debug("Executing next step without waiting");
+						getLogger().debug("Executing next step without waiting");
 					}
 				}
 				startTimeStep = startTime.getTimeInMillis();
 				
 				if (!disableWait)
 				{
-					logger.debug("Waiting for next step until " + startTime.getTime());
+					getLogger().debug("Waiting for next step until {}", startTime.getTime());
 					if (sleepTimer == null)
 					{
 						sleepTimer = new Timer();
-						logger.debug("Timer created");
+						getLogger().debug("Timer created");
 					}
 					TimerTask task = new UnsleepTask();
 					sleepTimer.schedule(task, startTime.getTime());
@@ -1023,7 +1028,7 @@ public abstract class Executor extends Thread
 					}
 
 					task.cancel();
-					logger.trace("Finished waiting for next step");
+					getLogger().trace("Finished waiting for next step");
 				}
 			}
 			catch (Exception e)
@@ -1035,7 +1040,8 @@ public abstract class Executor extends Thread
 				}
 				else
 				{
-					String msg = "Step '" + step.getName() + "': error while parsing 'Start at' parameter (" + step.getStartAt() + "), it must be in format '" + format + "' with optional '+' in the beginning";
+					String msg = format("Step '%s': error while parsing 'Start at' parameter (%s), it must be in format '%s' with optional '+' in the beginning",
+							step.getName(), step.getStartAt(), format);
 					status.add(msg);
 					getLogger().warn(msg, e);
 				}
@@ -1235,7 +1241,7 @@ public abstract class Executor extends Thread
 			}
 			catch (IOException e)
 			{
-				getLogger().error(String.format("Could not remove copy of executed matrix: '%s'", matrix.getFile().getName()), e);
+				getLogger().error("Could not remove copy of executed matrix: '{}'", matrix.getFile().getName(), e);
 			}
 		}
 	}
@@ -1263,7 +1269,7 @@ public abstract class Executor extends Thread
 				}
 				catch (IOException e)
 				{
-					getLogger().error(String.format("Could not remove previously saved matrix: '%s'", file.getName()), e);
+					getLogger().error("Could not remove previously saved matrix: '{}'", file.getName(), e);
 				}
 			}
 		}

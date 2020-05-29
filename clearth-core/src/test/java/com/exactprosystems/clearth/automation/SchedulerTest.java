@@ -19,7 +19,12 @@ package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.ActionsExecutionProgress;
+import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.SchedulersManager;
+import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 
@@ -44,6 +49,8 @@ import java.util.stream.Stream;
 
 import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
 import static com.exactprosystems.clearth.ApplicationManager.waitForSchedulerToStop;
+import static java.lang.String.format;
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
@@ -91,7 +98,7 @@ public class SchedulerTest
 		loadMatricesForExecuteTest(scheduler);
 
 		scheduler.start(userName);
-		waitForSchedulerToStop(scheduler, 1, 2000);
+		waitForSchedulerToStop(scheduler, 100, 10000);
 
 		List<XmlSchedulerLaunchInfo> launchesInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
 		if (launchesInfo == null || launchesInfo.isEmpty())
@@ -99,7 +106,26 @@ public class SchedulerTest
 
 		XmlSchedulerLaunchInfo currentLaunch = launchesInfo.get(0);
 		allSuccessVerify(currentLaunch);
+		verifyStepsStatuses(scheduler.getSteps());
 		checkReports(currentLaunch.getReportsPath());
+	}
+
+	private void verifyStepsStatuses(List<Step> steps)
+	{
+		for (Step step : steps)
+		{
+			Result result = step.getResult();
+			String msg = format("Step '%s' with kind '%s'", step.getName(), step.getKind());
+			if (result != null)
+			{
+				assertEquals(format("%s has unexpected inner result '%s' status", msg, result.isSuccess() ? "Success" : "Failed"),
+						result.isSuccess(), !step.isFailedDueToError());
+			}
+			ActionsExecutionProgress stepExecProgress = step.getExecutionProgress();
+			assertEquals(format("%s has wrong actions execution progress", msg),
+					step.getFinished() != null && stepExecProgress.getSuccessful() == stepExecProgress.getDone(), 
+					!step.isAnyActionFailed() && !step.isFailedDueToError());
+		}
 	}
 
 	@BeforeClass

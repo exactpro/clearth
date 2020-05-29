@@ -44,7 +44,7 @@ public class TestInvertedResults
 		clearThManager.loadMatrices(scheduler, MATRICES_DIR.toFile());
 		
 		scheduler.start(userName);
-		waitForSchedulerToStop(scheduler, 1, 1000);
+		waitForSchedulerToStop(scheduler, 100, 10000);
 		
 		List<Step> steps = scheduler.getSteps();
 		if(steps == null || steps.isEmpty())

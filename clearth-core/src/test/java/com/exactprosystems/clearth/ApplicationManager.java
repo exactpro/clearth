@@ -18,14 +18,10 @@
 
 package com.exactprosystems.clearth;
 
+import static org.mockito.Matchers.any;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,10 +33,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -50,8 +49,6 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.utils.ClearThException;
 
 public class ApplicationManager
@@ -234,6 +231,10 @@ public class ApplicationManager
 		when(core.getAdditionalTemplateParams()).thenReturn(null);
 		when(core.isUserSchedulersAllowed()).thenReturn(false);
 		when(core.getLogger()).thenReturn(coreLogger);
+		when(core.getValueGenerators()).thenReturn(new ValueGenerators());
+		when(core.createStepFactory()).thenReturn(createStepFactory());
+		doReturn(createExecutorFactory(core.getValueGenerators().getCommonGenerator()))
+				.when(core).createExecutorFactory(any(ValueGenerators.class));
 
 		//loadConfig() implementation
 		try
@@ -278,6 +279,22 @@ public class ApplicationManager
 		return core;
 	}
 
+	private ExecutorFactory createExecutorFactory(ValueGenerator valueGenerator)
+	{
+		return new TestingExecutorFactory(valueGenerator);
+	}
+
+	protected StepFactory createStepFactory()
+	{
+		return new DefaultStepFactory(){
+			@Override
+			protected boolean validStepKindEx(String stepKind)
+			{
+				return "Passed".equals(stepKind);
+			}
+		};
+	}
+
 	protected void initClearThInstance() throws ClearThException
 	{
 		if (ClearThCore.getInstance() == null)
@@ -288,5 +305,54 @@ public class ApplicationManager
 			dc.init(configFiles);
 			application.init(configFiles, dc);
 		}
+	}
+}
+
+class TestingExecutorFactory extends DefaultExecutorFactory
+{
+	public TestingExecutorFactory(ValueGenerator valueGenerator)
+	{
+		super(valueGenerator);
+	}
+
+	@Override
+	public Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser,
+			Map<String, Preparable> preparableActions)
+	{
+		GlobalContext globalContext =
+				createGlobalContext(scheduler.getBusinessDay(), scheduler.getBaseTime(), scheduler.isWeekendHoliday(),
+						scheduler.getHolidays(), startedByUser);
+		if (scheduler.isTestMode())
+			globalContext.setLoadedContext(GlobalContext.TEST_MODE, true);
+		return new TestingExecutor(scheduler, scheduler.getSteps(), matrices,
+				globalContext, createFailoverStatus(), preparableActions);
+	}
+
+	@Override
+	public Executor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices,
+			GlobalContext globalContext, Map<String, Preparable> preparableActions)
+	{
+		return new TestingExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions);
+	}
+}
+
+class TestingExecutor extends DefaultExecutor
+{
+	public TestingExecutor(Scheduler scheduler, List<Step> steps,
+			List<Matrix> matrices, GlobalContext globalContext,
+			FailoverStatus failoverStatus,
+			Map<String, Preparable> preparableActions)
+	{
+		super(scheduler, steps, matrices, globalContext, failoverStatus, preparableActions);
+	}
+
+	@Override
+	protected StepImpl createStepImpl(String stepKind, String stepParameter)
+	{
+		StepImpl testStepImpl = spy(StepImpl.class);
+		when(testStepImpl.execute(anyMapOf(Matrix.class, StepContext.class),any(GlobalContext.class)))
+				.thenReturn(DefaultResult.passed("Passed"));
+
+		return testStepImpl;
 	}
 }
