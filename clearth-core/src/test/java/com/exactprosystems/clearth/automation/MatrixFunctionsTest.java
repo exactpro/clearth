@@ -23,6 +23,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -89,6 +92,7 @@ public class MatrixFunctionsTest
 		assertEquals(actualDate, expectedDate);
 	}
 
+
 	@DataProvider(name = "trim")
 	Object[][] createDataForTrimLeft()
 	{
@@ -115,6 +119,7 @@ public class MatrixFunctionsTest
 		String actualString = functionsWithHolidays.trimright(stringToTrim, offset);
 		assertEquals(actualString, expectedString);
 	}
+
 
 	@DataProvider(name = "add-zeros")
 	Object[][] createDataForAddZeros()
@@ -177,6 +182,7 @@ public class MatrixFunctionsTest
 		assertEquals(actualString, expectedString);
 	}
 
+
 	@DataProvider(name = "trim-zeros")
 	Object[][] createDataForTrimZeros()
 	{
@@ -199,4 +205,491 @@ public class MatrixFunctionsTest
 		assertEquals(actualString, expectedString);
 	}
 
+
+	@DataProvider(name = "avg")
+	Object[][] createDataForAvg()
+	{
+		return new Object[][]
+				{
+						// a, b, result
+						{"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+								"333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+								"222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"
+						},
+						{
+								"9.99",
+								"3.33",
+								"6.66"
+						},
+						{
+								"00000000000000000000000000.00",
+								"88888888888888888888888888.88",
+								"44444444444444444444444444.44"
+						},
+				};
+	}
+
+	@Test(invocationCount = 30, threadPoolSize = 10)
+	public void checkAvg()
+	{
+		double a = Math.random();
+		double b = Math.random();
+		BigDecimal expectedResult = (BigDecimal.valueOf(a).add(BigDecimal.valueOf(b)).
+				divide(BigDecimal.valueOf(2)));
+		BigDecimal actualResult = functionsWithHolidays.avg(a, b);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "avg")
+	public void checkAvg(String a, String b, String expectedResult)
+	{
+		BigDecimal actualResult = functionsWithHolidays.avg(new BigDecimal(a), new BigDecimal(b));
+		assertEquals(actualResult, new BigDecimal(expectedResult));
+	}
+
+
+	@DataProvider(name = "add-sub")
+	Object[][] createDataForAdd()
+	{
+		return new Object[][]
+				{
+						// a, b, result, scale
+						//result, b, a, scale
+						{
+								"33.33333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+								"11.11111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+								"44.44444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+								-1
+						},
+						{
+								"9.99",
+								"3.33",
+								"13.32",
+								-1
+						},
+						{
+								"88.88",
+								"00.00",
+								"88.88",
+								-1
+						},
+						{
+								"88888888888.777777222222",
+								"11111111111.111111222222",
+								"99999999999.888888444444",
+								12
+						},
+				};
+	}
+
+	@Test(dataProvider = "add-sub")
+	public void checkAddWithScale(String a, String b, String expectedResult, int scale)
+	{
+		if (scale >= 0)
+		{
+			BigDecimal bd = new BigDecimal(expectedResult);
+			expectedResult = bd.setScale(scale, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+		}
+		String actualResult = functionsWithHolidays.add(a, b, scale);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "add-sub")
+	public void checkAdd(String a, String b, String expectedResult, int scale)
+	{
+		BigDecimal bd = new BigDecimal(expectedResult);
+		expectedResult = bd.setScale(5, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+
+		String actualResult = functionsWithHolidays.add(a, b);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "add-sub")
+	public void checkSubWithScale(String expectedResult, String b, String a, int scale)
+	{
+		if (scale >= 0)
+		{
+			BigDecimal bd = new BigDecimal(expectedResult);
+			expectedResult = bd.setScale(scale, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+		}
+		String actualResult = functionsWithHolidays.sub(a, b, scale);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "add-sub")
+	public void checkSub(String expectedResult, String b, String a, int scale)
+	{
+		BigDecimal bd = new BigDecimal(expectedResult);
+		expectedResult = bd.setScale(5, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+
+		String actualResult = functionsWithHolidays.sub(a, b);
+		assertEquals(actualResult, expectedResult);
+	}
+
+
+	@DataProvider(name = "mul-div")
+	Object[][] createDataForMul()
+	{
+		return new Object[][]
+				{
+						// a, b, result, scale
+						{
+								"3333333333333333333333333333333333333333333333333",
+								"1111111111111111111111111111111111111111111111111",
+								"3703703703703703703703703703703703703703703703702962962962962962962962962962962962962962962962963",
+								-1
+						},
+						{
+								"00000000000000000000000000000000000000000000000000000000000000000000000000.0",
+								"888888888888888888888888888",
+								"0.0",
+								-1
+						},
+						{
+								"1122.0000112212122211111111122211111111111111111111111111111112222222212121212121",
+								"0002.0000000000000000000000000000000000000000000000000000000000000000000000000000",
+								"2244.0000224424244422222222244422222222222222222222222222222224444444424242424242",
+								12
+						},
+						{
+								"132.12",
+								"234.45",
+								"30975.534",
+								3
+						},
+						{
+								"232.1",
+								"234.45",
+								"54415.845",
+								-1
+						}
+				};
+	}
+
+	@Test(dataProvider = "mul-div")
+	public void checkMulWithScale(String a, String b, String expectedResult, int scale)
+	{
+		if (scale >= 0)
+		{
+			BigDecimal bd = new BigDecimal(expectedResult);
+			expectedResult = bd.setScale(scale, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+		}
+
+		String actualResult = functionsWithHolidays.mul(a, b, scale);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "mul-div")
+	public void checkMul(String a, String b, String expectedResult, int scale)
+	{
+		BigDecimal bd = new BigDecimal(expectedResult);
+		expectedResult = bd.setScale(5, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+
+		String actualResult = functionsWithHolidays.mul(a, b);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "mul-div")
+	public void checkDivWithScale(String expectedResult, String b, String a, int scale)
+	{
+		BigDecimal bd = new BigDecimal(expectedResult);
+		if (scale >= 0)
+		{
+			bd = bd.setScale(scale, RoundingMode.HALF_UP);
+		}
+		expectedResult = bd.stripTrailingZeros().toPlainString();
+
+		String actualResult = functionsWithHolidays.div(a, b, scale);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "mul-div")
+	public void checkDiv(String expectedResult, String b, String a, int scale)
+	{
+		expectedResult =
+				new BigDecimal(expectedResult).setScale(5, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+
+		String actualResult = functionsWithHolidays.div(a, b);
+		assertEquals(actualResult, expectedResult);
+	}
+
+
+	@DataProvider(name = "min-max")
+	Object[][] createDataForMinMax()
+	{
+		return new Object[][]
+				{
+						// a (min value), b (max value), minResult (using right type), maxResult (using right type)
+						{
+								new BigDecimal("111.11"),
+								new BigDecimal("333.33"),
+								new BigDecimal("111.11"),
+								new BigDecimal("333.33"),
+						},
+						{
+								-1,
+								0,
+								-1L,
+								0L
+						},
+						{
+								12345,
+								23456,
+								12345L,
+								23456L
+						},
+						{
+								1.999,
+								2,
+								BigDecimal.valueOf(1.999),
+								new BigDecimal(2)
+						},
+						{
+								-10.12,
+								-5.13,
+								BigDecimal.valueOf(-10.12),
+								BigDecimal.valueOf(-5.13)
+						},
+						{
+								5.13,
+								10.12,
+								BigDecimal.valueOf(5.13),
+								BigDecimal.valueOf(10.12)
+						}
+				};
+	}
+
+	@Test(dataProvider = "min-max")
+	public void checkMin(Number a, Number b, Object expectedResult, Object max)
+	{
+		Number actualResult = functionsWithHolidays.min(a, b);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "min-max")
+	public void checkMax(Number a, Number b, Object min, Object expectedResult)
+	{
+		Number actualResult = functionsWithHolidays.max(a, b);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@DataProvider(name = "to-big-dec-from-string")
+	Object[][] createDataForToBigDecimal()
+	{
+		return new Object[][]
+				{
+						// string to parse, expected result
+						{
+								"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111.1",
+								new BigDecimal(
+										"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111.1")
+						},
+						{
+								"123456789123456789123456789456123456789456132467.894561231",
+								new BigDecimal(
+										"123456789123456789123456789456123456789456132467.894561231"),
+						},
+						{
+								"3",
+								new BigDecimal(
+										3),
+						},
+						{
+								"0",
+								new BigDecimal(
+										0),
+						},
+						{
+								"-1",
+								new BigDecimal(
+										-1),
+						},
+				};
+	}
+
+	@Test(dataProvider = "to-big-dec-from-string")
+	public void checkToBigDecimal(String number, BigDecimal expectedBd) throws ParseException
+	{
+		BigDecimal actualBd = functionsWithHolidays.toBigDecimal(number);
+		assertEquals(actualBd, expectedBd);
+	}
+
+	@DataProvider(name = "to-big-dec-from-string-with-dec-sep")
+	Object[][] createDataForToBigDecimalWithDecSeparator()
+	{
+		return new Object[][]
+				{
+						// string to parse, expected result, decimal separator
+						{
+								"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111.1",
+								new BigDecimal(
+										"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111.1"),
+								"."
+						},
+						{
+								"1111111," +
+										"11111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+								new BigDecimal(
+										"1111111." +
+												"11111111111111111111111111111111111111111111111111111111111111111111111111111111111"),
+								",",
+						},
+						{
+								"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222.1",
+								new BigDecimal(
+										"2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222.1"),
+								null,
+						},
+						{
+								"3,1",
+								new BigDecimal(
+										"3.1"),
+								","
+						},
+						{
+								"0",
+								new BigDecimal(
+										0),
+								null
+						},
+				};
+	}
+
+	@Test(dataProvider = "to-big-dec-from-string-with-dec-sep")
+	public void checkToBigDecimalWithDecSeparator(String number, BigDecimal expectedBd, String decimalSeparator)
+			throws ParseException
+	{
+		BigDecimal actualBd = functionsWithHolidays.toBigDecimal(number, decimalSeparator);
+		assertEquals(actualBd, expectedBd);
+	}
+
+	@DataProvider(name = "to-big-dec-from-string-with-group-sep")
+	Object[][] createDataForToBigDecimalWithGroupSeparator()
+	{
+		return new Object[][]
+				{
+						// string to parse, expected result, decimal separator, group separator
+						{
+								"111 " +
+										"111 " +
+										"111 " +
+										"111 " +
+										"111 " +
+										"111 111 111 " +
+										"111 111 111 111 111 111 111 111 111 111 111 111 " +
+										"111 111 111 111 111 111 111 111 111 111.1",
+								new BigDecimal(
+										"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111.1"),
+								".",
+								" "
+						},
+						{
+								"1111111," +
+										"11111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+								new BigDecimal(
+										"1111111." +
+												"11111111111111111111111111111111111111111111111111111111111111111111111111111111111"),
+								",",
+								null
+						},
+						{
+								"222" +
+										"/222" +
+										"/222" +
+										"/222" +
+										"/222" +
+										"/222/222/222" +
+										"/222/222/222/222/222/222/222/222/222/222/222/222" +
+										"/222/222/222/222/222/222/222/222/222/222.1",
+								new BigDecimal(
+										"222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222.1"),
+								".",
+								"/"
+
+						},
+						{
+								"3,1",
+								new BigDecimal(
+										"3.1"),
+								",",
+								null
+						},
+						{
+								"0",
+								new BigDecimal(
+										0),
+								null,
+								null
+						},
+				};
+	}
+
+	@Test(dataProvider = "to-big-dec-from-string-with-group-sep")
+	public void checkToBigDecimalWithGroupSeparator(String number, BigDecimal expectedBd, String decimalSeparator,
+	                                                String groupSeparator) throws ParseException
+	{
+		BigDecimal actualBd = functionsWithHolidays.toBigDecimal(number, decimalSeparator, groupSeparator);
+		assertEquals(actualBd, expectedBd);
+	}
+
+	@DataProvider(name = "round")
+	Object[][] createDataForRound()
+	{
+		return new Object[][]
+				{
+						// string to parse and round, int scale, round result, roundUp result, roundDown result
+						{
+								"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111.1",
+								0,
+								"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+								"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111112",
+								"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+						},
+						{
+								"11.555",
+								2,
+								"11.56",
+								"11.56",
+								"11.55",
+						},
+						{
+								"11.33",
+								1,
+								"11.3",
+								"11.4",
+								"11.3",
+						},
+						{
+								"-11.55",
+								2,
+								"-11.55",
+								"-11.55",
+								"-11.55",
+						},
+				};
+	}
+
+	@Test(dataProvider = "round")
+	public void checkRound(String number, int scale, String expectedRoundResult, String expectedRoundUpResult,
+	                       String expectedRoundDownResult)
+	{
+		String actualResult = functionsWithHolidays.round(number, scale);
+		assertEquals(actualResult, expectedRoundResult);
+	}
+
+	@Test(dataProvider = "round")
+	public void checkRoundUp(String number, int scale, String expectedRoundResult, String expectedRoundUpResult,
+	                         String expectedRoundDownResult)
+	{
+		String actualResult = functionsWithHolidays.roundUp(number, scale);
+		assertEquals(actualResult, expectedRoundUpResult);
+	}
+
+	@Test(dataProvider = "round")
+	public void checkRoundDown(String number, int scale, String expectedRoundResult, String expectedRoundUpResult,
+	                           String expectedRoundDownResult)
+	{
+		String actualResult = functionsWithHolidays.roundDown(number, scale);
+		assertEquals(actualResult, expectedRoundDownResult);
+	}
 }
