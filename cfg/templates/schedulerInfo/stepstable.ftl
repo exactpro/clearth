@@ -25,7 +25,7 @@
 							${stepData.step.started?string["dd.MM.yy HH:mm:ss"]}
 						</#if>
 					</td>
-					<td>${stepData.step.actionsSuccessful} / ${stepData.step.actionsDone}</td>
+					<td>${stepData.step.executionProgress}</td>
 					<td>
 						<#if stepData.step.finished??>
 							${stepData.step.finished?string["dd.MM.yy HH:mm:ss"]}
