@@ -18,36 +18,70 @@
 
 package com.exactprosystems.clearth.automation;
 
+import com.exactprosystems.clearth.*;
 import com.exactprosystems.clearth.automation.exceptions.FunctionException;
+import org.apache.commons.io.FileUtils;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static java.util.Arrays.asList;
+import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
+
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 
 /**
  * 03 June 2019
  */
-public class MatrixFunctionsTest
+public class MatrixFunctionsTest extends BasicTestNgTest
 {
 	private static final String DD_MM_YY_PATTERN = "ddMMyy";
 
+	public static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
+	public static final Path MATRIX_FUNCTIONS_TEST_OUTPUT_DIR = Paths.get("testOutput/MatrixFunctions");
+	private static final String MATRIX_FUNCTIONS_TEST_RESOURCE_DIR = "MatrixFunctionsTest";
+	public static final String TEST_GENERATOR_FILE = USER_DIR + "/value_generator_test.txt";
+	public static final String DEFAULT_GENERATOR_FILE = "value_generator.txt";
+
 	private volatile MatrixFunctions functionsWithHolidays;
 
-
 	@BeforeClass
-	void prepare()
+	void prepare() throws IOException
 	{
 		initFunctions();
 	}
 
-	private void initFunctions()
+	private void prepareFilesForValueGenerators() throws IOException
+	{
+		Files.createDirectories(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR);
+		Path originalDefaultGeneratorFile =
+				Paths.get(resourceToAbsoluteFilePath(MATRIX_FUNCTIONS_TEST_RESOURCE_DIR)).resolve(
+						DEFAULT_GENERATOR_FILE);
+		Path copiedDefaultGeneratorFile = MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.resolve(DEFAULT_GENERATOR_FILE);
+		Files.copy(originalDefaultGeneratorFile, copiedDefaultGeneratorFile, StandardCopyOption.REPLACE_EXISTING);
+
+		Path testGeneratorFile = Paths.get(TEST_GENERATOR_FILE);
+		if (Files.exists(testGeneratorFile))
+		{
+			Files.delete(testGeneratorFile);
+		}
+	}
+
+	private void initFunctions() throws IOException
 	{
 		Date businessDay = new GregorianCalendar(2019, Calendar.APRIL, 30).getTime();
 
@@ -59,14 +93,23 @@ public class MatrixFunctionsTest
 		holidays.put("20190509", true);
 		holidays.put("20190510", true);
 
+		prepareFilesForValueGenerators();
+		ValueGenerator valueGenerator =
+				new ValueGenerator(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.resolve(DEFAULT_GENERATOR_FILE).toString(), "default");
+
 		functionsWithHolidays = new MatrixFunctions(holidays,
 				businessDay,
 				null,
 				true,
-				null);
-
+				valueGenerator);
 	}
 
+	@Override
+	protected void mockOtherApplicationFields(ClearThCore application)
+	{
+		ValueGenerators valueGenerators = new ValueGenerators();
+		when(application.getValueGenerators()).thenReturn(valueGenerators);
+	}
 
 	@DataProvider(name = "time")
 	Object[][] createDataForTime()
@@ -421,22 +464,26 @@ public class MatrixFunctionsTest
 				{
 						// a (min value), b (max value), minResult (using right type), maxResult (using right type)
 						{
-								new BigDecimal("111.11"),
-								new BigDecimal("333.33"),
-								new BigDecimal("111.11"),
-								new BigDecimal("333.33"),
+								new BigDecimal(
+										"111.11"),
+								new BigDecimal(
+										"333.33"),
+								new BigDecimal(
+										"111.11"),
+								new BigDecimal(
+										"333.33"),
 						},
 						{
 								-1,
 								0,
-								-1L,
+								(long) -1,
 								0L
 						},
 						{
 								12345,
 								23456,
-								12345L,
-								23456L
+								(long) 12345,
+								(long) 23456
 						},
 						{
 								1.999,
@@ -692,4 +739,54 @@ public class MatrixFunctionsTest
 		String actualResult = functionsWithHolidays.roundDown(number, scale);
 		assertEquals(actualResult, expectedRoundDownResult);
 	}
+
+	@DataProvider(name = "value-generator")
+	Object[][] createDataForIdGenerator()
+	{
+		return new Object[][]
+				{
+						// generatorId, pattern, expectedResults
+						//Tests for existing prevValue-file
+						{
+								MatrixFunctions.DEFAULT_VALUE_GENERATOR,
+								"Value_gggg",
+								asList("Value_t124", "Value_t125", "Value_t126", "Value_t127", "Value_t128")
+						},
+						//Tests for case then prevValue-file doesn't exist
+						{
+								"test",
+								"test_g",
+								asList("test_0", "test_1", "test_2", "test_3", "test_4")
+						},
+				};
+	}
+
+	@Test(dataProvider = "value-generator")
+	public void checkGenerate(String generatorId, String pattern, List<String> expectedResults)
+	{
+		String actualResult;
+		if (generatorId.equals(MatrixFunctions.DEFAULT_VALUE_GENERATOR))
+		{
+			for (String expectedResult : expectedResults)
+			{
+				actualResult = functionsWithHolidays.generate(pattern);
+				assertEquals(actualResult, expectedResult);
+			}
+		}
+		else
+		{
+			for (String expectedResult : expectedResults)
+			{
+				actualResult = functionsWithHolidays.generate(generatorId, pattern);
+				assertEquals(actualResult, expectedResult);
+			}
+		}
+ 	}
+
+	@AfterMethod
+	public void tearDown() throws IOException
+	{
+		FileUtils.cleanDirectory(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.toFile());
+	}
+
 }
