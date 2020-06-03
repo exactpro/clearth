@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -35,9 +35,10 @@ public class DefaultScheduler extends Scheduler
 	}
 
 	@Override
-	public SchedulerData createSchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir) throws Exception
+	public SchedulerData createSchedulerData(String name, String configsRoot, String schedulerDirName,
+	                                         String lastExecutedDataDir, String matricesDir) throws Exception
 	{
-		return new DefaultSchedulerData(name, configsRoot, schedulerDirName, matricesDir, stepFactory);
+		return new DefaultSchedulerData(name, configsRoot, schedulerDirName, matricesDir, lastExecutedDataDir, stepFactory);
 	}
 	
 	@Override

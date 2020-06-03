@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,9 +23,10 @@ public class DefaultSchedulerData extends SchedulerData
 	public static final String[] CONFIG_HEADER = new String[]{"Global step", "Step kind", "Start at", "Start at type",
 			"Wait next day", "Parameter", "Ask for continue", "Ask if failed", "Execute", "Comment"};
 	
-	public DefaultSchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir, StepFactory stepFactory) throws Exception
+	public DefaultSchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir,
+	                            String lastExecutedDataDir, StepFactory stepFactory) throws Exception
 	{
-		super(name, configsRoot, schedulerDirName, matricesDir, stepFactory);
+		super(name, configsRoot, schedulerDirName, matricesDir, lastExecutedDataDir, stepFactory);
 	}
 	
 	@Override

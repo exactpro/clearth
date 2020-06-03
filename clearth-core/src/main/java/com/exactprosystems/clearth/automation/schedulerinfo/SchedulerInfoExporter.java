@@ -74,13 +74,16 @@ public class SchedulerInfoExporter
 				reportsPath = ClearThCore.reportsPath() + lastLaunch.getReportsPath();
 			}
 		}
-		if (matricesInfo == null || reportsPath == null) // No reports available yet
+		List<MatrixData> executedMatricesData = scheduler.getExecutedMatricesData();
+
+		// if the scheduler was not started
+		if (matricesInfo == null || reportsPath == null || executedMatricesData == null)
 			return MultiMapUtils.emptyMultiValuedMap();
-		
+
 		// Create and fill up the storage with all files could be exported
 		MultiValuedMap<String, SchedulerInfoFile> storage = new HashSetValuedHashMap<>();
-		storage.put(SUMMARY_FILE, createSummaryFile(scheduler.getSteps(), scheduler.getExecutedMatricesData(), matricesInfo));
-		storage.putAll(MATRICES, collectMatrices(scheduler.getExecutedMatricesData()));
+		storage.put(SUMMARY_FILE, createSummaryFile(scheduler.getSteps(), executedMatricesData, matricesInfo));
+		storage.putAll(MATRICES, collectMatrices(executedMatricesData));
 		storage.putAll(REPORTS, collectReports(reportsPath));
 		storage = collectOtherFiles(storage, scheduler);
 		return MultiMapUtils.unmodifiableMultiValuedMap(storage);

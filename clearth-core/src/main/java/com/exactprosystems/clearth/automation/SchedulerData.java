@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.ClearThException;
+import com.exactprosystems.clearth.utils.DateTimeUtils;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.XmlUtils;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
@@ -91,11 +92,11 @@ public abstract class SchedulerData
 	private final File stateDir;
 	private final File repDir;
 	private final File schedulerDir;
+	private final ExecutedMatricesData executedMatricesData;
 
-	private List<MatrixData> executedMatrices = null;
 
-
-	public SchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir, StepFactory stepFactory) throws Exception
+	public SchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir,
+	                     String lastExecutedDataDir, StepFactory stepFactory) throws Exception
 	{
 		this.forUser = schedulerDirName;
 		this.name = name;
@@ -104,6 +105,7 @@ public abstract class SchedulerData
 		String cfgDir = configsRoot + schedulerDirName + File.separator;
 		schedulerDir = new File(cfgDir, name);
 		Files.createDirectories(schedulerDir.toPath());  //Creating parent folder for scheduler data files
+
 		launchesName = getLaunchesName(cfgDir, name);
 		configName = getConfigName(cfgDir, name);
 		businessDayFilePath = getBusinessDayFilePath(cfgDir, name);
@@ -127,10 +129,11 @@ public abstract class SchedulerData
 		weekendHoliday = loadWeekendHoliday();
 		holidays = loadHolidays();
 		matrices = loadMatrices();
-		
 		configData = loadConfigData();
 		stateDir = new File(getStateDirName(cfgDir, name));
 		repDir = new File(getReportsDirName(cfgDir, name));
+
+		executedMatricesData = new ExecutedMatricesData(lastExecutedDataDir);
 	}
 
 	public abstract String[] getConfigHeader();
@@ -174,7 +177,7 @@ public abstract class SchedulerData
 	{
 		return configsRoot+schedulerName+File.separator+MATRICES_FILENAME;
 	}
-	
+
 	public static String getConfigDataName(String configsRoot, String schedulerName)
 	{
 		return configsRoot+schedulerName+File.separator+CONFIGDATA_FILENAME;
@@ -533,7 +536,7 @@ public abstract class SchedulerData
 			while (reader.readRecord())
 			{
 				String fileName = reader.get(MATRIX);
-				if ((fileName==null) || (fileName.isEmpty())) 
+				if ((fileName==null) || (fileName.isEmpty()))
 					continue;
 				File matrixFile = new File(matricesDir+fileName);
 				if (!matrixFile.exists())
@@ -542,7 +545,7 @@ public abstract class SchedulerData
 					continue;
 
 				String uploadDateNum = reader.get(UPLOADED);
-				Date uploadDate = getDateFromTimestampOrNull(uploadDateNum);
+				Date uploadDate = DateTimeUtils.getDateFromTimestampOrNull(uploadDateNum);
 
 				Boolean isExecute = Boolean.parseBoolean(reader.get(EXECUTE));
 				Boolean isTrim = (reader.get(TRIM_SPACES) != null && !reader.get(TRIM_SPACES).isEmpty())
@@ -572,20 +575,6 @@ public abstract class SchedulerData
 	
 	@SuppressWarnings("unused")
 	protected void readAdditionalMatrixSettings(CsvReader reader, MatrixData md) throws IOException {}
-
-	private static Date getDateFromTimestampOrNull(String timestamp)
-	{
-		if (timestamp == null || timestamp.isEmpty())
-			return null;
-		try
-		{
-			return new Date(Long.parseLong(timestamp));
-		}
-		catch (NumberFormatException e)
-		{
-			return null;
-		}
-	}
 
 	public List<MatrixData> loadMatrices(String matricesFileName, String matricesDir) throws IOException
 	{
@@ -623,7 +612,7 @@ public abstract class SchedulerData
 		writer.write(TRIM_SPACES);
 		writer.write(LINK);
 		writer.write(TYPE);
-		writer.write(AUTO_RELOAD);		
+		writer.write(AUTO_RELOAD);
 		List<String> additionalHeaders = getAdditionalMatricesTableHeaders();
 		if (isNotEmpty(additionalHeaders))
 		{
@@ -661,7 +650,12 @@ public abstract class SchedulerData
 	{
 		return loadMatrices(matricesName, matricesDir);
 	}
-	
+
+	public void loadExecutedMatrices() throws IOException
+	{
+		executedMatricesData.loadExecutedMatrices();
+	}
+
 	public void loadMatrices(List<MatrixData> matricesContainer) throws IOException
 	{
 		loadMatrices(matricesName, matricesDir, matricesContainer);
@@ -874,8 +868,12 @@ public abstract class SchedulerData
 	public File getRepDir() {
 		return repDir;
 	}
-	
-	
+
+	public Path getExecutedMatricesDirPath()
+	{
+		return executedMatricesData.getExecutedMatricesDirPath();
+	}
+
 	public static int matrixFileIndex(File matrixFile, List<MatrixData> matricesContainer)
 	{
 		for (int i=0; i<matricesContainer.size(); i++)
@@ -891,13 +889,13 @@ public abstract class SchedulerData
 		return matrixFileIndex(matrixFile, matrices);
 	}
 
-	public void setExecutedMatrices(List<MatrixData> matrices)
+	public void setExecutedMatrices(List<MatrixData> executedMatrices)
 	{
-		executedMatrices = matrices;
+		executedMatricesData.setExecutedMatrices(executedMatrices);
 	}
 
 	public List<MatrixData> getExecutedMatrices()
 	{
-		return executedMatrices;
+		return executedMatricesData.getExecutedMatrices();
 	}
 }

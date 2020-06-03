@@ -199,6 +199,7 @@ public class ApplicationManager
 
 		when(spy.getReportFilesDir()).thenReturn(DEFAULT_REPORT_FILES_DIR);
 		when(spy.getReportsDir()).thenReturn(TEST_REPORT_DIR + cfg.getReportsDir());
+		when(spy.getLastExecutionDir()).thenReturn(TEST_REPORT_DIR + cfg.getLastExecutionDir());
 		when(spy.getAutomationStorageDir()).thenReturn(TEST_DATA_DIR + cfg.getAutomationStorageDir());
 		when(spy.getScriptsDir()).thenReturn(TEST_DATA_DIR + cfg.getScriptsDir());
 		when(spy.getSchedulersDir()).thenReturn(TEST_DATA_DIR + cfg.getSchedulersDir());

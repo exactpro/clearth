@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -49,6 +49,7 @@ public class ConfigFiles
 	private static final String AUTOMATION_STORAGE_DIR = "automation/storage/";
 	private static final String SCRIPTS_DIR = "automation/scripts/";
 	private static final String REPORTS_DIR = "automation/reports/";
+	private static final String LAST_EXECUTION_DIR = "automation/last_execution/";
 	private static final String REALTIME_REPORT_DIR = "../ui/restricted/realtime/";
 
 	private static final String UPLOAD_STORAGE_DIR = "uploads/storage/";
@@ -216,6 +217,11 @@ public class ConfigFiles
 	public String getReportsDir()
 	{
 		return REPORTS_DIR;
+	}
+
+	public String getLastExecutionDir()
+	{
+		return LAST_EXECUTION_DIR;
 	}
 
 	public String getRealTimeReportDir()

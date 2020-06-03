@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -61,7 +62,7 @@ public abstract class Scheduler
 	protected static final Logger logger = LoggerFactory.getLogger(Scheduler.class);
 	private static final Pattern EXTENSION_FILTER = Pattern.compile("(.*\\.(csv|xls|xlsx)$)");
 
-	protected final String scriptsDir;
+	protected final String scriptsDir, lastExecutionDataDir;
 	protected final ExecutorFactory executorFactory;
 	protected final StepFactory stepFactory;
 	protected final SchedulerData schedulerData;
@@ -88,10 +89,11 @@ public abstract class Scheduler
 	public Scheduler(String name, String configsRoot, String schedulerDirName, ExecutorFactory executorFactory, StepFactory stepFactory) throws Exception
 	{
 		scriptsDir = ClearThCore.scriptsPath() + schedulerDirName + File.separator + name + File.separator;
+		lastExecutionDataDir = ClearThCore.lastExecutionPath() + schedulerDirName + File.separator + name + File.separator;
 
 		this.executorFactory = executorFactory;
 		this.stepFactory = stepFactory;
-		schedulerData = createSchedulerData(name, configsRoot, schedulerDirName, scriptsDir);
+		schedulerData = createSchedulerData(name, configsRoot, schedulerDirName, lastExecutionDataDir, scriptsDir);
 		
 		//If some matrices files were added before scheduler construction - let's add them to schedulerData
 		File mdFile = new File(scriptsDir);
@@ -120,7 +122,7 @@ public abstract class Scheduler
 		}
 	}
 	
-	public abstract SchedulerData createSchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir) throws Exception;
+	public abstract SchedulerData createSchedulerData(String name, String configsRoot, String schedulerDirName, String lastExecutedDataDir, String matricesDir) throws Exception;
 	public abstract void initEx() throws Exception;
 	public abstract ActionGenerator createActionGenerator(Map<String, Step> stepsMap, List<Matrix> matricesContainer, Map<String, Preparable> preparableActions);
 	public abstract SequentialExecutor createSequentialExecutor(Scheduler scheduler, String userName, Map<String, Preparable> preparableActions);
@@ -1468,6 +1470,7 @@ public abstract class Scheduler
 	synchronized public void reloadSchedulerData() throws Exception
 	{
 		schedulerData.loadMatrices(schedulerData.getMatrices());
+		schedulerData.loadExecutedMatrices();
 		schedulerData.reloadSteps(null);
 		schedulerData.setBusinessDay(SchedulerData.loadBusinessDay(schedulerData.getBusinessDayFilePath()));
 		schedulerData.setWeekendHoliday(schedulerData.loadWeekendHoliday());
@@ -1496,5 +1499,10 @@ public abstract class Scheduler
 	public void setExecutedMatrices(List<MatrixData> matrices)
 	{
 		schedulerData.setExecutedMatrices(matrices);
+	}
+
+	public Path getExecutedMatricesPath()
+	{
+		return schedulerData.getExecutedMatricesDirPath();
 	}
 }

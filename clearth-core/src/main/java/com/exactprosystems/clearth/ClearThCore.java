@@ -180,7 +180,12 @@ public abstract class ClearThCore
 	{
 		return instance.getReportsPath();
 	}
-	
+
+	public static String lastExecutionPath()
+	{
+		return instance.getLastExecutionPath();
+	}
+
 	public static String uploadStoragePath()
 	{
 		return instance.getUploadStoragePath();
@@ -385,6 +390,7 @@ public abstract class ClearThCore
 		Files.createDirectories(Paths.get(getDictsPath()));
 		Files.createDirectories(Paths.get(getAutomationStoragePath()));
 		Files.createDirectories(Paths.get(getScriptsPath()));
+		Files.createDirectories(Paths.get(getLastExecutionPath()));
 	}
 	
 	protected ValueGenerators createValueGenerators()
@@ -678,6 +684,11 @@ public abstract class ClearThCore
 	public String getReportsPath()
 	{
 		return getRootRelative(configFiles.getReportsDir());
+	}
+
+	public String getLastExecutionPath()
+	{
+		return getRootRelative(configFiles.getLastExecutionDir());
 	}
 
 	public String getReportsFilePath()

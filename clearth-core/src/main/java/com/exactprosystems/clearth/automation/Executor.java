@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -57,8 +57,7 @@ public abstract class Executor extends Thread
 {
 	protected static final String format = "HH:mm:ss",
 			REPORTDIR_COMPLETED = "completed",
-			REPORTDIR_ACTIONS = "actions",
-			EXECUTED_MATRICES_DIR = "executed";
+			REPORTDIR_ACTIONS = "actions";
 
 	protected static final SimpleDateFormat hmsFormatter = new SimpleDateFormat(format);
 
@@ -88,7 +87,6 @@ public abstract class Executor extends Thread
 	private Date started, ended;
 	private final SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 	protected String reportsDir, specificDir, completedReportsDir, actionsReportsDir;
-	protected Path executedMatricesPath;
 	protected ReportsInfo lastReportsInfo = null;
 	private Object executionMonitor = null;
 	protected File storedActionsReportsDir;
@@ -419,7 +417,6 @@ public abstract class Executor extends Thread
 		reportsDir = ClearThCore.getInstance().getReportsPath() + specificDir; //Not File.separator, because browser will transform "\" into unexpected character
 		completedReportsDir = reportsDir + REPORTDIR_COMPLETED + "/";
 		actionsReportsDir = reportsDir + REPORTDIR_ACTIONS + "/";
-		executedMatricesPath = Paths.get(scheduler.scriptsDir, EXECUTED_MATRICES_DIR);
 	}
 
 	protected void stepFinished(Step step)
@@ -1198,6 +1195,7 @@ public abstract class Executor extends Thread
 
 	private void saveExecutedMatrices(Scheduler scheduler, List<Matrix> matrices) throws IOException, AutomationException
 	{
+		Path executedMatricesPath = scheduler.getExecutedMatricesPath();
 		Files.createDirectories(executedMatricesPath);
 		List<MatrixData> executedMatrices = new ArrayList<>(matrices.size());
 		MatrixDataFactory matrixDataFactory = ClearThCore.getInstance().getMatrixDataFactory();
@@ -1209,13 +1207,18 @@ public abstract class Executor extends Thread
 				MatrixData matrixData = matrix.getMatrixData();
 				File matrixFile = matrixData.getFile();
 
-				Path executedMatrix = Files.copy(matrixFile.toPath(), executedMatricesPath.resolve(matrixFile.getName()));
+				Path executedMatrix = Files.copy(matrixFile.toPath(),
+						executedMatricesPath.resolve(matrixFile.getName()));
 
 				MatrixData createdMatrix = matrixDataFactory.createMatrixData(
+						matrixData.getName(),
 						executedMatrix.toFile(),
 						matrixData.getUploadDate(),
 						matrixData.isExecute(),
-						matrixData.isTrim());
+						matrixData.isTrim(),
+						matrixData.getLink(),
+						matrixData.getType(),
+						matrixData.isAutoReload());
 
 				executedMatrices.add(createdMatrix);
 			}
@@ -1248,12 +1251,10 @@ public abstract class Executor extends Thread
 
 	private void removeUnusedExecutedMatrices(List<Matrix> matrices)
 	{
-		File[] files = executedMatricesPath.toFile().listFiles();
+		File[] files = scheduler.getExecutedMatricesPath().toFile().listFiles();
 
 		if (files == null || files.length == 0)
-		{
 			return;
-		}
 
 		Set<String> matricesFilesNames = matrices.stream()
 				.map(Matrix::getFileName)

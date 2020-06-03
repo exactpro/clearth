@@ -15,14 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
+
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.ActionsExecutionProgress;
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.SchedulersManager;
-import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.ClearThException;
@@ -43,7 +40,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -105,7 +101,7 @@ public class SchedulerTest
 			throw new ClearThException("Launches data is not found");
 
 		XmlSchedulerLaunchInfo currentLaunch = launchesInfo.get(0);
-		allSuccessVerify(currentLaunch);
+		allSuccessVerify(currentLaunch, scheduler.getExecutedMatricesPath());
 		verifyStepsStatuses(scheduler.getSteps());
 		checkReports(currentLaunch.getReportsPath());
 	}
@@ -159,11 +155,12 @@ public class SchedulerTest
 		clearThManager.loadMatrices(scheduler, testConfigPath.resolve("matrices").toFile());
 	}
 
-	private void allSuccessVerify(XmlSchedulerLaunchInfo launch)
+	private void allSuccessVerify(XmlSchedulerLaunchInfo launch, Path executedMatricesPath)
 	{
 		assertNotNull("Scheduler launch info is not available", launch);
 		assertTrue("Scheduler launch info has not-success status", launch.isSuccess());
 		assertTrue("Reports by last launch are not generated", checkLastReportDir(launch.getReportsPath()));
+		assertTrue("Last executed matrices are not generated", checkLastExecutedMatrices(executedMatricesPath));
 	}
 
 	private boolean checkLastReportDir(String lastReportPath)
@@ -175,6 +172,22 @@ public class SchedulerTest
 		try (Stream<Path> list = Files.list(reportPath))
 		{
 			return Files.exists(reportPath) && list.count() > 0;
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+	}
+
+	private boolean checkLastExecutedMatrices(Path executedMatricesPath)
+	{
+		File executedMatricesFile = executedMatricesPath.getParent().resolve(ExecutedMatricesData.EXECUTED_MATRICES_FILENAME).toFile();
+		if (!executedMatricesFile.exists() || !Files.exists(executedMatricesPath))
+			return false;
+
+		try (Stream<Path> list = Files.list(executedMatricesPath))
+		{
+			return list.count() > 0;
 		}
 		catch (IOException e)
 		{

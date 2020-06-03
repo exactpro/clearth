@@ -26,8 +26,14 @@ import static java.util.Calendar.SECOND;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class DateTimeUtils
 {
+	private static final Logger logger = LoggerFactory.getLogger(DateTimeUtils.class);
+
+
 	public static long getStartOfDayTimestamp(Date date)
 	{
 		Calendar calendar = Calendar.getInstance();
@@ -91,5 +97,20 @@ public class DateTimeUtils
 		calendar.setTime(date);
 		int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 		return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY;
+	}
+
+	public static Date getDateFromTimestampOrNull(String timestamp)
+	{
+		if (timestamp == null || timestamp.isEmpty())
+			return null;
+		try
+		{
+			return new Date(Long.parseLong(timestamp));
+		}
+		catch (NumberFormatException e)
+		{
+			logger.info("Cannot get date from timestamp", e);
+			return null;
+		}
 	}
 }
