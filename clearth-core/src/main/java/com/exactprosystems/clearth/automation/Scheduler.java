@@ -587,7 +587,7 @@ public abstract class Scheduler
 			for (int i = 0; i < schedulerData.getMatrices().size(); i++)
 			{
 				MatrixData matrix = schedulerData.getMatrices().get(i);
-				if (matrix.isLinked() && matrix.isAutoReload())
+				if (matrix.isLinked() && matrix.isAutoReload() && matrix.isExecute())
 					addLinkedMatrix(matrix);
 			}
 		}
