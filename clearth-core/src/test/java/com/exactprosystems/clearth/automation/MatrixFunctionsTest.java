@@ -95,7 +95,8 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 		prepareFilesForValueGenerators();
 		ValueGenerator valueGenerator =
-				new ValueGenerator(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.resolve(DEFAULT_GENERATOR_FILE).toString(), "default");
+				new ValueGenerator(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.resolve(DEFAULT_GENERATOR_FILE).toString(),
+						"default");
 
 		functionsWithHolidays = new MatrixFunctions(holidays,
 				businessDay,
@@ -781,12 +782,125 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 				assertEquals(actualResult, expectedResult);
 			}
 		}
- 	}
+	}
+
+
+	private long parseDateAndTimeToMillis(String value, String format) throws ParseException
+	{
+		SimpleDateFormat sdf = new SimpleDateFormat(format);
+		sdf.setLenient(false);
+		Date date = sdf.parse(value);
+		return date.getTime();
+	}
+
+	@DataProvider(name = "date-format")
+	Object[][] createDataForDateTimeFormat()
+	{
+		return new Object[][]
+				{
+						// Format mask, formatted time, reformat mask, reformatted time,
+						// date8-formatted time, time6-formatted time
+						{
+								"yyyy/MM/dd",
+								"2020/06/03",
+								"dd-MM-yyyy",
+								"03-06-2020",
+								"20200603",
+								"000000"
+						},
+						{
+								"yyyy-MM-dd-hh",
+								"2020-06-03-02",
+								"dd MM yyyy hh",
+								"03 06 2020 02",
+								"20200603",
+								"020000"
+						},
+						{
+								"yyyy.MM.dd-hh:mm",
+								"2020.06.03-02:14",
+								"dd.MM.yyyy hh:mm",
+								"03.06.2020 02:14",
+								"20200603",
+								"021400"
+						},
+						{
+								"yyyy/MM/dd/hh/mm/ss",
+								"2020/06/03/02/14/04",
+								"dd.MM.yyyy hh-mm:ss",
+								"03.06.2020 02-14:04",
+								"20200603",
+								"021404"
+						},
+				};
+	}
+
+	@Test(dataProvider = "date-format")
+	public void checkFormat(String formatStr, String expectedFormatResult, String reformatStr,
+	                        String expectedReformatResult, String expectedDate8Result, String expectedTime6Result)
+			throws ParseException
+	{
+		long millis = parseDateAndTimeToMillis(expectedFormatResult, formatStr);
+		String actualResult = functionsWithHolidays.format(millis, formatStr);
+		assertEquals(actualResult, expectedFormatResult);
+	}
+
+	@Test(dataProvider = "date-format")
+	public void checkReformat(String formatStr, String expectedFormatResult, String reformatStr,
+	                          String expectedReformatResult, String expectedDate8Result, String expectedTime6Result)
+			throws FunctionException
+	{
+		String actualResult = functionsWithHolidays.reformat(expectedFormatResult, formatStr, reformatStr);
+		assertEquals(actualResult, expectedReformatResult);
+	}
+
+	@Test(dataProvider = "date-format")
+	public void checkParseDate(String formatStr, String expectedFormatResult, String reformatStr,
+	                           String expectedReformatResult, String expectedDate8Result, String expectedTime6Result)
+			throws FunctionException, ParseException
+	{
+		long millis = parseDateAndTimeToMillis(expectedFormatResult, formatStr);
+		long actualResult = functionsWithHolidays.parseDate(expectedFormatResult, formatStr);
+		assertEquals(actualResult, millis);
+	}
+
+
+	@Test(dataProvider = "date-format")
+	public void checkDate8(String formatStr, String expectedFormatResult, String reformatStr,
+	                       String expectedReformatResult, String expectedDate8Result, String expectedTime6Result)
+			throws ParseException
+	{
+		long millis = parseDateAndTimeToMillis(expectedFormatResult, formatStr);
+		String actualResult = functionsWithHolidays.date8(millis);
+		assertEquals(actualResult, expectedDate8Result);
+	}
+
+	@Test(dataProvider = "date-format")
+	public void checkTime6(String formatStr, String expectedFormatResult, String reformatStr,
+	                       String expectedReformatResult, String expectedDate8Result, String expectedTime6Result)
+			throws ParseException
+	{
+		long millis = parseDateAndTimeToMillis(expectedFormatResult, formatStr);
+		String actualResult = functionsWithHolidays.time6(millis);
+		assertEquals(actualResult, expectedTime6Result);
+	}
+
+	@Test(dataProvider = "date-format")
+	public void checkMilliseconds(String formatStr, String expectedFormatResult, String reformatStr,
+	                              String expectedReformatResult, String expectedDate8Result,
+	                              String expectedTime6Result)
+			throws FunctionException, ParseException
+	{
+		long millis = parseDateAndTimeToMillis(expectedFormatResult, formatStr);
+		String actualResult = functionsWithHolidays.milliseconds(expectedFormatResult, formatStr);
+		String expectedResult = String.valueOf(millis);
+		assertEquals(actualResult, expectedResult);
+	}
+
 
 	@AfterMethod
 	public void tearDown() throws IOException
 	{
 		FileUtils.cleanDirectory(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.toFile());
 	}
-
 }
