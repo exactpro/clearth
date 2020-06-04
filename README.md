@@ -33,6 +33,8 @@ Here are the links to the tutorial videos introducing you to the main features o
     https://youtu.be/l1gl26aEg1g
   - Custom Actions (Part 2):
     https://youtu.be/VjC7GCWw_B8
+  - Adding a Module for XML Messages
+    https://youtu.be/Mv3WxHgjmSQ
 
 
 
