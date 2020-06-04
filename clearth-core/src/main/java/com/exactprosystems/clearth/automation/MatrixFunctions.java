@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -71,6 +71,7 @@ public class MatrixFunctions
 	protected volatile Calendar currentTime;
 
 	protected final Object weekendHolidayMonitor = new Object();
+	protected final MvelExpressionValidator validator = new MvelExpressionValidator();
 
 	public MatrixFunctions(Map<String, Boolean> holidays, Date businessDay, Date baseTime, boolean weekendHoliday, ValueGenerator valueGenerator)
 	{
@@ -973,6 +974,8 @@ public class MatrixFunctions
 			//Compile and execute expression
 			Serializable compiledExp = MVEL.compileExpression(formula, functionsContext);
 			this.currentAction = currentAction;
+
+			validator.validateExpression(compiledExp);
 
 			Object resultObj = MVEL.executeExpression(compiledExp, this, mvelVars);  //if mvelVars is null it will only calculate function results, but will not follow references
 
