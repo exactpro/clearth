@@ -16,30 +16,17 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.schedulerinfo;
+package com.exactprosystems.clearth.utils;
 
-import com.exactprosystems.clearth.automation.StepData;
-
-public class SchedulerStepData
+public class BinaryConverter
 {
-	private final StepData stepData;
-	private final String stepName; // Name for displaying step on page (corrected for HTML)
-
-
-	public SchedulerStepData(StepData stepData, String stepName)
+	public static String getBinaryStringFromBoolean(boolean value)
 	{
-		this.stepData = stepData;
-		this.stepName = stepName;
+		return value ? "1" : "0";
 	}
 
-
-	public StepData getStepData()
+	public static boolean getBooleanFromString(String value)
 	{
-		return stepData;
-	}
-
-	public String getStepName()
-	{
-		return stepName;
+		return !value.isEmpty() && !value.equals("0");
 	}
 }

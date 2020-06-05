@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,13 +39,12 @@ public class DefaultStep extends Step
 	{
 		super(name, kind, startAt, startAtType, waitNextDay, parameter, askForContinue, askIfFailed, execute, comment);
 	}
-	
+
 	public DefaultStep(CsvReader reader) throws IOException
 	{
 		super(reader);
 	}
-	
-	
+
 	protected Logger getLogger()
 	{
 		return logger;
@@ -55,9 +54,9 @@ public class DefaultStep extends Step
 	@Override
 	public void init()
 	{
-		started = null;
-		finished = null;
-		executionProgress = new ActionsExecutionProgress();
+		stepData.setStarted(null);
+		stepData.setFinished(null);
+		stepData.setExecutionProgress(new ActionsExecutionProgress());
 		interrupted = false;
 		paused = false;
 	}
@@ -65,9 +64,9 @@ public class DefaultStep extends Step
 	@Override
 	public void initBeforeReplay()
 	{
-		executionProgress = new ActionsExecutionProgress();
+		stepData.setExecutionProgress(new ActionsExecutionProgress());
 		statusComment = null;
-		finished = null;
+		stepData.setFinished(null);
 	}
 	
 	

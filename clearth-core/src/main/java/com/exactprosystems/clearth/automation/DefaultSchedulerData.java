@@ -18,20 +18,53 @@
 
 package com.exactprosystems.clearth.automation;
 
+import static com.exactprosystems.clearth.automation.Step.StepParams;
+import static com.exactprosystems.clearth.automation.Step.StepParams.*;
+
 public class DefaultSchedulerData extends SchedulerData
 {
-	public static final String[] CONFIG_HEADER = new String[]{"Global step", "Step kind", "Start at", "Start at type",
-			"Wait next day", "Parameter", "Ask for continue", "Ask if failed", "Execute", "Comment"};
-	
+	public static final String[] CONFIG_HEADER = new String[] {
+			GLOBAL_STEP.getValue(),
+			STEP_KIND.getValue(),
+			START_AT.getValue(),
+			START_AT_TYPE.getValue(),
+			WAIT_NEXT_DAY.getValue(),
+			PARAMETER.getValue(),
+			ASK_FOR_CONTINUE.getValue(),
+			ASK_IF_FAILED.getValue(),
+			StepParams.EXECUTE.getValue(),
+			COMMENT.getValue()
+	};
+
+	public static final String[] EXECUTED_STEP_DATA_HEADER = new String[] {
+			GLOBAL_STEP.getValue(),
+			STEP_KIND.getValue(),
+			START_AT.getValue(),
+			ASK_FOR_CONTINUE.getValue(),
+			ASK_IF_FAILED.getValue(),
+			StepParams.EXECUTE.getValue(),
+			STARTED.getValue(),
+			ACTIONS_SUCCESSFUL.getValue(),
+			FINISHED.getValue()
+	};
+
+
 	public DefaultSchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir,
 	                            String lastExecutedDataDir, StepFactory stepFactory) throws Exception
 	{
 		super(name, configsRoot, schedulerDirName, matricesDir, lastExecutedDataDir, stepFactory);
 	}
-	
+
+
 	@Override
 	public String[] getConfigHeader()
 	{
 		return CONFIG_HEADER;
+	}
+
+	@Override
+	public String[] getExecutedStepsDataHeader()
+	{
+		return EXECUTED_STEP_DATA_HEADER;
 	}
 }

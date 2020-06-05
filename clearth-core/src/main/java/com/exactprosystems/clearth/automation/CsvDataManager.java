@@ -21,25 +21,11 @@ package com.exactprosystems.clearth.automation;
 import java.io.IOException;
 
 import com.csvreader.CsvReader;
-import com.exactprosystems.clearth.automation.persistence.StepState;
+import com.csvreader.CsvWriter;
 
-public abstract class StepFactory
+public interface CsvDataManager
 {
-	public abstract Step createStep();
-	public abstract Step createStep(String name, String kind, String startAt, StartAtType startAtType, boolean waitNextDay, String parameter, boolean askForContinue, boolean askIfFailed, boolean execute, String comment);
-	public abstract Step createStep(CsvReader reader) throws IOException;
-	
-	public abstract StepState createStepState();
-	public abstract StepState createStepState(Step step);
-	public abstract StepState createStepState(StepState stepState);
-	
-	protected abstract boolean validStepKindEx(String stepKind);
-	
-	public boolean validStepKind(String stepKind)
-	{
-		if (CoreStepKind.stepKindByLabel(stepKind) != CoreStepKind.InvalidStep)
-			return true;
-		
-		return validStepKindEx(stepKind);
-	}
+	void save(CsvWriter writer) throws IOException;
+
+	void assignFields(CsvReader reader) throws IOException;
 }

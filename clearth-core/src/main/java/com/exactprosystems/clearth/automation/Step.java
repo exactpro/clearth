@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,6 +22,7 @@ import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.utils.BinaryConverter;
 import com.exactprosystems.clearth.utils.javaFunction.BiConsumerWithException;
 import org.slf4j.Logger;
 
@@ -32,10 +33,10 @@ import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.automation.ActionExecutor.isAsyncAction;
 
-public abstract class Step
+public abstract class Step implements CsvDataManager
 {
-	protected String name, kind, startAt, parameter;
-	protected boolean askForContinue, askIfFailed, execute, executable;
+	protected String parameter;
+	protected boolean executable;
 	protected volatile boolean async;
 	protected String comment = "";
 	
@@ -43,8 +44,6 @@ public abstract class Step
 	protected final Set<Action> asyncActions = new HashSet<>();
 	protected String actionsReportsDir = null;
 
-	protected Date started, finished;
-	protected ActionsExecutionProgress executionProgress = new ActionsExecutionProgress();
 	protected boolean interrupted = false, paused = false;
 	protected AtomicBoolean anyActionFailed = new AtomicBoolean(false);
 	protected AtomicBoolean failedDueToError = new AtomicBoolean(false);
@@ -60,56 +59,47 @@ public abstract class Step
 	
 	protected boolean actionPause = false;
 	protected String actionPauseDescription = null;
+	protected StepData stepData = new StepData();
 
 
 	public Step()
 	{
-		name = null;
-		safeName = null;
-		kind = null;
 	}
-	
+
 	public Step(String name, String kind, String startAt, StartAtType startAtType, boolean waitNextDay, String parameter,
 			boolean askForContinue, boolean askIfFailed, boolean execute, String comment)
 	{
-		this.name = name;
+		stepData.setName(name);
 		safeName = name;
-		this.kind = kind;
-		this.startAt = startAt;
+		stepData.setKind(kind);
+		stepData.setStartAt(startAt);
 		this.parameter = parameter;
-		this.askForContinue = askForContinue;
-		this.askIfFailed = askIfFailed;
-		this.execute = execute;
+		stepData.setAskForContinue(askForContinue);
+		stepData.setAskIfFailed(askIfFailed);
+		stepData.setExecute(execute);
 		this.startAtType = startAtType;
 		this.waitNextDay = waitNextDay;
 		setComment(comment);
 	}
-	
+
 	public Step(CsvReader reader) throws IOException
 	{
-		assignStepFields(reader);
+		assignFields(reader);
 	}
 
-	public void assignStepFields(CsvReader reader) throws IOException
+
+	@Override
+	public void assignFields(CsvReader reader) throws IOException
 	{
-		name = reader.get(StepParams.GLOBAL_STEP.getValue());
-		safeName = name;
-		kind = reader.get(StepParams.STEP_KIND.getValue());
-		startAt	= reader.get(StepParams.START_AT.getValue());
+		stepData.assignBasicFields(reader);
+		safeName = stepData.getName();
 		setStartAtTypeString(reader.get(StepParams.START_AT_TYPE.getValue()));
-		parameter	= reader.get(StepParams.PARAMETER.getValue());
+		parameter = reader.get(StepParams.PARAMETER.getValue());
 		setComment(reader.get(StepParams.COMMENT.getValue()));
-
-		String waitNextD = reader.get(StepParams.WAIT_NEXT_DAY.getValue()),
-				askForCont = reader.get(StepParams.ASK_FOR_CONTINUE.getValue()),
-				askIfFld	= reader.get(StepParams.ASK_IF_FAILED.getValue()),
-				exec	= reader.get(StepParams.EXECUTE.getValue());
+		String waitNextD = reader.get(StepParams.WAIT_NEXT_DAY.getValue());
 		waitNextDay = !waitNextD.isEmpty() && !waitNextD.equals("0");
-		askForContinue = !askForCont.isEmpty() && !askForCont.equals("0");
-		askIfFailed = !askIfFld.isEmpty() && !askIfFld.equals("0");
-		execute = !exec.isEmpty() && !exec.equals("0");
 	}
-	
+
 	protected abstract Logger getLogger();
 	
 	public abstract void init();
@@ -123,15 +113,14 @@ public abstract class Step
 
 	public String getName()
 	{
-		return name;
+		return stepData.getName();
 	}
-	
+
 	public void setName(String name)
 	{
-		this.name = name;
+		stepData.setName(name);
 	}
-	
-		
+
 	public String getSafeName()
 	{
 		return safeName;
@@ -144,26 +133,23 @@ public abstract class Step
 
 	public String getKind()
 	{
-		return kind;
+		return stepData.getKind();
 	}
 	
 	public void setKind(String kind)
 	{
-		this.kind = kind;
+		stepData.setKind(kind);
 	}
 	
 	
 	public String getStartAt()
 	{
-		return startAt;
+		return stepData.getStartAt();
 	}
 	
 	public void setStartAt(String startAt)
 	{
-		if (startAt != null)
-			this.startAt = startAt.trim();
-		else
-			this.startAt = null;
+		stepData.setStartAt(startAt != null ? startAt.trim() : null);
 	}
 	
 	public StartAtType getStartAtType()
@@ -207,23 +193,23 @@ public abstract class Step
 
 	public boolean isAskForContinue()
 	{
-		return askForContinue;
+		return stepData.isAskForContinue();
 	}
 
 	public void setAskForContinue(boolean askForContinue)
 	{
-		this.askForContinue = askForContinue;
+		stepData.setAskForContinue(askForContinue);
 	}
 
 
 	public boolean isAskIfFailed()
 	{
-		return askIfFailed;
+		return stepData.isAskIfFailed();
 	}
 
 	public void setAskIfFailed(boolean askIfFailed)
 	{
-		this.askIfFailed = askIfFailed;
+		stepData.setAskIfFailed(askIfFailed);
 	}
 
 	/**
@@ -231,7 +217,7 @@ public abstract class Step
 	 */
 	public boolean isExecute()
 	{
-		return execute;
+		return stepData.isExecute();
 	}
 
 	/**
@@ -244,7 +230,7 @@ public abstract class Step
 	
 	public void setExecute(boolean execute)
 	{
-		this.execute = execute;
+		stepData.setExecute(execute);
 	}
 
 	public String getComment()
@@ -272,34 +258,34 @@ public abstract class Step
 
 	public Date getStarted()
 	{
-		return started;
+		return stepData.getStarted();
 	}
 	
 	public void setStarted(Date started)
 	{
-		this.started = started;
+		stepData.setStarted(started);
 	}
 	
 	
 	public Date getFinished()
 	{
-		return finished;
+		return stepData.getFinished();
 	}
 	
 	public void setFinished(Date finished)
 	{
-		this.finished = finished;
+		stepData.setFinished(finished);
 	}
 	
 	
 	public ActionsExecutionProgress getExecutionProgress()
 	{
-		return executionProgress;
+		return stepData.getExecutionProgress();
 	}
 	
 	public void setExecutionProgress(ActionsExecutionProgress executionProgress)
 	{
-		this.executionProgress = executionProgress;
+		stepData.setExecutionProgress(executionProgress);
 	}
 
 	public boolean isAnyActionFailed()
@@ -398,20 +384,25 @@ public abstract class Step
 		return actionPauseDescription;
 	}
 
+	public StepData getStepData()
+	{
+		return stepData;
+	}
+
+	@Override
 	public void save(CsvWriter writer) throws IOException
 	{
-		writer.write(name, true);
-		writer.write(kind, true);
-		writer.write(startAt, true);
+		writer.write(stepData.getName(), true);
+		writer.write(stepData.getKind(), true);
+		writer.write(stepData.getStartAt(), true);
 		writer.write(startAtType.getStringType(), true);
-		writer.write(waitNextDay ? "1" : "0", true);
+		writer.write(BinaryConverter.getBinaryStringFromBoolean(waitNextDay));
 		writer.write(parameter, true);
-		writer.write(askForContinue ? "1" : "0", true);
-		writer.write(askIfFailed ? "1" : "0", true);
-		writer.write(execute ? "1" : "0", true);
+		writer.write(BinaryConverter.getBinaryStringFromBoolean(stepData.isAskForContinue()));
+		writer.write(BinaryConverter.getBinaryStringFromBoolean(stepData.isAskIfFailed()));
+		writer.write(BinaryConverter.getBinaryStringFromBoolean(stepData.isExecute()));
 		writer.write(comment, true);
 	}
-	
 
 	public static String getValidFileName(String fileName) {
 		return fileName.replaceAll("[.\\\\/:*?\"<>|']", "_");
@@ -461,7 +452,7 @@ public abstract class Step
 		StepContext stepContext = stepContexts.get(matrix);
 		if (stepContext == null)
 		{
-			stepContext = createStepContext(this.name, this.started);
+			stepContext = createStepContext(stepData.getName(), stepData.getStarted());
 			stepContexts.put(matrix, stepContext);
 		}
 		
@@ -512,9 +503,10 @@ public abstract class Step
 			interrupted = false;
 			//paused = false;
 			beforeActions(globalContext);
-			
-			actionExec.reset(actionsReportsDir, executionProgress);  //Resetting all internal counters to prepare execution of actions from this particular step
-			
+
+			//Resetting all internal counters to prepare execution of actions from this particular step
+			actionExec.reset(actionsReportsDir, stepData.getExecutionProgress());
+
 			AtomicBoolean canReplay = new AtomicBoolean(false);
 			logger.info("Running actions for step '{}'", this.getName());
 			for (Action action : actions)
@@ -581,7 +573,7 @@ public abstract class Step
 	public void addAction(Action action)
 	{
 		actions.add(action);
-		if (execute && !executable && action.isExecutable())
+		if (stepData.isExecute() && !executable && action.isExecutable())
 			executable = true;
 		if (executable && action.isAsync())
 		{
@@ -608,7 +600,7 @@ public abstract class Step
 		clearActions();
 		this.actions.addAll(actions);
 		asyncActions.addAll(actions.stream().filter(Action::isAsync).collect(Collectors.toList()));
-		executable = execute && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
+		executable = stepData.isExecute() && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
 		async = !asyncActions.isEmpty();
 	}
 
@@ -634,15 +626,19 @@ public abstract class Step
 		COMMENT ("Comment"),
 		ASK_FOR_CONTINUE ("Ask for continue"),
 		ASK_IF_FAILED ("Ask if failed"),
-		EXECUTE ("Execute");
-		
+		EXECUTE ("Execute"),
+		STARTED ("Started"),
+		ACTIONS_SUCCESSFUL ("Actions successful"),
+		FINISHED ("Finished");
+
+
 		private final String value;
-		
+
 		StepParams(String value)
 		{
 			this.value = value;
 		}
-		
+
 		public String getValue()
 		{
 			return value;
@@ -659,19 +655,9 @@ public abstract class Step
 
 		Step step = (Step) o;
 
-		if (askForContinue != step.askForContinue)
-			return false;
-		if (askIfFailed != step.askIfFailed)
-			return false;
-		if (execute != step.execute)
+		if (!stepData.equals(step.stepData))
 			return false;
 		if (waitNextDay != step.waitNextDay)
-			return false;
-		if (!Objects.equals(name, step.name))
-			return false;
-		if (!Objects.equals(kind, step.kind))
-			return false;
-		if (!Objects.equals(startAt, step.startAt))
 			return false;
 		if (!Objects.equals(parameter, step.parameter))
 			return false;
@@ -683,13 +669,8 @@ public abstract class Step
 	@Override
 	public int hashCode()
 	{
-		int result = Objects.hashCode(name);
-		result = 31 * result + Objects.hashCode(kind);
-		result = 31 * result + Objects.hashCode(startAt);
+		int result = Objects.hashCode(stepData);
 		result = 31 * result + Objects.hashCode(parameter);
-		result = 31 * result + (askForContinue ? 1 : 0);
-		result = 31 * result + (askIfFailed ? 1 : 0);
-		result = 31 * result + (execute ? 1 : 0);
 		result = 31 * result + Objects.hashCode(comment);
 		result = 31 * result + Objects.hashCode(startAtType);
 		result = 31 * result + (waitNextDay ? 1 : 0);

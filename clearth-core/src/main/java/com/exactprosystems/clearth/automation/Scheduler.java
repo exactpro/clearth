@@ -136,7 +136,7 @@ public abstract class Scheduler
 	protected abstract void initSequentialExecutor(SequentialExecutor executor);
 	protected abstract void initSchedulerOnRestore(Executor executor);
 	
-		
+	
 	/* Properties control routines */
 	
 	private void saveConfigData() throws IOException
@@ -205,7 +205,7 @@ public abstract class Scheduler
 				}
 			}
 			
-			SchedulerData.saveSteps(schedulerData.getConfigName(), schedulerData.getConfigHeader(), stepContainer);
+			SchedulerData.saveSteps(new File(schedulerData.getConfigName()), schedulerData.getConfigHeader(), stepContainer);
 		} else {
 			FileOperationUtils.copyFile(uploadedConfig.getCanonicalPath(), schedulerData.getConfigName());
 		}
@@ -489,7 +489,7 @@ public abstract class Scheduler
 	{
 		List<Step> steps;
 		try
-		{ 
+		{
 			updateLinkedMatrices();
 			checkDuplicatedMatrixNames();
 			
@@ -666,7 +666,7 @@ public abstract class Scheduler
 		{
 			String matrixName = STORED_MATRIX_PREFIX + currentDate.getTime() + ".csv";
 			matrix.setFile(new File(scriptsDir + matrixName));
-		} 
+		}
 		file = matrix.getFile();
 		if (!file.getParentFile().exists())
 			file.getParentFile().mkdirs();
@@ -692,7 +692,7 @@ public abstract class Scheduler
 			{
 				if (StringUtils.equals(matrices.get(i).getName(), matrices.get(j).getName()))
 				{
-					throw new ClearThException(String.format("Some matrices contain '%s' duplicated names. Please use unique matrix names.", 
+					throw new ClearThException(String.format("Some matrices contain '%s' duplicated names. Please use unique matrix names.",
 							matrices.get(i).getName()));
 				}
 			}
@@ -1315,7 +1315,22 @@ public abstract class Scheduler
 	{
 		return steps;
 	}
-	
+
+	public List<StepData> getExecutedStepsData()
+	{
+		return schedulerData.getExecutedStepsData();
+	}
+
+	public void setExecutedStepsData(List<StepData> executedStepsData)
+	{
+		schedulerData.setExecutedStepsData(executedStepsData);
+	}
+
+	public void saveExecutedStepsData() throws IOException
+	{
+		schedulerData.saveExecutedStepsData();
+	}
+
 	public List<Matrix> getMatrices()
 	{
 		return matrices;
@@ -1472,6 +1487,7 @@ public abstract class Scheduler
 		schedulerData.loadMatrices(schedulerData.getMatrices());
 		schedulerData.loadExecutedMatrices();
 		schedulerData.reloadSteps(null);
+		schedulerData.reloadExecutedStepsData();
 		schedulerData.setBusinessDay(SchedulerData.loadBusinessDay(schedulerData.getBusinessDayFilePath()));
 		schedulerData.setWeekendHoliday(schedulerData.loadWeekendHoliday());
 		schedulerData.loadHolidays(schedulerData.getHolidays());

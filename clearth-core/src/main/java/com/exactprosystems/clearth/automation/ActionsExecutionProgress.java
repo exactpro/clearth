@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,7 +21,10 @@ package com.exactprosystems.clearth.automation;
 public class ActionsExecutionProgress
 {
 	private int successful, done;
-	
+
+	public static final String delimiter = " / ";
+
+
 	public ActionsExecutionProgress(int successful, int done)
 	{
 		this.successful = successful;
@@ -74,11 +77,15 @@ public class ActionsExecutionProgress
 	{
 		return done;
 	}
-	
-	
+
+	public static String getDelimiter()
+	{
+		return delimiter;
+	}
+
 	@Override
 	public String toString()
 	{
-		return successful + " / " + done;
+		return successful + delimiter + done;
 	}
 }

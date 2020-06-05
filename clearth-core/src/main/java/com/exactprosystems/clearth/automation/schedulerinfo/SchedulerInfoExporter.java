@@ -22,7 +22,7 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.MatrixData;
 import com.exactprosystems.clearth.automation.ReportsInfo;
 import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.automation.StepData;
 import com.exactprosystems.clearth.automation.schedulerinfo.template.SchedulerInfoTemplateFiles;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
@@ -75,29 +75,30 @@ public class SchedulerInfoExporter
 			}
 		}
 		List<MatrixData> executedMatricesData = scheduler.getExecutedMatricesData();
+		List<StepData> executedStepsData = scheduler.getExecutedStepsData();
 
 		// if the scheduler was not started
-		if (matricesInfo == null || reportsPath == null || executedMatricesData == null)
+		if (matricesInfo == null || reportsPath == null || executedMatricesData.isEmpty() || executedStepsData.isEmpty())
 			return MultiMapUtils.emptyMultiValuedMap();
 
 		// Create and fill up the storage with all files could be exported
 		MultiValuedMap<String, SchedulerInfoFile> storage = new HashSetValuedHashMap<>();
-		storage.put(SUMMARY_FILE, createSummaryFile(scheduler.getSteps(), executedMatricesData, matricesInfo));
+		storage.put(SUMMARY_FILE, createSummaryFile(executedStepsData, executedMatricesData, matricesInfo));
 		storage.putAll(MATRICES, collectMatrices(executedMatricesData));
 		storage.putAll(REPORTS, collectReports(reportsPath));
 		storage = collectOtherFiles(storage, scheduler);
 		return MultiMapUtils.unmodifiableMultiValuedMap(storage);
 	}
 	
-	protected SchedulerInfoFile createSummaryFile(List<Step> steps, List<MatrixData> matricesData,
-			List<XmlMatrixInfo> matricesInfo) throws IOException
+	protected SchedulerInfoFile createSummaryFile(List<StepData> stepData, List<MatrixData> matricesData,
+	                                              List<XmlMatrixInfo> matricesInfo) throws IOException
 	{
 		PrintWriter writer = null;
 		File summaryFile = new File(ClearThCore.tempPath() + SUMMARY_FILE);
 		try
 		{
 			writer = new PrintWriter(new BufferedWriter(new FileWriter(summaryFile)));
-			Map<String, Object> parameters = initTemplateParameters(steps, matricesData, matricesInfo);
+			Map<String, Object> parameters = initTemplateParameters(stepData, matricesData, matricesInfo);
 			ClearThCore.getInstance().getSchedulerInfoTemplatesProcessor().processTemplate(writer, parameters,
 					SchedulerInfoTemplateFiles.SCHEDULER_INFO);
 		}
@@ -112,14 +113,14 @@ public class SchedulerInfoExporter
 		return new SchedulerInfoFile(SUMMARY_FILE, summaryFile);
 	}
 	
-	protected Map<String, Object> initTemplateParameters(List<Step> steps, List<MatrixData> matricesData,
-			List<XmlMatrixInfo> matricesInfo)
+	protected Map<String, Object> initTemplateParameters(List<StepData> stepData, List<MatrixData> matricesData,
+	                                                     List<XmlMatrixInfo> matricesInfo)
 	{
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("pathToStyles", PATH_TO_RESOURCE_FILES + "style.css");
 		parameters.put("pathToJS", PATH_TO_RESOURCE_FILES + "script.js");
 		parameters.put("revision", getRevisionData());
-		parameters.put("stepsData", createStepsData(steps));
+		parameters.put("stepsData", createExecutedStepsData(stepData));
 		parameters.put("matricesData", matricesData);
 		parameters.put("reportsData", matricesInfo);
 		addExtraTemplateParameters(parameters);
@@ -130,18 +131,18 @@ public class SchedulerInfoExporter
 	{
 		return ClearThCore.getInstance().getVersion().getBuildNumber();
 	}
-	
-	protected List<SchedulerStepData> createStepsData(List<Step> allSteps)
+
+	protected List<SchedulerStepData> createExecutedStepsData(List<StepData> stepData)
 	{
 		List<SchedulerStepData> stepsData = new ArrayList<>();
-		if (CollectionUtils.isNotEmpty(allSteps))
+		if (CollectionUtils.isNotEmpty(stepData))
 		{
-			for (Step step : allSteps)
-				stepsData.add(new SchedulerStepData(step, StringEscapeUtils.escapeHtml(step.getName())));
+			for (StepData infoData : stepData)
+				stepsData.add(new SchedulerStepData(infoData, StringEscapeUtils.escapeHtml(infoData.getName())));
 		}
 		return stepsData;
 	}
-	
+
 	protected void addExtraTemplateParameters(Map<String, Object> parameters)
 	{
 	

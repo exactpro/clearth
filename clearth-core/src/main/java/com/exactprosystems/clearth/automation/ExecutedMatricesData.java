@@ -62,11 +62,11 @@ public class ExecutedMatricesData
 	public List<MatrixData> loadExecutedMatrices(Path executedMatricesListPath, Path executedMatricesPath) throws IOException
 	{
 		List<MatrixData> executedMatrices = new ArrayList<>();
-		
+
 		File f = executedMatricesListPath.toFile();
 		if (!f.isFile())
 			return null;
-		
+
 		CsvReader reader = null;
 		MatrixDataFactory matrixDataFactory = ClearThCore.getInstance().getMatrixDataFactory();
 		try
@@ -76,26 +76,38 @@ public class ExecutedMatricesData
 			reader.readHeaders();
 			while (reader.readRecord())
 			{
+				String originalFileName = reader.get(SchedulerData.NAME);
+				if (originalFileName == null || originalFileName.isEmpty())
+					continue;
+
 				String fileName = reader.get(SchedulerData.MATRIX);
 				if (fileName == null || fileName.isEmpty())
 					continue;
-				
+
 				File matrixFile = executedMatricesPath.resolve(fileName).toFile();
 				if (!matrixFile.exists())
 				{
 					logger.error(MessageFormat.format("Executed matrix '{0}' doesn't exist", matrixFile.getName()));
 					continue;
 				}
-				
+
 				String uploadDateNum = reader.get(SchedulerData.UPLOADED);
 				Date uploadDate = DateTimeUtils.getDateFromTimestampOrNull(uploadDateNum);
-				
+
 				boolean isExecute = Boolean.parseBoolean(reader.get(SchedulerData.EXECUTE));
 				String trimSpaces = reader.get(SchedulerData.TRIM_SPACES);
 				boolean isTrim = trimSpaces == null || trimSpaces.isEmpty()
 						|| Boolean.parseBoolean(trimSpaces);
-				
-				MatrixData matrixData = matrixDataFactory.createMatrixData(matrixFile, uploadDate, isExecute, isTrim);
+
+				MatrixData matrixData = matrixDataFactory.createMatrixData(
+						originalFileName,
+						matrixFile,
+						uploadDate,
+						isExecute,
+						isTrim,
+						null,
+						null,
+						false);
 				executedMatrices.add(matrixData);
 			}
 		}
@@ -103,7 +115,7 @@ public class ExecutedMatricesData
 		{
 			Utils.closeResource(reader);
 		}
-		
+
 		return executedMatrices;
 	}
 
@@ -152,6 +164,7 @@ public class ExecutedMatricesData
 
 	private void writeExecutedMatricesTableHeaders(CsvWriter writer) throws IOException
 	{
+		writer.write(SchedulerData.NAME);
 		writer.write(SchedulerData.MATRIX);
 		writer.write(SchedulerData.UPLOADED);
 		writer.write(SchedulerData.EXECUTE);
@@ -161,6 +174,7 @@ public class ExecutedMatricesData
 
 	private void writeExecutedMatrixData(CsvWriter writer, MatrixData md) throws IOException
 	{
+		writer.write(md.getName());
 		writer.write(md.getFile().getName());
 		writer.write(md.getUploadDate() == null ? "" : Long.toString(md.getUploadDate().getTime()));
 		writer.write(Boolean.toString(md.isExecute()));

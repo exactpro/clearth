@@ -13,22 +13,23 @@
 				<th>Finished</th>
 			</tr>
 			<#list stepsData as stepData>
+				<#assign step=stepData.stepData>
 				<tr>
 					<td>${stepData.stepName}</td>
-					<td>${stepData.step.kind}</td>
-					<td>${stepData.step.startAt}</td>
-					<td>${stepData.step.askForContinue?then("true", "false")}</td>
-					<td>${stepData.step.askIfFailed?then("true", "false")}</td>
-					<td>${stepData.step.execute?then("true", "false")}</td>
+					<td>${step.kind}</td>
+					<td>${step.startAt}</td>
+					<td>${step.askForContinue?then("true", "false")}</td>
+					<td>${step.askIfFailed?then("true", "false")}</td>
+					<td>${step.execute?then("true", "false")}</td>
 					<td>
-						<#if stepData.step.started??>
-							${stepData.step.started?string["dd.MM.yy HH:mm:ss"]}
+						<#if step.started??>
+							${step.started?string["dd.MM.yy HH:mm:ss"]}
 						</#if>
 					</td>
-					<td>${stepData.step.executionProgress}</td>
+					<td>${step.executionProgress}</td>
 					<td>
-						<#if stepData.step.finished??>
-							${stepData.step.finished?string["dd.MM.yy HH:mm:ss"]}
+						<#if step.finished??>
+							${step.finished?string["dd.MM.yy HH:mm:ss"]}
 						</#if>
 					</td>
 				</tr>

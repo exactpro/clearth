@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.util.*;
 
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+
 public abstract class SequentialExecutor extends Thread
 {
 	protected final ExecutorFactory executorFactory;
@@ -173,23 +175,29 @@ public abstract class SequentialExecutor extends Thread
 	{
 		return terminated;
 	}
-	
-	public void interruptExecution()
+
+	public void interruptExecution() throws AutomationException
 	{
 		synchronized (ceMonitor)
 		{
-			if (currentExecutor!=null)
+			if (currentExecutor != null)
 				currentExecutor.interruptExecution();
 		}
 	}
-	
-	public void interruptWholeExecution()
+
+	public void interruptWholeExecution() throws AutomationException
 	{
 		interrupted = true;
-		interruptExecution();
-		interrupt();
+		try
+		{
+			interruptExecution();
+		}
+		finally
+		{
+			interrupt();
+		}
 	}
-	
+
 	public boolean isExecutionInterrupted()
 	{
 		return interrupted;

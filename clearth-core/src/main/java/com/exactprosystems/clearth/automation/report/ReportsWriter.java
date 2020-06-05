@@ -118,7 +118,7 @@ public class ReportsWriter
 				if (actionEndTime == null)
 					break;
 
-				if (endTime.before(actionEndTime))
+				if (endTime == null || endTime.before(actionEndTime))
 					endTime = actionEndTime;
 			}
 		}

@@ -59,6 +59,7 @@ public abstract class SchedulerData
 			BASETIME_FILENAME = "basetime.txt",
 			WEEKEND_FILENAME = "weekend.txt",
 			MATRICES_FILENAME = "matrices.csv",
+			STEP_INFO_DATA_FILENAME = "executed_steps.csv",
 			CONFIGDATA_FILENAME = "configdata.cfg",
 			NAME = "Name",
 			MATRIX = "Matrix",
@@ -77,7 +78,7 @@ public abstract class SchedulerData
 	private final String forUser, name, matricesDir, launchesName, configName, baseTimeName,
 			weekendHolidayName, holidaysName, matricesName, configDataName;
 
-	private final Path businessDayFilePath;
+	private final Path businessDayFilePath, executedStepsDataFilePath;
 
 	private final StepFactory stepFactory;
 	private final XmlSchedulerLaunches launches;
@@ -93,6 +94,7 @@ public abstract class SchedulerData
 	private final File repDir;
 	private final File schedulerDir;
 	private final ExecutedMatricesData executedMatricesData;
+	private List<StepData> executedStepsData;
 
 
 	public SchedulerData(String name, String configsRoot, String schedulerDirName, String matricesDir,
@@ -109,6 +111,7 @@ public abstract class SchedulerData
 		launchesName = getLaunchesName(cfgDir, name);
 		configName = getConfigName(cfgDir, name);
 		businessDayFilePath = getBusinessDayFilePath(cfgDir, name);
+		executedStepsDataFilePath = getExecutedStepsDataFilePath(lastExecutedDataDir);
 		baseTimeName = getBaseTimeName(cfgDir, name);
 		weekendHolidayName = getWeekendHolidayName(cfgDir, name);
 		holidaysName = getHolidaysName(cfgDir, name);
@@ -124,6 +127,7 @@ public abstract class SchedulerData
 			logger.warn("Launches file for scheduler '" + name + "' is empty or doesn't exist.");
 		}
 		steps = loadSteps(null); //Ignore step warnings
+		executedStepsData = loadExecutedStepsData();
 		businessDay = loadBusinessDay();
 		baseTime = loadBaseTime();
 		weekendHoliday = loadWeekendHoliday();
@@ -137,7 +141,8 @@ public abstract class SchedulerData
 	}
 
 	public abstract String[] getConfigHeader();
-	
+	public abstract String[] getExecutedStepsDataHeader();
+
 	public File getSchedulerDir()
 	{
 		return schedulerDir;
@@ -162,7 +167,12 @@ public abstract class SchedulerData
 	{
 		return Paths.get(configsRoot, schedulerName, BUSINESSDAY_FILENAME);
 	}
-	
+
+	public static Path getExecutedStepsDataFilePath(String configsRoot)
+	{
+		return Paths.get(configsRoot, STEP_INFO_DATA_FILENAME);
+	}
+
 	public static String getBaseTimeName(String configsRoot, String schedulerName)
 	{
 		return configsRoot+schedulerName+File.separator+BASETIME_FILENAME;
@@ -247,17 +257,27 @@ public abstract class SchedulerData
 		loadSteps(configCSV, result, stepFactory, warnings);
 		return result;
 	}
-	
-	public static void saveSteps(String fileName, String[] configHeader, List<Step> steps) throws IOException
+
+	public static void saveExecutedStepsData(File file, String[] configHeader, List<StepData> stepData) throws IOException
+	{
+		saveSchedulerData(file, configHeader, stepData);
+	}
+
+	public static void saveSteps(File file, String[] configHeader, List<Step> steps) throws IOException
+	{
+		saveSchedulerData(file, configHeader, steps);
+	}
+
+	private static <T extends CsvDataManager> void saveSchedulerData(File file, String[] configHeader, List<T> schedulerData) throws IOException
 	{
 		CsvWriter writer = null;
 		try
 		{
-			writer = new CsvWriter(fileName);
+			writer = new CsvWriter(new FileWriter(file), ',');
 			writer.writeRecord(configHeader, true);
-			for (Step step : steps)
+			for (T data : schedulerData)
 			{
-				step.save(writer);
+				data.save(writer);
 				writer.endRecord();
 			}
 			writer.flush();
@@ -268,12 +288,45 @@ public abstract class SchedulerData
 				writer.close();
 		}
 	}
-	
+
 	public List<Step> loadSteps(List<String> warnings) throws IOException
 	{
 		return loadSteps(configName, stepFactory, warnings);
 	}
-	
+
+	public List<StepData> loadExecutedStepsData() throws IOException
+	{
+		List<StepData> result = new ArrayList<>();
+		loadExecutedStepsData(result);
+		return result;
+	}
+
+	public void loadExecutedStepsData(List<StepData> result) throws IOException
+	{
+		result.clear();
+		File executedStepsDataFile = executedStepsDataFilePath.toFile();
+		if (!executedStepsDataFile.isFile())
+			return;
+
+		CsvReader reader = null;
+		try
+		{
+			reader = new CsvReader(new FileReader(executedStepsDataFile));
+			reader.setSafetySwitch(false);
+			reader.readHeaders();
+			while (reader.readRecord())
+			{
+				StepData stepData = new StepData(reader);
+				result.add(stepData);
+			}
+		}
+		finally
+		{
+			if (reader!=null)
+				reader.close();
+		}
+	}
+
 	public void loadSteps(List<Step> stepsContainer, List<String> warnings) throws IOException
 	{
 		loadSteps(configName, stepsContainer, stepFactory, warnings);
@@ -283,13 +336,22 @@ public abstract class SchedulerData
 	{
 		loadSteps(configName, steps, stepFactory, warnings);
 	}
-	
+
+	public void reloadExecutedStepsData() throws IOException
+	{
+		loadExecutedStepsData(executedStepsData);
+	}
+
 	public void saveSteps() throws IOException
 	{
-		saveSteps(configName, getConfigHeader(), steps);
+		saveSteps(new File(configName), getConfigHeader(), steps);
 	}
-	
-	
+
+	public void saveExecutedStepsData() throws IOException
+	{
+		saveExecutedStepsData(executedStepsDataFilePath.toFile(), getExecutedStepsDataHeader(), executedStepsData);
+	}
+
 	public static void loadHolidays(String holidaysFileName, Map<String, Boolean> holidaysContainer) throws IOException
 	{
 		holidaysContainer.clear();
@@ -897,5 +959,15 @@ public abstract class SchedulerData
 	public List<MatrixData> getExecutedMatrices()
 	{
 		return executedMatricesData.getExecutedMatrices();
+	}
+
+	public void setExecutedStepsData(List<StepData> executedStepsData)
+	{
+		this.executedStepsData = executedStepsData;
+	}
+
+	public List<StepData> getExecutedStepsData()
+	{
+		return executedStepsData;
 	}
 }

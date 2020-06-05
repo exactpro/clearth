@@ -194,7 +194,7 @@ public class ConfigMakerTool
 		}
 
 		File configFile = File.createTempFile(resultConfigName + "_config_", ".cfg", destDir);
-		SchedulerData.saveSteps(configFile.getCanonicalPath(), configHeader, steps);
+		SchedulerData.saveSteps(configFile, configHeader, steps);
 
 		return configFile;
 	}

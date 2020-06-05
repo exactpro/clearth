@@ -70,6 +70,7 @@ public abstract class Executor extends Thread
 	protected final Map<String, Preparable> preparableActions;
 	protected final ActionParamsCalculator paramsCalculator;
 	protected final ActionExecutor actionExecutor;
+	protected final List<StepData> stepData;
 
 	private Map<String, String> fixedIds = null;  //Contains action IDs fixed for MVEL so that they can start with digits or underscores
 	
@@ -108,6 +109,7 @@ public abstract class Executor extends Thread
 		this.preparableActions = preparableActions;
 		this.paramsCalculator = createParamsCalculator();
 		this.actionExecutor = createActionExecutor();
+		this.stepData = new ArrayList<>(steps.size());
 	}
 
 	protected abstract Logger getLogger();
@@ -172,8 +174,7 @@ public abstract class Executor extends Thread
 			// Remove unused executed matrices from directory
 			removeUnusedExecutedMatrices(matrices);
 
-			// Storing executed matrices in scheduler
-			saveExecutedMatrices(scheduler, matrices);
+			scheduler.setExecutedStepsData(stepData);
 
 			if (!interrupted.get())
 			{
@@ -182,6 +183,8 @@ public abstract class Executor extends Thread
 				for (Step step : steps)
 				try
 				{
+					stepData.add(step.getStepData());
+
 					//Is step already done?
 					if (step.getFinished()!=null)
 						continue;
@@ -365,6 +368,11 @@ public abstract class Executor extends Thread
 			status.add("Making reports...");
 			makeReports(completedReportsDir, actionsReportsDir);
 			status.add("Reports made");
+
+			// Storing executed matrices in scheduler
+			saveExecutedMatrices(scheduler, matrices);
+
+			scheduler.saveExecutedStepsData();
 
 			//Storing info about this launch to make user able to access it from GUI
 			Date finished = Calendar.getInstance().getTime();
@@ -649,7 +657,7 @@ public abstract class Executor extends Thread
 	}
 	
 
-	public void interruptExecution()
+	public void interruptExecution() throws AutomationException
 	{
 		interrupted.set(true);
 		
@@ -668,9 +676,21 @@ public abstract class Executor extends Thread
 		}
 		
 		actionExecutor.interruptExecution();
-		interrupt();
+
+		try
+		{
+			scheduler.saveExecutedStepsData();
+		}
+		catch (IOException e)
+		{
+			throw new AutomationException("Executed steps cannot be stored", e);
+		}
+		finally
+		{
+			interrupt();
+		}
 	}
-	
+
 	public void pauseExecution()
 	{
 		synchronized (suspension)
