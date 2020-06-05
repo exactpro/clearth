@@ -81,7 +81,7 @@ public class SchedulerReportsTest
 		loadMatricesForExecuteTest(scheduler);
 
 		scheduler.start(userName);
-		waitForSchedulerToStop(scheduler, 100, 2000);
+		waitForSchedulerToStop(scheduler, 100, 10000);
 
 		List<XmlSchedulerLaunchInfo> launchesInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
 		if (launchesInfo == null || launchesInfo.isEmpty())
