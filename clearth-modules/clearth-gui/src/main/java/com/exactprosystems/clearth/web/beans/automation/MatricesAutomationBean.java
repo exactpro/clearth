@@ -142,7 +142,7 @@ public class MatricesAutomationBean extends ClearThBean {
 		try
 		{
 			matrixUploadHandler.handleUploadedFile(uploadedFile.getInputstream(), uploadedFileName, selectedScheduler());
-			String details = MessageFormat.format("File '{0}' is uploaded", uploadedFileName);
+			String details = String.format("File '%s' is uploaded", uploadedFileName);
 			MessageUtils.addInfoMessage("Success", details);
 		}
 		catch (MatrixUploadHandlerException e)

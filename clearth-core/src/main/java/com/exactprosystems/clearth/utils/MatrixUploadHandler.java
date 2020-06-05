@@ -87,19 +87,19 @@ public class MatrixUploadHandler
 		logger.trace("Filename to use: '{}'", normalizedFileName);
 
 		File storedFile = createStoredFile(matrixStream, normalizedFileName, getMatrixUploadDir());
-		addMatrixToScheduler(scheduler, storedFile);
+		addMatrixToScheduler(scheduler, storedFile, normalizedFileName);
 	}
 
-	private void addMatrixToScheduler(Scheduler scheduler, File storedFile) throws MatrixUploadHandlerException
+	private void addMatrixToScheduler(Scheduler scheduler, File storedFile, String originalName) throws MatrixUploadHandlerException
 	{
 		try
 		{
-			scheduler.addMatrix(storedFile, storedFile.getName());
-			logger.info("Uploaded matrix '{}' to scheduler '{}'", storedFile.getName(), scheduler.getName());
+			scheduler.addMatrix(storedFile, originalName);
+			logger.info("Uploaded matrix '{}' to scheduler '{}'", originalName, scheduler.getName());
 		}
 		catch (ClearThException e)
 		{
-			String errorMessage = MessageFormat.format("Error while uploading matrix '{0}'", storedFile.getName());
+			String errorMessage = MessageFormat.format("Error while uploading matrix '{0}'", originalName);
 			throw handleError(errorMessage, e);
 		}
 	}
@@ -120,7 +120,7 @@ public class MatrixUploadHandler
 		{
 			try
 			{
-				addMatrixToScheduler(scheduler, file);
+				addMatrixToScheduler(scheduler, file, file.getName());
 			}
 			catch (MatrixUploadHandlerException e)
 			{
