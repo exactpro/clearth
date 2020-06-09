@@ -586,8 +586,12 @@ public abstract class ActionGenerator
 						matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.UNEXPECTED_STEP_KIND, message);
 					}
 					step.addAction(action);
-					if (preparableActions != null && !preparableActions.containsKey(action.getName())
-							&& action.isExecutable() && action instanceof Preparable)
+					if (step.isExecutable()
+							&& action.isExecutable()
+							&& action instanceof Preparable
+							&& preparableActions != null
+							&& !preparableActions.containsKey(action.getName())
+					)
 						preparableActions.put(action.getName(), (Preparable)action);
 				}
 				logger.trace("Finished adding new action " + action.getClass());

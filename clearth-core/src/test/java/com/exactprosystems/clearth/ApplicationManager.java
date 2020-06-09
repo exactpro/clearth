@@ -55,6 +55,7 @@ public class ApplicationManager
 {
 	public static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
 
+	public static final String ADMIN = "admin";
 	public static final String TEST_OUTPUT = "testOutput/",
 			LOGS_DIR = USER_DIR.getParent().resolve(TEST_OUTPUT).resolve("logs").toString(),
 			TEST_DATA_DIR = TEST_OUTPUT + "appRoot/",

@@ -1,0 +1,7 @@
+// This action is supposed to be prepared as TurnedOnStep execution is turned ON.
+#id,#globalStep,#action
+id1,TurnedOnStep,PreparableAction1
+
+// This action is NOT supposed to be prepared as TurnedOffStep execution is turned OFF.
+#id,#globalStep,#action
+id2,TurnedOffStep,PreparableAction2

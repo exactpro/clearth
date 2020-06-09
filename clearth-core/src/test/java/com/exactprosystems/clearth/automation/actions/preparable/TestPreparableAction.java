@@ -16,46 +16,48 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation;
+package com.exactprosystems.clearth.automation.actions.preparable;
 
 import static com.exactprosystems.clearth.ApplicationManager.ADMIN;
 import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
 import static com.exactprosystems.clearth.ApplicationManager.waitForSchedulerToStop;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import com.exactprosystems.clearth.ApplicationManager;
-import com.exactprosystems.clearth.ClearThCore;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
 
+import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.LoggerStub;
+import com.exactprosystems.clearth.automation.ActionGenerator;
+import com.exactprosystems.clearth.automation.ActionMetaData;
+import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
 
-public class TestSchedulerSuccess
+public class TestPreparableAction
 {
-	private static final Path TEST_CONFIG_DIR = USER_DIR.resolve("src/test/resources/Scheduler/TestIsSuccessful");
-	private static final Path TEST_DATA = TEST_CONFIG_DIR.resolve("TwoParallelMatricesWithSimilarStep");
+	private static final Path TEST_DATA = USER_DIR.resolve("src/test/resources/Action/Preparable");
+	private static final Path ACTIONS_MAPPING_PATH = TEST_DATA.resolve("actionsmapping.cfg");
 	private static final Path MATRICES_DIR = TEST_DATA.resolve("matrices");
 	private static final Path CONFIGS_DIR = TEST_DATA.resolve("configs");
 	private static final Path CONFIG = CONFIGS_DIR.resolve("config.cfg");
-	private static final String STEP1 = "Step1";
-
 	private static ApplicationManager clearThManager;
-
+	private static final Logger logger = new LoggerStub();
+	private static Map<String, ActionMetaData> extraActionsMapping;
+	private static Map<String, ActionMetaData> originActionsMapping;
 
 	@Test
-	public void testIsSuccessful() throws ClearThException, AutomationException, IOException
+	public void testPrepare() throws IOException, ClearThException, AutomationException
 	{
 		Scheduler scheduler = clearThManager.getScheduler(ADMIN, ADMIN);
 		scheduler.clearSteps();
@@ -65,26 +67,30 @@ public class TestSchedulerSuccess
 		scheduler.start(ADMIN);
 		waitForSchedulerToStop(scheduler, 100, 2000);
 
-		Map<String, Step> stepsMap = toMap(scheduler.getSteps());
-
-		Step step1 = stepsMap.get(STEP1);
-		if (step1 == null)
-			fail("There is gotta be + '" + STEP1 + "' in Scheduler configuration due to the test case.");
-
-		Assert.assertTrue(step1.isAnyActionFailed());
-		Assert.assertFalse(step1.isFailedDueToError());
-		Assert.assertFalse(scheduler.isSuccessful());
+		Assert.assertTrue(PreparableAction1.isPrepared());
+		Assert.assertFalse(PreparableAction2.isPrepared());
 	}
 
-	private static Map<String, Step> toMap(Collection<Step> steps)
+	private static void addExtraActionsMapping()
 	{
-		return steps.stream().collect(Collectors.toMap(Step::getName, Function.identity()));
+		originActionsMapping = ClearThCore.getInstance().getActionFactory().getActionsMapping();
+		extraActionsMapping = ActionGenerator.loadActionsMapping(ACTIONS_MAPPING_PATH.toString(), true, logger);
+		originActionsMapping.putAll(extraActionsMapping);
+	}
+
+	private static void removeExtraActionsMapping()
+	{
+		for (String actionName : extraActionsMapping.keySet())
+		{
+			originActionsMapping.remove(actionName);
+		}
 	}
 
 	@BeforeClass
 	public static void startTestApp() throws ClearThException
 	{
 		clearThManager = new ApplicationManager();
+		addExtraActionsMapping();
 	}
 
 	@After
@@ -98,6 +104,7 @@ public class TestSchedulerSuccess
 	@AfterClass
 	public static void disposeTestApp() throws IOException
 	{
+		removeExtraActionsMapping();
 		if (clearThManager != null) clearThManager.dispose();
 	}
 }
