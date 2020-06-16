@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -131,7 +131,7 @@ public abstract class SequentialExecutor extends Thread
 				currentExecutor = null;
 			}
 			scheduler.seqExecutorFinished();
-			steps.clear();
+			clearSteps();
 		}
 	}
 	
@@ -400,5 +400,12 @@ public abstract class SequentialExecutor extends Thread
 				currentExecutor.copyActionReports(pathToStoreReports);
 		}
 		
+	}
+
+	protected void clearSteps()
+	{
+		steps.forEach(Step::clearActions);
+		if (scheduler.seqExec != null)
+			steps.clear();
 	}
 }
