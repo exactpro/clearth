@@ -18,24 +18,19 @@
 
 package com.exactprosystems.clearth.automation.generator;
 
+import com.exactprosystems.clearth.automation.ActionGenerator;
+import com.exactprosystems.clearth.utils.Utils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.exactprosystems.clearth.automation.ActionGenerator;
-import com.exactprosystems.clearth.utils.Utils;
 
 public class XlsActionReader extends ActionReader
 {
@@ -82,7 +77,7 @@ public class XlsActionReader extends ActionReader
 	{
 		return firstCellValue.trim().startsWith(ActionGenerator.COMMENT_INDICATOR);
 	}
-	
+
 	@Override
 	public boolean isHeaderLine()
 	{
@@ -153,7 +148,7 @@ public class XlsActionReader extends ActionReader
 	
 	protected boolean isRowToSkip(Row row)
 	{
-		return (row == null) || (row.getFirstCellNum() <= 0) || (row.getLastCellNum() <= 0);
+		return (row == null) || (row.getFirstCellNum() < 0) || (row.getLastCellNum() <= 0);
 	}
 
 	protected String getCellDataAsString(Cell cell)
