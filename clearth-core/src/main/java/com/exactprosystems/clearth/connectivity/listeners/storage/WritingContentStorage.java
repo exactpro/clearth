@@ -47,9 +47,10 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 	@Override
 	public void start()
 	{
-		getLogger().debug("Write thread starting...");
+		getLogger().debug("Writer thread starting...");
 		writingThreadInterrupted = false;
 		writingThread.start();
+		getLogger().debug("Writer thread has been started");
 	}
 	
 	@Override
@@ -60,7 +61,7 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 		logger.debug("Disposing writing content storage...");
 		writingThread.interrupt();
 		writingThreadInterrupted = true;
-		logger.debug("Write thread has been interrupted");
+		logger.debug("Writer thread has been interrupted");
 
 		clearMemory();
 	}
@@ -82,7 +83,7 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 			@Override
 			public void run()
 			{
-				while (!Thread.interrupted())
+				while (!Thread.interrupted() && !writingThreadInterrupted)
 				{
 					writingIteration();
 				}
@@ -96,7 +97,7 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 		if (writeContent)
 			writeContent();
 		else
-			getLogger().trace("Writing stored content is turned off");
+			getLogger().trace("Content writing is turned off");
 		
 		try
 		{
@@ -104,7 +105,8 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 		}
 		catch (InterruptedException e)
 		{
-			getLogger().error("Writing thread has been interrupted", e);
+			Thread.currentThread().interrupt();
+			getLogger().info("Writing thread has been interrupted", e);
 		}
 	}
 	

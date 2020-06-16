@@ -38,13 +38,13 @@ public class MemoryContentStorage<P, F> implements ContentStorage<P, F>
 	@Override
 	public void start()
 	{
-		getLogger().info("Content will be stored in memory");
+		logger.info("Content will be stored in memory");
 	}
 
 	@Override
 	public void dispose()
 	{
-		getLogger().info("Disposing content storage...");
+		logger.info("Disposing content storage...");
 		clearMemory();
 	}
 	
@@ -129,11 +129,5 @@ public class MemoryContentStorage<P, F> implements ContentStorage<P, F>
 	public Map<Long, F> getContentFailedAfterId(long id)
 	{
 		return contentFailed.tailMap(id, false);
-	}
-	
-	
-	protected Logger getLogger()
-	{
-		return logger;
 	}
 }

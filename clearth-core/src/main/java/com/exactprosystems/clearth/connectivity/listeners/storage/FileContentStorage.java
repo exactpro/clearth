@@ -89,6 +89,7 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	public void start()
 	{
 		memoryStorage.start();
+		logger.info("Content will be stored in file '{}'", contentsFilePath);
 		
 		if (!channel.isOpen())
 		{
