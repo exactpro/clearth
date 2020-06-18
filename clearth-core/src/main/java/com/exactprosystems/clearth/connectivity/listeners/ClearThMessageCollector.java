@@ -72,6 +72,7 @@ public class ClearThMessageCollector extends ReceiveListener
 	public static final String STOREFAILEDMESSAGES_SETTING = "storefailed";
 	public static final String STORE_RECEIVING_TIMESTAMP_SETTING = "storetimestamp";
 	public static final String MESSAGE = "Message";
+	private static final String STORE_THREAD_NAME = "FileContentStorage";
 
 	private static final int DEBUG_LOG_MSG_SIZE_LIMIT = 1024; //1 KB
 	private static final double DEFAULT_MAX_AGE = -1;
@@ -106,7 +107,8 @@ public class ClearThMessageCollector extends ReceiveListener
 		this.collectorName = collectorName;
 		this.connectionName = connectionName;
 		this.codec = codec;
-		this.collectorCleaner = Executors.newScheduledThreadPool(1, r -> new Thread(r, "collectorCleanerTimer"));
+		this.collectorCleaner = Executors.newScheduledThreadPool(1, r -> new Thread(r,
+				connectionName + " (collectorCleanerTimer)"));
 
 		InputParamsHandler handler = new InputParamsHandler(settings);
 		storeFailedMessages = handler.getBoolean(STOREFAILEDMESSAGES_SETTING, true);
@@ -554,7 +556,8 @@ public class ClearThMessageCollector extends ReceiveListener
 	protected FileContentStorage<ReceivedClearThMessage, ReceivedStringMessage> createFileContentStorage(String contentsFilePath)
 			throws IOException
 	{
-		return new DefaultFileContentStorage(contentsFilePath, storeTimestamp);
+		return new DefaultFileContentStorage(contentsFilePath, storeTimestamp, 
+				String.format("%s (%s)", connectionName, STORE_THREAD_NAME));
 	}
 	
 	

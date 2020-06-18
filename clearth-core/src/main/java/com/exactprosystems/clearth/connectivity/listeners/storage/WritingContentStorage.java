@@ -18,13 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity.listeners.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F>
 {
@@ -33,16 +33,17 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 	private static final String WRITING_THREAD_NAME = "WritingContentStorage";
 	
 	private static final long WRITE_DELAY = 500; // millis
+	protected final String threadName;
 	
 	protected Thread writingThread;
 	protected volatile boolean writeContent = true, writeBeforeDispose = true, writingThreadInterrupted = false;
 	
 	
-	public WritingContentStorage()
+	public WritingContentStorage(String threadName)
 	{
+		this.threadName = threadName;
 		this.writingThread = createWritingThread(getWritingThreadName());
-	}
-	
+	}	
 	
 	@Override
 	public void start()
@@ -152,7 +153,9 @@ public abstract class WritingContentStorage<P, F> implements ContentStorage<P, F
 	
 	protected String getWritingThreadName()
 	{
-		return WRITING_THREAD_NAME;
+		if (threadName == null || threadName.isEmpty())
+			return WRITING_THREAD_NAME;
+		return threadName;
 	}
 	
 	protected long getWriteDelay()

@@ -27,14 +27,14 @@ import static com.exactprosystems.clearth.connectivity.ReceiveListener.format;
 
 public class DefaultFileContentStorage extends FileContentStorage<ReceivedClearThMessage, ReceivedStringMessage>
 {
-	public DefaultFileContentStorage(String contentsFilePath) throws IOException
+	public DefaultFileContentStorage(String contentsFilePath, String threadName) throws IOException
 	{
-		super(contentsFilePath);
+		super(contentsFilePath, threadName);
 	}
 
-	public DefaultFileContentStorage(String contentsFilePath, boolean storeTimestamp) throws IOException
+	public DefaultFileContentStorage(String contentsFilePath, boolean storeTimestamp, String threadName) throws IOException
 	{
-		super(contentsFilePath, storeTimestamp);
+		super(contentsFilePath, storeTimestamp, threadName);
 	}
 	
 

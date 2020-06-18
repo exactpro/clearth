@@ -18,6 +18,11 @@
 
 package com.exactprosystems.clearth.connectivity.listeners.storage;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -28,12 +33,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.Utils;
 
 public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, F>
 {
@@ -54,9 +53,9 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	protected boolean needToRewriteFile = false, needToClearFile = false, storeTimestamp = false;
 
 
-	public FileContentStorage (String contentsFilePath) throws IOException
+	public FileContentStorage (String contentsFilePath, String threadName) throws IOException
 	{
-		super();
+		super(threadName);
 		
 		memoryStorage = new MemoryContentStorage<P, F>();
 		
@@ -78,10 +77,10 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 		this.insertQueue = new ConcurrentLinkedQueue<P>();
 		this.fileContents = new ConcurrentLinkedQueue<P>();
 	}
-	
-	public FileContentStorage(String contentsFilePath, boolean storeTimestamp) throws IOException
+
+	public FileContentStorage(String contentsFilePath, boolean storeTimestamp, String threadName) throws IOException
 	{
-		this(contentsFilePath);
+		this(contentsFilePath, threadName);
 		this.storeTimestamp = storeTimestamp;
 	}
 	
@@ -346,6 +345,8 @@ public abstract class FileContentStorage<P, F> extends WritingContentStorage<P, 
 	@Override
 	protected String getWritingThreadName()
 	{
-		return STORE_THREAD_NAME;
+		if (threadName == null || threadName.isEmpty())
+			return STORE_THREAD_NAME;
+		return threadName;
 	}
 }
