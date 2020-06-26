@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.utils.ComparisonUtils;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import java.lang.reflect.Field;
@@ -42,6 +43,12 @@ public abstract class BasicTestNgTest
 		mockOtherApplicationFields(application);
 
 		mockOtherBeforeClass();
+	}
+	
+	@AfterClass
+	public void clear() throws ReflectiveOperationException
+	{
+		setStaticField(ClearThCore.class, "instance", null);
 	}
 	
 	
