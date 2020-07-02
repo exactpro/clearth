@@ -18,10 +18,17 @@
 
 package com.exactprosystems.clearth;
 
-import static org.mockito.Matchers.any;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.utils.ClearThException;
+import com.exactprosystems.clearth.utils.Stopwatch;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.mockito.Matchers;
+import org.mockito.internal.util.reflection.Whitebox;
+import org.mockito.stubbing.Answer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,18 +45,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.exactprosystems.clearth.automation.*;
-import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.Stopwatch;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.mockito.Matchers;
-import org.mockito.internal.util.reflection.Whitebox;
-import org.mockito.stubbing.Answer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.exactprosystems.clearth.utils.ClearThException;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.*;
 
 public class ApplicationManager
 {
@@ -65,7 +64,8 @@ public class ApplicationManager
 			WEB_APP_DIR = USER_DIR.getParent().resolve("clearth-modules/clearth-gui/src/main/webapp").toString(),
 			WEB_UI_RESTRICTED = WEB_APP_DIR + "/ui/restricted/",
 			DEFAULT_REPORT_FILES_DIR = WEB_APP_DIR + "/WEB-INF/report_files/",
-			REALTIME_REPORT_DIR = APP_ROOT + "/ui/restricted/";
+			REALTIME_REPORT_DIR = APP_ROOT + "/ui/restricted/",
+			USER_SETTINGS_DIR = TEST_OUTPUT + "usersettings/";
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -207,6 +207,7 @@ public class ApplicationManager
 		when(spy.getConnectionsDir()).thenReturn(TEST_DATA_DIR + cfg.getConnectionsDir());
 		when(spy.getLogsDir()).thenReturn(TEST_DATA_DIR + cfg.getLogsDir());
 		when(spy.getLogCfgFileName()).thenReturn(LOG_PROPERTIES_FILE_PATH);
+		when(spy.getUserSettingsDir()).thenReturn(USER_SETTINGS_DIR);
 
 		return spy;
 	}

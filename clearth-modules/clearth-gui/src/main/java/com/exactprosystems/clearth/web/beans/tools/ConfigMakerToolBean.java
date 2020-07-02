@@ -29,6 +29,7 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.model.UploadedFile;
 
@@ -36,8 +37,9 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.String.format;
 
 
 /**
@@ -51,6 +53,7 @@ public class ConfigMakerToolBean extends ClearThBean
 	protected UploadedFile file = null;
 	protected Scheduler selectedScheduler;
 
+
 	@PostConstruct
 	public void init()
 	{
@@ -59,14 +62,15 @@ public class ConfigMakerToolBean extends ClearThBean
 
 	public void makeConfigAndApply()
 	{
-		if (file == null) { 
+		if (file == null) {
 			MessageUtils.addWarningMessage("No file selected", "Please select a script file (matrix)!");
 			return;
 		}
-		
+
 		try
 		{
 			File storedUploadedFile = storeUploadedFile();
+			if (storedUploadedFile == null) return;
 			List<String> warnings = configMakerTool.makeConfigAndApply(selectedScheduler, storedUploadedFile, destDir);
 			handleWarnings(warnings);
 		}
@@ -78,14 +82,15 @@ public class ConfigMakerToolBean extends ClearThBean
 
 	public void makeConfigAndDownload()
 	{
-		if (file == null) { 
+		if (file == null) {
 			MessageUtils.addWarningMessage("No file selected", "Please select a script file (matrix)!");
 			return;
 		}
-		
+
 		try
 		{
 			File storedUploadedFile = storeUploadedFile();
+			if (storedUploadedFile == null) return;
 			File configFile = configMakerTool.makeConfig(storedUploadedFile, destDir, storedUploadedFile.getName());
 			WebUtils.redirectToFile(ClearThCore.configFiles().getTempDir() + URLEncoder.encode(configFile.getName(), "UTF-8"));
 		}
@@ -125,11 +130,22 @@ public class ConfigMakerToolBean extends ClearThBean
 		MessageUtils.addErrorMessage(summary, cause);
 	}
 
+
 	private File storeUploadedFile() throws ClearThException
 	{
 		try
 		{
-			final File storedUploadedFile = WebUtils.storeUploadedFile(file, uploadStorage, "matrixforconfig_", ".csv");
+			final File storedUploadedFile;
+			String fileExtension = '.' + FilenameUtils.getExtension(file.getFileName());
+			if (!ConfigMakerTool.EXTENSION_FILTER.matcher(fileExtension).matches())
+			{
+				MessageUtils.addErrorMessage("Error",
+						format("Matrix file format must be .%s, .%s or .%s",ConfigMakerTool.CSV_EXT,
+								ConfigMakerTool.XLS_EXT,ConfigMakerTool.XLSX_EXT));
+				return null;
+			}
+			storedUploadedFile =
+					WebUtils.storeUploadedFile(file, uploadStorage, "matrixforconfig_", fileExtension);
 			MessageUtils.addInfoMessage("Success", "File " + storedUploadedFile.getName() + " uploaded");
 			return storedUploadedFile;
 		}

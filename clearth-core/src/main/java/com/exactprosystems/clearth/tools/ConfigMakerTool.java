@@ -18,20 +18,23 @@
 
 package com.exactprosystems.clearth.tools;
 
-import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.generator.ActionReader;
+import com.exactprosystems.clearth.automation.generator.CsvActionReader;
+import com.exactprosystems.clearth.automation.generator.XlsActionReader;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.Utils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Created by alexander.magomedov on 11/7/16.
@@ -40,11 +43,27 @@ public class ConfigMakerTool
 {
 	private static final Logger logger = LoggerFactory.getLogger(ConfigMakerTool.class);
 	protected static final String stepColumn = ActionGenerator.HEADER_DELIMITER + ActionGenerator.COLUMN_GLOBALSTEP;
+	public static final String CSV_EXT ="csv";
+	public static final String XLS_EXT = "xls";
+	public static final String XLSX_EXT = "xlsx";
+	public static final Pattern EXTENSION_FILTER = Pattern.compile("(.*\\.(csv|xls|xlsx)$)");
 
-	public List<String> makeConfigAndApply(Scheduler selectedScheduler, File matrixFile, File destDir) throws ClearThException
+	public static boolean checkMatrixFileExtension(String matrixFilePath)
+	{
+		return EXTENSION_FILTER.matcher(matrixFilePath).matches();
+	}
+
+
+	public List<String> makeConfigAndApply(Scheduler selectedScheduler, File matrixFile, File destDir)
+			throws ClearThException
 	{
 		if (selectedScheduler == null)
 			throw new ClearThException("No scheduler selected");
+
+		if(matrixFile == null)
+			throw new ClearThException("No matrix file selected");
+		if(!checkMatrixFileExtension(matrixFile.getName()))
+			throw new ClearThException("Unsupported matrix file format");
 
 		File configFile;
 		try
@@ -63,29 +82,94 @@ public class ConfigMakerTool
 			List<String> warnings = new ArrayList<String>();
 			selectedScheduler.uploadSteps(configFile, configFile.getName(), warnings, false);
 			if (warnings.isEmpty())
-				logger.debug("Scheduler configuration uploaded. Scheduler: {}; matrix file: {}", selectedScheduler.getName(), matrixFile.getName());
+				logger.debug("Scheduler configuration uploaded. Scheduler: {}; matrix file: {}",
+						selectedScheduler.getName(), matrixFile.getName());
 			else
-				logger.warn("Scheduler configuration uploaded with errors:{}{}", Utils.EOL, StringUtils.join(warnings, Utils.EOL));
+				logger.warn("Scheduler configuration uploaded with errors:{}{}", Utils.EOL,
+						StringUtils.join(warnings, Utils.EOL));
 
 			return warnings;
 		}
 		catch (Exception e)
 		{
-			String msg = String.format("An error occurred while uploading scheduler configuration from file '%s'", matrixFile.getName());
+			String msg = String.format("An error occurred while uploading scheduler configuration from file '%s'",
+					matrixFile.getName());
 			logger.error(msg, e);
 			throw new ClearThException(msg, e);
 		}
 	}
 
-	public File makeConfig(File matrixFile, File destDir, String resultConfigName) throws IOException, ClearThException
+	private ActionReader getActionReader(File matrixFile) throws IOException
+	{
+		if(FilenameUtils.getExtension(matrixFile.getName()).equalsIgnoreCase(CSV_EXT) )
+		{
+			return new CsvActionReader(matrixFile.getAbsolutePath(), true);
+		}
+		else if ( FilenameUtils.getExtension(matrixFile.getName()).equalsIgnoreCase(XLS_EXT)
+				|| FilenameUtils.getExtension(matrixFile.getName()).equalsIgnoreCase(XLSX_EXT))
+		{
+			return new XlsActionReader(matrixFile.getAbsolutePath(), true);
+		}
+		return null;
+	}
+
+	private List<String> readMatrixFile(File matrixFile) throws IOException
+	{
+		ActionReader reader = getActionReader(matrixFile);
+		if (reader == null) return null;
+		List<String> stepsNames = new ArrayList<String>();
+		int headerColumn = -1;
+		try
+		{
+			while (reader.readNextLine())
+			{
+				String[] values = reader.parseLine(false).toArray(new String[0]);
+				if (reader.isCommentLine())
+					continue;
+				else if (reader.isHeaderLine())
+				{
+					headerColumn = -1;
+					for (int i = 0; i < values.length; i++)
+					{
+						if (values[i].equalsIgnoreCase(stepColumn))
+						{
+							headerColumn = i;
+							break;
+						}
+					}
+				}
+				else if (headerColumn > -1)
+				{
+					if (values.length <= headerColumn)
+						continue;
+					if ((!values[headerColumn].trim().isEmpty()) &&
+							(!stepsNames.contains(values[headerColumn])))
+					{
+						stepsNames.add(values[headerColumn]);
+					}
+				}
+			}
+		}
+		finally
+		{
+			reader.close();
+		}
+		return stepsNames;
+	}
+
+	public File makeConfig (File matrixFile, File destDir, String resultConfigName) throws
+			IOException, ClearThException
 	{
 		if (matrixFile == null || !matrixFile.exists())
-			throw new ClearThException("Matrix file does not exists!");
+			throw new ClearThException("Matrix file does not exist!");
+		if(!checkMatrixFileExtension(matrixFile.getName()))
+			throw new ClearThException("Unsupported matrix file format");
+
 
 		String[] configHeader;
 		List<Scheduler> schedulers = ClearThCore.getInstance().getSchedulersManager().getCommonSchedulers();
 		StepFactory stepFactory;
-		if (!schedulers.isEmpty())
+		if (schedulers != null && !schedulers.isEmpty())
 		{
 			Scheduler sch = schedulers.get(0);
 			configHeader = sch.getSchedulerData().getConfigHeader();
@@ -96,65 +180,32 @@ public class ConfigMakerTool
 			configHeader = DefaultSchedulerData.CONFIG_HEADER;
 			stepFactory = null;
 		}
-		
-		CsvReader reader = null;
-		List<String> stepsNames = new ArrayList<String>();
-		try
-		{
-			reader = new CsvReader(new FileReader(matrixFile));
-			reader.setSafetySwitch(false);
-			reader.setDelimiter(ActionGenerator.DELIMITER);
-			reader.setTextQualifier(ActionGenerator.TEXT_QUALIFIER);
-			int headerColumn = -1;
-			while (reader.readRecord())
-			{
-				String[] values = reader.getValues();
-				
-				if (values[0].startsWith(ActionGenerator.COMMENT_INDICATOR))
-					continue;
-				else if (values[0].startsWith(ActionGenerator.HEADER_DELIMITER))
-				{
-					headerColumn = -1;
-					for (int i = 0; i < values.length; i++)
-						if (values[i].equalsIgnoreCase(stepColumn))
-						{
-							headerColumn = i;
-							break;
-						}
-				}
-				else if (headerColumn > -1)
-				{
-					if (values.length <= headerColumn)
-						continue;
-					if ((!values[headerColumn].trim().isEmpty()) && (!stepsNames.contains(values[headerColumn])))
-					{
-						stepsNames.add(values[headerColumn]);
-					}
-				}
-			}
-		}
-		finally
-		{
-			Utils.closeResource(reader);
-		}
-		
-		if (stepsNames.size() == 0)
-			throw new ClearThException("No steps references found in uploaded file " + resultConfigName + ". Please make sure that you upload a script file");
-		
+		List<String> stepsNames = null;
+		stepsNames = readMatrixFile(matrixFile);
+
+		if (stepsNames == null || stepsNames.isEmpty())
+			throw new ClearThException("No steps references found in uploaded file " + resultConfigName +
+					". Please make sure that you upload a script file with right extension");
+
 		List<Step> steps = new ArrayList<Step>();
 		for (String stepName : stepsNames)
+		{
 			steps.add(createStep(stepName, stepFactory));
-		
+		}
+
 		File configFile = File.createTempFile(resultConfigName + "_config_", ".cfg", destDir);
 		SchedulerData.saveSteps(configFile.getCanonicalPath(), configHeader, steps);
-		
+
 		return configFile;
 	}
-	
-	protected Step createStep(String stepName, StepFactory stepFactory)
+
+	protected Step createStep (String stepName, StepFactory stepFactory)
 	{
 		if (stepFactory != null)
-			return stepFactory.createStep(stepName, CoreStepKind.Default.getLabel(), "", StartAtType.DEFAULT, false, "", false, false, true, "");
-		return new DefaultStep(stepName, CoreStepKind.Default.getLabel(), "", StartAtType.DEFAULT, false, "", false, false, true, "");
+			return stepFactory.createStep(stepName, CoreStepKind.Default.getLabel(), "", StartAtType.DEFAULT,
+					false,
+					"", false, false, true, "");
+		return new DefaultStep(stepName, CoreStepKind.Default.getLabel(), "", StartAtType.DEFAULT, false, "", false,
+				false, true, "");
 	}
 }
