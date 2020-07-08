@@ -95,7 +95,11 @@ public class MatrixFunctions
 	{
 		return 100;
 	}
-	
+
+	protected Calendar getCalendar()
+	{
+		return Calendar.getInstance();
+	}
 
 	public String asNumber(String expected){
 		return String.format("%s'%s')}", ComparisonUtils.AS_NUMBER_START, expected);
@@ -185,12 +189,12 @@ public class MatrixFunctions
 	)
 	public long time(int days, int months, int years, int hours) throws FunctionException
 	{
-		Calendar c = Calendar.getInstance(),
+		Calendar c = getCalendar(),
 				now;
 		if (currentTime != null)
 			now = currentTime;
 		else
-			now = Calendar.getInstance();
+			now = getCalendar();
 		
 		if (businessDay != null)
 			c.setTime(businessDay);
@@ -214,7 +218,7 @@ public class MatrixFunctions
 			if (!weekendHoliday)
 				setWeekendHoliday(true);
 
-			Calendar c = Calendar.getInstance();
+			Calendar c = getCalendar();
 			c.setTimeInMillis(time);
 			time = getTime(c, offset, 0, 0, 0);
 
@@ -301,7 +305,7 @@ public class MatrixFunctions
 				throw new FunctionException("Unable to get next holiday: offset exceeds holidays count in current scheduler");
 		}
 
-		Calendar c = Calendar.getInstance();
+		Calendar c = getCalendar();
 		c.setTimeInMillis(date);
 
 		String dayStr;
@@ -368,7 +372,7 @@ public class MatrixFunctions
 	)
 	public long sysTime(int days, int months, int years, int hours) throws FunctionException
 	{	
-		Calendar c = Calendar.getInstance();
+		Calendar c = getCalendar();
 		return getTime(c, days, months, years, hours);
 	}
 	/**
@@ -496,7 +500,7 @@ public class MatrixFunctions
 	)
 	public long endOfMonth(long time) throws FunctionException
 	{
-		Calendar c = Calendar.getInstance();
+		Calendar c = getCalendar();
 		c.setTimeInMillis(time);
 		c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
 		while (checkHolidays(c))
@@ -506,14 +510,14 @@ public class MatrixFunctions
 	
 	public String date(int day) throws FunctionException
 	{
-		Calendar c = Calendar.getInstance();
+		Calendar c = getCalendar();
 		long shiftedTime = getTime(c, day, 0, 0, 0);
 		return new SimpleDateFormat("yyyyMMdd").format(shiftedTime);
 	}
 	
 	public String date8(long date)
 	{
-		Calendar cld = Calendar.getInstance();
+		Calendar cld = getCalendar();
 		cld.setTimeInMillis(date);
 		return String.format("%04d%02d%02d", cld.get(Calendar.YEAR), cld.get(Calendar.MONTH)+1, 
 				cld.get(Calendar.DAY_OF_MONTH));
@@ -521,7 +525,7 @@ public class MatrixFunctions
 	
 	public String time6(long time)
 	{
-		Calendar cld = Calendar.getInstance();
+		Calendar cld = getCalendar();
 		cld.setTimeInMillis(time);
 		return String.format("%02d%02d%02d", cld.get(Calendar.HOUR_OF_DAY), cld.get(Calendar.MINUTE), 
 				cld.get(Calendar.SECOND));
@@ -1053,10 +1057,10 @@ public class MatrixFunctions
 	{
 		if (baseTime != null)
 		{
-			this.baseTime = Calendar.getInstance();
+			this.baseTime = getCalendar();
 			this.baseTime.setTime(baseTime);
 			
-			baseTimeChanged = Calendar.getInstance();
+			baseTimeChanged = getCalendar();
 		}
 		else
 		{
