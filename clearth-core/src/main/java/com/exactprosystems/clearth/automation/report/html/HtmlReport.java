@@ -38,8 +38,6 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.exactprosystems.clearth.utils.Utils.closeResource;
-
 
 public class HtmlReport
 {
@@ -47,6 +45,8 @@ public class HtmlReport
 	
 	protected static final String pathToResourceFiles;
 	protected static final String[] resourceFiles = {"logo.gif", "show.gif", "hide.gif", "right.gif", "close.gif"};
+	protected static final String APP_LOGO = "app_logo.gif";
+	protected static final String APP_LOGO_NY = "app_logo_ny.gif";
 
 	protected String pathToFiles;
 	protected String reportFilePath;
@@ -103,34 +103,48 @@ public class HtmlReport
 
 	public void writeReport(List<Step> allSteps, List<String> matrixSteps, File actionsReportsDir, boolean onlyFailed) throws IOException, ReportException
 	{
-		PrintWriter writer = null;
-		try
+		copyReportFiles();
+		Map<String, Object> parameters = initTemplateParameters(allSteps, matrixSteps, actionsReportsDir, onlyFailed);
+
+		try (Writer writer = new BufferedWriter(new FileWriter(reportFilePath)))
 		{
-			Map<String, Object> parameters = initTemplateParameters(allSteps, matrixSteps, actionsReportsDir, onlyFailed);
-			
-			for (String file : getResourceFilesNames())
-				FileOperationUtils.copyFile(file, pathToResourceFiles, pathToFiles);
-
-			String logoFile = (DateTimeUtils.isNewYear() && newYearLogoExists()) ? "app_logo_ny.gif" : "app_logo.gif";
-			FileOperationUtils.copyFile(pathToResourceFiles+logoFile, pathToFiles+"app_logo.gif");
-
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(reportFilePath)));
 			ClearThCore.getInstance().getReportTemplatesProcessor().processTemplate(writer, parameters, ReportTemplateFiles.REPORT);
 		}
 		catch (TemplateException e)
 		{
-			getLogger().error("An error occurred while processing the template of the report: ", e);
-			throw new ReportException("An error occurred while processing the template of the report. Please check logs for details");
+			String errMsg = "An error occurred while processing the template of the report.";
+			getLogger().error(errMsg, e);
+			throw new ReportException(errMsg + " Please check logs for details");
 		}
-		finally
+
+		writeAdditionalInfo(parameters);
+	}
+
+	protected void writeAdditionalInfo(Map<String, Object> parameters)	throws IOException, ReportException
+	{
+		// Override to write addition information
+	}
+
+	protected void copyReportFiles() throws IOException
+	{
+		String logoFile = getAppLogoFile();
+
+		for (String file : getResourceFilesNames())
 		{
-			closeResource(writer);
+			FileOperationUtils.copyFile(file, pathToResourceFiles, pathToFiles);
 		}
+
+		FileOperationUtils.copyFile(pathToResourceFiles + logoFile, pathToFiles + APP_LOGO);
+	}
+
+	protected String getAppLogoFile()
+	{
+		return (DateTimeUtils.isNewYear() && newYearLogoExists()) ? APP_LOGO_NY : APP_LOGO;
 	}
 	
 	private boolean newYearLogoExists()
 	{
-		return new File(pathToResourceFiles + "app_logo_ny.gif").exists();
+		return new File(pathToResourceFiles + APP_LOGO_NY).exists();
 	}
 	
 	protected Map<String, Object> initTemplateParameters(List<Step> allSteps, List<String> matrixSteps, File actionsReportsDir, boolean onlyFailed)
