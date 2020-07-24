@@ -1066,7 +1066,7 @@ public abstract class Executor extends Thread
 		{
 			List<String> stepsMatrix = getMatrixSteps(matrix.getShortFileName());
 
-			reportsWriter.buildAndWriteReports(matrix, stepsMatrix, globalContext.getStartedByUser(), started, ended);
+			reportsWriter.buildAndWriteReports(matrix, stepsMatrix, globalContext.getStartedByUser());
 		}
 		
 		lastReportsInfo = new ReportsInfo();
