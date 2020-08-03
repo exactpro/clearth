@@ -26,7 +26,6 @@ import com.exactprosystems.clearth.automation.StepData;
 import com.exactprosystems.clearth.automation.schedulerinfo.template.SchedulerInfoTemplateFiles;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import freemarker.template.TemplateException;
 import org.apache.commons.collections4.CollectionUtils;
@@ -55,50 +54,56 @@ public class SchedulerInfoExporter
 	public MultiValuedMap<String, SchedulerInfoFile> collectFiles(Scheduler scheduler) throws IOException
 	{
 		// Obtain necessary metadata to collect scheduler files
-		List<XmlMatrixInfo> matricesInfo = null;
-		String reportsPath = null;
-		if (scheduler.isRunning())
-		{
-			ReportsInfo info = scheduler.makeCurrentReports(scheduler.getReportsDir() +
-					"current_" + DATETIME_FORMAT.format(new Date()));
-			matricesInfo = info.getMatrices();
-			reportsPath = info.getPath();
-		}
-		else
-		{
-			List<XmlSchedulerLaunchInfo> launches = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
-			XmlSchedulerLaunchInfo lastLaunch = launches.size() > 0 ? launches.get(0) : null;
-			if (lastLaunch != null)
-			{
-				matricesInfo = lastLaunch.getMatricesInfo();
-				reportsPath = ClearThCore.reportsPath() + lastLaunch.getReportsPath();
-			}
-		}
+		ReportsInfo reportsInfo = getReportsInfo(scheduler);
+
 		List<MatrixData> executedMatricesData = scheduler.getExecutedMatricesData();
 		List<StepData> executedStepsData = scheduler.getExecutedStepsData();
 
 		// if the scheduler was not started
-		if (matricesInfo == null || reportsPath == null || executedMatricesData.isEmpty() || executedStepsData.isEmpty())
+		if (reportsInfo.getMatrices() == null
+				|| reportsInfo.getPath() == null
+				|| executedMatricesData.isEmpty()
+				|| executedStepsData.isEmpty())
 			return MultiMapUtils.emptyMultiValuedMap();
 
 		// Create and fill up the storage with all files could be exported
 		MultiValuedMap<String, SchedulerInfoFile> storage = new HashSetValuedHashMap<>();
-		storage.put(SUMMARY_FILE, createSummaryFile(executedStepsData, executedMatricesData, matricesInfo));
+		storage.put(SUMMARY_FILE, createSummaryFile(executedStepsData, executedMatricesData, reportsInfo));
 		storage.putAll(MATRICES, collectMatrices(executedMatricesData));
-		storage.putAll(REPORTS, collectReports(reportsPath));
+		storage.putAll(REPORTS, collectReports(reportsInfo.getPath()));
 		storage = collectOtherFiles(storage, scheduler);
 		return MultiMapUtils.unmodifiableMultiValuedMap(storage);
 	}
-	
+
+	private ReportsInfo getReportsInfo(Scheduler scheduler)
+	{
+		if (scheduler.isRunning())
+		{
+			return scheduler.makeCurrentReports(scheduler.getReportsDir() +
+					"current_" + DATETIME_FORMAT.format(new Date()));
+		} else
+		{
+			List<XmlSchedulerLaunchInfo> launches = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
+			XmlSchedulerLaunchInfo lastLaunch = launches.isEmpty() ? null : launches.get(0);
+			ReportsInfo reportsInfo = new ReportsInfo();
+			if (lastLaunch != null)
+			{
+				reportsInfo.setMatrices(lastLaunch.getMatricesInfo());
+				reportsInfo.setPath(ClearThCore.reportsPath() + lastLaunch.getReportsPath());
+			}
+			return reportsInfo;
+		}
+	}
+
 	protected SchedulerInfoFile createSummaryFile(List<StepData> stepData, List<MatrixData> matricesData,
-	                                              List<XmlMatrixInfo> matricesInfo) throws IOException
+	                                              ReportsInfo reportsInfo) throws IOException
 	{
 		PrintWriter writer = null;
 		File summaryFile = new File(ClearThCore.tempPath() + SUMMARY_FILE);
 		try
 		{
 			writer = new PrintWriter(new BufferedWriter(new FileWriter(summaryFile)));
-			Map<String, Object> parameters = initTemplateParameters(stepData, matricesData, matricesInfo);
+			Map<String, Object> parameters = initTemplateParameters(stepData, matricesData, reportsInfo);
 			ClearThCore.getInstance().getSchedulerInfoTemplatesProcessor().processTemplate(writer, parameters,
 					SchedulerInfoTemplateFiles.SCHEDULER_INFO);
 		}
@@ -112,9 +117,9 @@ public class SchedulerInfoExporter
 		}
 		return new SchedulerInfoFile(SUMMARY_FILE, summaryFile);
 	}
-	
+
 	protected Map<String, Object> initTemplateParameters(List<StepData> stepData, List<MatrixData> matricesData,
-	                                                     List<XmlMatrixInfo> matricesInfo)
+	                                                     ReportsInfo reportsInfo)
 	{
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("pathToStyles", PATH_TO_RESOURCE_FILES + "style.css");
@@ -122,7 +127,7 @@ public class SchedulerInfoExporter
 		parameters.put("revision", getRevisionData());
 		parameters.put("stepsData", createExecutedStepsData(stepData));
 		parameters.put("matricesData", matricesData);
-		parameters.put("reportsData", matricesInfo);
+		parameters.put("reportsData", reportsInfo.getMatrices());
 		addExtraTemplateParameters(parameters);
 		return parameters;
 	}
