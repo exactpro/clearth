@@ -174,6 +174,9 @@ public abstract class Executor extends Thread
 			// Remove unused executed matrices from directory
 			removeUnusedExecutedMatrices(matrices);
 
+			// Storing executed matrices in scheduler
+			saveExecutedMatrices(scheduler, matrices);
+
 			scheduler.setExecutedStepsData(stepData);
 
 			if (!interrupted.get())
@@ -368,9 +371,6 @@ public abstract class Executor extends Thread
 			status.add("Making reports...");
 			makeReports(completedReportsDir, actionsReportsDir);
 			status.add("Reports made");
-
-			// Storing executed matrices in scheduler
-			saveExecutedMatrices(scheduler, matrices);
 
 			scheduler.saveExecutedStepsData();
 
