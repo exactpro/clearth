@@ -18,15 +18,6 @@
 
 package com.exactprosystems.clearth.web.beans.automation;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.*;
-
-import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
-import org.slf4j.Logger;
-
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
@@ -40,8 +31,19 @@ import com.exactprosystems.clearth.web.beans.tools.ConfigMakerToolBean;
 import com.exactprosystems.clearth.web.misc.MatrixIssue;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.*;
 
 import static com.exactprosystems.clearth.ClearThCore.configFiles;
+import static com.exactprosystems.clearth.automation.MatrixFileExtensions.isExtensionSupported;
+import static java.lang.String.format;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class MatricesAutomationBean extends ClearThBean {
@@ -142,7 +144,7 @@ public class MatricesAutomationBean extends ClearThBean {
 		try
 		{
 			matrixUploadHandler.handleUploadedFile(uploadedFile.getInputstream(), uploadedFileName, selectedScheduler());
-			String details = String.format("File '%s' is uploaded", uploadedFileName);
+			String details = format("File '%s' is uploaded", uploadedFileName);
 			MessageUtils.addInfoMessage("Success", details);
 		}
 		catch (MatrixUploadHandlerException e)
@@ -361,18 +363,30 @@ public class MatricesAutomationBean extends ClearThBean {
 
 	public void saveLinkedMatrix()
 	{
-		try {
-			selectedLinkedMatrix.setExecute(true);
-			selectedScheduler().addLinkedMatrix(selectedLinkedMatrix);
-			MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
-			selectedLinkedMatrix = mdf.createMatrixData();
-			WebUtils.addCanCloseCallback(true);
-		}
-		catch (Exception e)
+		String extension = FilenameUtils.getExtension(selectedLinkedMatrix.getLink());
+		if (isExtensionSupported(extension))
 		{
-			String msg = "Error while uploading '"+selectedLinkedMatrix.getLink()+"' linked matrix";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, e.getMessage());
+			try
+			{
+				selectedLinkedMatrix.setExecute(true);
+				selectedScheduler().addLinkedMatrix(selectedLinkedMatrix);
+				MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
+				selectedLinkedMatrix = mdf.createMatrixData();
+				WebUtils.addCanCloseCallback(true);
+			}
+			catch (Exception e)
+			{
+				String msg = "Error while uploading '" + selectedLinkedMatrix.getLink() + "' linked matrix";
+				getLogger().error(msg, e);
+				MessageUtils.addErrorMessage(msg, e.getMessage());
+			}
+		}
+		else
+		{
+			String msg = format("Matrix file format must be one of these: %s.",
+					MatrixFileExtensions.supportedExtensionsAsString);
+			MessageUtils.addErrorMessage("Unsupported matrix file format", msg);
+			return;
 		}
 	}
 

@@ -18,28 +18,6 @@
 
 package com.exactprosystems.clearth.automation;
 
-import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
-
-import javax.xml.bind.JAXBException;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
@@ -56,11 +34,34 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+
+import static com.exactprosystems.clearth.automation.MatrixFileExtensions.isExtensionSupported;
+import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
+import static java.lang.String.format;
 
 public abstract class Scheduler
 {
 	protected static final Logger logger = LoggerFactory.getLogger(Scheduler.class);
-	private static final Pattern EXTENSION_FILTER = Pattern.compile("(.*\\.(csv|xls|xlsx)$)");
 
 	protected final String scriptsDir, lastExecutionDataDir;
 	protected final ExecutorFactory executorFactory;
@@ -97,7 +98,8 @@ public abstract class Scheduler
 		
 		//If some matrices files were added before scheduler construction - let's add them to schedulerData
 		File mdFile = new File(scriptsDir);
-		File[] files = mdFile.listFiles(file -> EXTENSION_FILTER.matcher(file.getName()).matches());
+		File[] files =
+				mdFile.listFiles(file -> isExtensionSupported(FilenameUtils.getExtension(file.getName())));
 		if (files==null)
 			return;
 		MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
@@ -615,7 +617,8 @@ public abstract class Scheduler
 		boolean isNewMatrix = matrixFile == null; //Add matrix or Update matrix
 		String link = matrix.getLink();
 		String type = matrix.getType();
-		File tempFile = null;
+		String matrixFileExtension = "." + FilenameUtils.getExtension(link);
+		File tempFile;
 		
 		for (MatrixData m : schedulerData.getMatrices())
 		{
@@ -627,31 +630,40 @@ public abstract class Scheduler
 		InputStream input = null;
 		try
 		{
-			Map<String, Object> params = new HashMap<String, Object>();
-			MatrixProvider provider = getMatrixProviderHolder().getMatrixProvider(link, type, params);
-			matrix.setName(provider.getName());
-			for (MatrixData m: getMatricesData()) // check duplicated matrix names
-			{
-				if (!StringUtils.equals(matrix.getLink(), m.getLink())
+		Map<String, Object> params = new HashMap<String, Object>();
+		MatrixProvider provider = getMatrixProviderHolder().getMatrixProvider(link, type, params);
+		matrix.setName(provider.getName());
+		for (MatrixData m: getMatricesData()) // check duplicated matrix names
+		{
+			if (!StringUtils.equals(matrix.getLink(), m.getLink())
 					&& StringUtils.equals(matrix.getName(), m.getName())
 					&& isNewMatrix)
-					throw new ClearThException(String.format("'%s' matrix already exists. Please use unique matrix names.", matrix.getName()));
-			}
-			
-			input = provider.getMatrix();
-			
-			FileOutputStream output = null;
-			try
+				throw new ClearThException(
+						format("'%s' matrix already exists. Please use unique matrix names.", matrix.getName()));
+		}
+
+		input = provider.getMatrix();
+
+		FileOutputStream output = null;
+		try
+		{
+			File tempDir = new File(ClearThCore.automationStoragePath());
+			if(isExtensionSupported(matrixFileExtension))
 			{
-				File tempDir = new File(ClearThCore.automationStoragePath());
-				tempFile = File.createTempFile("matrix_", ".csv", tempDir);
-				output = new FileOutputStream(tempFile);
-				output.write(IOUtils.toByteArray(input));
+				tempFile = File.createTempFile("matrix_", matrixFileExtension, tempDir);
 			}
+			else
+			{
+				throw new ClearThException(format("Matrix file '%s' has unexpected type. Only %s are" +
+						" supported.", matrix.getName(), MatrixFileExtensions.supportedExtensionsAsString));
+			}
+			output = new FileOutputStream(tempFile);
+			output.write(IOUtils.toByteArray(input));
+		}
 			finally
-			{
-				IOUtils.closeQuietly(output);
-			}
+				{
+					IOUtils.closeQuietly(output);
+				}
 		}
 		finally
 		{
@@ -664,7 +676,7 @@ public abstract class Scheduler
 		File file;
 		if (matrix.getFile() == null)
 		{
-			String matrixName = STORED_MATRIX_PREFIX + currentDate.getTime() + ".csv";
+			String matrixName = STORED_MATRIX_PREFIX + currentDate.getTime() + matrixFileExtension;
 			matrix.setFile(new File(scriptsDir + matrixName));
 		}
 		file = matrix.getFile();
@@ -692,7 +704,7 @@ public abstract class Scheduler
 			{
 				if (StringUtils.equals(matrices.get(i).getName(), matrices.get(j).getName()))
 				{
-					throw new ClearThException(String.format("Some matrices contain '%s' duplicated names. Please use unique matrix names.",
+					throw new ClearThException(format("Some matrices contain '%s' duplicated names. Please use unique matrix names.",
 							matrices.get(i).getName()));
 				}
 			}
@@ -717,7 +729,8 @@ public abstract class Scheduler
 			for (MatrixData m: getMatricesData()) // check duplicated matrix names for linked matrices
 			{
 				if (m.isLinked() && StringUtils.equals(matrixName, m.getName()))
-					throw new ClearThException(String.format("'%s' matrix already exists. Please use unique matrix names.", matrixName));
+					throw new ClearThException(
+							format("'%s' matrix already exists. Please use unique matrix names.", matrixName));
 			}
 			
 			File matrix = new File(scriptsDir+matrixName);
