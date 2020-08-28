@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTf-8" standalone="yes"?>
+<SwiftDictionaryDesc>
+
+	<messageDesc name="Message" type="001">
+		<fieldDesc name="MANDATORY" sequenceType="MANDATORY" mandatory="true">
+			<fieldDesc name="A" tag="20C" qualifier="A" />
+			<fieldDesc name="B" tag="23G" />
+			<fieldDesc name="C" tag="98C" qualifier="C" />
+			<fieldDesc sequenceType="LINK" >
+				<fieldDesc name="D" tag="20C" qualifier="D" />
+			</fieldDesc>
+			<fieldDesc sequenceType="LINK" >
+				<fieldDesc name="E" tag="20C" qualifier="E" />
+			</fieldDesc>
+			<fieldDesc sequenceType="LINK" >
+				<fieldDesc name="F" tag="20C" qualifier="F" />
+			</fieldDesc>
+		</fieldDesc>
+		<fieldDesc sequenceType="NOTMANDATORY">
+			<fieldDesc name="G" tag="20C" qualifier="G" />
+		</fieldDesc>
+	</messageDesc>
+
+	<messageDesc name="RepeatGroupMessage" type="002">
+		<fieldDesc name="A" sequenceType="A"  mandatory="true">
+			<fieldDesc name="B" sequenceType="B" repeat="true" mandatory="false">
+				<fieldDesc name="C" tag="13A" qualifier="C" />
+				<fieldDesc name="D" tag="13B" qualifier="D" />
+			</fieldDesc>
+		</fieldDesc>
+	</messageDesc>
+
+	<messageDesc name="DefaultValueMessage" type="003">
+		<fieldDesc name="A" tag="23G" default="BBB" />
+	</messageDesc>
+
+	<messageDesc name="ValuePrefixMessage" type="004">
+		<fieldDesc name="A" tag="23G" valuePrefix="prefix" />
+	</messageDesc>
+
+	<messageDesc name="SeparatorMessage" type="005">
+		<fieldDesc name="A" tag="20C" separator="." qualifier="A" />
+	</messageDesc>
+
+</SwiftDictionaryDesc>

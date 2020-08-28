@@ -42,10 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -71,10 +71,15 @@ public class SwiftCodec implements ICodec
 	
 	public static final String DEFAULT_CODEC_NAME = "Swift";
 	public static final String MSG_DESC_DOES_NOT_FIT = "Message definition, founded by %s (type = %s), does not fit by %s.";
+	public static final String DATE_PATTERN = "yyMMdd";
+	public static final String DATE_TIME_PATTERN = "HHmm";
+	public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_PATTERN);
+	public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
 
 	protected SwiftDictionary dictionary;
 	protected ValueGenerator generator;
 	protected final MessageValidator messageValidator;
+	private final Clock clock;
 	
 	protected static final SwiftMetaData emptySwiftMetaData = new SwiftMetaData(Collections.emptyMap());
 
@@ -85,9 +90,15 @@ public class SwiftCodec implements ICodec
 	
 	public SwiftCodec(SwiftDictionary swiftDictionary, ValueGenerator generator)
 	{
+		this(swiftDictionary, generator, Clock.systemDefaultZone());
+	}
+
+	public SwiftCodec(SwiftDictionary swiftDictionary, ValueGenerator generator, Clock clock)
+	{
 		this.dictionary = swiftDictionary;
 		this.generator = generator;
 		this.messageValidator = createMessageValidator();
+		this.clock = clock;
 	}
 	
 	protected boolean ignoreEmptyValues()
@@ -113,11 +124,9 @@ public class SwiftCodec implements ICodec
 	
 	protected SwiftBlock2 encodeSwiftBlock2(ClearThMessage message)
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat("yyMMdd");
-		String curDate = formatter.format(Calendar.getInstance().getTime());
-
-		SimpleDateFormat timeFormatter = new SimpleDateFormat("HHmm");
-		String curTime = timeFormatter.format(Calendar.getInstance().getTime());
+		LocalDateTime time = LocalDateTime.now(clock);
+		String curDate = DATE_FORMATTER.format(time);
+		String curTime = DATE_TIME_FORMATTER.format(time);
 
 		SwiftMetaData metaData = (message instanceof ClearThSwiftMessage) ? 
 				((ClearThSwiftMessage)message).getMetaData() : emptySwiftMetaData;
@@ -148,15 +157,24 @@ public class SwiftCodec implements ICodec
 	
 	protected SwiftBlock3 encodeSwiftBlock3(ClearThMessage message, SwiftBlock4 swift4)
 	{
-		SwiftMetaData metaData = (message instanceof ClearThSwiftMessage) ? ((ClearThSwiftMessage)message).getMetaData() : null;
-		if (metaData == null || !metaData.hasBlock3Fields()) {
+		SwiftMetaData metaData =
+				(message instanceof ClearThSwiftMessage) ? ((ClearThSwiftMessage) message).getMetaData() : null;
+		if (metaData == null || !metaData.hasBlock3Fields())
 			return null;
-		}
 		
 		Set<String> block3Names = metaData.getCurrentBlock3Names();
 		List<Tag> tags = new ArrayList<>(block3Names.size());
-		for (String currentBlock3Name : block3Names) {
-			tags.add(new Tag(currentBlock3Name, metaData.getBlock3Tag(currentBlock3Name)));
+		for (String currentBlock3Name : block3Names)
+		{
+			String tagData = metaData.getBlock3Tag(currentBlock3Name);
+			
+			if(tagData == null)
+			{
+				logger.warn("There is tag {} without value in message's block 3.", currentBlock3Name);
+				continue;
+			}
+			
+			tags.add(new Tag(currentBlock3Name, tagData));
 		}
 
 		return new SwiftBlock3(tags);
@@ -187,7 +205,7 @@ public class SwiftCodec implements ICodec
 
 
 	@Override
-	public String encode(ClearThMessage<?> message) throws  EncodeException
+	public String encode(ClearThMessage<?> message) throws EncodeException
 	{
 		logger.trace("Message encoding started");
 
