@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -69,7 +69,9 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 	@Override
 	public void actionFinished(AsyncActionData actionData)
 	{
-		startedActions.remove(actionData);
+		if (!startedActions.remove(actionData))
+			return;
+
 		finishedActions.add(actionData);
 		
 		refreshState(actionData.getAction());
