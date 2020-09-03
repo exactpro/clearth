@@ -1,0 +1,5 @@
+#id,#globalstep,#timeout,#action,#param1
+id1,Step1,0,TestAction,1
+id2,Step1,0,TestAction,2
+id3,Step1,0,TestAction,3
+id4,Step2,3000,TestAction,1

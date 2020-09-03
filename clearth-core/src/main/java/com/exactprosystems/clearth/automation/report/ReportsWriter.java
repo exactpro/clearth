@@ -89,43 +89,14 @@ public class ReportsWriter
 	public void buildAndWriteReports(Matrix matrix, List<String> matrixSteps, String userName) throws IOException, ReportException
 	{
 		Date startTime = executor.getStarted();
-		Date endTime = calcReportEndTime();
+		Date endTime = executor.getReportEndTime();
 
 		buildAndWriteHtmlReports(matrix, matrixSteps, userName, startTime, endTime);
 		buildAndWriteJsonReports(matrix, matrixSteps, userName, startTime, endTime);
 		copyResultDetailsDir(matrix);
 	}
 
-	private Date calcReportEndTime()
-	{
-		if (executor.isTerminated())
-		{
-			return executor.getEnded();
-		}
-
-		Date endTime = executor.getEnded();
-		for (Step step : executor.getSteps())
-		{
-			if (!step.isExecute())
-				continue;
-
-			if (step.getStarted() == null)
-				return endTime;
-
-			for (Action action : step.getActions())
-			{
-				Date actionEndTime = action.getFinished();
-				if (actionEndTime == null)
-					break;
-
-				if (endTime == null || endTime.before(actionEndTime))
-					endTime = actionEndTime;
-			}
-		}
-		return endTime;
-	}
-	
-	protected void buildAndWriteHtmlReports(Matrix matrix, List<String> matrixSteps, String userName, 
+	protected void buildAndWriteHtmlReports(Matrix matrix, List<String> matrixSteps, String userName,
 			Date startTime, Date endTime) throws IOException, ReportException
 	{
 		logger.debug("Writing HTML reports for matrix '{}'...", matrix.getName());

@@ -856,6 +856,41 @@ public abstract class Executor extends Thread
 		return ended;
 	}
 
+	public Date getReportEndTime()
+	{
+		if (isTerminated())
+		{
+			return getEnded();
+		}
+
+		Date endTime = getEnded();
+		for (Step step : getSteps())
+		{
+			if (!step.isExecute())
+				continue;
+
+			if (step.getStarted() == null)
+				return endTime;
+
+			if (step.getFinished() != null)
+			{
+				endTime = step.getFinished();
+				continue;
+			}
+
+			for (Action action : step.getActions())
+			{
+				Date actionEndTime = action.getFinished();
+				if (actionEndTime == null)
+					break;
+
+				if (endTime == null || endTime.before(actionEndTime))
+					endTime = actionEndTime;
+			}
+		}
+		return endTime;
+	}
+
 	public void setEnded(Date ended)
 	{
 		this.ended = ended;
