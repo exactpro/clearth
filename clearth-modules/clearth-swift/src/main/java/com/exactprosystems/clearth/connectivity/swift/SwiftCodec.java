@@ -408,6 +408,10 @@ public class SwiftCodec implements ICodec
 
 		boolean isInbound = smd.isIncoming();
 		SwiftMessageDesc md = dictionary.getMessageDesc(msgType);
+		
+		if (md == null)
+			throw new EncodeException(String.format("There is no messages with type '%s' in the dictionary.", msgType));
+		
 		if(msgDescFits(md, isInbound))
 			return md;
 
