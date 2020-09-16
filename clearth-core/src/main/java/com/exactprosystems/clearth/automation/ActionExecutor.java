@@ -213,7 +213,6 @@ public class ActionExecutor implements Closeable
 		while ((a = asyncManager.getNextFinishedAction()) != null)
 		{
 			Action action = a.getAction();
-			actionToMvel(action);
 			updateAsyncActionReport(a);
 			afterAsyncAction(action);
 			cleanAfterAsyncAction(action);
@@ -288,7 +287,7 @@ public class ActionExecutor implements Closeable
 	
 	protected AsyncActionsManager createAsyncManager()
 	{
-		return new AsyncActionsManager(globalContext);
+		return new AsyncActionsManager(globalContext, this::actionToMvel);
 	}
 	
 	public static boolean isAsyncAction(Action action)

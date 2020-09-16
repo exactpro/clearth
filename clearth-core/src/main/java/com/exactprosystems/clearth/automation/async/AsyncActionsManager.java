@@ -18,23 +18,19 @@
 
 package com.exactprosystems.clearth.automation.async;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -45,6 +41,8 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 	public static final String DEFAULT_ASYNC_THREAD_NAME = "Default";
 	
 	protected final GlobalContext globalContext;
+	protected final Consumer<Action> actionToMvel;
+	
 	protected AsyncActionsThread defaultThread;
 	protected Map<String, AsyncActionsThread> threads;
 	protected final Set<AsyncActionData> startedActions, finishedActions;
@@ -53,9 +51,10 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		actionsBeforeStep;  //Arranges actions by step name to quickly get know which actions should finish before the step starts
 	protected final Set<AsyncActionData> actionsForScheduler;
 	
-	public AsyncActionsManager(GlobalContext globalContext)
+	public AsyncActionsManager(GlobalContext globalContext, Consumer<Action> actionToMvel)
 	{
 		this.globalContext = globalContext;
+		this.actionToMvel = actionToMvel;
 		
 		startedActions = createActionDataSet();
 		finishedActions = createActionDataSet();
@@ -74,7 +73,13 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 
 		finishedActions.add(actionData);
 		
-		refreshState(actionData.getAction());
+		Action action = actionData.getAction();
+		// Need to apply action parameters to MVEL right here because they could be used in further actions.
+		// Setting this params in ActionExecutor on async action status checking could cause calculation exceptions
+		// because next action may be already started but previous params weren't applied to MVEL
+		actionToMvel.accept(action);
+		
+		refreshState(action);
 		
 		try
 		{
