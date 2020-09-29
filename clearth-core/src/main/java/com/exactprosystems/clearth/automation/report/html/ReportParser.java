@@ -213,47 +213,47 @@ public class ReportParser
 		{
 			strReader = new StringReader(actionBlock);
 			reader = factory.createXMLEventReader(strReader);
+
+			LinkedList<ActionDesc> subList = new LinkedList<ActionDesc>();
+			findNextTag(reader, TAG_SPAN);
+			String actionTitle = prepareTagValue(reader.getElementText());
+			boolean inverted = actionTitle.contains(FLAG_INVERTED);
+			Matcher matcher = NAME_STATUS_PATTERN.matcher(actionTitle);
+			if (!matcher.find())
+				return;
+			String actionId = matcher.group(1);
+			String actionName = matcher.group(2);
+			ActionDesc actionDesc = new ActionDesc(actionId, actionName, stepName);
+			subList.add(actionDesc);
+			nextTag(reader);	// skip action container tag
+	
+			parseDescParams(reader, actionDesc);
+			if (inverted)
+				actionDesc.addParam(ActionGenerator.COLUMN_INVERT, "true");
+			findNextTag(reader, TAG_TD, ATTR_CLASS, CLASS_PARAMS);
+			nextTag(reader);	// skip 'Input parameters' label
+			StartElement nextTag = nextTag(reader);
+			if (StringUtils.equals(getTagName(nextTag), TAG_TABLE))
+			{
+				parseParamsTable(reader, actionDesc.inputParams);
+			}
+			nextTag = nextTag(reader);
+			/* basic params formulas present */
+			if (StringUtils.equals(getTagName(nextTag), TAG_SPAN) && isNextCharacters(reader)
+					&& StringUtils.equals(LABEL_BASIC_PARAMS, reader.getElementText()))
+			{
+				findNextTag(reader, TAG_TABLE);
+				parseParamsTable(reader, actionDesc.inputParams, true);
+			}
+			findNextTag(reader, TAG_DIV, LABEL_SUBACTIONS);
+			parseSubActions(reader, subList, stepName);
+	
+			actions.addAll(subList);
 		} finally {
 			Utils.closeResource(strReader);
 			if (reader != null)
 				reader.close();
 		}
-
-		LinkedList<ActionDesc> subList = new LinkedList<ActionDesc>();
-		findNextTag(reader, TAG_SPAN);
-		String actionTitle = prepareTagValue(reader.getElementText());
-		boolean inverted = actionTitle.contains(FLAG_INVERTED);
-		Matcher matcher = NAME_STATUS_PATTERN.matcher(actionTitle);
-		if (!matcher.find())
-			return;
-		String actionId = matcher.group(1);
-		String actionName = matcher.group(2);
-		ActionDesc actionDesc = new ActionDesc(actionId, actionName, stepName);
-		subList.add(actionDesc);
-		nextTag(reader);	// skip action container tag
-
-		parseDescParams(reader, actionDesc);
-		if (inverted)
-			actionDesc.addParam(ActionGenerator.COLUMN_INVERT, "true");
-		findNextTag(reader, TAG_TD, ATTR_CLASS, CLASS_PARAMS);
-		nextTag(reader);	// skip 'Input parameters' label
-		StartElement nextTag = nextTag(reader);
-		if (StringUtils.equals(getTagName(nextTag), TAG_TABLE))
-		{
-			parseParamsTable(reader, actionDesc.inputParams);
-		}
-		nextTag = nextTag(reader);
-		/* basic params formulas present */
-		if (StringUtils.equals(getTagName(nextTag), TAG_SPAN) && isNextCharacters(reader)
-				&& StringUtils.equals(LABEL_BASIC_PARAMS, reader.getElementText()))
-		{
-			findNextTag(reader, TAG_TABLE);
-			parseParamsTable(reader, actionDesc.inputParams, true);
-		}
-		findNextTag(reader, TAG_DIV, LABEL_SUBACTIONS);
-		parseSubActions(reader, subList, stepName);
-
-		actions.addAll(subList);
 	}
 
 	protected void parseDescParams(XMLEventReader reader, ActionDesc actionDesc) throws XMLStreamException
