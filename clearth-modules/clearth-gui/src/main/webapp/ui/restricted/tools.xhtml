@@ -635,10 +635,10 @@
 						<h:outputText style="color:#{dictionaryValidatorToolBean.validationColor};" value="#{dictionaryValidatorToolBean.validationMessage}" />
 					</div>
 					<br />
-					<c:if test="#{dictionaryValidatorToolBean.comparationTreeAvaliable}">
+					<c:if test="#{dictionaryValidatorToolBean.comparisonTreeAvailable}">
 						<div class="ui-grid-row">
-							<h:outputText value="Messages comparation table:" />
-							<p:treeTable value="#{dictionaryValidatorToolBean.comparationTree}" var="treeNode">
+							<h:outputText value="Messages comparison table:" />
+							<p:treeTable value="#{dictionaryValidatorToolBean.comparisonTree}" var="treeNode">
 								<p:column headerText="Original message" style="width: 50%; min-width: 50%;">
 									<h:outputText value="#{treeNode.value1}" style="background-color:#{treeNode.equal ? '' : 'LightCoral'}; white-space: normal; word-wrap: break-word;"/>
 								</p:column>
@@ -648,7 +648,7 @@
 							</p:treeTable>
 						</div>
 					</c:if>
-					<c:if test="#{!dictionaryValidatorToolBean.comparationTreeAvaliable}">
+					<c:if test="#{!dictionaryValidatorToolBean.comparisonTreeAvailable}">
 						<h:outputText value="#{dictionaryValidatorToolBean.validationDetails}" style="white-space: pre-line" />
 					</c:if>
 				</h:form>

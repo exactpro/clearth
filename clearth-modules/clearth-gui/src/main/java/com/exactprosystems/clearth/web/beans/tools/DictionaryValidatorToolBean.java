@@ -33,10 +33,7 @@ import com.exactprosystems.clearth.xmldata.XmlCodecConfig;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
 
@@ -47,53 +44,43 @@ public class DictionaryValidatorToolBean extends ClearThBean
 	protected CodecsStorage codecs;
 	protected Set<String> validationConfigs;
 	
-	protected String textToParse = "", decodedText = "", encodedText = "", validationDetails = "",
-			textToParseFormat = "", currValidationConfig = "";
+	protected String textToParse = "", textToParseFormat = "", currValidationConfig = "";
+	protected DictionaryValidationResult result;
 	
-	protected boolean validatedSuccessfully = false;
-	
-	protected List<Integer> differencesIndexes = new ArrayList<Integer>();
-	protected TreeNode comparationTree = new DefaultTreeNode();
+	protected TreeNode comparisonTree = new DefaultTreeNode();
 	
 	@PostConstruct
 	public void init()
 	{
 		dictionaryValidatorTool = ClearThCore.getInstance().getToolsFactory().createDictionaryValidatorTool();
-		
 		codecs = ClearThCore.getInstance().getCodecs();
 		
 		currValidationConfig = DictionaryValidatorTool.getDefaultValidationConfig();
-		
-		validationConfigs = new HashSet<String>(DictionaryValidatorTool.getValidationConfigs());
+		validationConfigs = new LinkedHashSet<>(DictionaryValidatorTool.getValidationConfigs());
 		validationConfigs.remove(currValidationConfig);
 		
-		textToParseFormat = getTextToParseFormatDefault();
+		textToParseFormat = getCodecDefault();
 	}
 	
 	public void validateDictionary()
 	{
 		if (getLogger().isInfoEnabled())
-			getLogger().info("Parsing text: " + textToParse + Utils.EOL + "Validating format: " + textToParseFormat);
+			getLogger().info("Validating format: {}; Parsing text: {}", textToParseFormat, textToParse);
 		
-		DictionaryValidationResult result = null;
-		List<DictionaryValidatorError> errors = new ArrayList<>();
+		List<DictionaryValidatorError> errors = new LinkedList<>();
 		try
 		{
 			result = dictionaryValidatorTool.validateDictionary(textToParse, textToParseFormat, currValidationConfig, errors);
+			createComparisonTree(result);
 		}
 		catch (Exception e)
 		{
 			handleException(textToParseFormat+": could not validate dictionary", e);
-			handleErrors(errors);
-			return;
 		}
-		
-		validatedSuccessfully = result.isValidatedSuccessfully();
-		decodedText = result.getOriginalText();
-		encodedText = result.getEncodedText();
-		validationDetails = result.getValidationDetails();
-		handleErrors(errors);
-		createComparisonTree(result);
+		finally
+		{
+			handleErrors(errors);
+		}
 	}
 	
 	protected void handleErrors(List<DictionaryValidatorError> errors)
@@ -103,10 +90,9 @@ public class DictionaryValidatorToolBean extends ClearThBean
 	}
 	
 	protected void createComparisonTree(DictionaryValidationResult result)
-	{	
-		comparationTree = new DefaultTreeNode();
-		String[] encodedStrings = result.getEncodedText().split(Utils.EOL),
-				originalStrings = null;
+	{
+		comparisonTree = new DefaultTreeNode();
+		String[] originalStrings, encodedStrings = result.getEncodedText().split(Utils.EOL);
 		
 		String config = result.getValidationConfigName();
 		switch (config)
@@ -115,7 +101,7 @@ public class DictionaryValidatorToolBean extends ClearThBean
 				originalStrings = result.getOriginalText().split(Utils.EOL);
 				break;
 			case DictionaryValidatorTool.NO_LINE_SEPARATION_CONFIG:
-				originalStrings = formateStringByPattern(result.getOriginalText(), encodedStrings);
+				originalStrings = formatStringByPattern(result.getOriginalText(), encodedStrings);
 				break;
 			default:
 				return;
@@ -127,23 +113,23 @@ public class DictionaryValidatorToolBean extends ClearThBean
 		{
 			original = originalStrings[i];
 			encoded = encodedStrings[i];
-			new DefaultTreeNode(new ComparationNode(original, encoded, original.equals(encoded)), comparationTree);
+			new DefaultTreeNode(new ComparationNode(original, encoded, original.equals(encoded)), comparisonTree);
 		}
 		
 		// checking for extra strings in both arrays
 		for (int i = count; i < originalStrings.length; i++)
 		{
-			new DefaultTreeNode(new ComparationNode(originalStrings[i], "", false), comparationTree);
+			new DefaultTreeNode(new ComparationNode(originalStrings[i], "", false), comparisonTree);
 		}
 		for (int i = count; i < encodedStrings.length; i++)
 		{
-			new DefaultTreeNode(new ComparationNode("", encodedStrings[i], false), comparationTree);
+			new DefaultTreeNode(new ComparationNode("", encodedStrings[i], false), comparisonTree);
 		}
 	}
 	
-	protected String[] formateStringByPattern(String original, String[] pattern)
+	protected String[] formatStringByPattern(String original, String[] pattern)
 	{
-		List<String> originalStringsList = new ArrayList<String>();
+		List<String> originalStringsList = new LinkedList<>();
 		String originalWithoutFormatting = original.replace(Utils.EOL, "");
 		
 		int originalLength = originalWithoutFormatting.length(),
@@ -161,7 +147,7 @@ public class DictionaryValidatorToolBean extends ClearThBean
 		if (startIndex < originalLength)
 			originalStringsList.add(original.substring(startIndex, originalLength));
 		
-		return originalStringsList.toArray(new String[originalStringsList.size()]);
+		return originalStringsList.toArray(new String[0]);
 	}
 	
 	protected void handleException(String message, Exception e)
@@ -190,36 +176,16 @@ public class DictionaryValidatorToolBean extends ClearThBean
 	{
 		if (codecs == null || codecs.getConfigsList().isEmpty())
 			return "";
-		
 		if (codecs.getConfigsList().size() == 1)
-		{
-			for (String value : codecs.getCodecNames())
-				return value;
-		}
-		
+			return codecs.getCodecNames().iterator().next();
 		return DictionaryValidatorTool.AUTO_FORMAT;
 	}
-	
 	
 	public String getTextToParseFormat()
 	{
 		return textToParseFormat;
 	}
 
-	public String getTextToParseFormatDefault()
-	{
-		if (codecs == null || codecs.getConfigsList().isEmpty())
-			return "";
-		
-		if (codecs.getConfigsList().size() == 1)
-		{
-			for (String value : codecs.getCodecNames())
-				return value;
-		}
-		
-		return DictionaryValidatorTool.AUTO_FORMAT;
-	}
-	
 	public void setTextToParseFormat(String textToParseFormat)
 	{
 		this.textToParseFormat = textToParseFormat;
@@ -230,7 +196,7 @@ public class DictionaryValidatorToolBean extends ClearThBean
 	{
 		return validationConfigs;
 	}
-		
+	
 	public String getValidationConfig()
 	{
 		return currValidationConfig;
@@ -258,50 +224,39 @@ public class DictionaryValidatorToolBean extends ClearThBean
 	}
 	
 	
-	public String getDecodedText()
-	{
-		return decodedText;
-	}
-	
 	public String getEncodedText()
 	{
-		return encodedText;
+		return result == null ? "" : result.getEncodedText();
 	}
 	
 	
 	public boolean isValidatedSuccessfully()
 	{
-		return validatedSuccessfully;
+		return result != null && result.isValidatedSuccessfully();
 	}
 	
 	public String getValidationDetails()
 	{
-		return validationDetails;
+		return result == null ? "" : result.getValidationDetails();
 	}
 	
 	public String getValidationMessage()
 	{
-		if (encodedText.isEmpty())
-			return "";
-		
-		return "messages "+(isValidatedSuccessfully() ? "are equal" : "have differences");
+		return getEncodedText().isEmpty() ? "" : (isValidatedSuccessfully() ? "passed" : "failed");
 	}
 	
 	public String getValidationColor()
 	{
-		if (encodedText.isEmpty())
-			return "";
-		
-		return isValidatedSuccessfully() ? "green" : "red";
+		return getEncodedText().isEmpty() ? "" : isValidatedSuccessfully() ? "green" : "red";
 	}
 	
-	public boolean isComparationTreeAvaliable()
+	public boolean isComparisonTreeAvailable()
 	{
-		return comparationTree != null && !comparationTree.getChildren().isEmpty();
+		return comparisonTree != null && !comparisonTree.getChildren().isEmpty();
 	}
 	
-	public TreeNode getComparationTree()
+	public TreeNode getComparisonTree()
 	{
-		return comparationTree;
+		return comparisonTree;
 	}
 }

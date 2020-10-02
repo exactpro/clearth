@@ -24,20 +24,13 @@ import com.exactprosystems.clearth.utils.Utils;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.custommonkey.xmlunit.DetailedDiff;
-import org.custommonkey.xmlunit.Diff;
-import org.custommonkey.xmlunit.Difference;
+import org.custommonkey.xmlunit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.xml.bind.UnmarshalException;
 
@@ -46,18 +39,25 @@ public class DictionaryValidatorTool
 	private static final Logger logger = LoggerFactory.getLogger(DictionaryValidatorTool.class);
 	
 	public static final String AUTO_FORMAT = "auto",
-			NO_LINE_SEPARATION_CONFIG = "No line separation", NO_LINE_SEPARATION_API = "nolineseparation",
+			NO_LINE_SEPARATION_CONFIG = "Ignore line separation", NO_LINE_SEPARATION_API = "nolineseparation",
 			BY_CHARACTERS_CONFIG = "By characters", BY_CHARACTERS_API = "bycharacters",
 			XML_CONFIG = "Xml", XML_API = "xml";
 	
-	protected static final String SUCCESS_MESSAGE = "Dictionary validated successfully";
+	public static final String EOL_REGEX = "\\r\\n|\\r|\\n";
+	protected static final String SUCCESS_MESSAGE = "Dictionary validated successfully.";
 	
-	protected static final Set<String> VALIDATION_CONFIGS = new LinkedHashSet<String>(
+	protected static final Set<String> VALIDATION_CONFIGS = new LinkedHashSet<>(
 			Arrays.asList(NO_LINE_SEPARATION_CONFIG, BY_CHARACTERS_CONFIG, XML_CONFIG));
 	
-	//errorsOutput is not part of result because method may fail with exception but other not so critical errors should be seen as well
-	public DictionaryValidationResult validateDictionary(String originalText, String textToParseFormat,
-			String validationConfig, List<DictionaryValidatorError> errorsOutput) throws Exception
+	static
+	{
+		XMLUnit.setIgnoreWhitespace(true);
+	}
+
+	// errorsOutput is not part of result because method may fail with exception
+	// but other not so critical errors should be seen as well
+	public DictionaryValidationResult validateDictionary(String originalText, String textToParseFormat, String validationConfig,
+			List<DictionaryValidatorError> errorsOutput) throws EncodeException, IOException, SAXException
 	{
 		if (StringUtils.isEmpty(originalText))
 			throw new IllegalArgumentException("Nothing to validate: original text is empty");
@@ -75,10 +75,10 @@ public class DictionaryValidatorTool
 		switch (validationConfig)
 		{
 			case NO_LINE_SEPARATION_CONFIG:
-				validateWithoutFormating(result);
+				validateWithoutFormatting(result);
 				break;
 			case BY_CHARACTERS_CONFIG:
-				validateWithFormating(result);
+				validateWithFormatting(result);
 				break;
 			case XML_CONFIG:
 				validateXml(result);
@@ -89,18 +89,16 @@ public class DictionaryValidatorTool
 		return result;
 	}
 	
-	protected void encodeOriginalText(DictionaryValidationResult result, String textToParseFormat, List<DictionaryValidatorError> errors) throws EncodeException
-	{	
-		String origingalText = result.getOriginalText();
-		
+	protected void encodeOriginalText(DictionaryValidationResult result, String textToParseFormat,
+			List<DictionaryValidatorError> errors) throws EncodeException
+	{
 		MessageParserTool msgParser = new MessageParserTool();
-		msgParser.parseText(origingalText, textToParseFormat);
+		msgParser.parseText(result.getOriginalText(), textToParseFormat);
 		
-		boolean parsingError = false;
+		boolean parsingError = StringUtils.isEmpty(msgParser.getParsedText()) && !msgParser.getExceptionMap().isEmpty();
 		
-		if (StringUtils.isEmpty(msgParser.getParsedText()) && !msgParser.getExceptionMap().isEmpty())
+		if (parsingError)
 		{
-			parsingError = true;
 			for (Map.Entry<String, Exception> entry : msgParser.getExceptionMap().entrySet())
 			{
 				if (entry.getValue() instanceof UnmarshalException)
@@ -112,18 +110,19 @@ public class DictionaryValidatorTool
 		
 		ICodec codec = msgParser.getCodec();
 		if (codec == null || parsingError)
-			throw new IllegalArgumentException("Unable to parse text with '"+textToParseFormat+"' format");
+			throw new IllegalArgumentException("Unable to parse text with given format: " + textToParseFormat);
 		
 		result.setDictionaryName(msgParser.getCodecName());
 		result.setEncodedText(codec.encode(msgParser.getParsedMsg()));
 	}
 	
-	protected void validateWithoutFormating(DictionaryValidationResult result)
+	protected void validateWithoutFormatting(DictionaryValidationResult result)
 	{
-		validateText(result.getOriginalText().replace(Utils.EOL, ""), result.getEncodedText().replace(Utils.EOL, ""), result);
+		validateText(result.getOriginalText().replaceAll(EOL_REGEX, ""),
+				result.getEncodedText().replaceAll(EOL_REGEX, ""), result);
 	}
 	
-	protected void validateWithFormating(DictionaryValidationResult result)
+	protected void validateWithFormatting(DictionaryValidationResult result)
 	{
 		validateText(result.getOriginalText(), result.getEncodedText(), result);
 	}
@@ -143,35 +142,31 @@ public class DictionaryValidatorTool
 	
 	protected void validateXml(DictionaryValidationResult result) throws SAXException, IOException
 	{
-		String original = result.getOriginalText().replace(Utils.EOL, "");
-		String encoded = result.getEncodedText().replace(Utils.EOL, "");
-		
-		DetailedDiff detailedDiff = null;
-		detailedDiff = new DetailedDiff(new Diff(original, encoded));
-		
-		List<Difference> allDifferences = new ArrayList<Difference>();
-		if (detailedDiff != null)
-			allDifferences = detailedDiff.getAllDifferences();
-		
-		boolean validatedSuccessfully = allDifferences.isEmpty();
-		result.setValidatedSuccessfully(validatedSuccessfully);
-		
-		String validationDetails = SUCCESS_MESSAGE;
-		if (!validatedSuccessfully)
+		Diff diff = new Diff(result.getOriginalText(), result.getEncodedText());
+		if (diff.identical())
 		{
-			StringBuilder detailsBuilder = new StringBuilder("Differences: ");
-			for (Difference diff : allDifferences)
-			{
-				detailsBuilder.append(Utils.EOL+diff.toString());
-			}
-			validationDetails = detailsBuilder.toString();
+			result.setValidatedSuccessfully(true);
+			result.setValidationDetails("Messages are identical.");
+			return;
 		}
-		result.setValidationDetails(validationDetails);
+		
+		diff.overrideElementQualifier(new ElementNameAndTextQualifier());
+		result.setValidatedSuccessfully(diff.similar());
+		
+		StringBuilder detailsBuilder = new StringBuilder();
+		if (result.isValidatedSuccessfully())
+			detailsBuilder.append("Messages are similar, but have differences.").append(Utils.EOL).append(Utils.EOL);
+		detailsBuilder.append("Differences:");
+		for (Difference difference : new DetailedDiff(diff).getAllDifferences())
+		{
+			detailsBuilder.append(Utils.EOL).append(difference);
+		}
+		result.setValidationDetails(detailsBuilder.toString());
 	}
 	
 	protected List<Integer> compareArrays(Object[] array1, Object[] array2)
 	{
-		List<Integer> differencesIndexes = new ArrayList<Integer>();
+		List<Integer> differencesIndexes = new LinkedList<>();
 		
 		int count = Math.min(array1.length, array2.length);
 		for (int i = 0; i < count; i++)
@@ -189,7 +184,6 @@ public class DictionaryValidatorTool
 				differencesIndexes.add(i);
 			}
 		}
-		
 		return differencesIndexes;
 	}
 	

@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.tools;
 
+import com.exactprosystems.clearth.utils.Utils;
 
 public class DictionaryValidationResult
 {
@@ -39,7 +40,7 @@ public class DictionaryValidationResult
 	}
 	
 	public DictionaryValidationResult(String dictionaryName, String validationConfigName, String originalText,
-											String encodedText, boolean validatedSuccessfully, String validationDetails)
+			String encodedText, boolean validatedSuccessfully, String validationDetails)
 	{
 		this.dictionaryName = dictionaryName;
 		this.validationConfigName = validationConfigName;
@@ -76,7 +77,7 @@ public class DictionaryValidationResult
 
 	public void setOriginalText(String originalText)
 	{
-		this.originalText = originalText;
+		this.originalText = fixEOL(originalText);
 	}
 
 	public String getEncodedText()
@@ -86,7 +87,7 @@ public class DictionaryValidationResult
 
 	public void setEncodedText(String encodedText)
 	{
-		this.encodedText = encodedText;
+		this.encodedText = fixEOL(encodedText);
 	}
 
 	public boolean isValidatedSuccessfully()
@@ -107,5 +108,15 @@ public class DictionaryValidationResult
 	public void setValidationDetails(String validationDetails)
 	{
 		this.validationDetails = validationDetails;
+	}
+
+	private String fixEOL(String str)
+	{
+		String res = str.replaceAll(DictionaryValidatorTool.EOL_REGEX, Utils.EOL);
+		while (res.endsWith(Utils.EOL))
+		{
+			res = res.replaceFirst("(?s)(.*)" + Utils.EOL, "$1");
+		}
+		return res;
 	}
 }
