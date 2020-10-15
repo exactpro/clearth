@@ -37,6 +37,8 @@ Here are the links to the tutorial videos introducing you to the main features o
     https://youtu.be/Mv3WxHgjmSQ
   - Automation Example with Messages
     https://youtu.be/uFbp8RpGrCw
+  - Built-in Tools
+    https://youtu.be/akayR4N3dhk
 
 
 
