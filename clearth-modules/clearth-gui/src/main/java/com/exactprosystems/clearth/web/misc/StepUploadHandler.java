@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,141 +33,112 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class StepUploadHandler
 {
 	private static final Logger logger = LoggerFactory.getLogger(StepUploadHandler.class);
-
-	public static final String CSV = "csv",
-			CFG = "cfg",
-			VALID_MIME_TYPE_STEPS_CFG = "text/";
-
+	
+	public static final String CSV = "csv", CFG = "cfg", VALID_MIME_TYPE_STEPS_CFG = "text/", ERROR = "Error";
+	
 	public static void uploadSteps(FileUploadEvent event, String mimeType, Scheduler scheduler, boolean appendSteps)
 	{
 		UploadedFile uploadedFile = event.getFile();
 		if (!isValidStepConfig(uploadedFile, mimeType))
 			return;
-
+		
 		String uploadedFilename = uploadedFile.getFileName();
+		File storedFile = null;
 		try
 		{
-			File storageDir = new File(ClearThCore.automationStoragePath());
-			File storedFile = WebUtils.storeUploadedFile(uploadedFile, storageDir, "scconfig_", "."+CSV);
-
+			storedFile = WebUtils.storeUploadedFile(uploadedFile, new File(ClearThCore.automationStoragePath()), "scconfig_", "." + CSV);
 			if (!checkStepConfigHeader(uploadedFilename, storedFile))
+			{
+				deleteStoredFile(storedFile);
 				return;
-
+			}
+			
 			List<String> warnings = new ArrayList<>();
 			scheduler.uploadSteps(storedFile, uploadedFilename, warnings, appendSteps);
 			checkUploadWarnings(warnings);
-
-			logger.info("uploaded configuration '{}' for scheduler '{}' with {}", uploadedFilename,
+			logger.info("Uploaded configuration '{}' for scheduler '{}' with {} steps", uploadedFilename,
 					scheduler.getName(), appendSteps ? "append" : "apply");
 		}
 		catch (Exception e)
 		{
 			String message = String.format("Error occurred while working with scheduler configuration from file '%s'", uploadedFilename);
 			logger.error(message, e);
-			MessageUtils.addErrorMessage("Error", message + ": " + e.getMessage());
+			MessageUtils.addErrorMessage(ERROR, message + ": " + e.getMessage());
+			
+			if (storedFile != null)
+				deleteStoredFile(storedFile);
 		}
 	}
-
-	private static void deleteStoredFile(File storedFile)
-	{
-		try
-		{
-			Files.deleteIfExists(Paths.get(storedFile.getAbsolutePath()));
-		}
-		catch (IOException e)
-		{
-			logger.warn("Error while deleting '"+storedFile.getName()+"' file.", e);
-			return;
-		}
-		
-		logger.info("File '{}' has been deleted.", storedFile.getName());
-	}
-
-	private static void checkUploadWarnings(List<String> warnings)
-	{
-		if (warnings.isEmpty())
-		{
-			MessageUtils.addInfoMessage("Success", "Scheduler configuration uploaded.");
-		}
-		else
-		{
-			String separator = "\r\n<br /><li>";
-			MessageUtils.addWarningMessage("Warning",
-					"Scheduler configuration uploaded with errors:" + separator +
-							StringUtils.join(warnings, separator));
-		}
-	}
-
+	
+	
 	public static boolean isValidStepConfig(UploadedFile file, String mimeType)
 	{
-		if ((file == null) || (file.getContents().length == 0))
+		if (file == null || file.getContents().length == 0)
 		{
-			logger.error("Steps configuration file doesn't exist or empty");
-			MessageUtils.addErrorMessage("Error", "Error occurred while working with scheduler configuration");
+			String message = "Steps configuration file doesn't exist or empty";
+			logger.error(message);
+			MessageUtils.addErrorMessage(ERROR, message);
 			return false;
 		}
 		
-		boolean isCsvOrCfg = FilenameUtils.isExtension(file.getFileName().toLowerCase(), new String[]{CSV, CFG});
-		boolean isValidContent = mimeType == null ? false : mimeType.startsWith(VALID_MIME_TYPE_STEPS_CFG);
-
+		boolean isCsvOrCfg = FilenameUtils.isExtension(file.getFileName().toLowerCase(), new String[] { CSV, CFG }),
+				isValidContent = mimeType != null && mimeType.startsWith(VALID_MIME_TYPE_STEPS_CFG);
 		if (!isValidContent || !isCsvOrCfg)
 		{
-			String message =
-					String.format("Invalid file type for steps configuration file. Valid types are: '%s', '%s'", CFG, CSV);
+			String message = String.format("Invalid file type for steps configuration file. Valid ones are: '%s', '%s'", CFG, CSV);
 			logger.error(message);
-			MessageUtils.addErrorMessage("Error", message);
+			MessageUtils.addErrorMessage(ERROR, message);
 			return false;
 		}
-
 		return true;
 	}
-
+	
 	public static boolean checkStepConfigHeader(String uploadedFilename, File storedFile) throws IOException
 	{
-		String storedFilename = storedFile.getAbsolutePath();
-		List<String> undefinedFields;
-		try
-		{
-			undefinedFields = readConfigHeaders(storedFilename);
-		}
-		catch (IOException e)
-		{
-			deleteStoredFile(storedFile);
-			throw e;
-		}
-
+		List<String> undefinedFields = readConfigHeaders(storedFile.getAbsolutePath());
 		if (!undefinedFields.isEmpty())
 		{
 			String message = String.format("File '%s' doesn't contain the following header parameters: %s", uploadedFilename, undefinedFields);
 			logger.error(message);
-			MessageUtils.addErrorMessage("Error", message);
-			deleteStoredFile(storedFile);
+			MessageUtils.addErrorMessage(ERROR, message);
 			return false;
 		}
-
 		return true;
 	}
-
-	private static List<String> readConfigHeaders(String storedFilename) throws IOException
+	
+	private static void checkUploadWarnings(List<String> warnings)
+	{
+		if (warnings.isEmpty())
+			MessageUtils.addInfoMessage("Success", "Scheduler configuration uploaded.");
+		else
+		{
+			String separator = "\r\n<br/><li>";
+			MessageUtils.addWarningMessage("Warning", "Scheduler configuration uploaded with errors:"
+					+ separator + StringUtils.join(warnings, separator));
+		}
+	}
+	
+	
+	public static List<String> readConfigHeaders(String storedFilePath) throws IOException
 	{
 		CsvReader reader = null;
 		List<String> undefinedFields = new ArrayList<>();
 		try
 		{
-			reader = new CsvReader(storedFilename);
+			reader = new CsvReader(storedFilePath);
 			reader.setSafetySwitch(false);
 			reader.readHeaders();
 
 			List<String> header = Arrays.asList(reader.getHeaders());
+			Set<Step.StepParams> excludedParams = getExcludedParams();
 			for (Step.StepParams param : Step.StepParams.values())
 			{
-				if (!header.contains(param.getValue()) && !excludedParams().contains(param))
+				if (!header.contains(param.getValue()) && !excludedParams.contains(param))
 					undefinedFields.add(param.getValue());
 			}
 		}
@@ -175,20 +146,35 @@ public class StepUploadHandler
 		{
 			Utils.closeResource(reader);
 		}
-
 		return undefinedFields;
 	}
-
-	private static Set<Step.StepParams> excludedParams()
+	
+	private static Set<Step.StepParams> getExcludedParams()
 	{
 		return new HashSet<Step.StepParams>()
 		{
 			{
-				add(Step.StepParams.COMMENT);
-				add(Step.StepParams.ASK_IF_FAILED);
 				add(Step.StepParams.START_AT_TYPE);
 				add(Step.StepParams.WAIT_NEXT_DAY);
+				add(Step.StepParams.COMMENT);
+				add(Step.StepParams.ASK_IF_FAILED);
+				add(Step.StepParams.STARTED);
+				add(Step.StepParams.ACTIONS_SUCCESSFUL);
+				add(Step.StepParams.FINISHED);
 			}
 		};
+	}
+	
+	private static void deleteStoredFile(File storedFile)
+	{
+		try
+		{
+			Files.delete(storedFile.toPath());
+			logger.info("Stored file '{}' has been deleted", storedFile.getAbsolutePath());
+		}
+		catch (IOException e)
+		{
+			logger.warn("Error while deleting stored file '{}'", storedFile.getAbsolutePath(), e);
+		}
 	}
 }
