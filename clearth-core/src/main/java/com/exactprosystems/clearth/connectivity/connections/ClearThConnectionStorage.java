@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2020 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,18 @@
 
 package com.exactprosystems.clearth.connectivity.connections;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.SchedulerData;
+import com.exactprosystems.clearth.automation.SchedulersManager;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
+import com.exactprosystems.clearth.connectivity.validation.ConnectionStartValidator;
+import com.exactprosystems.clearth.utils.SettingsException;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,16 +43,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
-import com.exactprosystems.clearth.connectivity.validation.ConnectionStartValidator;
-import com.exactprosystems.clearth.utils.SettingsException;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -336,6 +338,7 @@ public abstract class ClearThConnectionStorage
 			connection.setName(newName);
 
 			ClearThCore.getInstance().getFavoriteConnections().changeName(oldName, newName);
+			modifyConnectionToIgnoreFailures(oldName, newName);
 			
 			connectionsByName.remove(oldName);
 			connectionsByName.put(newName, connection);
@@ -533,6 +536,8 @@ public abstract class ClearThConnectionStorage
 			if (byType.isEmpty())
 				connectionsByType.remove(type);
 		}
+		
+		modifyConnectionToIgnoreFailures(connection.getName(), null);
 	}
 
 	protected void sort()
@@ -578,5 +583,42 @@ public abstract class ClearThConnectionStorage
 	public Collection<ConnectionErrorInfo> getStoppedConnectionsErrors()
 	{
 		return stoppedConnectionsErrors;
+	}
+	
+	
+	/**
+	 * Modifies or removes (depending on second parameter) specified connection from all sets of ones for which failures should be ignored.
+	 * @param connectionName original name of connection to work with.
+	 * @param newConnectionName new name of selected connection. If not specified, connection will be removed from the set.
+	 */
+	protected void modifyConnectionToIgnoreFailures(String connectionName, String newConnectionName)
+	{
+		SchedulersManager schedulersManager = ClearThCore.getInstance().getSchedulersManager();
+		List<Scheduler> allSchedulers = new ArrayList<>(schedulersManager.getCommonSchedulers());
+		schedulersManager.getUsersSchedulers().values().forEach(allSchedulers::addAll);
+		boolean removing = StringUtils.isBlank(newConnectionName);
+		
+		for (Scheduler scheduler : allSchedulers)
+		{
+			SchedulerData data = scheduler.getSchedulerData();
+			Set<String> connectionsToIgnoreFailures = data.getConnectionsToIgnoreFailures();
+			if (connectionsToIgnoreFailures.remove(connectionName))
+			{
+				if (!removing)
+					connectionsToIgnoreFailures.add(newConnectionName);
+				
+				try
+				{
+					data.saveConnectionsToIgnoreFailures();
+				}
+				catch (IOException e)
+				{
+					boolean commonScheduler = SchedulersManager.COMMON_SCHEDULERS_KEY.equals(scheduler.getForUser());
+					logger.error("Couldn't save changes of connections to ignore failures after {} '{}' for {}scheduler '{}'{}",
+							removing ? "removing" : "modifying", connectionName, commonScheduler ? "common " : "",
+							scheduler.getName(), !commonScheduler ? " of user '" + scheduler.getForUser() + "'" : "", e);
+				}
+			}
+		}
 	}
 }

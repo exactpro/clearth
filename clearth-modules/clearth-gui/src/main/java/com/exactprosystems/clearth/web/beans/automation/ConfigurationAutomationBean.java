@@ -299,7 +299,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	public void setSelectedConnectionsToIgnoreFailures(List<String> selectedConnectionsToIgnoreFailures)
 	{
 		// This will be called once on saving connections names to the config file
-		selectedScheduler().getSchedulerData().setConnectionsToIgnoreFailures(new HashSet<>(selectedConnectionsToIgnoreFailures));
+		selectedScheduler().getSchedulerData().setConnectionsToIgnoreFailures(new LinkedHashSet<>(selectedConnectionsToIgnoreFailures));
 	}
 	
 	public List<String> getSelectedConnectionsToIgnoreFailures()

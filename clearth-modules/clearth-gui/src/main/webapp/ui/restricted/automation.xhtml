@@ -1419,16 +1419,18 @@
 		</p:dialog>
 		<!-- Setup connections to ignore failures dialog -->
 		<p:dialog header="Select connections to ignore failures" widgetVar="connectionsToIgnoreFailuresDialog"
-				width="400" resizable="false" closeOnEscape="true" modal="true">
+				  width="420" resizable="false" closeOnEscape="true" modal="true">
 			<h:form id="ConnectionsToIgnoreFailuresDialog">
 				<h:outputLabel value="If failure occurs for any connection selected below, scheduler execution won't be suspended but relevant actions will be failed." />
-				<p:dataTable value="#{automationConfigBean.allConnections}" var="connection" rowKey="#{connection}"
-				             selection="#{automationConfigBean.selectedConnectionsToIgnoreFailures}">
-					<p:column selectionMode="multiple" style="width: 20px; text-align: center;" />
-					<p:column headerText="Connection" style="text-align: center;">
-						<h:outputText value="#{connection}" />
-					</p:column>
-				</p:dataTable>
+				<p:scrollPanel style="max-height: 250px;">
+					<p:dataTable value="#{automationConfigBean.allConnections}" var="connection" rowKey="#{connection}"
+								 selection="#{automationConfigBean.selectedConnectionsToIgnoreFailures}">
+						<p:column selectionMode="multiple" style="width: 20px; text-align: center;" />
+						<p:column headerText="Connection" style="text-align: center;">
+							<h:outputText value="#{connection}" />
+						</p:column>
+					</p:dataTable>
+				</p:scrollPanel>
 				<br/>
 				<p:outputPanel layout="block" style="text-align: right;">
 					<p:commandButton value="Save" update=":Growl :ConnectionsToIgnoreFailures" actionListener="#{automationConfigBean.saveConnectionsToIgnoreFailures()}"

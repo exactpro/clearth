@@ -562,7 +562,7 @@ public abstract class SchedulerData
 	
 	public Set<String> loadConnectionsToIgnoreFailures() throws IOException
 	{
-		Set<String> result = new HashSet<>();
+		Set<String> result = new LinkedHashSet<>();
 		File file = new File(connectionsToIgnoreFailuresName);
 		if (file.isFile())
 		{
