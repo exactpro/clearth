@@ -1,0 +1,155 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_matrix_info.csv",
+  "userName" : "test",
+  "result" : true,
+  "description" : "Matrix start\r\n",
+  "constants" : {
+    "FirstLetter" : "A",
+    "SecondLetter" : "B",
+    "DoubleValue" : "0.0071",
+    "InvertedValue" : "140"
+  },
+  "stepReports" : [{
+    "stepName" : "MatrixInfo",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "mi1",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "@{isNotEmpty}",
+            "specialValue" : true
+          },
+          "Actual" : {
+            "value" : "Matrix start\r\n",
+            "formula" : "@{matrix.desc}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "@{isNotEmpty}",
+            "actual" : "Matrix start\r\n",
+            "errorMessage" : null,
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "mi2",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "A"
+          },
+          "Actual" : {
+            "value" : "A",
+            "formula" : "@{matrix.FirstLetter}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "A",
+            "actual" : "A",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "mi3",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "B"
+          },
+          "Actual" : {
+            "value" : "B",
+            "formula" : "@{matrix.SecondLetter}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "B",
+            "actual" : "B",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "mi4",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "0.0071"
+          },
+          "Actual" : {
+            "value" : "0.0071",
+            "formula" : "@{matrix.DoubleValue}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "0.0071",
+            "actual" : "0.0071",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "mi5",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "140",
+            "formula" : "@{1 / matrix.DoubleValue}"
+          },
+          "Actual" : {
+            "value" : "140",
+            "formula" : "@{matrix.InvertedValue}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "140",
+            "actual" : "140",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}

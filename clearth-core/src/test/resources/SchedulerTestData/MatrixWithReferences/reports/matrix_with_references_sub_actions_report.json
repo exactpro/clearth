@@ -1,0 +1,390 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_sub_actions.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "SubActions",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "id1",
+        "actionName" : "TestActionWithSubActions",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "8"
+          },
+          "B" : {
+            "value" : "12"
+          },
+          "RepeatingGroups" : {
+            "value" : "id1_1"
+          }
+        },
+        "subActions" : [ {
+          "actionId" : "id1_1",
+          "actionName" : "AddRepeatingGroup",
+          "status" : {
+            "passed" : true
+          },
+          "inputParams" : {
+            "A" : {
+              "value" : "4"
+            },
+            "SubMsgType" : {
+              "value" : "Participant"
+            },
+            "B" : {
+              "value" : "6"
+            },
+            "RepeatingGroups" : {
+              "value" : "id1_1_1,id1_1_2"
+            }
+          },
+          "subActions" : [ {
+            "actionId" : "id1_1_1",
+            "actionName" : "AddRepeatingGroup",
+            "status" : {
+              "passed" : true
+            },
+            "inputParams" : {
+              "A" : {
+                "value" : "1"
+              },
+              "SubMsgType" : {
+                "value" : "Participant2"
+              },
+              "B" : {
+                "value" : "2"
+              },
+              "C" : {
+                "value" : "C"
+              }
+            }
+          }, {
+            "actionId" : "id1_1_2",
+            "actionName" : "AddRepeatingGroup",
+            "status" : {
+              "passed" : true
+            },
+            "inputParams" : {
+              "A" : {
+                "value" : "3"
+              },
+              "SubMsgType" : {
+                "value" : "Participant2"
+              },
+              "B" : {
+                "value" : "4"
+              },
+              "C" : {
+                "value" : "C"
+              }
+            }
+          } ]
+        } ]
+      }
+    ,
+      {
+        "actionId" : "id2",
+        "actionName" : "TestActionWithSubActions",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "RepeatingGroups" : {
+            "value" : "id2_1"
+          }
+        },
+        "subActions" : [ {
+          "actionId" : "id2_1",
+          "actionName" : "AddRepeatingGroup",
+          "status" : {
+            "passed" : true
+          },
+          "inputParams" : {
+            "A" : {
+              "value" : "4",
+              "formula" : "@{id1_1.A}"
+            },
+            "SubMsgType" : {
+              "value" : "Participant"
+            },
+            "B" : {
+              "value" : "6",
+              "formula" : "@{id1_1.B}"
+            },
+            "RepeatingGroups" : {
+              "value" : "id2_1_1,id2_1_2"
+            }
+          },
+          "subActions" : [ {
+            "actionId" : "id2_1_1",
+            "actionName" : "AddRepeatingGroup",
+            "status" : {
+              "passed" : true
+            },
+            "inputParams" : {
+              "A" : {
+                "value" : "1",
+                "formula" : "@{id1_1_1.A}"
+              },
+              "SubMsgType" : {
+                "value" : "Participant2"
+              },
+              "B" : {
+                "value" : "2",
+                "formula" : "@{id1_1_1.B}"              
+              },
+              "C" : {
+                "value" : "@{isNotNull}",
+                "specialValue" : true
+              },
+              "D" : {
+                "value" : "D"
+              }
+            }
+          }, {
+            "actionId" : "id2_1_2",
+            "actionName" : "AddRepeatingGroup",
+            "status" : {
+              "passed" : true
+            },
+            "inputParams" : {
+              "A" : {
+                "value" : "3",
+                "formula" : "@{id1_1_2.A}"
+              },
+              "SubMsgType" : {
+                "value" : "Participant2"
+              },
+              "B" : {
+                "value" : "4",
+                "formula" : "@{id1_1_2.B}"
+              },
+              "C" : {
+                "value" : "@{isNotNull}",
+                "specialValue" : true
+              },
+              "D" : {
+                "value" : "D"
+              }
+            }
+          } ]
+        } ]
+      }
+    ,
+      {
+        "actionId" : "id4",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "4"
+          },
+          "Actual" : {
+            "value" : "4",
+            "formula" : "@{id2_1.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "4",
+            "actual" : "4",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "id5",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "6"
+          },
+          "Actual" : {
+            "value" : "6",
+            "formula" : "@{id2_1.B}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "6",
+            "actual" : "6",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "id6",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "1"
+          },
+          "Actual" : {
+            "value" : "1",
+            "formula" : "@{id2_1_1.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "1",
+            "actual" : "1",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "id7",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "2"
+          },
+          "Actual" : {
+            "value" : "2",
+            "formula" : "@{id2_1_1.B}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "2",
+            "actual" : "2",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "id8",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "D"
+          },
+          "Actual" : {
+            "value" : "D",
+            "formula" : "@{id2_1_1.in.D}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "D",
+            "actual" : "D",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "id9",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "{pattern('..isNotNull.')}",
+            "formula" : "@{pattern('..isNotNull.')}"
+          },
+          "Actual" : {
+            "value" : "@{isNotNull}",
+            "formula" : "@{id2_1_2.C}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "{pattern('..isNotNull.')}",
+            "actual" : "@{isNotNull}",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "id10",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "D"
+          },
+          "Actual" : {
+            "value" : "D",
+            "formula" : "@{id2_1_1.in.D}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "D",
+            "actual" : "D",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "id11",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "{pattern('..isNotNull.')}",
+            "formula" : "@{pattern('..isNotNull.')}"
+          },
+          "Actual" : {
+            "value" : "@{id2_1_2.out.C}",
+            "formula" : "@{id2_1_2.out.C}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "inverted" : true
+        }
+      }
+    ]
+
+  } ]
+}

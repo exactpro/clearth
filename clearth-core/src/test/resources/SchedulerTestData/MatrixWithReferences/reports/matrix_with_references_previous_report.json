@@ -1,0 +1,85 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_previous.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "PrevAction",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "pa1",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "123"
+          },
+          "B" : {
+            "value" : "123"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "pa2",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "123",
+            "formula" : "@{prevAction.A}"
+          },
+          "Actual" : {
+            "value" : "123",
+            "formula" : "@{prevAction.B}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "123",
+            "actual" : "123",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "pa3",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "123",
+            "formula" : "@{prevAction.Expected}"
+          },
+          "Actual" : {
+            "value" : "123",
+            "formula" : "@{prevAction.Actual}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "123",
+            "actual" : "123",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}

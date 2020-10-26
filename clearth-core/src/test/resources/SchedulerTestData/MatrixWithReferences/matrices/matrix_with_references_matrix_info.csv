@@ -1,0 +1,14 @@
+//Description:
+//Matrix start
+
+//Constants:
+//FirstLetter=A
+//SecondLetter=B
+//DoubleValue=0.0071
+//InvertedValue=@{1 / matrix.DoubleValue}
+#id,#GlobalStep,#Action,#Expected,#Actual
+mi1,MatrixInfo,Compare2Values,@{isNotEmpty},@{matrix.desc}
+mi2,MatrixInfo,Compare2Values,A,@{matrix.FirstLetter}
+mi3,MatrixInfo,Compare2Values,B,@{matrix.SecondLetter}
+mi4,MatrixInfo,Compare2Values,0.0071,@{matrix.DoubleValue}
+mi5,MatrixInfo,Compare2Values,@{1 / matrix.DoubleValue},@{matrix.InvertedValue}

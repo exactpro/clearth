@@ -1,0 +1,92 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_action_result.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "ActionResult",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "ar1",
+        "actionName" : "TestAction",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "1"
+          }
+        },
+        "outputParams" : {
+          "A" : "1"
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "A",
+            "expected" : "1",
+            "actual" : "1",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ar2",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "true"
+          },
+          "Actual" : {
+            "value" : "true",
+            "formula" : "@{ar1.action.passed}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "true",
+            "actual" : "true",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ar3",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "null"
+          },
+          "Actual" : {
+            "value" : "null",
+            "formula" : "@{ar2.action.failReason == null ? 'null' : ar2.action.failReason}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "null",
+            "actual" : "null",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}

@@ -1,0 +1,6 @@
+#id,#GlobalStep,#Action,#A
+bd,BeforeDisabled,SetStatic,123
+#id,#GlobalStep,#Action,#A
+d,Disabled,SetStatic,@{bd.A}
+#id,#GlobalStep,#Action,#Expected,#Actual
+cd1,CheckDisabled,Compare2Values,123,@{d.A}

@@ -1,0 +1,14 @@
+#id,#GlobalStep,#Action,#execute,#A,#B
+ne1,NoExecute,SetStatic,true,123,456
+ne2,NoExecute,SetStatic,false,@{ne1.A},@{ne1.B}
+ne3,NoExecute,SetStatic,true,78,90
+ne4,NoExecute,SetStatic,@{(1 + 1) < 1},@{ne3.A},@{ne3.B}
+#id,#GlobalStep,#Action,#invert,#Expected,#Actual
+ne5,NoExecute,Compare2Values,no,123,@{ne2.A}
+ne6,NoExecute,Compare2Values,no,123,@{ne2.in.A}
+ne7,NoExecute,Compare2Values,yes,123,@{ne2.out.A}
+ne8,NoExecute,Compare2Values,no,false,@{ne4.action.passed}
+ne9,NoExecute,Compare2Values,no,NOT_EXECUTED,@{ne4.action.failReason}
+ne10,NoExecute,Compare2Values,no,90,@{ne4.B}
+ne11,NoExecute,Compare2Values,no,90,@{ne4.in.B}
+ne12,NoExecute,Compare2Values,yes,90,@{ne4.out.B}

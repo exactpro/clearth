@@ -1,0 +1,264 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_no_execute.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "NoExecute",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "ne1",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "123"
+          },
+          "B" : {
+            "value" : "456"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "ne3",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "78"
+          },
+          "B" : {
+            "value" : "90"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "ne4",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : false
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "78",
+            "formula" : "@{ne3.A}"
+          },
+          "B" : {
+            "value" : "90",
+            "formula" : "@{ne3.B}"
+          }
+        },
+        "result" : {
+          "success" : false
+        }
+      }
+    ,
+      {
+        "actionId" : "ne5",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "123"
+          },
+          "Actual" : {
+            "value" : "123",
+            "formula" : "@{ne2.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "123",
+            "actual" : "123",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ne6",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "123"
+          },
+          "Actual" : {
+            "value" : "123",
+            "formula" : "@{ne2.in.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "123",
+            "actual" : "123",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ne7",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "123"
+          },
+          "Actual" : {
+            "value" : "@{ne2.out.A}",
+            "formula" : "@{ne2.out.A}"
+          }
+        },
+        "result" : {
+          "success" : true
+        }
+      }
+    ,
+      {
+        "actionId" : "ne8",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "false"
+          },
+          "Actual" : {
+            "value" : "false",
+            "formula" : "@{ne4.action.passed}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "false",
+            "actual" : "false",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ne9",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "NOT_EXECUTED"
+          },
+          "Actual" : {
+            "value" : "NOT_EXECUTED",
+            "formula" : "@{ne4.action.failReason}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "NOT_EXECUTED",
+            "actual" : "NOT_EXECUTED",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ne10",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "90"
+          },
+          "Actual" : {
+            "value" : "90",
+            "formula" : "@{ne4.B}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "90",
+            "actual" : "90",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ne11",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "90"
+          },
+          "Actual" : {
+            "value" : "90",
+            "formula" : "@{ne4.in.B}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "90",
+            "actual" : "90",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "ne12",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "90"
+          },
+          "Actual" : {
+            "value" : "@{ne4.out.B}",
+            "formula" : "@{ne4.out.B}"
+          }
+        },
+        "result" : {
+          "success" : true
+        }
+      }
+    ]
+
+  } ]
+}

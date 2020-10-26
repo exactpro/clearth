@@ -1,0 +1,15 @@
+#id,#GlobalStep,#Action,#invert,#A,#B,#C
+sio1,SimpleInOut,TestAction,true,4,5,6
+#id,#GlobalStep,#Action,#Expected,#Actual
+sio2,SimpleInOut,Compare2Values,1,@{sio1.A}
+sio3,SimpleInOut,Compare2Values,5,@{sio1.in.B}
+sio4,SimpleInOut,Compare2Values,3,@{sio1.out.C}
+#id,#GlobalStep,#Action,#invert,#A
+sio5,SimpleInOut,TestAction,true,2
+#id,#GlobalStep,#Action,#A
+sio6,SimpleInOut,SetStatic,@{sio5.in.A}
+sio7,SimpleInOut,SetStatic,@{sio5.out.A}
+sio8,SimpleInOut,SetStatic,@{sio6.in.A}
+#id,#GlobalStep,#Action,#Expected,#Actual
+sio9,SimpleInOut,Compare2Values,2,@{sio8.in.A}
+sio10,SimpleInOut,Compare2Values,1,@{sio7.in.A}

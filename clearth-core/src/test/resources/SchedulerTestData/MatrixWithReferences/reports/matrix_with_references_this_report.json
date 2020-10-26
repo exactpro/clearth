@@ -1,0 +1,36 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_this.csv",
+  "userName" : "test",
+  "result" : true, 
+  "stepReports" : [{
+    "stepName" : "ThisAction",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "ta",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "123"
+          },
+          "B" : {
+            "value" : "123",
+            "formula" : "@{thisAction.A}"
+          },
+          "C" : {
+            "value" : "123",
+            "formula" : "@{thisAction.B}"
+          }
+        }
+      }
+    ]
+
+  } ]
+}

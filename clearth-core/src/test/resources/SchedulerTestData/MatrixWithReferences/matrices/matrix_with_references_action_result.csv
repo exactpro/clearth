@@ -1,0 +1,5 @@
+#id,#GlobalStep,#Action,#A
+ar1,ActionResult,TestAction,1
+#id,#GlobalStep,#Action,#Expected,#Actual
+ar2,ActionResult,Compare2Values,true,@{ar1.action.passed}
+ar3,ActionResult,Compare2Values,null,@{ar2.action.failReason == null ? 'null' : ar2.action.failReason}

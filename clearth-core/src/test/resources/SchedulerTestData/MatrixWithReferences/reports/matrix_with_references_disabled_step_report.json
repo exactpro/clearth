@@ -1,0 +1,84 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_disabled_step.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "BeforeDisabled",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "bd",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "123"
+          }
+        }
+      }
+    ]
+
+  },{
+    "stepName" : "Disabled",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "d",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "123",
+            "formula" : "@{bd.A}"
+          }
+        }
+      }
+    ]
+
+  },{
+    "stepName" : "CheckDisabled",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "cd1",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "123"
+          },
+          "Actual" : {
+            "value" : "123",
+            "formula" : "@{d.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "123",
+            "actual" : "123",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}

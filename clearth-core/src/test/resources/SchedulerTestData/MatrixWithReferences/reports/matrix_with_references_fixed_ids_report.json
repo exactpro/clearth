@@ -1,0 +1,112 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_fixed_ids.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "FixedIds",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "1",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "1.0B"
+          },
+          "B" : {
+            "value" : "2.7B"
+          },
+          "C" : {
+            "value" : "3.5B"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "2",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "1.0B"
+          },
+          "Actual" : {
+            "value" : "1.0B",
+            "formula" : "@{1.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "1.0B",
+            "actual" : "1.0B",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "3",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "2.7B"
+          },
+          "Actual" : {
+            "value" : "2.7B",
+            "formula" : "@{1.B}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "2.7B",
+            "actual" : "2.7B",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "4",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "3.5B"
+          },
+          "Actual" : {
+            "value" : "3.5B",
+            "formula" : "@{1.C}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "3.5B",
+            "actual" : "3.5B",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}

@@ -1,0 +1,154 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_service.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "ServiceParams",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "sp1",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "ParamTimeout" : {
+            "value" : "100"
+          },
+          "ParamExecute" : {
+            "value" : "yes"
+          },
+          "SpecialParam" : {
+            "value" : "Text"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "sp2",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Value" : {
+            "value" : "yes",
+            "formula" : "@{sp1.ParamExecute}"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "sp3",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Value" : {
+            "value" : "100",
+            "formula" : "@{sp1.ParamTimeout}"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "sp4",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Value" : {
+            "value" : "Text",
+            "formula" : "@{sp1.SpecialParam}"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "sp5",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "true"
+          },
+          "Actual" : {
+            "value" : "true",
+            "formula" : "@{sp2.execute}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "true",
+            "actual" : "true",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sp6",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "200"
+          },
+          "Actual" : {
+            "value" : "200",
+            "formula" : "@{sp3.timeout}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "200",
+            "actual" : "200",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sp7",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "Some - Text"
+          },
+          "Actual" : {
+            "value" : "Some - Text",
+            "formula" : "@{sp4.comment}"
+          }
+        },
+        "result" : {
+          "success" : true, 
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "Some - Text",
+            "actual" : "Some - Text",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}

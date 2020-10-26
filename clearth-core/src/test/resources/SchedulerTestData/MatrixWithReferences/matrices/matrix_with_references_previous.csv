@@ -1,0 +1,5 @@
+#id,#GlobalStep,#Action,#A,#B
+pa1,PrevAction,SetStatic,123,123
+#id,#GlobalStep,#Action,#Expected,#Actual
+pa2,PrevAction,Compare2Values,@{prevAction.A},@{prevAction.B}
+pa3,PrevAction,Compare2Values,@{prevAction.Expected},@{prevAction.Actual}

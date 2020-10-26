@@ -1,0 +1,255 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix_with_references_in_out.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "SimpleInOut",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "sio1",
+        "actionName" : "TestAction",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "4"
+          },
+          "B" : {
+            "value" : "5"
+          },
+          "C" : {
+            "value" : "6"
+          }
+        },
+        "outputParams" : {
+          "A" : "1",
+          "B" : "2",
+          "C" : "3"
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "A",
+            "expected" : "4",
+            "actual" : "1",
+            "identical" : false
+          }, {
+            "param" : "B",
+            "expected" : "5",
+            "actual" : "2",
+            "identical" : false
+          }, {
+            "param" : "C",
+            "expected" : "6",
+            "actual" : "3",
+            "identical" : false
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sio2",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "1"
+          },
+          "Actual" : {
+            "value" : "1",
+            "formula" : "@{sio1.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "1",
+            "actual" : "1",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sio3",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "5"
+          },
+          "Actual" : {
+            "value" : "5",
+            "formula" : "@{sio1.in.B}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "5",
+            "actual" : "5",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sio4",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "3"
+          },
+          "Actual" : {
+            "value" : "3",
+            "formula" : "@{sio1.out.C}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "3",
+            "actual" : "3",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sio5",
+        "actionName" : "TestAction",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "2"
+          }
+        },
+        "outputParams" : {
+          "A" : "1"
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "A",
+            "expected" : "2",
+            "actual" : "1",
+            "identical" : false
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sio6",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "2",
+            "formula" : "@{sio5.in.A}"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "sio7",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "1",
+            "formula" : "@{sio5.out.A}"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "sio8",
+        "actionName" : "SetStatic",
+       "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "A" : {
+            "value" : "2",
+            "formula" : "@{sio6.in.A}"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "sio9",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "2"
+          },
+          "Actual" : {
+            "value" : "2",
+            "formula" : "@{sio8.in.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "2",
+            "actual" : "2",
+            "identical" : true
+          } ]
+        }
+      }
+    ,
+      {
+        "actionId" : "sio10",
+        "actionName" : "Compare2Values",
+       "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "1"
+          },
+          "Actual" : {
+            "value" : "1",
+            "formula" : "@{sio7.in.A}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "1",
+            "actual" : "1",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}

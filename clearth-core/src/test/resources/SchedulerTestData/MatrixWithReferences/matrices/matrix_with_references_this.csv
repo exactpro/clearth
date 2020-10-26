@@ -1,0 +1,2 @@
+#id,#GlobalStep,#Action,#A,#B,#C
+ta,ThisAction,SetStatic,123,@{thisAction.A},@{thisAction.B}

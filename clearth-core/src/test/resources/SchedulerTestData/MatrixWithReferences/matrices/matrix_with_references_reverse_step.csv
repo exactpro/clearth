@@ -1,0 +1,8 @@
+#id,#GlobalStep,#Action,#Expected,#Actual
+rs4,ReverseStep1,Compare2Values,456,@{rs3.A}
+#id,#GlobalStep,#Action,#Expected,#Actual
+rs2,ReverseStep2,Compare2Values,123,@{rs1.A}
+#id,#GlobalStep,#Action,#A
+rs3,ReverseStep2,SetStatic,456
+#id,#GlobalStep,#Action,#A
+rs1,ReverseStep3,SetStatic,123
