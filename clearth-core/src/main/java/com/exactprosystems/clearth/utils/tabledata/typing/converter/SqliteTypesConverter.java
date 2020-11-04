@@ -33,7 +33,7 @@ public class SqliteTypesConverter implements DbTypesConverter
 			case BIGINT:
 			case TINYINT:
 			case SMALLINT:
-				return TableDataType.INTEGER;
+				return TableDataType.LONG;
 			case DATE:
 				return TableDataType.LOCALDATETIME;
 			case NUMERIC:	
