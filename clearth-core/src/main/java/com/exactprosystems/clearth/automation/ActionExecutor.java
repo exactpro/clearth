@@ -45,6 +45,9 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 public class ActionExecutor implements Closeable
 {
 	private static final Logger logger = LoggerFactory.getLogger(ActionExecutor.class);
+	
+	protected static final String ACTION_SKIP_MSG_PREFIX = "Action has been skipped as user decided to ignore ";
+	
 	public static final String PARAMS_IN = "in",
 			PARAMS_OUT = "out",
 			PARAMS_PREV_ACTION = "prevAction",
@@ -55,20 +58,22 @@ public class ActionExecutor implements Closeable
 	private final ActionParamsCalculator calculator;
 	private final ActionReportWriter reportWriter;
 	private final FailoverStatus failoverStatus;
+	private final boolean ignoreAllConnectionsFailures;
 	private final Set<String> connectionsToIgnoreFailures;
-	private AsyncActionsManager asyncManager;
 	
+	private AsyncActionsManager asyncManager;
 	private ActionsExecutionProgress executionProgress;
 	private String actionsReportsDir;
 	private boolean interrupted = false;
 	
 	public ActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, ActionReportWriter reportWriter,
-			FailoverStatus failoverStatus, Set<String> connectionsToIgnoreFailures)
+			FailoverStatus failoverStatus, boolean ignoreAllConnectionsFailures, Set<String> connectionsToIgnoreFailures)
 	{
 		this.globalContext = globalContext;
 		this.calculator = calculator;
 		this.reportWriter = reportWriter;
 		this.failoverStatus = failoverStatus;
+		this.ignoreAllConnectionsFailures = ignoreAllConnectionsFailures;
 		this.connectionsToIgnoreFailures = connectionsToIgnoreFailures;
 		this.asyncManager = null;
 	}
@@ -447,6 +452,53 @@ public class ActionExecutor implements Closeable
 			subActionData.setFailedComment(comment.toString());
 	}
 	
+	/**
+	 * Handles failover exception that occurred while executing current action.
+	 * @return {@code false}, if action should be restarted; {@code true} otherwise.
+	 */
+	protected boolean handleFailoverException(Action action, String actionDesc, FailoverException exception,
+			StepContext stepContext, MatrixContext matrixContext) throws InterruptedException
+	{
+		if (ignoreAllConnectionsFailures)
+		{
+			action.setResult(DefaultResult.failed(ACTION_SKIP_MSG_PREFIX + "all connections failures.", exception));
+			return true;
+		}
+		else if (connectionsToIgnoreFailures.contains(exception.getConnectionName()))
+		{
+			action.setResult(DefaultResult.failed(ACTION_SKIP_MSG_PREFIX + "all failures for connection '"
+					+ exception.getConnectionName() + "'.", exception));
+			return true;
+		}
+		
+		action.getStep().actionFailover(action, exception, stepContext, matrixContext, globalContext);  // Disposing connections according to action type, if needed
+		synchronized (failoverStatus)
+		{
+			failoverStatus.failover = true;
+			failoverStatus.actionType = action.getActionType();
+			failoverStatus.reason = exception.getReason();
+			failoverStatus.reasonString = exception.getMessage();
+			failoverStatus.connectionName = exception.getConnectionName();
+			failoverStatus.needRestartAction = true;
+			failoverStatus.needSkipAction = false;
+			failoverStatus.setFailoverInfo(action, exception);
+			failoverStatus.wait(); // needRestartAction and needSkipAction may be changed in automationBean
+			
+			if (failoverStatus.needSkipAction)
+			{
+				action.setResult(DefaultResult.failed(ACTION_SKIP_MSG_PREFIX + "current failure.", exception));
+				getLogger().info("Skipping{}", actionDesc);
+				return true;
+			}
+			else
+			{
+				if (failoverStatus.needRestartAction)
+					getLogger().info("Restarting{}", actionDesc);
+				return !failoverStatus.needRestartAction;
+			}
+		}
+	}
+	
 	protected void applyActionResult(Action action, boolean countSuccess)
 	{
 		Matrix matrix = action.getMatrix();
@@ -643,44 +695,13 @@ public class ActionExecutor implements Closeable
 				}
 				catch (FailoverException e)
 				{
-					if (connectionsToIgnoreFailures.contains(e.getConnectionName()))
-					{
-						action.setResult(DefaultResult.failed("Action has been skipped" 
-								+ " as user decided to ignore all failures for connection '" + e.getConnectionName() + "'.", e));
-						continue;
-					}
-					
-					action.getStep().actionFailover(action, e, stepContext, matrixContext, globalContext);  // Disposing connections according to action type, if needed
 					try
 					{
-						synchronized (failoverStatus)
-						{
-							failoverStatus.failover = true;
-							failoverStatus.actionType = action.getActionType();
-							failoverStatus.reason = e.getReason();
-							failoverStatus.reasonString = e.getMessage();
-							failoverStatus.connectionName = e.getConnectionName();
-							failoverStatus.needRestartAction = true;
-							failoverStatus.needSkipAction = false;
-							failoverStatus.setFailoverInfo(action, e);
-							failoverStatus.wait(); // needRestartAction and needSkipAction may be changed in automationBean
-							
-							if (failoverStatus.needSkipAction)
-							{
-								action.setResult(DefaultResult.failed("Action has been skipped as user decided to ignore current failure.", e));
-								getLogger().info("Skipping{}", actionDesc);
-							}
-							else
-							{
-								passed = !failoverStatus.needRestartAction;
-								if (!passed)
-									getLogger().info("Restarting{}", actionDesc);
-							}
-						}
+						passed = handleFailoverException(action, actionDesc, e, stepContext, matrixContext);
 					}
 					catch (InterruptedException e1)
 					{
-						getLogger().warn("Wait interrupted", e1);
+						getLogger().warn("Handling action's failover interrupted", e1);
 						action.getStep().interruptExecution();
 						synchronized (failoverStatus)
 						{

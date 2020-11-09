@@ -32,7 +32,7 @@ public class NestedActionExecutor extends ActionExecutor
 	
 	public NestedActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, ActionReportWriter reportWriter)
 	{
-		super(globalContext, calculator, reportWriter, new FailoverStatus(), Collections.emptySet());
+		super(globalContext, calculator, reportWriter, new FailoverStatus(), false, Collections.emptySet());
 	}
 	
 	public void executeAction(Action action, StepContext stepContext, boolean writeReport)

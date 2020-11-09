@@ -291,6 +291,32 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	}
 	
 	
+	public void setIgnoreAllConnectionsFailures(boolean ignoreAllConnectionsFailures)
+	{
+		try
+		{
+			SchedulerData schedulerData = selectedScheduler().getSchedulerData();
+			schedulerData.setIgnoreAllConnectionsFailures(ignoreAllConnectionsFailures);
+			schedulerData.saveIgnoreAllConnectionsFailures();
+		}
+		catch (IOException e)
+		{
+			String msg = "Couldn't save changes for ignoring all connections failures";
+			getLogger().error(msg, e);
+			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+		}
+	}
+	
+	public boolean isIgnoreAllConnectionsFailures()
+	{
+		return selectedScheduler().getSchedulerData().isIgnoreAllConnectionsFailures();
+	}
+	
+	public void ignoreAllConnectionsFailuresChanged(AjaxBehaviorEvent event)
+	{
+		// Nothing to do, because all necessary changes have been made and saved in set-method above
+	}
+	
 	public List<String> getAllConnections()
 	{
 		return ClearThCore.connectionStorage().getConnections().stream().map(ClearThConnection::getName).collect(Collectors.toList());
@@ -311,7 +337,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	{
 		Set<String> connections = selectedScheduler().getSchedulerData().getConnectionsToIgnoreFailures();
 		if (connections.isEmpty())
-			return "No connection failures will be ignored";
+			return "Connections to ignore failures are not specified";
 		
 		Iterator<String> connectionsIter = connections.iterator();
 		CommaBuilder builder = new CommaBuilder();
@@ -337,7 +363,9 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not save selected connections to ignore failures", ExceptionUtils.getDetailedMessage(e));
+			String msg = "Could not save selected connections to ignore failures";
+			getLogger().error(msg, e);
+			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
 		}
 	}
 	

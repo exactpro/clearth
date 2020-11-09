@@ -967,9 +967,14 @@ public abstract class Scheduler
 	
 	protected void doBeforeStartExecution() throws AutomationException
 	{
-		connectionsToIgnoreFailuresByRun = new HashSet<>(schedulerData.getConnectionsToIgnoreFailures());
-		if (!connectionsToIgnoreFailuresByRun.isEmpty())
-			logger.info("Failures will be ignored for the following connections: {}", connectionsToIgnoreFailuresByRun);
+		if (schedulerData.isIgnoreAllConnectionsFailures())
+			logger.info("All connections failures will be ignored and corresponding actions failed in current run");
+		else
+		{
+			connectionsToIgnoreFailuresByRun = new HashSet<>(schedulerData.getConnectionsToIgnoreFailures());
+			if (!connectionsToIgnoreFailuresByRun.isEmpty())
+				logger.info("Failures will be ignored for the following connections: {}", connectionsToIgnoreFailuresByRun);
+		}
 	}
 	
 	synchronized public boolean restoreState(String userName) throws IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
@@ -1536,6 +1541,7 @@ public abstract class Scheduler
 		schedulerData.setBusinessDay(SchedulerData.loadBusinessDay(schedulerData.getBusinessDayFilePath()));
 		schedulerData.setWeekendHoliday(schedulerData.loadWeekendHoliday());
 		schedulerData.loadHolidays(schedulerData.getHolidays());
+		schedulerData.setIgnoreAllConnectionsFailures(schedulerData.loadIgnoreAllConnectionsFailures());
 		schedulerData.setConnectionsToIgnoreFailures(schedulerData.loadConnectionsToIgnoreFailures());
 		init();
 	}

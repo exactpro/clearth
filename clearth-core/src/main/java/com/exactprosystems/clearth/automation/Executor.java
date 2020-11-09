@@ -518,7 +518,7 @@ public abstract class Executor extends Thread
 	protected ActionExecutor createActionExecutor()
 	{
 		return new ActionExecutor(globalContext, paramsCalculator, createReportWriter(), failoverStatus,
-				scheduler.getConnectionsToIgnoreFailuresByRun());
+				scheduler.getSchedulerData().isIgnoreAllConnectionsFailures(), scheduler.getConnectionsToIgnoreFailuresByRun());
 	}
 	
 	protected void waitForAsyncActions()

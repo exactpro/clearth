@@ -57,6 +57,7 @@ public abstract class SchedulerData
 			BUSINESSDAY_FILENAME = "businessday.txt",
 			BASETIME_FILENAME = "basetime.txt",
 			WEEKEND_FILENAME = "weekend.txt",
+			IGNORE_ALL_CONNECTIONS_FAILURES_FILENAME = "ignore_all_connections_failures.txt",
 			CONNECTIONS_TO_IGNORE_FAILURES_FILENAME = "connections_to_ignore_failures.txt",
 			MATRICES_FILENAME = "matrices.csv",
 			STEP_INFO_DATA_FILENAME = "executed_steps.csv",
@@ -76,7 +77,7 @@ public abstract class SchedulerData
 			baseTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
 	private final String forUser, name, matricesDir, launchesName, configName, baseTimeName, weekendHolidayName,
-			holidaysName, connectionsToIgnoreFailuresName, matricesName, configDataName;
+			holidaysName, ignoreAllConnectionsFailuresName, connectionsToIgnoreFailuresName, matricesName, configDataName;
 
 	private final Path businessDayFilePath, executedStepsDataFilePath;
 
@@ -88,6 +89,7 @@ public abstract class SchedulerData
 	private boolean useCurrentDate;
 	private boolean weekendHoliday;
 	private final Map<String, Boolean> holidays;
+	private boolean ignoreAllConnectionsFailures;
 	private Set<String> connectionsToIgnoreFailures;
 	private final List<MatrixData> matrices;
 	private final ConfigData configData;
@@ -116,6 +118,7 @@ public abstract class SchedulerData
 		baseTimeName = getBaseTimeName(cfgDir, name);
 		weekendHolidayName = getWeekendHolidayName(cfgDir, name);
 		holidaysName = getHolidaysName(cfgDir, name);
+		ignoreAllConnectionsFailuresName = getIgnoreAllConnectionsFailuresName(cfgDir, name);
 		connectionsToIgnoreFailuresName = getConnectionsToIgnoreFailuresName(cfgDir, name);
 		matricesName = getMatricesName(cfgDir, name);
 		configDataName = getConfigDataName(cfgDir, name);
@@ -134,6 +137,7 @@ public abstract class SchedulerData
 		baseTime = loadBaseTime();
 		weekendHoliday = loadWeekendHoliday();
 		holidays = loadHolidays();
+		ignoreAllConnectionsFailures = loadIgnoreAllConnectionsFailures();
 		connectionsToIgnoreFailures = loadConnectionsToIgnoreFailures();
 		matrices = loadMatrices();
 		configData = loadConfigData();
@@ -184,6 +188,11 @@ public abstract class SchedulerData
 	public static String getWeekendHolidayName(String configsRoot, String schedulerName)
 	{
 		return configsRoot+schedulerName+File.separator+WEEKEND_FILENAME;
+	}
+	
+	public static String getIgnoreAllConnectionsFailuresName(String configsRoot, String schedulerName)
+	{
+		return configsRoot + schedulerName + File.separator + IGNORE_ALL_CONNECTIONS_FAILURES_FILENAME;
 	}
 	
 	public static String getConnectionsToIgnoreFailuresName(String configsRoot, String schedulerName)
@@ -560,6 +569,26 @@ public abstract class SchedulerData
 	}
 	
 	
+	public boolean loadIgnoreAllConnectionsFailures() throws IOException
+	{
+		File file = new File(ignoreAllConnectionsFailuresName);
+		if (!file.isFile())
+			return false;
+		
+		try (BufferedReader reader = new BufferedReader(new FileReader(file)))
+		{
+			return Boolean.parseBoolean(reader.readLine());
+		}
+	}
+	
+	public void saveIgnoreAllConnectionsFailures() throws IOException
+	{
+		try (PrintWriter writer = new PrintWriter(ignoreAllConnectionsFailuresName))
+		{
+			writer.write(String.valueOf(ignoreAllConnectionsFailures));
+		}
+	}
+	
 	public Set<String> loadConnectionsToIgnoreFailures() throws IOException
 	{
 		Set<String> result = new LinkedHashSet<>();
@@ -917,6 +946,16 @@ public abstract class SchedulerData
 		this.weekendHoliday = weekendHoliday;
 	}
 	
+	
+	public void setIgnoreAllConnectionsFailures(boolean ignoreAllConnectionsFailures)
+	{
+		this.ignoreAllConnectionsFailures = ignoreAllConnectionsFailures;
+	}
+	
+	public boolean isIgnoreAllConnectionsFailures()
+	{
+		return ignoreAllConnectionsFailures;
+	}
 	
 	public void setConnectionsToIgnoreFailures(Set<String> connectionsToIgnoreFailures)
 	{

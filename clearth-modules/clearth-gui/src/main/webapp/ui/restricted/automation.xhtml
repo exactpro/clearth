@@ -357,10 +357,17 @@
 					</div>
 					
 					<h:form id="ConnectionsToIgnoreFailures">
-						<h:outputLabel value="#{automationConfigBean.connectionsToIgnoreFailuresString}" />
-						&#160;
-						<p:commandButton value="Setup" oncomplete="PF('connectionsToIgnoreFailuresDialog').show();"
-						                 update=":ConnectionsToIgnoreFailuresDialog" disabled="#{automationSchedulerBean.running}" />
+						<p:selectBooleanCheckbox value="#{automationConfigBean.ignoreAllConnectionsFailures}"
+												 itemLabel="Ignore all connections failures" disabled="#{automationSchedulerBean.running}">
+							<p:ajax listener="#{automationConfigBean.ignoreAllConnectionsFailuresChanged}" update=":Growl :ConnectionsToIgnoreFailures" />
+						</p:selectBooleanCheckbox>
+						
+						<p:outputPanel rendered="#{!automationConfigBean.ignoreAllConnectionsFailures}" style="display: inline;">
+							<h:outputLabel value="#{automationConfigBean.connectionsToIgnoreFailuresString}" />
+							&#160;
+							<p:commandButton value="Setup" oncomplete="PF('connectionsToIgnoreFailuresDialog').show();"
+											 update=":ConnectionsToIgnoreFailuresDialog" disabled="#{automationSchedulerBean.running}" />
+						</p:outputPanel>
 					</h:form>
 				</div>
 				
