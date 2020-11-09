@@ -184,6 +184,34 @@ static def getDate() {
 	return formattedDate
 }
 
+task createCommitMessage {
+	doLast {
+		def sinceCommit = project.getProperty("since")
+		def untilCommit = project.getProperty("until")
+		def interval = sinceCommit.toString() + '...' + untilCommit.toString()
+
+		def gitHistory = new ByteArrayOutputStream()
+		exec {
+			commandLine 'git', 'log', interval, '--grep=^Bug', '--grep=^Feature', '--pretty=format:"%s"'
+			standardOutput = gitHistory
+		}
+		def message = "Applied new Core and modules (" +
+				untilCommit.toString() +
+				") with the following improvements:\n\n" +
+				gitHistory.toString().replace('"', '')
+
+		def commitCommentFile = new File("./core_update")
+		try {
+			commitCommentFile.write(message.toString())
+			println("Core update info has been written to 'core_update' file")
+		}
+		catch (IOException e) {
+			println("Error occured while writing core update info:")
+			println(e.toString())
+		}
+	}
+}
+
 task buildCoreArchieves(type: GradleBuild) {
 	tasks = ['clearth-core:build', 'clearth-core:uploadArchives',
 			 'clearth-modules:clearth-rhdata:build', 'clearth-modules:clearth-rhdata:uploadArchives']
