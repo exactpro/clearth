@@ -333,27 +333,6 @@
 					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top);
 					return;
 				}
-
-				var toBtm = $(".toBottom.ui-datatable-scrollable .ui-datatable-scrollable-body");
-				if ($(toBtm).offset())
-				{
-					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
-					return;
-				}
-
-				toBtm = $(".toBottom .ui-datagrid-data");
-				if ($(toBtm).offset())
-				{
-					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
-					return;
-				}
-
-				toBtm = $(".toBottom");
-				if ($(toBtm).offset())
-				{
-					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top);
-					return;
-				}
 			}
 		</script>
 	</ui:define>
