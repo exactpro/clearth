@@ -43,6 +43,7 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 	private static final Logger logger = LoggerFactory.getLogger(TypedDbDataWriter.class);
 
 	protected final PreparedStatement preparedStatement;
+	private boolean isGeneratedKeyAvailable = true;
 
 	public TypedDbDataWriter(TableHeader<TypedTableHeaderItem> header, Connection con, String tableName) throws SQLException
 	{
@@ -153,10 +154,27 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 
 	protected int getGeneratedKey(PreparedStatement ps)
 	{
+		if (!isGeneratedKeyAvailable)
+			return -1;
+		
 		try (ResultSet rs = ps.getGeneratedKeys())
 		{
 			if (rs.next())
-				return rs.getInt(1);
+			{
+				Object key = rs.getObject(1);
+				String stringKey = String.valueOf(key);
+				//From some database value came in string format, so it's better to check number  with parse method
+				try
+				{
+					return Integer.parseInt(stringKey);
+				}
+				catch (NumberFormatException e)
+				{
+					logger.warn("Bad value type while retrieving auto-generated key, expected int, but " +
+							"value is {}",	stringKey);
+					isGeneratedKeyAvailable = false;
+				}
+			}
 		}
 		catch (Exception e)
 		{
