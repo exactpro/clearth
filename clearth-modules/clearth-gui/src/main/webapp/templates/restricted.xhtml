@@ -310,29 +310,23 @@
 					});
 				});
 			}
-			
+
+			function stretchElementsToBottom(selector, spaceDownToBtm)
+			{
+				$(selector).each(function()
+				{
+					if ($(this).offset())
+					{
+						$(this).height($('#pageContainer').height() - $(this).offset().top - spaceDownToBtm);
+					}
+				});
+			}
+
 			function handle_toBottom()
 			{
-				var toBtm = $(".toBottom.ui-datatable-scrollable .ui-datatable-scrollable-body");
-				if ($(toBtm).offset())
-				{
-					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
-					return;
-				}
-
-				toBtm = $(".toBottom .ui-datagrid-data");
-				if ($(toBtm).offset())
-				{
-					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top - 1);
-					return;
-				}
-
-				toBtm = $(".toBottom");
-				if ($(toBtm).offset())
-				{
-					$(toBtm).height($('#pageContainer').height()-$(toBtm).offset().top);
-					return;
-				}
+				stretchElementsToBottom(".toBottom.ui-datatable-scrollable .ui-datatable-scrollable-body", 1);
+				stretchElementsToBottom(".toBottom .ui-datagrid-data", 1);
+				stretchElementsToBottom(".toBottom", 0);
 			}
 		</script>
 	</ui:define>
