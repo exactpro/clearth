@@ -46,17 +46,6 @@ public class RowComparisonData<A, B>
 	public void addComparisonDetail(ColumnComparisonDetail<A, B> compDetail)
 	{
 		compDetails.add(compDetail);
-		if (compDetail.isIdentical() || resultType == RowComparisonResultType.FAILED)
-			return;
-		
-		// Only non-identical details could affect the final result type
-		boolean expectedValueIsNull = compDetail.getExpectedValue() == null, actualValueIsNull = compDetail.getActualValue() == null;
-		if ((!expectedValueIsNull && !actualValueIsNull)
-				|| (expectedValueIsNull && resultType == RowComparisonResultType.NOT_FOUND)
-				|| (actualValueIsNull && resultType == RowComparisonResultType.EXTRA))
-			resultType = RowComparisonResultType.FAILED;
-		else
-			resultType = expectedValueIsNull ? RowComparisonResultType.EXTRA : RowComparisonResultType.NOT_FOUND;
 	}
 	
 	public void addComparisonDetail(A column, B expectedValue, B actualValue, boolean identical)
@@ -94,8 +83,7 @@ public class RowComparisonData<A, B>
 	{
 		return resultType;
 	}
-	
-	
+
 	/**
 	 * Converts this {@link RowComparisonData} instance to {@link DetailedResult} one.
 	 * @return result of conversion.
@@ -117,5 +105,42 @@ public class RowComparisonData<A, B>
 		if (resultType == RowComparisonResultType.NOT_FOUND || resultType == RowComparisonResultType.EXTRA)
 			result.setFailReason(FailReason.FAILED);
 		return result;
+	}
+
+	public void completeRow()
+	{
+		resultType = calculateResultType();
+	}
+
+	protected RowComparisonResultType calculateResultType()
+	{
+		boolean isPassed = true, hasPassed = false;
+		boolean isActualNull = true, isExpectedNull = true;
+		for(ColumnComparisonDetail<A,B> detail: compDetails)
+		{
+			if (detail.isIdentical())
+			{
+				hasPassed = true;
+				continue;
+			}
+			isPassed = false;
+			if (detail.getActualValue() != null)
+				isActualNull = false;
+			if (detail.getExpectedValue() != null)
+				isExpectedNull = false;
+		}
+		if (isPassed)
+		{
+			return RowComparisonResultType.PASSED;
+		}
+		if (!hasPassed && isActualNull)
+		{
+			return RowComparisonResultType.NOT_FOUND;
+		}
+		if (!hasPassed && isExpectedNull)
+		{
+			return RowComparisonResultType.EXTRA;
+		}
+		return RowComparisonResultType.FAILED;
 	}
 }

@@ -50,10 +50,10 @@ public class TableRowsComparator<A, B>
 					processValuesComparison(column, row1.getValue(column), row2.getValue(column), compData);
 			}
 		}
+		compData.completeRow();
 		return compData;
 	}
-	
-	
+
 	protected boolean checkRows(TableRow<A, B> row1, TableRow<A, B> row2, TableHeader<A> commonHeader, RowComparisonData<A, B> compData)
 	{
 		if (row1 == null && row2 == null)
