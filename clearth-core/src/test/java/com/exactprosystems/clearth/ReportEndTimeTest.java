@@ -18,149 +18,117 @@
 
 package com.exactprosystems.clearth;
 
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.SchedulersManager;
-import com.exactprosystems.clearth.automation.Step;
-import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.actions.TestAction;
 import com.exactprosystems.clearth.utils.ClearThException;
-import com.exactprosystems.clearth.utils.Stopwatch;
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.AfterClass;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
-import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
-import static org.junit.Assert.fail;
+import static org.mockito.Mockito.*;
+import static org.testng.Assert.assertEquals;
+
 
 public class ReportEndTimeTest
 {
-	private static final int WAITING_TIMEOUT = 1000;
-
-	private final String userName = "reportChecker", schedulerName = "ReportChecker";
-
-	private static final String RESOURCE_PATH = "ReportEndTimeTest";
-	private static final String MATRICES_PATH = "matrices";
-	private static final String CONFIG_PATH = "configs/config.cfg";
-	private static final Path TEST_OUTPUT_PATH =
-			USER_DIR.getParent().resolve("testOutput").resolve("ReportEndTimeTest");
-
+	private static final String SCHEDULER_NAME = "reportChecker", USER_NAME = "ReportChecker";
+	private static Scheduler scheduler;
+	private static Executor executor;
+	private static Step firstStep, secondStep, thirdStep;
 	private static ApplicationManager clearThManager;
-	private Scheduler scheduler;
+	private static final long START_IN_MILLIS = 1605081600000L;
+	private static final Date START = new Date(START_IN_MILLIS);
+	private static final Date START_PLUS_100 = new Date(START_IN_MILLIS + 100);
+	private static final Date START_PLUS_200 = new Date(START_IN_MILLIS + 200);
+	private static final Date START_PLUS_300 = new Date(START_IN_MILLIS + 300);
 
 	@BeforeClass
-	public static void startTestApp() throws ClearThException, IOException
+	public static void startTestApp() throws ClearThException
 	{
 		clearThManager = new ApplicationManager();
-		Files.createDirectories(TEST_OUTPUT_PATH);
+		scheduler = clearThManager.getScheduler(SCHEDULER_NAME, USER_NAME);
+		executor = new DefaultExecutorFactory(null).createExecutor(scheduler,null,USER_NAME,
+				null);
+
+
+		List<Action> firstStepActions = initializeActions(START, START_PLUS_100,START_PLUS_100,START_PLUS_200);
+		firstStep = initializeStep(START,START_PLUS_200,firstStepActions);
+
+		List<Action> secondStepActions = initializeActions(START_PLUS_200,START_PLUS_300,START_PLUS_300,null);
+		secondStep = initializeStep(START_PLUS_200,null,secondStepActions);
+
+		List<Action> thirdStepActions  = initializeActions(null,null,null,null);
+		thirdStep = initializeStep(null,null,thirdStepActions);
+	}
+
+	private static Step initializeStep(Date stepStart, Date stepFinish, List<Action> actions)
+	{
+		Step step = Mockito.mock(DefaultStep.class);
+		when(step.isExecute()).thenReturn(true);
+		when(step.getStarted()).thenReturn(stepStart);
+		when(step.getFinished()).thenReturn(stepFinish);
+		when(step.getActions()).thenReturn(actions);
+		return step;
+	}
+
+	private static List<Action> initializeActions(Date firsActionStart, Date firstActionFinish,
+	                                              Date secondActionStart, Date secondActionFinish)
+	{
+		Action firstAction = Mockito.mock(TestAction.class),
+				secondAction = Mockito.mock(TestAction.class);
+		List<Action> actions = new ArrayList<>();
+		actions.add(firstAction);
+		actions.add(secondAction);
+		when(firstAction.getStarted()).thenReturn(firsActionStart);
+		when(firstAction.getFinished()).thenReturn(firstActionFinish);
+		when(secondAction.getStarted()).thenReturn(secondActionStart);
+		when(secondAction.getFinished()).thenReturn(secondActionFinish);
+		return actions;
 	}
 
 	@Test
-	public void runTest() throws ClearThException, AutomationException, IOException
+	public void testExecutorThatIsEnded()
 	{
-		scheduler = clearThManager.getScheduler(userName, schedulerName);
-		loadStepsForExecuteTest();
-		loadMatricesForExecuteTest();
-		scheduler.start(userName);
-		waitForFirstStepEnd(100, WAITING_TIMEOUT);
-		checkExecutionTime();
-		scheduler.stop();
+		Executor testExecutor = spy(executor);
+		List<Step> steps = new ArrayList<>();
+		steps.add(firstStep);
+		steps.add(secondStep);
+		when(testExecutor.getSteps()).thenReturn(steps);
+		when(testExecutor.isTerminated()).thenReturn(true);
+		when(testExecutor.getEnded()).thenReturn(START_PLUS_200);
+
+		Date actual = testExecutor.getReportEndTime();
+		assertEquals(actual, START_PLUS_200);
 	}
 
-	private void checkExecutionTime()
+	@Test
+	public void testExecutorWithEndedStep()
 	{
-		long executionTime =
-				scheduler.getExecutor().getReportEndTime().getTime() - scheduler.getExecutor().getStarted().getTime();
-		long stepsTimeSum = calculateStepsTimeSum();
-		if (executionTime < stepsTimeSum)
-			fail(String.format("Execution time in millis is: %d. That is less than the sum of all steps: %d.",
-					executionTime, stepsTimeSum));
+		List<Step> steps = new ArrayList<>();
+		steps.add(firstStep);
+		steps.add(thirdStep);
+		Executor testExecutor = spy(executor);
+		when(testExecutor.getSteps()).thenReturn(steps);
+
+		Date actual = testExecutor.getReportEndTime();
+		assertEquals(actual, START_PLUS_200);
 	}
 
-	private long calculateStepsTimeSum()
+	@Test
+	public void testExecutorWithEndedActions()
 	{
-		long stepsTimeSum = 0;
-		for (Step step : scheduler.getSteps())
-		{
-			if (step.getStarted() != null)
-			{
-				if (step.getFinished() != null)
-				{
-					long stepTime = step.getFinished().getTime() - step.getStarted().getTime();
-					stepsTimeSum += stepTime;
-				}
-				else
-				{
-					for (Action action : step.getActions())
-					{
-						if (action.getStarted() != null && action.getFinished() != null)
-						{
-							long actionTime = action.getFinished().getTime() - action.getStarted().getTime();
-							stepsTimeSum += actionTime;
-						}
-					}
-				}
-			}
-		}
-		return stepsTimeSum;
-	}
+		List<Step> steps = new ArrayList<>();
+		steps.add(firstStep);
+		steps.add(secondStep);
+		Executor testExecutor = spy(executor);
+		when(testExecutor.getSteps()).thenReturn(steps);
 
-	private void loadStepsForExecuteTest() throws ClearThException, FileNotFoundException
-	{
-		File config = Paths.get(resourceToAbsoluteFilePath(RESOURCE_PATH)).resolve(CONFIG_PATH).toFile();
-		clearThManager.loadSteps(scheduler, config);
+		Date actual = testExecutor.getReportEndTime();
+		assertEquals(actual, START_PLUS_300);
 	}
-
-	private void loadMatricesForExecuteTest() throws ClearThException, FileNotFoundException
-	{
-		File matricesDir = Paths.get(resourceToAbsoluteFilePath(RESOURCE_PATH)).resolve(MATRICES_PATH).toFile();
-		clearThManager.loadMatrices(scheduler, matricesDir);
-	}
-
-	private void waitForFirstStepEnd(long delay, long timeout)
-	{
-		try
-		{
-			Stopwatch s = Stopwatch.createAndStart(timeout);
-			while (scheduler.isRunning())
-			{
-				if (scheduler.getSteps().get(0).getExecutionProgress().getDone() > 1)
-					return;
-				if (s.isExpired())
-					fail("Timeout expired before ending of the first step.");
-				TimeUnit.MILLISECONDS.sleep(delay);
-			}
-			fail("Scheduler execution finished before timeout expired.");
-		}
-		catch (InterruptedException e)
-		{
-			Thread.currentThread().interrupt();
-			fail("Waiting before first step is done is interrupted.");
-		}
-	}
-
-	@After
-	public void clearSchedulerData()
-	{
-		SchedulersManager manager = ClearThCore.getInstance().getSchedulersManager();
-		List<Scheduler> userSchedulers = manager.getUserSchedulers(schedulerName);
-		userSchedulers.clear();
-	}
-
-	@AfterClass
-	public static void disposeTestApp() throws IOException
-	{
-		if (clearThManager != null) clearThManager.dispose();
-		FileUtils.cleanDirectory(TEST_OUTPUT_PATH.toFile());
-	}
-
 }
