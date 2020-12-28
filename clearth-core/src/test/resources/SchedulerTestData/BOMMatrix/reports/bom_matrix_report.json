@@ -1,0 +1,45 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "bom_matrix.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "id1",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Sender" : {
+            "value" : "Test"
+          },
+          "CurrentDate" : {
+            "formula" : "@{format(time(0), 'yyyy-MM-dd')}"
+          }
+        }
+      }
+    ,
+      {
+        "actionId" : "id2",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Value" : {
+            "value" : "Test",
+            "formula" : "@{id1.Sender}"
+          }
+        }
+      }
+    ]
+
+  } ]
+}

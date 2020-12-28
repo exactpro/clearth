@@ -1,0 +1,6 @@
+﻿#Id,#GlobalStep,#Action,#CurrentDate,#Sender
+id1,Step1,SetStatic,"@{format(time(0), 'yyyy-MM-dd')}", Test
+#Id,#GlobalStep,#Action,#Value
+id2,Step1,SetStatic,@{id1.Sender}
+//This matrix has byte order mark at the beginning of the file,
+//so if there is no BOMInputStream in CsvActionReader, then the header will not be processed.

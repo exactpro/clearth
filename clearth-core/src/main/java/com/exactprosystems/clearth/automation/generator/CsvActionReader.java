@@ -18,15 +18,14 @@
 
 package com.exactprosystems.clearth.automation.generator;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.automation.ActionGenerator;
 import com.exactprosystems.clearth.utils.Utils;
+import org.apache.commons.io.input.BOMInputStream;
 
 public class CsvActionReader extends ActionReader
 {
@@ -103,7 +102,7 @@ public class CsvActionReader extends ActionReader
 	
 	protected CsvReader createReader(String fileName) throws IOException
 	{
-		CsvReader result = new CsvReader(new FileReader(new File(fileName)));
+		CsvReader result = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(fileName))));
 		result.setSafetySwitch(false);
 		result.setDelimiter(ActionGenerator.DELIMITER);
 		result.setTextQualifier(ActionGenerator.TEXT_QUALIFIER);
