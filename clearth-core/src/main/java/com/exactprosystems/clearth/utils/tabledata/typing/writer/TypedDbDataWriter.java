@@ -147,9 +147,16 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 				ps.setTimestamp(i, Timestamp.valueOf((LocalDateTime) value));
 			else if (value instanceof Timestamp)
 				ps.setTimestamp(i, (Timestamp) value);
-			else
+			else if (!checkAdditionalTypes(value, i, ps))
 				ps.setObject(i, value);
 		}
+	}
+
+	protected boolean checkAdditionalTypes(Object value, int i, PreparedStatement ps)
+	{
+		//Do nothing here, this method is needed for the possibility to add more types
+		//If any new type fits then return true
+		return false;
 	}
 
 	protected int getGeneratedKey(PreparedStatement ps)
