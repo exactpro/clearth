@@ -30,11 +30,6 @@
 				node="./xsd:complexType[@name='SchedulerLaunchInfo']//xsd:element[@name='MatrixInfo']">
 			<jxb:property name="matricesInfo" />
 		</jxb:bindings>
-		
-		<jxb:bindings
-				node="./xsd:element[@name='SchedulerLaunches']//xsd:element[@name='LaunchInfo']">
-			<jxb:property name="launchesInfo" />
-		</jxb:bindings>
 
 		<jxb:bindings
 				node="./xsd:element[@name='CodecConfigs']//xsd:element[@name='CodecConfig']">

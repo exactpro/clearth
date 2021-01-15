@@ -108,13 +108,10 @@ public class SchedulersManager
 	
 	private void updateLaunchesInfo(Scheduler scheduler) throws JAXBException, ClearThException
 	{
-		XmlSchedulerLaunches launches = scheduler.getSchedulerData().getLaunches();
-		if (CollectionUtils.isNotEmpty(launches.getLaunchesInfo()))
-		{
-			for (XmlSchedulerLaunchInfo launch : launches.getLaunchesInfo())
+		for (XmlSchedulerLaunchInfo launch : scheduler.getSchedulerData().getLaunches().getLaunchesInfo())
 				launch.setReportsPath(scheduler.getForUser() + "/" + launch.getReportsPath());
-			scheduler.getSchedulerData().saveLaunches();
-		}
+
+		scheduler.getSchedulerData().saveLaunches();
 	}
 	
 	

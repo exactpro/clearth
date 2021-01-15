@@ -32,6 +32,8 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
+import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
+import org.apache.commons.lang.time.DateUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -148,9 +150,14 @@ public class AutomationReportsBean extends ClearThBean {
 		selectedReportsInfo.setFinished(launchInfo.getFinished());
 	}
 
+	public XmlSchedulerLaunches getXmlLaunches()
+	{
+		return selectedScheduler().getSchedulerData().getLaunches();
+	}
+
 	public List<XmlSchedulerLaunchInfo> getLaunches()
 	{
-		return selectedScheduler().getSchedulerData().getLaunches().getLaunchesInfo();
+		return getXmlLaunches().getLaunchesInfo();
 	}
 
 	public XmlSchedulerLaunchInfo getLastLaunch()
@@ -169,17 +176,19 @@ public class AutomationReportsBean extends ClearThBean {
 
 	public void clearHistory(boolean cleanToday)
 	{
-		Calendar cal = Calendar.getInstance();
-		int today = cal.get(Calendar.DAY_OF_YEAR);
+		XmlSchedulerLaunches xmlLaunches = getXmlLaunches();
 
-		List<XmlSchedulerLaunchInfo> launches = getLaunches();
-		for (int i = launches.size()-1; i>=0; i--)
-		{
-			XmlSchedulerLaunchInfo launchInfo = launches.get(i);
-			cal.setTime(launchInfo.getFinished());
-			if (cleanToday || cal.get(Calendar.DAY_OF_YEAR)!=today)
-				launches.remove(i);
-		}
+		if (cleanToday)
+            xmlLaunches.clearLaunchInfoList();
+		else
+			{
+				Date today = Calendar.getInstance().getTime();
+				List<XmlSchedulerLaunchInfo> launches = getLaunches();
+
+				launches.stream().filter(launchInfo -> !DateUtils.isSameDay(today, launchInfo.getFinished()))
+					.forEach(launchInfo -> xmlLaunches.removeLaunchInfo(launchInfo));
+			}
+
 
 		getLogger().info("cleared history of launchers in scheduler '"+selectedScheduler().getName()+"'");
 

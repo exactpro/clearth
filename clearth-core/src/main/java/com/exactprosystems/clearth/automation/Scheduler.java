@@ -1460,7 +1460,7 @@ public abstract class Scheduler
 	synchronized public void addLaunch(XmlSchedulerLaunchInfo launchInfo) throws JAXBException, ClearThException
 	{
 		XmlSchedulerLaunches launches = schedulerData.getLaunches();
-		launches.getLaunchesInfo().add(0, launchInfo);
+		launches.addLaunchInfo(0, launchInfo);
 		schedulerData.saveLaunches();
 	}
 	
