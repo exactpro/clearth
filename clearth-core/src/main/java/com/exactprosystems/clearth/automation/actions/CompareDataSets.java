@@ -31,8 +31,8 @@ import com.exactprosystems.clearth.utils.BigDecimalValueTransformer;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonConfiguration;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
@@ -47,46 +47,36 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.Nu
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.StringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class CompareDataSets extends Action
 {
-	public static final String KEY_COLUMNS = "KeyColumns", NUMERIC_COLUMNS = "NumericColumns", CHECK_DUPLICATES = "CheckDuplicates";
-	
-	protected Set<String> keyColumns = null;
-	protected Map<String, BigDecimal> numericColumns = null;
 	protected IValueTransformer bdValueTransformer = null;
-	
-	protected boolean checkDuplicates = false;
+	protected ComparisonConfiguration compConfig;
 	
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
-		Map<String, String> actionParameters = getActionParameters();
-		getLogger().debug("Initializing special action parameters");
-		InputParamsHandler handler = new InputParamsHandler(actionParameters);
-		initParameters(globalContext, handler);
-		handler.check();
-		
 		BasicTableDataReader<String, String, ?> expectedReader = null, actualReader = null;
 		try
 		{
+			getLogger().debug("Initializing comparison configuration");
+			Map<String, String> actionParameters = getActionParameters();
+			bdValueTransformer = createBigDecimalValueTransformer();
+			compConfig = createComparisonConfiguration(actionParameters);
+			
 			getLogger().debug("Preparing data readers");
 			TableDataReaderFactory<String, String> readerFactory = createTableDataReaderFactory();
-			expectedReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters, true), () -> getDbConnection(true));
-			actualReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters, false), () -> getDbConnection(false));
+			expectedReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters,
+					true), () -> getDbConnection(true));
+			actualReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters,
+					false), () -> getDbConnection(false));
 			
-			return createComparisonProcessor().compareTables(createTableDataComparator(expectedReader, actualReader),
-					checkDuplicates ? createKeyColumnsRowsCollector() : null);
+			return makeComparison(expectedReader, actualReader);
 		}
 		catch (ParametersException | IOException e)
 		{
@@ -109,46 +99,15 @@ public class CompareDataSets extends Action
 		return copyInputParams();
 	}
 	
-	protected void initParameters(GlobalContext globalContext, InputParamsHandler handler)
-	{
-		keyColumns = handler.getSet(KEY_COLUMNS, ",");
-		numericColumns = getNumericColumns(handler.getSet(NUMERIC_COLUMNS, ","));
-		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
-	}
-	
-	protected Map<String, BigDecimal> getNumericColumns(Set<String> columnsWithScales)
-	{
-		if (CollectionUtils.isEmpty(columnsWithScales))
-			return null;
-		
-		bdValueTransformer = createBigDecimalValueTransformer();
-		Map<String, BigDecimal> numericColumns = new HashMap<>();
-		for (String columnWithScale : columnsWithScales)
-		{
-			String[] columnAndScale = columnWithScale.split(":", 2);
-			String column = columnAndScale[0];
-			BigDecimal precision = BigDecimal.ZERO;
-			if (columnAndScale.length == 2)
-			{
-				try
-				{
-					precision = new BigDecimal(bdValueTransformer != null ?
-							bdValueTransformer.transform(columnAndScale[1]) : columnAndScale[1]);
-				}
-				catch (Exception e)
-				{
-					throw ResultException.failed("Numeric column '" + column + "' with specified precision '"
-							+ columnAndScale[1] + "' couldn't be obtained due to error.", e);
-				}
-			}
-			numericColumns.put(column, precision);
-		}
-		return numericColumns;
-	}
-	
 	protected IValueTransformer createBigDecimalValueTransformer()
 	{
 		return new BigDecimalValueTransformer();
+	}
+	
+	protected ComparisonConfiguration createComparisonConfiguration(Map<String, String> actionParameters)
+			throws ParametersException
+	{
+		return new ComparisonConfiguration(actionParameters, bdValueTransformer);
 	}
 	
 	
@@ -172,15 +131,15 @@ public class CompareDataSets extends Action
 	
 	protected StringTableRowMatcher createTableRowMatcher()
 	{
-		return MapUtils.isEmpty(numericColumns) ? new StringTableRowMatcher(keyColumns)
-				:  new NumericStringTableRowMatcher(keyColumns, numericColumns, bdValueTransformer);
+		return compConfig.getNumericColumns().isEmpty() ? new StringTableRowMatcher(compConfig.getKeyColumns())
+				:  new NumericStringTableRowMatcher(compConfig.getKeyColumns(), compConfig.getNumericColumns(), bdValueTransformer);
 	}
 	
 	protected StringTableRowsComparator createTableRowsComparator()
 	{
 		ComparisonUtils comparisonUtils = ClearThCore.comparisonUtils();
-		return MapUtils.isEmpty(numericColumns) ? new StringTableRowsComparator(comparisonUtils)
-				: new NumericStringTableRowsComparator(comparisonUtils, numericColumns, bdValueTransformer);
+		return compConfig.getNumericColumns().isEmpty() ? new StringTableRowsComparator(comparisonUtils)
+				: new NumericStringTableRowsComparator(comparisonUtils, compConfig.getNumericColumns(), bdValueTransformer);
 	}
 	
 	
@@ -188,18 +147,25 @@ public class CompareDataSets extends Action
 			BasicTableDataReader<String, String, ?> actualReader) throws IOException
 	{
 		StringTableRowsComparator rowsComparator = createTableRowsComparator();
-		return keyColumns.isEmpty() ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
+		return compConfig.getKeyColumns().isEmpty() ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
 				: new IndexedStringTableDataComparator(expectedReader, actualReader, createTableRowMatcher(), rowsComparator);
 	}
 	
-	protected ComparisonProcessor<String, String, String> createComparisonProcessor() throws IOException
+	protected ComparisonProcessor<String, String, String> createComparisonProcessor()
 	{
 		return new ComparisonProcessor<>();
 	}
 	
 	protected KeyColumnsRowsCollector<String, String, String> createKeyColumnsRowsCollector() throws IOException
 	{
-		return new StringKeyColumnsRowsCollector(keyColumns);
+		return new StringKeyColumnsRowsCollector(compConfig.getKeyColumns());
+	}
+	
+	protected Result makeComparison(BasicTableDataReader<String, String, ?> expectedReader,
+			BasicTableDataReader<String, String, ?> actualReader) throws ComparisonException, IOException
+	{
+		return createComparisonProcessor().compareTables(createTableDataComparator(expectedReader, actualReader),
+				compConfig.isCheckDuplicates() ? createKeyColumnsRowsCollector() : null);
 	}
 	
 	
@@ -208,8 +174,7 @@ public class CompareDataSets extends Action
 	{
 		super.dispose();
 		
-		keyColumns = null;
-		numericColumns = null;
 		bdValueTransformer = null;
+		compConfig = null;
 	}
 }
