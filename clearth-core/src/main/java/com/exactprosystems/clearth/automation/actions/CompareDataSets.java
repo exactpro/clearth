@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2021 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,15 +27,19 @@ import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.BigDecimalValueTransformer;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonConfiguration;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
+import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
+import com.exactprosystems.clearth.utils.tabledata.comparison.connections.StubDbConnectionSupplier;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.IndexedStringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.StringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.TableDataComparator;
@@ -49,7 +53,6 @@ import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTabl
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.Map;
 
 public class CompareDataSets extends Action
@@ -62,6 +65,7 @@ public class CompareDataSets extends Action
 			throws ResultException, FailoverException
 	{
 		BasicTableDataReader<String, String, ?> expectedReader = null, actualReader = null;
+		DbConnectionSupplier dbConnectionSupplier = null;
 		try
 		{
 			getLogger().debug("Initializing comparison configuration");
@@ -70,26 +74,28 @@ public class CompareDataSets extends Action
 			compConfig = createComparisonConfiguration(actionParameters);
 			
 			getLogger().debug("Preparing data readers");
+			dbConnectionSupplier = createDbConnectionSupplier(actionParameters, globalContext);
 			TableDataReaderFactory<String, String> readerFactory = createTableDataReaderFactory();
 			expectedReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters,
-					true), () -> getDbConnection(true));
+					true), dbConnectionSupplier);
 			actualReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters,
-					false), () -> getDbConnection(false));
+					false), dbConnectionSupplier);
 			
 			return makeComparison(expectedReader, actualReader);
 		}
 		catch (ParametersException | IOException e)
 		{
-			throw ResultException.failed("Error while preparing resources for making comparison.", e);
+			return DefaultResult.failed("Error while preparing resources for making comparison.", e);
 		}
-		catch (ComparisonException e)
+		catch (TableDataException | ComparisonException e)
 		{
-			throw ResultException.failed(e.getMessage(), (Exception)e.getCause());
+			return DefaultResult.failed(e.getMessage(), (Exception)e.getCause());
 		}
 		finally
 		{
 			Utils.closeResource(expectedReader);
 			Utils.closeResource(actualReader);
+			Utils.closeResource(dbConnectionSupplier);
 		}
 	}
 	
@@ -110,6 +116,11 @@ public class CompareDataSets extends Action
 		return new ComparisonConfiguration(actionParameters, bdValueTransformer);
 	}
 	
+	protected DbConnectionSupplier createDbConnectionSupplier(Map<String, String> actionParameters, GlobalContext globalContext)
+	{
+		return new StubDbConnectionSupplier();
+	}
+	
 	
 	protected TableDataReaderSettings createTableDataReaderSettings(Map<String, String> actionParameters,
 			boolean forExpectedData) throws ParametersException
@@ -120,12 +131,6 @@ public class CompareDataSets extends Action
 	protected TableDataReaderFactory<String, String> createTableDataReaderFactory()
 	{
 		return new StringTableDataReaderFactory();
-	}
-	
-	protected Connection getDbConnection(boolean forExpectedData)
-	{
-		// FIXME: here we need to obtain DB connection by using Core capabilities, once this is implemented
-		throw new UnsupportedOperationException("Could not initialize database connection. Please contact developers.");
 	}
 	
 	

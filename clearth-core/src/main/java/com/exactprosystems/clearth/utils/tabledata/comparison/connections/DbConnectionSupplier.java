@@ -16,20 +16,16 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
+package com.exactprosystems.clearth.utils.tabledata.comparison.connections;
 
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.TableDataException;
-import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
-import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
+import com.exactprosystems.clearth.utils.IValueTransformer;
+import com.exactprosystems.clearth.utils.SettingsException;
 
-/**
- * Factory to create and configure {@link BasicTableDataReader} instances based on specified settings.
- * @param <A> class of header members.
- * @param <B> class of values in table rows.
- */
-public interface TableDataReaderFactory<A, B>
+import java.sql.Connection;
+import java.sql.SQLException;
+
+public interface DbConnectionSupplier extends AutoCloseable
 {
-	BasicTableDataReader<A, B, ?> createTableDataReader(TableDataReaderSettings settings,
-			DbConnectionSupplier dbConnectionSupplier) throws TableDataException;
+	Connection getConnection(boolean forExpectedData) throws SQLException, SettingsException;
+	IValueTransformer getValueTransformer();
 }

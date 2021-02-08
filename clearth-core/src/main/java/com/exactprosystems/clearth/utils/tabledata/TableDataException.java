@@ -16,20 +16,26 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
+package com.exactprosystems.clearth.utils.tabledata;
 
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.TableDataException;
-import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
-import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
-
-/**
- * Factory to create and configure {@link BasicTableDataReader} instances based on specified settings.
- * @param <A> class of header members.
- * @param <B> class of values in table rows.
- */
-public interface TableDataReaderFactory<A, B>
+public class TableDataException extends Exception
 {
-	BasicTableDataReader<A, B, ?> createTableDataReader(TableDataReaderSettings settings,
-			DbConnectionSupplier dbConnectionSupplier) throws TableDataException;
+	private static final long serialVersionUID = 5458225540325254514L;
+	
+	public TableDataException() { }
+	
+	public TableDataException(String message)
+	{
+		super(message);
+	}
+	
+	public TableDataException(Throwable cause)
+	{
+		super(cause);
+	}
+	
+	public TableDataException(String message, Throwable cause)
+	{
+		super(message, cause);
+	}
 }

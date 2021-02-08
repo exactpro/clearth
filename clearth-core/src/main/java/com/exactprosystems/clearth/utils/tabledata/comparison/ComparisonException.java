@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2021 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,17 +23,17 @@ public class ComparisonException extends Exception
 	private static final long serialVersionUID = 6943493622785056997L;
 	
 	public ComparisonException() { }
-
+	
 	public ComparisonException(String message)
 	{
 		super(message);
 	}
-
+	
 	public ComparisonException(Throwable cause)
 	{
 		super(cause);
 	}
-
+	
 	public ComparisonException(String message, Throwable cause)
 	{
 		super(message, cause);

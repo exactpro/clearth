@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2021 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,25 +21,24 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.utils.LineBuilder;
+import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
 import com.exactprosystems.clearth.utils.scripts.ScriptUtils;
-import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
+import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
+import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
 
 import java.io.*;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class StringTableDataReaderFactory implements TableDataReaderFactory<String, String>
@@ -51,7 +50,7 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	
 	@Override
 	public BasicTableDataReader<String, String, ?> createTableDataReader(TableDataReaderSettings settings,
-			Supplier<Connection> dbConnectionSupplier) throws ComparisonException
+			DbConnectionSupplier dbConnectionSupplier) throws TableDataException
 	{
 		try
 		{
@@ -67,7 +66,8 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 		}
 		catch (Exception e)
 		{
-			throw new ComparisonException("Couldn't create table data reader.", e);
+			throw new TableDataException("Couldn't create " + (settings.isForExpectedData() ?
+					"expected" : "actual") + " table data reader.", e);
 		}
 	}
 	
@@ -79,17 +79,19 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	}
 	
 	
-	protected DbDataReader createDbDataReader(TableDataReaderSettings settings,
-			Supplier<Connection> dbConnectionSupplier) throws IOException, SQLException
+	protected DbDataReader createDbDataReader(TableDataReaderSettings settings, DbConnectionSupplier dbConnectionSupplier)
+			throws IOException, SQLException, SettingsException
 	{
+		boolean forExpectedData = settings.isForExpectedData();
 		String source = settings.getSourceData();
 		ParametrizedQuery query = settings.getSourceType().equalsIgnoreCase(DB_QUERY) ? SQLUtils.parseSQLTemplate(source)
 				: SQLUtils.parseSQLTemplate(new File(ClearThCore.rootRelative(source)));
-		PreparedStatement statement = query.createPreparedStatement(dbConnectionSupplier.get(), settings.getSqlQueryParams());
+		PreparedStatement statement = query.createPreparedStatement(dbConnectionSupplier.getConnection(forExpectedData),
+				settings.getSqlQueryParams());
 		
 		DbDataReader dbDataReader = new DbDataReader(statement);
-		dbDataReader.setQueryDescription("for " + (settings.isForExpectedData() ? "expected" : "actual") + " data");
-		dbDataReader.setValueTransformer(new DefaultSQLValueTransformer());
+		dbDataReader.setQueryDescription("for " + (forExpectedData ? "expected" : "actual") + " data");
+		dbDataReader.setValueTransformer(dbConnectionSupplier.getValueTransformer());
 		return dbDataReader;
 	}
 	
