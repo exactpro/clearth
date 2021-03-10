@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2021 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -82,10 +82,11 @@ public class DefaultMQConnection extends MQConnection
 	protected ReceiveListener createMessageCollector(String collectorName, Map<String, String> settings) 
 			throws SettingsException, ConnectivityException
 	{
+		String messageEndIndicator = getMessageEndIndicator();
 		String type = settings.get(ClearThMessageCollector.TYPE_SETTING);
 		if (type == null)
-			return new ClearThMessageCollector(collectorName, name, settings, Utils.EOL+Utils.EOL);
-		return new ClearThMessageCollector(collectorName, name, ClearThCore.getInstance().createCodec(type), settings,Utils.EOL+Utils.EOL);
+			return new ClearThMessageCollector(collectorName, name, settings, messageEndIndicator);
+		return new ClearThMessageCollector(collectorName, name, createCodec(type), settings, messageEndIndicator);
 	}
 	
 	@Override
@@ -104,5 +105,11 @@ public class DefaultMQConnection extends MQConnection
 	protected String initType()
 	{
 		return ClearThConnectionStorage.MQ;
+	}
+	
+	
+	protected String getMessageEndIndicator()
+	{
+		return ClearThMessageCollector.DEFAULT_MESSAGE_END_INDICATOR;
 	}
 }

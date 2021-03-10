@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2021 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,6 +27,8 @@ import java.util.Map.Entry;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.exactprosystems.clearth.connectivity.*;
+import com.exactprosystems.clearth.connectivity.iface.ICodec;
+
 import org.slf4j.Logger;
 
 import com.exactprosystems.clearth.ClearThCore;
@@ -294,4 +296,12 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		}
 	}
 	
+	
+	protected ICodec createCodec(String type) throws SettingsException
+	{
+		String[] names = type.split(",");
+		if (names.length < 2)
+			return ClearThCore.getInstance().createCodec(type);
+		return new MultiCodec(names);
+	}
 }

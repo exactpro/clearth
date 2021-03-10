@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2021 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.connectivity.connections;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.ClearThClient;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
@@ -176,14 +175,14 @@ public abstract class BasicClearThMessageConnection<C extends BasicClearThMessag
 	protected ReceiveListener createMessageCollector(String collectorName, Map<String, String> settings)
 			throws SettingsException, ConnectivityException
 	{
-		String messageEndIndicator = Utils.EOL + Utils.EOL;
+		String messageEndIndicator = getMessageEndIndicator();
 
 		String type = settings.get(ClearThMessageCollector.TYPE_SETTING);
 		if (isBlank(type))
 			return new ClearThMessageCollector(collectorName, name, settings, messageEndIndicator);
 		else
 		{
-			ICodec codec = ClearThCore.getInstance().createCodec(type);
+			ICodec codec = createCodec(type);
 			return new ClearThMessageCollector(collectorName, name, codec, settings, messageEndIndicator);
 		}
 	}
@@ -192,5 +191,11 @@ public abstract class BasicClearThMessageConnection<C extends BasicClearThMessag
 	public Class<?> getMessageCollectorClass()
 	{
 		return ClearThMessageCollector.class;
+	}
+	
+	
+	protected String getMessageEndIndicator()
+	{
+		return ClearThMessageCollector.DEFAULT_MESSAGE_END_INDICATOR;
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2021 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,6 +36,7 @@ import com.exactprosystems.clearth.connectivity.listeners.storage.FileContentSto
 import com.exactprosystems.clearth.connectivity.listeners.storage.MemoryContentStorage;
 import com.exactprosystems.clearth.connectivity.listeners.storage.WritingContentStorage;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @ListenerDescription(description = "ClearTH message collector")
 @SettingsDetails(details = "Format: <code>setting=value;setting=value</code><br/><br/>" + "Settings:" + "<ul>"
-		+ "<li><b>type=&lt;value&gt;</b> &mdash; type of a codec that will decode incoming messages. <br/>" + "If you just need to collect messages without decoding them, omit this setting.</li>"
+		+ "<li><b>type=&lt;value&gt;</b> &mdash; type of a codec that will decode incoming messages. <br/>" 
+		+   "If incoming messages are of various formats, specify multiple codec names delimited with comma (,). <br/>"
+		+   "If you just need to collect messages without decoding them, omit this setting.</li>"
 		+ "<li><b>fileName=&lt;path&gt;</b> &mdash; path to a file which contains an initial message set for this collector.</li>"
 		+ "<li><b>contentsFileName=&lt;path&gt;</b> &mdash; path to a file in which to store current collector contents.</li>"
 		+ "<li><b>storeTimestamp=&lt;true/false&gt;</b> &mdash; If set as 'true' message receiving timestamp will be written in storage file before message content. Default value is 'false'.</li>"
@@ -72,6 +75,7 @@ public class ClearThMessageCollector extends ReceiveListener
 	public static final String STOREFAILEDMESSAGES_SETTING = "storefailed";
 	public static final String STORE_RECEIVING_TIMESTAMP_SETTING = "storetimestamp";
 	public static final String MESSAGE = "Message";
+	public static final String DEFAULT_MESSAGE_END_INDICATOR = Utils.EOL + Utils.EOL;
 	private static final String STORE_THREAD_NAME = "FileContentStorage";
 
 	private static final int DEBUG_LOG_MSG_SIZE_LIMIT = 1024; //1 KB
