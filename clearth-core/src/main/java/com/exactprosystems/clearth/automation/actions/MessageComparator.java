@@ -54,16 +54,24 @@ public class MessageComparator<T extends ClearThMessage<T>>
 	protected final boolean checkExtraRgs,
 			saveFields,
 			saveSubFields;
+	protected boolean failExtraRgs;
 	protected RgKeyFieldNames rgKeyFieldNames;
-	
+
 	protected LinkedHashMap<String, String> outputFields;
 	protected LinkedHashMap<String, LinkedHashMap<String, String>> subOutputFields;
-	
+
+
 	public MessageComparator(Set<String> serviceParams, boolean checkExtraRgs, boolean saveFields, boolean saveSubFields)
+	{
+		this(serviceParams, checkExtraRgs, false, saveFields, saveSubFields);
+	}
+
+	public MessageComparator(Set<String> serviceParams, boolean checkExtraRgs, boolean failExtraRgs, boolean saveFields, boolean saveSubFields)
 	{
 		this.serviceParams = serviceParams;
 		cu = ClearThCore.comparisonUtils();
 		this.checkExtraRgs = checkExtraRgs;
+		this.failExtraRgs = failExtraRgs;
 		this.saveFields = saveFields;
 		this.saveSubFields = saveSubFields;
 	}
@@ -300,6 +308,8 @@ public class MessageComparator<T extends ClearThMessage<T>>
 	private Result processExtraSubMessages(List<T> subMessages, String type)
 	{
 		ContainerResult result = createBlockResult(format("Extra repeating groups with type '%s'", type));
+		if (failExtraRgs)
+			result.setSuccess(false);
 		for (T sm : subMessages)
 			result.addDetail(processExtraSubMessage(sm));
 		return result;
@@ -309,7 +319,7 @@ public class MessageComparator<T extends ClearThMessage<T>>
 	{
 		DetailedResult result = new DetailedResult();
 		for (String fieldName : subMessage.getFieldNames())
-			result.addResultDetail(new ResultDetail(fieldName, null, subMessage.getField(fieldName), true));
+			result.addResultDetail(new ResultDetail(fieldName, null, subMessage.getField(fieldName), !failExtraRgs));
 		return result;
 	}
 	

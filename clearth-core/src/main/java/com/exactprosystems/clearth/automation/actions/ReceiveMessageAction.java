@@ -49,6 +49,7 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 			PARAM_RG_KEYFIELDS = "RGKeyFields",
 			PARAM_OUTPUTPARAMS = "OutputParams",
 			IGNORE_EXTRA_REPEATING_GROUPS = "IgnoreExtraRepeatingGroups",
+            FAIL_EXTRA_REPEATING_GROUPS = "FailExtraRepeatingGroups",
 			LOG_SUBMESSAGES_OUTPUT = "LogSubMsgsOutput",
 			SAVE_OUTPUT_IF_FAILED = "SaveOutputIfFailed",
 			REMOVE_IF_FAILED = "RemoveIfFailed",
@@ -67,6 +68,7 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 		add(PARAM_KEYFIELDS);
 		add(PARAM_RG_KEYFIELDS);
 		add(IGNORE_EXTRA_REPEATING_GROUPS);
+		add(FAIL_EXTRA_REPEATING_GROUPS);
 		add(PARAM_OUTPUTPARAMS);
 		add(MessageAction.FILENAME);
 		add(MessageAction.CODEC);
@@ -282,7 +284,7 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 	
 	protected MessageComparator<T> getMessageComparator()
 	{
-		return new MessageComparator<T>(getServiceParameters(), !isIgnoreExtraRgs(), true, isLogSubMessagesOutput());
+		return new MessageComparator<T>(getServiceParameters(), !isIgnoreExtraRgs(), isFailExtraRgs(), true, isLogSubMessagesOutput());
 	}
 	
 	
@@ -452,6 +454,15 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 	protected boolean isIgnoreExtraRgs()
 	{
 		return getBooleanOrDefault(inputParams, IGNORE_EXTRA_REPEATING_GROUPS, isIgnoreExtraRgsByDefault());
+	}
+
+
+	protected boolean isFailExtraRgsByDefault() {
+		return false;
+	}
+
+	protected boolean isFailExtraRgs() {
+		return getBooleanOrDefault(inputParams, FAIL_EXTRA_REPEATING_GROUPS, isFailExtraRgsByDefault());
 	}
 
 
