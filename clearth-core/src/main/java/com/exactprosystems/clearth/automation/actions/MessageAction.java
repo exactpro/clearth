@@ -72,6 +72,7 @@ public abstract class MessageAction<T extends ClearThMessage<T>> extends Action 
 		return getMessageBuilder(getServiceParameters())
 				.fields(getInputParams())
 				.rgs(matrixContext, this)
+				.type(inputParams.get(ClearThMessage.MSGTYPE))
 				.build();
 	}
 	

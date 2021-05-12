@@ -87,7 +87,8 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	public MessageBuilder<M> type(String type)
 	{
 		message.removeField(ClearThMessage.SUBMSGTYPE);
-		return field(ClearThMessage.MSGTYPE, type);
+		message.addField(ClearThMessage.MSGTYPE, type);
+		return this;
 	}
 	
 	/**

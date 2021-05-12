@@ -22,6 +22,7 @@ import static com.exactprosystems.clearth.automation.report.results.ContainerRes
 import static com.exactprosystems.clearth.automation.report.results.ContainerResult.createPlainResult;
 import static com.exactprosystems.clearth.connectivity.iface.ClearThMessage.SUBMSGTYPE;
 import static com.exactprosystems.clearth.connectivity.iface.ClearThMessage.SUBMSGSOURCE;
+import static com.exactprosystems.clearth.connectivity.iface.ClearThMessage.MSGTYPE;
 import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -102,7 +103,15 @@ public class MessageComparator<T extends ClearThMessage<T>>
 	
 	private Result compareMessages(T expectedMessage, T actualMessage, boolean isSubMessage)
 	{
+		try {
+			if(!cu.compareValues(expectedMessage.getField(MSGTYPE), actualMessage.getField(MSGTYPE)))
+				return DefaultResult.failed("Message types don't match.");
+		} catch (ParametersException e) {
+			throw ResultException.failed("Error while comparing message types.", e);
+		}
+
 		ContainerResult result;
+
 		if (isSubMessage)
 		{
 			String subActionId = expectedMessage.getField(SUBMSGSOURCE);
