@@ -1,0 +1,32 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <table>
+        <tr>
+            <td>\t - a tabulation character</td>
+        </tr>
+        <tr>
+            <td>\n - a newline</td>
+        </tr>
+        <tr>
+            <td>\r - a carriage return</td>
+        </tr>
+        <tr>
+            <td>\' - a single quote character</td>
+        </tr>
+        <tr>
+            <td>"" - a double quote character</td>
+        </tr>
+        <tr>
+            <td>\\\\ - a backslash character</td>
+        </tr>
+    </table>
+    <h3>, - comma</h3>
+    <p>The whole value in the column with comma should be enclosed in double quotes</p>
+    <h3>Examples</h3>
+    <p>Value in column is: value,with,commas</p>
+    <p>should be written like this: "value,with,commas"</p>
+    <p>The same is for expressions: @{format(time(0), 'yyyy-MM-dd')}</p>
+    <p>In CSV it should be: "@{format(time(0), 'yyyy-MM-dd')}"</p>
+</ui:composition>
