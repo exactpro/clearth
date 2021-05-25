@@ -137,7 +137,7 @@ public class ExpressionCalculatorTool
 	
 	protected String wrapExpression(String exp)
 	{
-		if (!exp.startsWith(MatrixFunctions.FORMULA_START) && !exp.endsWith(MatrixFunctions.FORMULA_END))
+		if (!exp.contains(MatrixFunctions.FORMULA_START) && !exp.endsWith(MatrixFunctions.FORMULA_END))
 			return MatrixFunctions.FORMULA_START + exp + MatrixFunctions.FORMULA_END;
 		return exp;
 	}
@@ -236,4 +236,5 @@ public class ExpressionCalculatorTool
 		for (CalculatorVariable var : variables)
 			checkVariable(var, var.getName());
 	}
+
 }
