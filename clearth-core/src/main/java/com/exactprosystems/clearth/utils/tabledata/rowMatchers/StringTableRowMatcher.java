@@ -20,10 +20,7 @@ package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class StringTableRowMatcher implements TableRowMatcher<String, String, String>
 {
@@ -31,7 +28,7 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 	
 	public StringTableRowMatcher(Set<String> keyColumns)
 	{
-		this.keyColumns = new HashSet<>(keyColumns);
+		this.keyColumns = new LinkedHashSet<>(keyColumns);
 	}
 	
 	@Override

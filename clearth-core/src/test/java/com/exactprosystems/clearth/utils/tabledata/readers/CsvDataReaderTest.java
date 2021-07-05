@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.utils.tabledata.readers;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -28,10 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +38,7 @@ public class CsvDataReaderTest
 {
 	private static final String TEST_CSV_FILE = "TableDataTest/testCsv.csv";
 	private static final String TEST_WITH_DOTS_CSV_FLE = "TableDataTest/testDotsCsv.csv";
+	private static final String TEST_ORDER_FILE = "TableDataTest/testOrderCsv.csv";
 
 	@Test(dataProvider = "pathsAndDelimiters")
 	public void testReadAllDataWithFile(Path filePath, char delimiter) throws IOException
@@ -156,5 +155,33 @@ public class CsvDataReaderTest
 		emptyValues.add("");
 		emptyValues.add("");
 		return emptyValues;
+	}
+	
+	/* testFile content:
+	First,Second,Third,Fourth,TwoPointFive
+	A,B,C,D,Impostor
+	 */
+	@Test
+	public void testOrder() throws IOException
+	{
+		Set<String> keys = buildLinkedHashSet();
+		StringTableRowMatcher matcher = new StringTableRowMatcher(keys);
+
+		Path pathToFile = Paths.get(resourceToAbsoluteFilePath(TEST_ORDER_FILE));
+		StringTableData tableData = CsvDataReader.read(new FileReader(pathToFile.toFile()));
+		TableRow<String, String> row = tableData.getRow(0);
+		assertThat(matcher.createPrimaryKey(row)).isEqualTo("A,B,Impostor,C,D");
+	}
+
+	private Set<String> buildLinkedHashSet()
+	{
+		Set<String> keys = new LinkedHashSet<>();
+		keys.add("First");
+		keys.add("Second");
+		keys.add("TwoPointFive");
+		keys.add("Third");
+		keys.add("Fourth");
+
+		return keys;
 	}
 }
