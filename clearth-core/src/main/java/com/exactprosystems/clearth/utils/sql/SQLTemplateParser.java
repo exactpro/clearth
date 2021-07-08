@@ -34,10 +34,18 @@ import static org.apache.commons.lang.StringUtils.contains;
 
 public class SQLTemplateParser
 {
+	private static final String END_OF_LINE_REGEX = "(\r\n|\r|\n|\u0085|\u2028|\u2029)";
 	private static final Pattern TEMPLATE_PARAM_PATTERN = Pattern.compile("'?(?<![\\\\])[#$@][\\w]+'?");
 	private static final String MULTI_PARAM_BEGINNER = "@";
-	
-	
+	// regex for /* */
+	private static final String MULTI_LINE_REGEX = "/\\*[\\s\\S]*?\\*/";
+	// regex for --
+	private static final String SINGLE_LINE_REGEX = "(--[\\s\\S]*?"+END_OF_LINE_REGEX+")|(--[\\s\\S]*)";
+	// regex for ' ' or " " that considers \' or \" in them
+	private static final String STRING_LITERAL_REGEX = "'[\\s\\S]*?[^\\\\]'|\"[\\s\\S]*?[^\\\\]\"";
+	private static final Pattern SQL_COMMENTS_AND_LITERALS_REGEX = Pattern.compile(String.format("(%s)|(%s)|(%s)",
+			MULTI_LINE_REGEX, SINGLE_LINE_REGEX, STRING_LITERAL_REGEX));
+
 	public ParametrizedQuery parseParametrizedQueryTemplate(File templateFile) throws IOException
 	{
 		String templateText = FileUtils.readFileToString(templateFile, Charset.defaultCharset());
@@ -48,6 +56,7 @@ public class SQLTemplateParser
 
 	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText, String multiParamsDelimiter)
 	{
+		templateText = removeComments(templateText);
 		Matcher paramMatcher = TEMPLATE_PARAM_PATTERN.matcher(templateText);
 		List<String> queryParams = new ArrayList<>();
 		HashSet<String> multiParams = new HashSet<>();
@@ -63,14 +72,14 @@ public class SQLTemplateParser
 			paramMatcher.appendReplacement(queryBuilder, "?");
 		}
 		paramMatcher.appendTail(queryBuilder);
-		
+
 		replaceAll(queryBuilder, TABLE_NAME_WITH_DOLLAR.toString(), Character.toString(CONVERT_BEGINNER));
 		replaceAll(queryBuilder,TABLE_NAME_WITH_SHARP.toString(),Character.toString(CUSTOM_BEGINNER));
 		replaceAll(queryBuilder, "\\" + MULTI_PARAM_BEGINNER, MULTI_PARAM_BEGINNER);
-		
+
 		return new ParametrizedQuery(queryBuilder.toString(), queryParams, multiParams, multiParamsDelimiter);
 	}
-	
+
 	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText)
 	{
 		return parseParametrizedQueryTemplate(templateText, ",");
@@ -86,12 +95,48 @@ public class SQLTemplateParser
 			index = builder.indexOf(from, index);
 		}
 	}
-	
+
 	protected String getTemplateParamName(String templateParam)
 	{
 		if (templateParam.length() < 2)
 			throw new IllegalArgumentException("Template param should contain at least 2 characters.");
-		
+
 		return templateParam.replaceAll("[#$@']*", "").trim();
+	}
+
+	/**
+	 * deletes single line and multiline comments;
+	 * can handle strict sql strings (in ''/"") and situations like "--/*" and "/*--"
+	 * @return query without comments
+	 */
+	public String removeComments(String query)
+	{
+		Matcher matcher = SQL_COMMENTS_AND_LITERALS_REGEX.matcher(query);
+		
+		if (!matcher.find())
+			return query;
+		
+		StringBuilder result = new StringBuilder();
+		int index = 0;
+		while (index < query.length() && matcher.find(index))
+		{
+			result.append(query.subSequence(index, matcher.start()));
+			index = matcher.end();
+			
+			String block = matcher.group();
+			if (block.startsWith("/")) // multiline comment start
+				result.append(" ");
+			else if (block.startsWith("-")) // single line comment start
+			{
+				result.append(index >= query.length() ? "" :
+						query.substring(index - 2, index).equals("\r\n") ? "\r\n" : query.charAt(index - 1));
+			}
+			else // string literal start
+				result.append(block);
+		}
+		
+		if (index < query.length())
+			result.append(query.substring(index));
+		return result.toString();
 	}
 }

@@ -60,12 +60,12 @@ public class SQLTemplateParserTest
 						},
 						{
 								"select * from \\#trades where venue = #venue",
-								new ParametrizedQuery("select * from #trades where venue = ?", 
+								new ParametrizedQuery("select * from #trades where venue = ?",
 										singletonList("venue"))
 						},
 						{
 								"select * from \\$trades where venue = $venue",
-								new ParametrizedQuery("select * from $trades where venue = ?", 
+								new ParametrizedQuery("select * from $trades where venue = ?",
 										singletonList("venue"))
 						},
 						{
@@ -92,12 +92,183 @@ public class SQLTemplateParserTest
 								"select * from trades\\# where venue = #venue",
 								new ParametrizedQuery("select * from trades# where venue = ?",
 										singletonList("venue"))
-						}
+						},
+						{ // case with /* */
+								"select * from trades\\# where/* 1=1 and */ venue = #venue",
+								new ParametrizedQuery("select * from trades# where  venue = ?",
+										singletonList("venue"))
+						},
+						{ // case with /* \n */
+								"select * from trades\\# where/* 1=1 and\n asdf */ venue = #venue",
+								new ParametrizedQuery("select * from trades# where  venue = ?",
+										singletonList("venue"))
+						},
+						{ // case with /* \n '' \n */
+								"select * from trades\\# where/* 1=1 and\n 'must not appear' \n */ venue = #venue",
+								new ParametrizedQuery("select * from trades# where  venue = ?",
+										singletonList("venue"))
+						},
+						{ // case with --
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\n and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\n and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- \r \n (space matters)
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\r \n and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\r \n and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- \r\n
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\r\n and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\r\n and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- \r without \n
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\r and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\r and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- at the end
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?",
+										asList("Firm", "Venue"))
+						},
+						{ // case with -- \r
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\r and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\r and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- \r\r
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\r\r and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\r\r and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- \u0085
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\u0085 and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\u0085 and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- \u2028
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\u2028 and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\u2028 and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with -- \u2029
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue" +
+										"--and sell_firm = #Firm\u2029 and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ?\u2029 and sell_venue = ?",
+										asList("Firm", "Venue", "Venue"))
+						},
+						{ // case with --/* and --*/
+								"select * from trades where buy_firm = #Firm --/*\nand buy_venue = #Venue --*/\n" +
+										"and sell_firm = #Firm and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? \n" +
+										"and buy_venue = ? \nand sell_firm = ? and sell_venue = ?",
+										asList("Firm", "Venue", "Firm", "Venue"))
+						},
+						{ // case with --/* without */
+								"select * from trades where buy_firm = #Firm --/*\nand buy_venue = #Venue " +
+										"and sell_firm = #Firm and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"\nand buy_venue = ? and sell_firm = ? and sell_venue = ?",
+										asList("Firm", "Venue", "Firm", "Venue"))
+						},
+						{ // case with --*/ without /*
+								"select * from trades where buy_firm = #Firm and buy_venue = #Venue --*/\n" +
+										"and sell_firm = #Firm and sell_venue = #Venue",
+								new ParametrizedQuery("select * from trades where buy_firm = ? " +
+										"and buy_venue = ? \nand sell_firm = ? and sell_venue = ?",
+										asList("Firm", "Venue", "Firm", "Venue"))
+						},
+						{ // case with '/**/' 
+								"select * from trades where venue='#SourceVenue' and side='/*must appear*/'",
+								new ParametrizedQuery("select * from trades where venue=? and side='/*must appear*/'",
+										asList("SourceVenue"))
+						},
+						{ // case with '/*\n*/' 
+								"select * from trades where venue='#SourceVenue' and side='/*must\nappear*/'",
+								new ParametrizedQuery("select * from trades where venue=? and side='/*must\nappear*/'",
+										asList("SourceVenue"))
+						},
+						{ // case with ' \' ' 
+								"select * from trades where venue='#SourceVenue' and side='/*must\\' appear*/'",
+								new ParametrizedQuery("select * from trades where venue=? and side='/*must\\' appear*/'",
+										asList("SourceVenue"))
+						},
+						{ // case with "/**/"
+								"select * from trades where venue='#SourceVenue' and side=\"/*must appear*/\"",
+								new ParametrizedQuery("select * from trades where venue=? and side=\"/*must appear*/\"",
+										asList("SourceVenue"))
+						},
+						{ // case with " \" "
+								"select * from trades where venue='#SourceVenue' and side=\"/*must\\\" appear*/\"",
+								new ParametrizedQuery("select * from trades where venue=? and side=\"/*must\\\" appear*/\"",
+										asList("SourceVenue"))
+						},
+						{
+								"select 1",
+								new ParametrizedQuery("select 1",
+										null)
+						},
+						{ // must be valid SQL (while "select1" is not)
+								"select/* asdf */1",
+								new ParametrizedQuery("select 1",
+										null)
+						},
+						{
+								"--",
+								new ParametrizedQuery("",
+										null)
+						},
+						{
+								"--asdf",
+								new ParametrizedQuery("",
+										null)
+						},
+						{
+								"'",
+								new ParametrizedQuery("'",
+										null)
+						},
+						{
+								"/**/",
+								new ParametrizedQuery(" ",
+										null)
+						},
+						{
+								"",
+								new ParametrizedQuery("",
+										null)
+						},
+						{
+								"/*",
+								new ParametrizedQuery("/*",
+										null)
+						},
 				};
 	}
-	
+
 	@Test(dataProvider = "createParameters")
-	public void testParseParametrizedQueryTemplate(String queryTemplate, ParametrizedQuery expectedQuery) 
+	public void testParseParametrizedQueryTemplate(String queryTemplate, ParametrizedQuery expectedQuery)
 	{
 		SQLTemplateParser parser = new SQLTemplateParser();
 		ParametrizedQuery actualQuery = parser.parseParametrizedQueryTemplate(queryTemplate);
