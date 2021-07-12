@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<commonFieldsA>trap</commonFieldsA>-->
+<!--<commonFieldsA>trap</commonFieldsA>-->
+<!DOCTYPE commonFieldsAC [
+        <!ELEMENT commonFieldsAC (commonFieldsA, f, abc)>
+        <!ELEMENT commonFieldsA (#PCDATA)>
+        <!ELEMENT f (#PCDATA)>
+        <!ELEMENT abc (ab, c)>
+        <!ELEMENT ab (a, b)>
+        <!ELEMENT a (#PCDATA)>
+        <!ELEMENT b (#PCDATA)>
+        <!ELEMENT c (#PCDATA)>
+        ]>
+<!-- <commonFieldsA>trap</commonFieldsA> -->
+<!--    <commonFieldsA> trap </commonFieldsA>  -->
+<commonFieldsAC>
+    <commonFieldsA>trap</commonFieldsA>
+    <!--<f>321</f>-->
+    <f>123</f>
+    <abc>
+        <ab>
+            <a>345</a>
+            <b>678</b>
+        </ab>
+        <c>90</c>
+    </abc>
+</commonFieldsAC>
+<!--<commonFieldsA>trap</commonFieldsA>-->
+        <!-- <commonFieldsA> trap </commonFieldsA>-->

@@ -29,7 +29,16 @@ import static java.lang.String.format;
  */
 public class RootTagCondition implements MessageValidatorCondition
 {
-	private static final String REGEX_TEMPLATE = "\\A(<\\?(?i)xml(?-i).*>\\s*)?<rootTag.*>";
+	private static final String ROOT_TAG_TEMPLATE = "rootTagTemplateToReplace";
+	private static final String SPACES = "\\s*";
+	private static final String XML_TAG_TEMPLATE = "(<\\?(?i)xml(?-i).*>)?";
+	private static final String DOCTYPE_TAG_TEMPLATE = "(<!DOCTYPE[\\s\\S]*?(\\[(\\s\\S)*\\])|^\\[)?";
+	private static final String ROOT_TAG_FULL_REGEX = String.format("((<%s(\\s|>)+[\\s\\S]*<\\/%s>)|(<%s\\/>))",
+			ROOT_TAG_TEMPLATE, ROOT_TAG_TEMPLATE, ROOT_TAG_TEMPLATE);
+	private static final String COMMENT_REGEX = "(<!--[\\s\\S]*?-->\\s*)*";
+	private static final String[] REGEX_PARTS = {"\\A", COMMENT_REGEX, XML_TAG_TEMPLATE, COMMENT_REGEX, DOCTYPE_TAG_TEMPLATE, COMMENT_REGEX, ROOT_TAG_FULL_REGEX, COMMENT_REGEX};
+	// can handle xml comments <!-- -->
+	private static final String REGEX_TEMPLATE = String.join(SPACES, REGEX_PARTS);
 	
 	private final String rootTag;
 	private final Pattern pattern;
@@ -37,7 +46,7 @@ public class RootTagCondition implements MessageValidatorCondition
 	public RootTagCondition(String rootTag)
 	{
 		this.rootTag = rootTag;
-		pattern = Pattern.compile(REGEX_TEMPLATE.replace("rootTag", rootTag));
+		pattern = Pattern.compile(REGEX_TEMPLATE.replaceAll(ROOT_TAG_TEMPLATE, rootTag));
 	}
 
 	@Override

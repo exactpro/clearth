@@ -43,8 +43,16 @@
         <fieldDesc name="privateFieldG" source="g"/>
         <fieldDesc reference="commonFieldBCDE"/>
     </messageDesc>
-    
-    
+
+    <!--3rd message-->
+    <messageDesc rootTag="commonFieldsAC" type="commonFieldsAC">
+        <fieldDesc name="privateFieldAC" source="f"/>
+        <fieldDesc reference="commonFieldABC"/>
+    </messageDesc>
+
+    <!--self closing root tag-->
+    <messageDesc rootTag="selfClosing" type="selfClosingType">
+    </messageDesc>
     
     <!--COMMON FIELD GROUP TEST-->
     <!--fields-->

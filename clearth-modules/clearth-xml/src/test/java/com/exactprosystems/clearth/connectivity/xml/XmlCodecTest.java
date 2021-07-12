@@ -123,6 +123,16 @@ public class XmlCodecTest
 				"innerCommonFieldD", "78",
 				"innerCommonFieldE", "90"));
 	
+	public static final ClearThXmlMessage COMMON_FIELDS_AC = message(
+			map("MsgType", "commonFieldsAC",
+					"privateFieldAC", "123",
+					"innerCommonFieldA", "345",
+					"innerCommonFieldB", "678",
+					"innerCommonFieldC", "90"));
+	
+	public static final ClearThXmlMessage SELF_CLOSING = message(
+			map("MsgType", "selfClosingType"));
+	
 	public static final ClearThXmlMessage COMMON_FIELDS_GROUP = message(
 			map("MsgType", "commonFieldsGroup",
 				"a", "12", "b", "34", "c", "56", "d", "78"));
@@ -179,6 +189,13 @@ public class XmlCodecTest
 	{
 		decode(resourceToAbsoluteFilePath("messages/commonFieldsA.xml"), COMMON_FIELDS_A);
 		decode(resourceToAbsoluteFilePath("messages/commonFieldsB.xml"), COMMON_FIELDS_B);
+		decode(resourceToAbsoluteFilePath("messages/commonFieldsAC.xml"), COMMON_FIELDS_AC);
+	}
+	
+	@Test
+	public void decodeSelfEnclosing() throws Exception
+	{
+		decode(resourceToAbsoluteFilePath("messages/selfClosing.xml"), SELF_CLOSING);
 	}
 	
 	@Test
