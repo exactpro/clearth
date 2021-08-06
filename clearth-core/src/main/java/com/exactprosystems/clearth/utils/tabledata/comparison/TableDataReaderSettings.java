@@ -54,7 +54,9 @@ public class TableDataReaderSettings
 	protected void loadSettings(ParametersHandler handler) throws ParametersException
 	{
 		sourceType = handler.getRequiredString((forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM) + SOURCE_TYPE);
-		sourceData = handler.getRequiredString((forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM) + SOURCE_DATA);
+		if (isSourceDataRequired(sourceType))
+			sourceData = handler.getRequiredString((forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM) + SOURCE_DATA);
+
 		
 		// Next properties are custom ones for certain types of table data readers.
 		// It could be applied for expected and actual readers separately
@@ -78,7 +80,10 @@ public class TableDataReaderSettings
 				handler.getString(SCRIPT_SHELL_OPTION + (forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM), "-c"));
 	}
 	
-	
+	protected boolean isSourceDataRequired(String sourceType) {
+		return true;
+	}
+
 	public boolean isForExpectedData()
 	{
 		return forExpectedData;
