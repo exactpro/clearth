@@ -25,12 +25,11 @@ import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbRowFilter;
 import com.exactprosystems.clearth.utils.tabledata.typing.*;
 import com.exactprosystems.clearth.utils.tabledata.typing.converter.DbTypesConverter;
-import com.exactprosystems.clearth.utils.tabledata.typing.converter.GenericDbTypesConverter;
-import com.exactprosystems.clearth.utils.tabledata.typing.converter.SqliteTypesConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -133,47 +132,43 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 				switch (type)
 				{
 					case INTEGER:
-						typedTableRow.setInteger(headerName, resultSet.getInt(headerName));
+						typedTableRow.setInteger(headerName, getInteger(headerName, resultSet));
 						break;
 					case BOOLEAN:
-						typedTableRow.setBoolean(headerName, resultSet.getBoolean(headerName));
+						typedTableRow.setBoolean(headerName, getBoolean(headerName, resultSet));
 						break;
 					case FLOAT:
-						typedTableRow.setFloat(headerName, resultSet.getFloat(headerName));
+						typedTableRow.setFloat(headerName, getFloat(headerName, resultSet));
 						break;
 					case DOUBLE:
-						typedTableRow.setDouble(headerName, resultSet.getDouble(headerName));
+						typedTableRow.setDouble(headerName, getDouble(headerName, resultSet));
 						break;
 					case BYTE:
-						typedTableRow.setByte(headerName, resultSet.getByte(headerName));
+						typedTableRow.setByte(headerName, getByte(headerName, resultSet));
 						break;
 					case SHORT:
-						typedTableRow.setShort(headerName, resultSet.getShort(headerName));
+						typedTableRow.setShort(headerName, getShort(headerName, resultSet));
 						break;
 					case LONG:
-						typedTableRow.setLong(headerName, resultSet.getLong(headerName));
+						typedTableRow.setLong(headerName, getLong(headerName, resultSet));
 						break;
 					case LOCALDATE:
-						typedTableRow.setLocalDate(headerName, resultSet.getDate(headerName));
+						typedTableRow.setLocalDate(headerName, getLocalDate(headerName, resultSet));
 						break;
 					case LOCALTIME:
-						Time time = resultSet.getTime(headerName);
-						LocalTime ltValue = time == null ? null : time.toLocalTime();
-						typedTableRow.setLocalTime(headerName, ltValue);
+						typedTableRow.setLocalTime(headerName, getLocalTime(headerName, resultSet));
 						break;
 					case BIGDECIMAL:
-						typedTableRow.setBigDecimal(headerName, resultSet.getBigDecimal(headerName));
+						typedTableRow.setBigDecimal(headerName, getBigDecimal(headerName, resultSet));
 						break;
 					case STRING:
-						typedTableRow.setString(headerName, resultSet.getString(headerName));
+						typedTableRow.setString(headerName, getString(headerName, resultSet));
 						break;
 					case LOCALDATETIME:
-						Timestamp timestamp = resultSet.getTimestamp(headerName);
-						LocalDateTime ldValue = timestamp == null ? null : timestamp.toLocalDateTime();
-						typedTableRow.setDateTime(headerName, ldValue);
+						typedTableRow.setDateTime(headerName, getLocalDateTime(headerName, resultSet));
 						break;
 					default:
-						typedTableRow.setObject(headerName, resultSet.getObject(headerName));
+						typedTableRow.setObject(headerName, getObject(headerName, resultSet));
 				}
 			}
 			catch (SQLException e)
@@ -183,8 +178,69 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 		}
 	}
 
+	protected Integer getInteger(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getInt(tableHeader);
+	}
 
-	protected Object getValueFromResultSet(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Boolean getBoolean(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getBoolean(tableHeader);
+	}
+
+	protected Float getFloat(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getFloat(tableHeader);
+	}
+
+	protected Double getDouble(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getDouble(tableHeader);
+	}
+
+	protected Byte getByte(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getByte(tableHeader);
+	}
+
+	protected Short getShort(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getShort(tableHeader);
+	}
+
+	protected Long getLong(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getLong(tableHeader);
+	}
+
+	protected Date getLocalDate(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getDate(tableHeader);
+	}
+
+	protected LocalTime getLocalTime(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		Time time = resultSet.getTime(tableHeader);
+		return time == null ? null : time.toLocalTime();
+	}
+
+	protected BigDecimal getBigDecimal(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getBigDecimal(tableHeader);
+	}
+
+	protected String getString(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		return resultSet.getString(tableHeader);
+	}
+
+	protected LocalDateTime getLocalDateTime(String tableHeader, ResultSet resultSet) throws SQLException
+	{
+		Timestamp timestamp = resultSet.getTimestamp(tableHeader);
+		return timestamp == null ? null : timestamp.toLocalDateTime();
+	}
+
+	protected Object getObject(String tableHeader, ResultSet resultSet) throws SQLException
 	{
 		return resultSet.getObject(tableHeader);
 	}
