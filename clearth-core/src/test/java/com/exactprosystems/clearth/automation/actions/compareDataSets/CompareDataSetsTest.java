@@ -24,8 +24,10 @@ import com.exactprosystems.clearth.LoggerStub;
 import com.exactprosystems.clearth.automation.ActionGenerator;
 import com.exactprosystems.clearth.automation.ActionMetaData;
 import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,6 +36,7 @@ import org.testng.Assert;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static com.exactprosystems.clearth.ApplicationManager.*;
@@ -76,6 +79,14 @@ public class CompareDataSetsTest {
         originActionsMapping = ClearThCore.getInstance().getActionFactory().getActionsMapping();
         extraActionsMapping = ActionGenerator.loadActionsMapping(ACTIONS_MAPPING_PATH.toString(), true, logger);
         originActionsMapping.putAll(extraActionsMapping);
+    }
+
+    @After
+    public void clearSchedulerData()
+    {
+        SchedulersManager manager = ClearThCore.getInstance().getSchedulersManager();
+        List<Scheduler> userSchedulers = manager.getUserSchedulers(ADMIN);
+        userSchedulers.clear();
     }
 
     @AfterClass
