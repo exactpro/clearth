@@ -80,6 +80,7 @@
 	<filter-mapping>
 		<filter-name>AuthenticationFilter</filter-name>
 		<url-pattern>/ui/restricted/*</url-pattern>
+		<url-pattern>/download/*</url-pattern>
 	</filter-mapping>
 
 	<listener>
