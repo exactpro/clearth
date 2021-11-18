@@ -29,9 +29,10 @@
 								  update=":Connections :Growl" styleClass="simple">
 					</p:fileUpload>
 					<h:outputText value="&#160;&#160;&#160;"/>
-					<p:commandButton value="Download connections" ajax="false"
-									 actionListener="#{connectivityBean.downloadMqConnections}"
-									 icon="ui-icon-arrowthickstop-1-s" style="top: 1px;"/>
+					<p:commandButton value="Download connections" ajax="false" 
+							icon="ui-icon-arrowthickstop-1-s" style="top: 1px;">
+						<p:fileDownload value="#{connectivityBean.downloadMqConnections()}" />
+					</p:commandButton>
 				</div>
 			</div>
 

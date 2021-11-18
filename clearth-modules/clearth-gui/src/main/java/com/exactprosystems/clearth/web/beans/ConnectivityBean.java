@@ -34,12 +34,16 @@ import com.exactprosystems.clearth.web.misc.MqConPropsToEdit;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.model.SelectItem;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -286,25 +290,22 @@ public class ConnectivityBean extends ClearThBean
 		}
 	}
 
-	protected void downloadXConnections(String type)
+	protected StreamedContent downloadXConnections(String type)
 	{
-		File resultFile;
 		try
 		{
-			resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(type);
+			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(type);
+			return new DefaultStreamedContent(new FileInputStream(resultFile), new MimetypesFileTypeMap().getContentType(resultFile), resultFile.getName());
 		}
 		catch (IOException e)
 		{
 			String errMsg = "Error while exporting connections";
 			getLogger().error(errMsg, e);
 			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			return;
+			return null;
 		}
-
-		String destDir = ClearThCore.configFiles().getTempDir();
-		WebUtils.redirectToFile(destDir + resultFile.getName());
 	}
-
+	
 	protected void uploadXConnections(String type, FileUploadEvent event)
 	{
 		UploadedFile file = event.getFile();
@@ -686,9 +687,9 @@ public class ConnectivityBean extends ClearThBean
 		setOneSelectedXConnection(selectedCon, MQ);
 	}
 
-	public void downloadMqConnections()
+	public StreamedContent downloadMqConnections()
 	{
-		downloadXConnections(MQ);
+		return downloadXConnections(MQ);
 	}
 
 	public void uploadMqConnections(FileUploadEvent fileUploadEvent)

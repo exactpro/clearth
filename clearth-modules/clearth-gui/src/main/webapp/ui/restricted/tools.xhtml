@@ -308,7 +308,9 @@
 					&#160;
 					<p:commandButton value="Make config and apply" ajax="false" actionListener="#{configMakerToolBean.makeConfigAndApply}" action="tools?faces-redirect=true" />
 					&#160;OR&#160;
-					<p:commandButton value="Make config and download" ajax="false" actionListener="#{configMakerToolBean.makeConfigAndDownload}" action="tools?faces-redirect=true" />
+					<p:commandButton value="Make config and download" ajax="false">
+						<p:fileDownload value="#{configMakerToolBean.makeConfigAndDownload()}" />
+					</p:commandButton>
 				</h:form>
 			</p:outputPanel>
 <!-- Matrix from report -->

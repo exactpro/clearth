@@ -21,12 +21,10 @@
 					&#160;&#160;
 					<p:fileUpload fileUploadListener="#{userManagementBean.uploadConfiguration}" allowTypes="/(\.|\/)(xml)$/" label="Upload configuration"
 							mode="advanced" auto="true" showButtons="false" multiple="false" update=":Users :Growl" styleClass="simple" />
-					<h:outputLink value="#{request.contextPath}/download?file=#{userManagementBean.pathToConfig}" 
-							class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left"
-							style="border: none; height: 28px;">
-						<span class="ui-button-icon-left ui-icon ui-c ui-icon-arrowthickstop-1-s"></span>
-						<span class="ui-button-text" style="margin-top: 1px;">Download configuration</span>
-					</h:outputLink>
+					
+					<p:commandButton value="Download configuration" ajax="false" icon="ui-icon-arrowthickstop-1-s">
+						<p:fileDownload value="#{userManagementBean.downloadConfig()}" />
+					</p:commandButton>
 					</c:if>
 				</div>
 				<div class="upperRightContainer">

@@ -19,16 +19,21 @@
 package com.exactprosystems.clearth.web.beans;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.model.SelectItem;
 
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
 import com.exactprosystems.clearth.ClearThCore;
@@ -329,11 +334,6 @@ public class UserManagementBean extends ClearThBean
 		}
 	}
 
-	public String getPathToConfig()
-	{
-		return ClearThCore.getInstance().excludeRoot(ClearThCore.usersListPath());
-	}
-	
 	public boolean isActiveUsersSelected()
 	{
 		for (UserEntry user : selectedUsers)
@@ -371,5 +371,22 @@ public class UserManagementBean extends ClearThBean
 			return true;
 		MessageUtils.addErrorMessage("Error", "You have no access to User Management actions");
 		return false;
+	}
+	
+	
+	public StreamedContent downloadConfig()
+	{
+		try
+		{
+			File f = new File(ClearThCore.usersListPath());
+			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
+		}
+		catch (IOException e)
+		{
+			String errMsg = "Could not download user list";
+			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			getLogger().debug(errMsg, e);
+			return null;
+		}
 	}
 }

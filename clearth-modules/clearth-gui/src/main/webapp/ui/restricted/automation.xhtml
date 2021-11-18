@@ -310,7 +310,9 @@
 										  update=":BusinessDay :WeekendIsHoliday :ConfigFile :ConnectionsToIgnoreFailures :Steps :Growl" styleClass="simple">
 							</p:fileUpload>
 							&#160;&#160;
-							<p:commandButton value="Download configuration" ajax="false" actionListener="#{automationConfigBean.downloadSchedulerSettings}" action="automation?faces-redirect=true"/>
+							<p:commandButton value="Download configuration" ajax="false">
+								<p:fileDownload value="#{automationConfigBean.downloadSchedulerSettings()}" />
+							</p:commandButton>
 						</h:form>
 					</div>
 					<div class="upperLeftContainer" style="min-width: 640px; margin-right: 0px;">
@@ -389,12 +391,9 @@
 								<p:ajax />
 							</p:selectBooleanCheckbox>
 							&#160;&#160;
-							<h:outputLink value="#{request.contextPath}/download?file=#{automationConfigBean.pathToConfig}"
-										  class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left"
-										  style="border: none; height: 28px">
-								<span class="ui-button-icon-left ui-icon ui-c ui-icon-arrowthickstop-1-s"></span>
-								<span class="ui-button-text ui-c">Download steps</span>
-							</h:outputLink>
+							<p:commandButton value="Download steps" ajax="false" icon="ui-icon-arrowthickstop-1-s">
+								<p:fileDownload value="#{automationConfigBean.downloadSteps()}" />
+							</p:commandButton>
 						</div>
 
 						<div class="upperRightContainer">
@@ -579,7 +578,9 @@
 								<h:graphicImage rendered="#{matrix.type eq 'GoogleSpreadsheets'}" value="/images/matrix-linked-google-spreadsheets.png" alt="Google Spreadsheets Linked Matrix" style="vertical-align: middle;width:20px;" />
 								<h:graphicImage rendered="#{matrix.type eq 'Remote'}" value="/images/matrix-linked-remote.png" alt="Remote Linked Matrix" style="vertical-align: middle;width:20px;" />
 								&#160;
-								<h:outputLink value="#{request.contextPath}/download?file=#{automationMatricesBean.pathToMatrices}#{automationBean.safeFileName(matrix.file.name)}">#{matrix.name}</h:outputLink>
+								<p:commandLink value="#{matrix.name}" ajax="false">
+									<p:fileDownload value="#{automationMatricesBean.downloadMatrix(matrix)}" />
+								</p:commandLink>
 							</p:column>
 							<p:column style="width: 20%;">
 								<f:facet name="header">Uploaded</f:facet>
@@ -860,8 +861,10 @@
 				</p:dataTable>
 				<br/>
 				<p:outputPanel layout="block" style="text-align: right;">
-					<p:commandButton value="Download" update=":Growl" actionListener="#{schedulerInfoExportBean.exportSelectedFiles}"
-									 oncomplete="if (args.canClose) PF('exportSchedulerInfoDialog').hide();" icon="ui-icon-arrowthickstop-1-s" />
+					<p:commandButton value="Download" update=":Growl" ajax="false"
+							onclick="PrimeFaces.monitorDownload(null, hideExportDialog)" icon="ui-icon-arrowthickstop-1-s">
+						<p:fileDownload value="#{schedulerInfoExportBean.exportSelectedFiles()}" />
+					</p:commandButton>
 					<p:commandButton value="Cancel" onclick="PF('exportSchedulerInfoDialog').hide();" icon="ui-icon ui-icon-close" type="button" />
 				</p:outputPanel>
 			</h:form>
@@ -1674,6 +1677,11 @@
 				}
 				else
 					restoreExecScrollPos();
+			}
+			
+			function hideExportDialog()
+			{
+				PF('exportSchedulerInfoDialog').hide();
 			}
 		</script>
 	</ui:define>

@@ -29,10 +29,14 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.faces.event.AjaxBehaviorEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -82,31 +86,40 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	
 	
 
-	public String getPathToConfig()
+	public StreamedContent downloadSteps()
 	{
-		return ClearThCore.getInstance().excludeRoot(selectedScheduler().getSchedulerData().getConfigName());
-	}
-
-	public void downloadSchedulerSettings()
-	{
-		SchedulerData schedulerData = selectedScheduler().getSchedulerData();
-		File resultFile;
 		try
 		{
-			resultFile = ClearThCore.getInstance().getSchedulerSettingsTransmitter().exportSettings(schedulerData);
+			File f = new File(selectedScheduler().getSchedulerData().getConfigName());
+			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Error while export scheduler settings";
+			String errMsg = "Could not download steps";
+			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			getLogger().debug(errMsg, e);
+			return null;
+		}
+	}
+	
+
+	public StreamedContent downloadSchedulerSettings()
+	{
+		SchedulerData schedulerData = selectedScheduler().getSchedulerData();
+		try
+		{
+			File resultFile = ClearThCore.getInstance().getSchedulerSettingsTransmitter().exportSettings(schedulerData);
+			return new DefaultStreamedContent(new FileInputStream(resultFile), new MimetypesFileTypeMap().getContentType(resultFile), resultFile.getName());
+		}
+		catch (IOException e)
+		{
+			String errMsg = "Error while exporting scheduler settings";
 			getLogger().error(errMsg, e);
 			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			return;
+			return null;
 		}
-
-		String destDir = configFiles().getTempDir();
-		WebUtils.redirectToFile(destDir + resultFile.getName());
 	}
-
+	
 	public void uploadSchedulerSettings(FileUploadEvent event)
 	{
 		UploadedFile file = event.getFile();

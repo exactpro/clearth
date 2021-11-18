@@ -99,8 +99,10 @@
 					</p:fileUpload>
 					<p:commandButton id="saveSettings"
 									 value="Save" icon="ui-icon-disk"
-									 actionListener="#{matrixUpdaterToolBean.saveSettings}"
-									 update=":Growl" />
+									 update=":Growl"
+									 ajax="false">
+						<p:fileDownload value="#{matrixUpdaterToolBean.saveSettings()}" />
+					</p:commandButton>
 
 					<p:commandButton value="Reset" icon="ui-icon-refresh"
 									 actionListener="#{matrixUpdaterToolBean.reset}" 
@@ -430,10 +432,11 @@
 								ajax="true" update=":Growl" icon="ui-icon-cancel"
 								style="background-color: red; width:100px"
 								oncomplete="PF('progressDialog').hide();"/>
-						<p:commandButton value="Download" rendered="#{empty(matrixUpdaterToolBean.error) and matrixUpdaterToolBean.resultAvailable}"
-								actionListener="#{matrixUpdaterToolBean.downloadResult()}"
-								ajax="true" update=":Growl" style="width:100px" icon="ui-icon-arrowthickstop-1-s"
-								oncomplete="PF('progressDialog').hide();"/>
+						<p:commandButton value="Download" rendered="#{empty(matrixUpdaterToolBean.error) and matrixUpdaterToolBean.resultAvailable}" 
+								ajax="false" update=":Growl" style="width:100px" icon="ui-icon-arrowthickstop-1-s"
+								onclick="PrimeFaces.monitorDownload(null, hideDownloadDialog)">
+							<p:fileDownload value="#{matrixUpdaterToolBean.downloadResult()}" />
+						</p:commandButton>
 						<p:commandButton id="closeProgressDialog" value="Close" rendered="#{not empty matrixUpdaterToolBean.error}"
 								ajax="true" update=":Growl" icon="ui-icon-close"
 								oncomplete="PF('progressDialog').hide();"/>
@@ -468,4 +471,11 @@
 			</div>
 		</h:form>
 	</p:dialog>
+	
+	<script>
+		function hideDownloadDialog()
+		{
+			PF('progressDialog').hide();
+		}
+	</script>
 </ui:composition>

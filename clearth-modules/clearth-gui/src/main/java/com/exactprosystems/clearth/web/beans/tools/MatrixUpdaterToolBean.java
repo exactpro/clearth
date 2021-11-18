@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.web.beans.tools;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.SchedulerData;
 import com.exactprosystems.clearth.tools.matrixupdater.MatrixUpdater;
 import com.exactprosystems.clearth.tools.matrixupdater.MatrixUpdaterException;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Cell;
@@ -33,11 +35,15 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -117,18 +123,20 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		if (isRunning()) matrixUpdater.cancel();
 	}
-
-	public void downloadResult()
+	
+	
+	public StreamedContent downloadResult()
 	{
 		try
 		{
-			Path toRedirect = MatrixUpdaterPathHandler.userUploadsDirectoryToRedirect(UserInfoUtils.getUserName())
-					.resolve(URLEncoder.encode(matrixUpdater.getResult().getName(), "UTF-8"));
-			WebUtils.redirectToFile(toRedirect.toString());
+			File f = MatrixUpdaterPathHandler.userUploadsAbsoluteDirectory(UserInfoUtils.getUserName())
+					.resolve(URLEncoder.encode(matrixUpdater.getResult().getName(), "UTF-8")).toFile();
+			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
 		}
-		catch (UnsupportedEncodingException e)
+		catch (Exception e)
 		{
 			MessageUtils.addErrorMessage("Result download error", getDetailedMessage(e));
+			return null;
 		}
 	}
 
@@ -271,23 +279,18 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		matrixUpdater.reset();
 	}
 
-	public void saveSettings()
+	public StreamedContent saveSettings()
 	{
 		try
 		{
-			redirectToConfig(matrixUpdater.saveConfig());
+			File f = matrixUpdater.saveConfig().toFile();
+			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
 		}
 		catch (JAXBException | IOException e)
 		{
 			MessageUtils.addErrorMessage("Error while saving config", getDetailedMessage(e));
+			return null;
 		}
-	}
-
-	private void redirectToConfig(Path config)
-	{
-		Path path = MatrixUpdaterPathHandler.userConfigPathToRedirect(UserInfoUtils.getUserName())
-				.resolve(config.getFileName().toString());
-		WebUtils.redirectToFile(path.toString());
 	}
 	
 	public void uploadConfigFile(FileUploadEvent event)

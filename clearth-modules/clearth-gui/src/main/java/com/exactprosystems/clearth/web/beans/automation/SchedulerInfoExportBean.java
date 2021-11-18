@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.web.beans.automation;
 
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.MatrixData;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoFile;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
@@ -29,14 +30,19 @@ import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import javax.activation.MimetypesFileTypeMap;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class SchedulerInfoExportBean extends ClearThBean
@@ -89,25 +95,25 @@ public class SchedulerInfoExportBean extends ClearThBean
 		updateStats();
 	}
 	
-	public void exportSelectedFiles()
+	public StreamedContent exportSelectedFiles()
 	{
 		if (totalCount == 0)
 		{
 			MessageUtils.addErrorMessage("Nothing to export", "No scheduler information file selected");
-			return;
+			return null;
 		}
 		
 		try
 		{
 			File exportZip = ClearThCore.getInstance().getSchedulerInfoExporter().exportSelectedZip(storage);
-			WebUtils.addCanCloseCallback(true);
-			WebUtils.redirectToFile(ClearThCore.getInstance().excludeRoot(exportZip.getAbsolutePath()));
+			return new DefaultStreamedContent(new FileInputStream(exportZip), new MimetypesFileTypeMap().getContentType(exportZip), exportZip.getName());
 		}
 		catch (Exception e)
 		{
 			String errMsg = "Could not download scheduler info files";
 			getLogger().error(errMsg, e);
 			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			return null;
 		}
 	}
 	

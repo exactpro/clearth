@@ -22,7 +22,6 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.tools.ConfigMakerTool;
 import com.exactprosystems.clearth.utils.ClearThException;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
@@ -31,12 +30,14 @@ import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.io.FileInputStream;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -80,30 +81,28 @@ public class ConfigMakerToolBean extends ClearThBean
 		}
 	}
 
-	public void makeConfigAndDownload()
+	public StreamedContent makeConfigAndDownload()
 	{
 		if (file == null) {
 			MessageUtils.addWarningMessage("No file selected", "Please select a script file (matrix)!");
-			return;
+			return null;
 		}
-
+		
 		try
 		{
 			File storedUploadedFile = storeUploadedFile();
-			if (storedUploadedFile == null) return;
+			if (storedUploadedFile == null)
+				return null;
 			File configFile = configMakerTool.makeConfig(storedUploadedFile, destDir, storedUploadedFile.getName());
-			WebUtils.redirectToFile(ClearThCore.configFiles().getTempDir() + URLEncoder.encode(configFile.getName(), "UTF-8"));
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			MessageUtils.addErrorMessage("Error occurred while redirecting to configuration file", ExceptionUtils.getDetailedMessage(e));
+			return new DefaultStreamedContent(new FileInputStream(configFile), new MimetypesFileTypeMap().getContentType(configFile), configFile.getName());
 		}
 		catch (Exception e)
 		{
 			handleException(e);
+			return null;
 		}
 	}
-
+	
 	public static void handleWarnings(List<String> warnings)
 	{
 		if (CollectionUtils.isEmpty(warnings))

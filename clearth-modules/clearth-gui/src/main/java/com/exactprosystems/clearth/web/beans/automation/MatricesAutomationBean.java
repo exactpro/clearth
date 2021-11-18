@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.tools.ConfigMakerTool;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.CommaBuilder;
+import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.MatrixUploadHandler;
 import com.exactprosystems.clearth.utils.exception.MatrixUploadHandlerException;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
@@ -33,13 +34,18 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
+
+import javax.activation.MimetypesFileTypeMap;
 
 import static com.exactprosystems.clearth.ClearThCore.configFiles;
 import static com.exactprosystems.clearth.automation.MatrixFileExtensions.isExtensionSupported;
@@ -123,10 +129,21 @@ public class MatricesAutomationBean extends ClearThBean {
 	{
 		return selectedScheduler().getMatricesData();
 	}
-
-	public String getPathToMatrices()
+	
+	public StreamedContent downloadMatrix(MatrixData matrix)
 	{
-		return configFiles().getScriptsDir() + selectedScheduler().getForUser() + "/" + selectedScheduler().getName() + "/";
+		try
+		{
+			File f = matrix.getFile();
+			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
+		}
+		catch (IOException e)
+		{
+			String errMsg = "Could not download matrix";
+			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			getLogger().debug(errMsg, e);
+			return null;
+		}
 	}
 
 	public void uploadMatrix(FileUploadEvent event)

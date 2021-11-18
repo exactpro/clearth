@@ -76,22 +76,6 @@ public class WebUtils
 		}
 	}
 
-	public static void redirectToFile(String filePath)
-	{
-		ExternalContext ex = FacesContext.getCurrentInstance().getExternalContext();
-		String context = WebUtils.getContext();
-		try
-		{
-			ex.redirect(String.format("%s/download?file=%s", context, filePath));
-		}
-		catch (IOException e)
-		{
-			String errMsg = "Error while redirecting to file";
-			logger.error(errMsg, e);
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-		}
-	}
-	
 	public static boolean addCanCloseCallback(boolean canClose)
 	{
 		RequestContext context = RequestContext.getCurrentInstance();

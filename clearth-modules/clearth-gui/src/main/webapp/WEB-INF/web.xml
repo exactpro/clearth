@@ -10,16 +10,6 @@
 		<url-pattern>*.jsf</url-pattern>
 	</servlet-mapping>
 	
-	<servlet>
-		<servlet-name>Download Servlet</servlet-name>
-		<servlet-class>com.exactprosystems.clearth.web.DownloadServlet</servlet-class>
-		<load-on-startup>2</load-on-startup>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>Download Servlet</servlet-name>
-		<url-pattern>/download/*</url-pattern>
-	</servlet-mapping>
-
 	<context-param>
 		<param-name>javax.faces.STATE_SAVING_METHOD</param-name>
 		<param-value>server</param-value>
@@ -80,7 +70,6 @@
 	<filter-mapping>
 		<filter-name>AuthenticationFilter</filter-name>
 		<url-pattern>/ui/restricted/*</url-pattern>
-		<url-pattern>/download/*</url-pattern>
 	</filter-mapping>
 
 	<listener>
