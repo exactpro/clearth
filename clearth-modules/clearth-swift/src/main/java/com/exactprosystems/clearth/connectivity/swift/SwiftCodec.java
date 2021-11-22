@@ -26,9 +26,7 @@ import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.MessageValidator;
 import com.exactprosystems.clearth.utils.SpecialValue;
-import com.prowidesoftware.swift.io.ConversionService;
-import com.prowidesoftware.swift.io.IConversionService;
-import com.prowidesoftware.swift.io.parser.SwiftParser;
+import com.prowidesoftware.swift.io.writer.SwiftWriter;
 import com.prowidesoftware.swift.model.SwiftBlock1;
 import com.prowidesoftware.swift.model.SwiftBlock2;
 import com.prowidesoftware.swift.model.SwiftBlock2Input;
@@ -38,10 +36,12 @@ import com.prowidesoftware.swift.model.SwiftBlock4;
 import com.prowidesoftware.swift.model.SwiftBlock5;
 import com.prowidesoftware.swift.model.SwiftMessage;
 import com.prowidesoftware.swift.model.Tag;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -209,8 +209,6 @@ public class SwiftCodec implements ICodec
 	{
 		logger.trace("Message encoding started");
 
-		IConversionService srv = new ConversionService();
-
 		logger.trace("Getting message parameters");
 		
 		logger.trace("Creating SWIFT message");
@@ -225,10 +223,18 @@ public class SwiftCodec implements ICodec
 				((ClearThSwiftMessage)message).getMetaData() : emptySwiftMetaData;
 		if (smd.isBlock5())
 			swiftMsg.setBlock5(encodeSwiftBlock5(message));
-		return srv.getFIN(swiftMsg);
+		return getFIN(swiftMsg);
 	}
-	
-	
+
+	private static String getFIN(SwiftMessage msg)
+	{
+		final StringWriter writer = new StringWriter();
+		SwiftWriter.writeMessage(msg, writer, false);
+		final String fin = writer.getBuffer().toString();
+
+		return SwiftWriter.ensureEols(fin);
+	}
+
 	private List<Tag> createBody(ClearThMessage message, SwiftMessageDesc messageDesc) throws EncodeException
 	{
 		List<Tag> result = new ArrayList<Tag>();
@@ -589,7 +595,7 @@ public class SwiftCodec implements ICodec
 		SwiftMessage swiftMessage;
 		try
 		{
-			swiftMessage = new SwiftParser().parse(message);
+			swiftMessage = SwiftMessage.parse(message);
 		}
 		catch (IOException e)
 		{
