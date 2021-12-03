@@ -53,15 +53,24 @@ public class DefaultScriptConverter extends ScriptConverter
 			reader = new CsvReader(new InputStreamReader(new ByteArrayInputStream(scriptToConvert.getBytes())));
 			reader.setSafetySwitch(false);
 			String[] currentHeader = null;
+			int lineNumber = 0;
 			while (reader.readRecord())
 			{
 				final String[] currentRecord = reader.getValues();
+				lineNumber++;
+				if (currentRecord.length==0 || currentRecord[0].startsWith(ActionGenerator.COMMENT_INDICATOR)) {
+					continue;
+				}
+
 				if (isHeaderRecord(currentRecord)) {
 					currentHeader = currentRecord;
 					continue;
 				}
 
 				if (currentHeader != null) {
+					if (currentHeader.length != currentRecord.length) {
+						throw new EncodeException("Conversion error. Number of header columns " + currentHeader.length + " differs from number of values " + currentRecord.length + " in line " + lineNumber);
+					}
 					final Pair<String[], String[]> entry = new Pair<String[], String[]>();
 					entry.setFirst(currentHeader);
 					entry.setSecond(currentRecord);
@@ -128,14 +137,13 @@ public class DefaultScriptConverter extends ScriptConverter
 
 		Class<?> messageClass = Class.forName(config.getClearThMessageClass());
 		MessageFiller filler = createMessageFiller(config);
-		
-		ClearThMessage message = (ClearThMessage)messageClass.newInstance();
+		ClearThMessage message = (ClearThMessage) messageClass.newInstance();
 		filler.fillMainFields(message, actionParams, mainEntry);
 
 		List<ClearThMessage> subMessages = null;
 		for (Pair<String[], String[]> entry : hv)  //Setting-up sub-messages i.e. repeating groups
 		{
-			ClearThMessage sm = (ClearThMessage)messageClass.newInstance();
+			ClearThMessage sm = (ClearThMessage) messageClass.newInstance();
 			filler.fillByHeaderAndValues(sm, entry.getFirst(), entry.getSecond(), getIncludeList());
 			if (subMessages == null)
 				subMessages = new ArrayList<ClearThMessage>();
@@ -154,11 +162,11 @@ public class DefaultScriptConverter extends ScriptConverter
 
 		return codecFactory.createCodec(codecConfig).encode(message);
 	}
-	
+
 	protected MessageFiller createMessageFiller(XmlScriptConverterConfig config) throws InstantiationException, IllegalAccessException, ClassNotFoundException
 	{
 		String clazz = config.getMessageFillerClass();
-		if (clazz == null) 
+		if (clazz == null)
 			return new MessageFiller();
 		return (MessageFiller)Class.forName(clazz).newInstance();
 	}
@@ -197,7 +205,7 @@ public class DefaultScriptConverter extends ScriptConverter
 		result.add(MessageAction.REPEATINGGROUPS.toLowerCase());
 		return result;
 	}
-	
+
 	/**
 	 * Processes a list of repeating groups of different levels, making a tree from a flat list.
 	 * @param list ClearThMessage flat list of repeating groups which need to be structured.
@@ -216,16 +224,16 @@ public class DefaultScriptConverter extends ScriptConverter
 			String id = item.getField(ActionGenerator.COLUMN_ID);
 			map.put(id, item);
 		}
-		
+
 		for (int i = list.size()-1; i >= 0; i--)
 		{
 			ClearThMessage item = list.get(i);
 			String rgNames = item.getField(MessageAction.REPEATINGGROUPS);
 			item.removeField(MessageAction.REPEATINGGROUPS);
-			
+
 			String itemId = item.getField(ActionGenerator.COLUMN_ID);
 			item.removeField(ActionGenerator.COLUMN_ID);
-			
+
 			String[] array = rgNames == null ? new String[0] : rgNames.split("\\,");
 			for (String name : array)
 			{

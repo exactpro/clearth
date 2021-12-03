@@ -37,7 +37,7 @@ import com.exactprosystems.clearth.utils.Pair;
 public class MessageFiller
 {
 	protected final Set<String> matrixServiceFields = new HashSet<String>();
-	
+
 	public MessageFiller()
 	{
 		matrixServiceFields.add(ActionGenerator.COLUMN_ACTION);
@@ -50,17 +50,17 @@ public class MessageFiller
 		matrixServiceFields.add(MessageAction.CONNECTIONNAME.toLowerCase());
 		matrixServiceFields.add(MessageAction.REPEATINGGROUPS.toLowerCase());
 	}
-	
-	
+
+
 	protected boolean isColumnToSkip(String columnName, List<String> includeList)
 	{
 		if (!columnName.startsWith(ActionGenerator.HEADER_DELIMITER))
 			return true;
-		
+
 		String h = columnName.substring(1).toLowerCase();
 		return matrixServiceFields.contains(h) && ((includeList == null) || (!includeList.contains(h)));
 	}
-	
+
 	/**
 	 * Fills message with values from script
 	 * @param message to fill
@@ -70,16 +70,26 @@ public class MessageFiller
 	 */
 	public void fillByHeaderAndValues(ClearThMessage<?> message, String[] header, String[] values, List<String> includeList)
 	{
+
 		for (int i = 0; i < header.length; i++)
 		{
 			String h = header[i];
 			if (isColumnToSkip(h, includeList))
 				continue;
-			
-			message.addField(h.substring(1), values[i]);
+
+			if (!h.isEmpty())
+			{
+				h = h.substring(1);
+				if (h.equalsIgnoreCase(ActionGenerator.COLUMN_ID))
+				{
+					h = ActionGenerator.COLUMN_ID;
+				}
+			}
+
+			message.addField(h, values[i]);
 		}
 	}
-	
+
 	/**
 	 * Converts values line from script to Map
 	 * @param header line of script
@@ -95,12 +105,12 @@ public class MessageFiller
 			String h = header[i];
 			if (isColumnToSkip(h, includeList))
 				continue;
-			
+
 			result.put(h.substring(1), values[i]);
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Fills main fields of message (i.e. not fields in RGs) with default action parameter values and values from script
 	 * @param message to fill
@@ -112,7 +122,7 @@ public class MessageFiller
 		//Setting-up the fields from default action parameters
 		for (Entry<String, String> field : actionParams.entrySet())
 			message.addField(field.getKey(), field.getValue());
-		
+
 		//Setting-up the fields from script, i.e. this may override default parameters
 		fillByHeaderAndValues(message, mainEntry.getFirst(), mainEntry.getSecond(), null);
 	}
