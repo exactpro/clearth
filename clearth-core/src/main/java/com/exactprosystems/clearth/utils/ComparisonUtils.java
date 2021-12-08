@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils;
 
+import com.exactprosystems.clearth.automation.MatrixFunctions;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
@@ -263,6 +264,9 @@ public class ComparisonUtils
 	 */
 	public boolean isForCompareValues(String value)
 	{
+		if ((!StringUtils.contains(value,'@')) || (!StringUtils.contains(value, MatrixFunctions.FORMULA_START)))
+			return false;
+
 		return isSpecialValue(value) || isSpecialFunction(value) || contains(trim(value), PATTERN_START);
 	}
 
