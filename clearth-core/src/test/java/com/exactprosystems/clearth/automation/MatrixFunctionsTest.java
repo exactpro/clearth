@@ -1652,10 +1652,15 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 						{"@{timeIncludingHolidays(1557093600000, 3)}", null, mvelVars, fixedIDs, null, 1557784800000L},
 
-						{"@{holiday(1557093600000)}", null, mvelVars, fixedIDs, null, 1557525600000L},
-						{"@{holiday(1557093600000, 'any')}", null, mvelVars, fixedIDs, null, 1557180000000L},
-						{"@{holiday(1557093600000, 3)}", null, mvelVars, fixedIDs, null, 1558216800000L},
-						{"@{holiday(1557093600000, 'any', 3)}", null, mvelVars, fixedIDs, null, 1557525600000L},
+						// for GMT+0: 1557144000000L ->  05/06/2019 12:00:00
+						// 1557576000000L -> 05/11/2019 12:00:00
+						{"@{holiday(1557144000000)}", null, mvelVars, fixedIDs, null, 1557576000000L},
+						// 1557230400000L -> 05/07/2019 12:00:00
+						{"@{holiday(1557144000000, 'any')}", null, mvelVars, fixedIDs, null, 1557230400000L},
+						// 1558267200000L -> 05/19/2019 12:00:00
+						{"@{holiday(1557144000000, 3)}", null, mvelVars, fixedIDs, null, 1558267200000L},
+						// 1557576000000L -> 05/11/2019 12:00:00
+						{"@{holiday(1557144000000, 'any', 3)}", null, mvelVars, fixedIDs, null, 1557576000000L},
 
 						{"@{date8(sysTime(days, months, years, hours))}", null, mvelVars, fixedIDs, null, "20210505"},
 						{"@{date8(sysTime(days, months, years))}", null, mvelVars, fixedIDs, null, "20210505"},
