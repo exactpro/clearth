@@ -117,7 +117,7 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	
 	protected String executeScriptFile(String scriptPath, String args, boolean forExpectedData) throws IOException
 	{
-		return processScriptResult(ScriptUtils.executeScript(scriptPath + " " + args, null), forExpectedData);
+		return processScriptResult(ScriptUtils.executeScript(scriptPath + " " + args), forExpectedData);
 	}
 	
 	protected String executeScriptCommands(String commands, String shellName, String shellOption, boolean forExpectedData)

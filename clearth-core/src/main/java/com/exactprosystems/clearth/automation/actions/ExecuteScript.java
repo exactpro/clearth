@@ -51,19 +51,26 @@ public class ExecuteScript extends Action {
 			SUCCESS_RESULT_CODES = "SuccessResultCodes",
 			SCRIPT_TEXT_PARAM = "ScriptText",
 			EXECUTABLE_NAME_PARAM = "ExecutableName",
-			SHELL_OPTION_PARAM = "ShellOption";
+			SHELL_OPTION_PARAM = "ShellOption",
+			WORKING_DIRECTORY = "WorkingDirectory";
+
 	protected String executableName, shellOption;
+
+	protected File workingDir;
+
 
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException
 	{
-		if (inputParams.size() == 0)
+		if (inputParams.isEmpty())
 			return noParametersResult();
+
+		String workingDirPath = InputParamsUtils.getStringOrDefault(inputParams, WORKING_DIRECTORY, getDefaultWorkingDir());
+		workingDir = new File(ClearThCore.rootRelative(workingDirPath));
 
 		String command = buildCommand(getInputParams());
 		String parameters = buildScriptParameters(getInputParams());
-		if (logger.isDebugEnabled())
-			logger.debug("Script location: " + command + ". Parameters: " + parameters);
+		logger.debug("Script: {}. Parameters: {}. Working dir: {}.", command, parameters, workingDir);
 		
 		if (parameters != null && !StringUtils.isEmpty(parameters.trim()))
 			command += " " + parameters.trim();
@@ -74,8 +81,9 @@ public class ExecuteScript extends Action {
 	
 	protected Result noParametersResult()
 	{
-		return DefaultResult.failed(String.format("No parameters specified. "
-				+ "Required parameter: %s. Optional parameters: %s, %s, %s.", SCRIPT_FILE_NAME, SCRIPT_DIRECTORY, PARAMETERS, ASYNC));
+		return DefaultResult.failed(
+				String.format("No parameters specified. Required parameter: %s. Optional parameters: %s, %s, %s, %s.",
+				SCRIPT_FILE_NAME, SCRIPT_DIRECTORY, WORKING_DIRECTORY, PARAMETERS, ASYNC));
 	}
 	
 	protected String buildCommand(Map<String, String> parameters) throws ResultException
@@ -118,7 +126,7 @@ public class ExecuteScript extends Action {
 		ScriptResult res;
 		try
 		{
-			res = ScriptUtils.executeScript(command, null);
+			res = ScriptUtils.executeScript(command, workingDir);
 		}
 		catch (ExecuteException e)
 		{
@@ -178,8 +186,8 @@ public class ExecuteScript extends Action {
 			result.add(Integer.parseInt(s));
 		return result;
 	}
-	
-	protected Result executeScriptSync(String command)
+
+	protected Result executeScriptSync(String command) throws ResultException
 	{
 		ScriptResult res;
 		if (executableName == null)
@@ -190,7 +198,7 @@ public class ExecuteScript extends Action {
 		{
 			try
 			{
-				res = ScriptUtils.executeScript(command, executableName, shellOption, null, null);
+				res = ScriptUtils.executeScript(command, executableName, shellOption, null, null, workingDir);
 			}
 			catch (IOException e)
 			{
@@ -200,8 +208,8 @@ public class ExecuteScript extends Action {
 		processScriptResult(res);
 		return buildActionResult(res);
 	}
-	
-	protected Result executeScriptAsync(final String command)
+
+	protected Result executeScriptAsync(String command) throws ResultException
 	{
 		String messageComplete = String.format("Script '%s' executed asynchronously, triggered by action '%s' from matrix '%s'.",
 		                                       command, getIdInMatrix(), getMatrix().getName());
@@ -211,26 +219,32 @@ public class ExecuteScript extends Action {
 		{
 			if (executableName != null)
 			{
-				ScriptUtils.executeScriptAsync(command, executableName, shellOption, null, messageComplete, messageFail);
+				ScriptUtils.executeScriptAsync(command, executableName, shellOption, null, messageComplete, messageFail, workingDir);
 			}
 			else
 			{
-				ScriptUtils.executeScriptAsync(command, null, messageComplete, messageFail);
+				ScriptUtils.executeScriptAsync(command, null, messageComplete, messageFail, workingDir);
 			}
 		}
 		catch (IOException e)
 		{
-			logger.error("Script '{}' was not launched, triggered by action '{}' from matrix '{}'.", 
-					new Object[] {command, getIdInMatrix(), getMatrix().getName(), e});
+			throw ResultException.failed(String.format("Script '%s' was not launched, triggered by action '%s' from matrix '%s'.",
+					command, getIdInMatrix(), getMatrix().getName()), e);
 		}
 
 		return DefaultResult.passed(String.format("Execution of script '%s' started asynchronously", command));
 	}
-	
-	protected Result executeScript(String command)
+
+	protected Result executeScript(String command) throws ResultException
 	{
 		if (!InputParamsUtils.getBooleanOrDefault(getInputParams(), ASYNC, false))
 			return executeScriptSync(command);
 		return executeScriptAsync(command);
+	}
+
+
+	protected String getDefaultWorkingDir()
+	{
+		return ClearThCore.filesRoot();
 	}
 }
