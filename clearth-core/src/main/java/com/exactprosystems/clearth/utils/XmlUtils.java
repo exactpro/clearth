@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -126,7 +126,10 @@ public class XmlUtils
 			
 			XStream xs = new XStream();
 			if (annotatedClasses != null)
+			{
 				xs.processAnnotations(annotatedClasses);
+				xs.allowTypes(annotatedClasses);
+			}
 			xs.toXML(object, writer);
 		}
 		finally
@@ -151,7 +154,10 @@ public class XmlUtils
 			
 			XStream xs = new XStream();
 			if (annotatedClasses != null)
+			{
 				xs.processAnnotations(annotatedClasses);
+				xs.allowTypes(annotatedClasses);
+			}
 			return xs.fromXML(reader);
 		}
 		finally

@@ -85,7 +85,7 @@ public class GoogleSpreadsheetsMatrixProvider implements MatrixProvider
 				File file = driveService.files().get(fileId).execute();
 				String downloadUrl = file.getExportLinks().get("text/csv") + '&' + sheetId;
 				inputStream = downloadFile(driveService, downloadUrl);
-				name = file.getTitle();
+				name = file.getName();
 			}
 			return inputStream;
 		}

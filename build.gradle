@@ -1,3 +1,18 @@
+buildscript {
+	repositories {
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
+		mavenCentral()
+	}
+	dependencies {
+		classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.21.0"
+		classpath 'org.owasp:dependency-check-gradle:6.5.3'
+	}
+}
+
+apply plugin: 'org.owasp.dependencycheck'
+
 ext {
 	sharedDir = file('shared')
 	coreXsdDir = file('clearth-core/xsd')
@@ -22,17 +37,6 @@ ext {
 	jettyDistName = "jetty-distribution-${jettyVersion}"
 }
 
-buildscript {
-	repositories {
-		maven {
-			url "https://plugins.gradle.org/m2/"
-		}
-	}
-	dependencies {
-		classpath "org.jfrog.buildinfo:build-info-extractor-gradle:2.2.5"
-	}
-}
-
 subprojects {
 
 	repositories {
@@ -41,16 +45,16 @@ subprojects {
 			name 'MavenLocal' // for local builds only
 			url sharedDir
 		}
-		jcenter()
+		mavenCentral()
 	}
 	
 	apply plugin: 'java'
 	apply plugin: 'maven'
 	apply plugin: 'com.jfrog.artifactory'
 	apply plugin: 'maven-publish'
-
+	
 	defaultTasks 'build'
-
+	
 	compileJava.options.debugOptions.debugLevel = 'source,lines,vars' // Include debug information
 	
 	ext {
@@ -66,7 +70,7 @@ subprojects {
 	
 	version	 = cth_version
 	group	 = 'com.exactprosystems.clearth'
-
+	
 	sourceSets {
 		main {
 			java {
@@ -82,25 +86,40 @@ subprojects {
 				// fail eagerly on version conflict (includes transitive dependencies)
 				// e.g. multiple different versions of the same dependency (group and name are equal)
 				failOnVersionConflict()
-
+				
 				// prefer modules that are part of this build (multi-project or composite build) over external modules
 //				preferProjectModules()
 				
-				force   'commons-logging:commons-logging:1.1.1',
-						'com.fasterxml.jackson.core:jackson-core:2.4.2',
-						'commons-io:commons-io:2.5',
+				force   'commons-beanutils:commons-beanutils:1.9.4',
+						'commons-logging:commons-logging:1.1.1',
+						'com.fasterxml.jackson.core:jackson-core:2.13.2',
+						'com.fasterxml.jackson.core:jackson-databind:2.13.2.2',
+						'commons-io:commons-io:2.7',
 						'javax.xml.bind:jaxb-api:2.2',
-						'commons-codec:commons-codec:1.10',
-						'junit:junit:4.12',
+						'commons-codec:commons-codec:1.13',
+						'commons-codec:commons-compress:1.21',
+						'org.apache.commons:commons-text:1.9',
+						'junit:junit:4.13.1',
 						'org.hamcrest:hamcrest-core:1.3',
 						'org.slf4j:slf4j-api:1.7.13',
-						'org.apache.httpcomponents:httpclient:4.5.5'
-	
+						'org.apache.httpcomponents:httpclient:4.5.13',
+						'org.apache.commons:commons-lang3:3.12.0',
+						'org.apache.commons:commons-compress:1.21',
+						'com.google.oauth-client:google-oauth-client:1.31.0',
+						'com.google.http-client:google-http-client:1.35.0',
+						'com.google.guava:guava:31.0.1-jre',
+						'org.apache.httpcomponents:httpcore:4.4.15',
+						'org.apache.logging.log4j:log4j-api:2.17.2'
+				
+				
 				// don't cache changing modules at all
 				cacheChangingModulesFor 0, 'seconds'
 			}
 		}
 		compile.exclude module: 'guava-jdk5'
+		compile.exclude group: 'log4j', module: 'log4j'
+		compile.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+		
 		jaxb
 	}
 
@@ -121,10 +140,10 @@ subprojects {
 	dependencies {
 		jaxb 'com.sun.xml.bind:jaxb-xjc:2.1.3'
 		jaxb 'com.sun.xml.bind:jaxb-impl:2.1.3'
-		jaxb 'javax.xml.bind:jaxb-api:2.1'
+		jaxb 'javax.xml.bind:jaxb-api:2.2'
 		jaxb 'javax.xml:jsr173:1.0'
 
-		testCompile 'junit:junit:4.12'
+		testCompile 'junit:junit:4.13.1'
 		testCompile 'org.mockito:mockito-all:2.0.2-beta'
 		testCompile 'org.testng:testng:6.14.3'
 		testCompile 'org.xerial:sqlite-jdbc:3.28.0'
@@ -132,7 +151,7 @@ subprojects {
 		testCompile 'org.assertj:assertj-core:3.15.0'
 
 		if(JavaVersion.current() > JavaVersion.VERSION_1_8)
-			compile 'javax.annotation:javax.annotation-api:1.2'
+			compile 'javax.annotation:javax.annotation-api:1.3.2'
 
 		if (project.getParent().getName() == 'clearth-modules')
 			compile project(':clearth-core')
@@ -336,6 +355,13 @@ task createProject(type: Copy,
 		include 'gradlew'
 	}
 	into newProjectDir
+}
+
+dependencyCheck {
+	skipConfigurations = ['grettyProductRuntime', 'grettyRunnerJetty93', 'grettyRunnerJetty94', 'grettyRunnerJetty8', 'grettyStarter', 
+		'grettyRunnerJetty9', 'grettyRunnerTomcat85', 'grettyRunnerTomcat7', 'grettyRunnerTomcat8', 'grettyRunnerJetty7', 'grettyRunnerTomcat9', 
+		'grettyNoSpringBoot', 'gretty']
+	format = 'ALL'
 }
 
 wrapper {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,15 +26,7 @@ import com.exactprosystems.clearth.utils.ThreadDumpGenerator;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
 
-import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -44,6 +36,18 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+
+import javax.activation.MimetypesFileTypeMap;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
 public class LogsBean extends ClearThBean
 {
@@ -296,9 +300,17 @@ public class LogsBean extends ClearThBean
 			MessageUtils.addWarningMessage("No logger selected", "Choose logger before setting logger level");
 			return;
 		}
+		
 		Level level = Level.toLevel(lvl);
+		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+		Configuration config = ctx.getConfiguration();
 		for (Logger loggerObject : loggers.get(currentLogger))
-			loggerObject.setLevel(level);
+		{
+			LoggerConfig loggerConfig = config.getLoggerConfig(loggerObject.getName());
+			loggerConfig.setLevel(level);
+		}
+		ctx.updateLoggers();
+		
 		MessageUtils.addInfoMessage("Success", "Level " + lvl + " is now set for '" + currentLogger + "'");
 	}
 	
@@ -312,26 +324,38 @@ public class LogsBean extends ClearThBean
 		} else {
 			loggerKeys = Collections.emptySet();
 		}
+		
 		Level level = Level.toLevel(lvl);
+		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+		Configuration config = ctx.getConfiguration();
 		for (String loggerKey : loggerKeys)
 		{
 			Logger[] logger = loggers.get(loggerKey);
 			for (Logger loggerObject : logger)
-				loggerObject.setLevel(level);
+			{
+				LoggerConfig loggerConfig = config.getLoggerConfig(loggerObject.getName());
+				loggerConfig.setLevel(level);
+			}
 		}
+		ctx.updateLoggers();
+		
 		MessageUtils.addInfoMessage("Success", "Level " + lvl + " is now set for all loggers");
 	}
 	
 	public void resetLoggingLevel()
 	{
-		PropertyConfigurator.configureAndWatch(ClearThCore.rootRelative(ClearThCore.configFiles().getLogCfgFileName()));
+		ClearThCore.getInstance().configureLogging();
 	}
 	
 	public void testLogging()
 	{
-		for (Logger loggerObject : loggers.get(currentLogger))
+		Logger[] selectedLoggers;
+		if (currentLogger == null || (selectedLoggers = loggers.get(currentLogger)) == null)
+			return;
+		
+		for (Logger loggerObject : selectedLoggers)
 		{
-			org.apache.log4j.Logger lg = LogManager.getLogger(loggerObject.getName()+".Test");
+			org.apache.logging.log4j.Logger lg = LogManager.getLogger(loggerObject.getName()+".Test");
 			lg.trace("Logging test at TRACE level");
 			lg.debug("Logging test at DEBUG level");
 			lg.info ("Logging test at INFO  level");

@@ -89,7 +89,7 @@ public class XlsActionReader extends ActionReader
 	{
 		for (Cell cell : row)
 		{
-			if (cell != null && !cell.getCellTypeEnum().equals(CellType.BLANK) && StringUtils.isNotBlank(cell.toString()))
+			if (cell != null && !cell.getCellType().equals(CellType.BLANK) && StringUtils.isNotBlank(cell.toString()))
 				return false;
 		}
 		return true;

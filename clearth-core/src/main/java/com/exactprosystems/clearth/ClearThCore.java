@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -41,7 +41,8 @@ import com.ibm.mq.constants.CMQC;
 
 import freemarker.template.TemplateModelException;
 
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -301,6 +302,13 @@ public abstract class ClearThCore
 	
 	/*** init() parts ***/
 	
+	public void configureLogging()
+	{
+		File logConfig = new File(getRootRelative(configFiles.getLogCfgFileName()));
+		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+		ctx.setConfigLocation(logConfig.toURI());
+	}
+	
 	protected void initSystemProperties()
 	{
 		Locale.setDefault(Locale.ENGLISH);
@@ -318,7 +326,7 @@ public abstract class ClearThCore
 	
 	protected void initLogging()
 	{
-		PropertyConfigurator.configureAndWatch(getRootRelative(configFiles.getLogCfgFileName()));
+		configureLogging();
 		configureMqLogging();
 	}
 	

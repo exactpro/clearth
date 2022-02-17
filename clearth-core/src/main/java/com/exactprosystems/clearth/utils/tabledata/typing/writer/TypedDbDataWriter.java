@@ -25,7 +25,6 @@ import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableData;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeader;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeaderItem;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableRow;
-import com.google.api.client.util.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,8 +140,6 @@ public class TypedDbDataWriter extends TableDataWriter<TypedTableHeaderItem, Obj
 				ps.setDate(i, (Date) value);
 			else if (value instanceof Time)
 				ps.setTime(i, (Time) value);
-			else if (value instanceof DateTime)
-				ps.setTimestamp(i, new Timestamp(((DateTime) value).getValue()));
 			else if (value instanceof LocalDateTime)
 				ps.setTimestamp(i, Timestamp.valueOf((LocalDateTime) value));
 			else if (value instanceof Timestamp)
