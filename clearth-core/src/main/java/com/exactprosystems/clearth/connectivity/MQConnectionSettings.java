@@ -44,8 +44,12 @@ public abstract class MQConnectionSettings extends BasicMqConnectionSettings<MQC
 	public boolean autoReconnect;
 	@XmlElement
 	public boolean autoConnect;
-	
-	
+
+	@XmlElement
+	public int retryAttemptCount;
+	@XmlElement
+	public long retryTimeout;
+
 	public MQConnectionSettings()
 	{
 		readDelay = 1000;
@@ -61,6 +65,9 @@ public abstract class MQConnectionSettings extends BasicMqConnectionSettings<MQC
 		
 		autoReconnect = false;
 		autoConnect = false;
+
+		retryAttemptCount = 10;
+		retryTimeout = 5000;
 	}
 	
 	public MQConnectionSettings(MQConnectionSettings settings)
@@ -78,6 +85,9 @@ public abstract class MQConnectionSettings extends BasicMqConnectionSettings<MQC
 
 		this.autoReconnect = settings.autoReconnect;
 		this.autoConnect = settings.autoConnect;
+
+		this.retryAttemptCount = settings.retryAttemptCount;
+		this.retryTimeout = settings.retryTimeout;
 	}
 	
 	public abstract MQConnectionSettings copy();
@@ -100,7 +110,10 @@ public abstract class MQConnectionSettings extends BasicMqConnectionSettings<MQC
 
 		sb.append("Auto-reconnect="+autoReconnect);
 		sb.append("Auto-connect="+autoConnect);
-		
+
+		sb.append("Retry attempt count="+retryAttemptCount);
+		sb.append("Retry timeout="+retryTimeout);
+
 		return sb.toString();
 	}
 }

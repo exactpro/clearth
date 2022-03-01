@@ -115,15 +115,16 @@ public abstract class MessageReceiverThread extends Thread
 	
 	protected void reconnect()
 	{
-		//Making up to 10 attempts to reconnect
-		for (int i=1; i<=10; i++)
+		//Making up to MQConnection.retryAttemptCount attempts to reconnect
+		for (int i=1; i<=owner.getRetryAttemptCount(); i++)
 		{
 			if (i>1)
 			{
 				try
 				{
-					getLogger().debug("Waiting for 5 seconds before next reconnect attempt");
-					sleep(5000);
+					long retryTimeout = owner.getRetryTimeout();
+					getLogger().debug("Waiting for {} seconds before next reconnect attempt", retryTimeout / 1000.0);
+					sleep(retryTimeout);
 				}
 				catch (InterruptedException e)
 				{

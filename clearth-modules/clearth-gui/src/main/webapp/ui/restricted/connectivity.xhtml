@@ -354,6 +354,14 @@
 					<h:outputText value="Channel:" />
 					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.channel}" label="Channel" />
 
+					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.retryAttemptCount}" rendered="#{!connectivityBean.oneConnectionSelected}" />
+					<h:outputText value="Retry attempt count:" />
+					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.retryAttemptCount}" label="Retry attempt count" />
+
+					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.retryTimeout}" rendered="#{!connectivityBean.oneConnectionSelected}" />
+					<h:outputText value="Retry timeout:" />
+					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.retryTimeout}" label="Retry timeout" />
+
 					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.receiveQueue}" rendered="#{!connectivityBean.oneConnectionSelected}" />
 					<p:outputPanel>
 						<p:selectBooleanCheckbox value="#{connectivityBean.oneSelectedMqConnection.useReceiveQueue}" itemLabel="Receive queue:"/>

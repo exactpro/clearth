@@ -24,7 +24,7 @@ package com.exactprosystems.clearth.web.misc;
 
 public class MqConPropsToEdit
 {
-	private boolean host, port, queueManager, channel, receiveQueue, sendQueue, readDelay, autoConnect, autoReconnect;
+	private boolean host, port, queueManager, channel, receiveQueue, sendQueue, readDelay, autoConnect, autoReconnect, retryAttemptCount, retryTimeout;
 
 	
 	public MqConPropsToEdit()
@@ -38,6 +38,8 @@ public class MqConPropsToEdit
 		readDelay = false;
 		autoConnect = false;
 		autoReconnect = false;
+		retryAttemptCount = false;
+		retryTimeout = false;
 	}
 	
 	
@@ -137,5 +139,21 @@ public class MqConPropsToEdit
 	public void setAutoReconnect(boolean autoReconnect)
 	{
 		this.autoReconnect = autoReconnect;
+	}
+
+	public boolean isRetryAttemptCount() {
+		return retryAttemptCount;
+	}
+
+	public void setRetryAttemptCount(boolean retryAttemptCount) {
+		this.retryAttemptCount = retryAttemptCount;
+	}
+
+	public boolean isRetryTimeout() {
+		return retryTimeout;
+	}
+
+	public void setRetryTimeout(boolean retryTimeout) {
+		this.retryTimeout = retryTimeout;
 	}
 }

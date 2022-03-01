@@ -719,5 +719,7 @@ public class ConnectivityBean extends ClearThBean
 		connectionToEdit.setReadDelay(propsToEdit.isReadDelay() ? changes.getReadDelay() : original.getReadDelay());
 		connectionToEdit.setAutoConnect(propsToEdit.isAutoConnect() ? changes.isAutoConnect() : original.isAutoConnect());
 		connectionToEdit.setAutoReconnect(propsToEdit.isAutoReconnect() ? changes.isAutoReconnect() : original.isAutoReconnect());
+		connectionToEdit.setRetryAttemptCount(propsToEdit.isRetryAttemptCount() ? changes.getRetryAttemptCount() : original.getRetryAttemptCount());
+		connectionToEdit.setRetryTimeout(propsToEdit.isRetryTimeout() ? changes.getRetryTimeout() : original.getRetryTimeout());
 	}
 }

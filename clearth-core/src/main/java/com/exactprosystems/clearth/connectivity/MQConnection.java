@@ -159,7 +159,23 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 	{
 		this.settings.autoReconnect = autoReconnect;
 	}
-	
+
+	public int getRetryAttemptCount() {
+		return settings.retryAttemptCount;
+	}
+
+	public void setRetryAttemptCount(int retryAttemptCount) {
+		this.settings.retryAttemptCount = retryAttemptCount;
+	}
+
+	public long getRetryTimeout() {
+		return settings.retryTimeout;
+	}
+
+	public void setRetryTimeout(long retryTimeout) {
+		this.settings.retryTimeout = retryTimeout;
+	}
+
 	@Override
 	public boolean isAutoConnect()
 	{
