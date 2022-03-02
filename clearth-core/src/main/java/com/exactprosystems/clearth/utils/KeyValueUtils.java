@@ -35,6 +35,7 @@ public class KeyValueUtils
 	private static final Logger logger = LoggerFactory.getLogger(KeyValueUtils.class);
 	
 	private static final String KEY_VALUE_DELIM = "=",
+			PAIRS_DELIM = "\n",
 			URL_PARAMS_START = "?",
 			URL_PARAMS_DELIM = "&";
 	
@@ -146,6 +147,24 @@ public class KeyValueUtils
 		{
 			closeResource(writer);
 		}
+	}
+
+	public static String getKeyValueString(Map<String, String> data)
+	{
+		if (data == null || data.isEmpty())
+			return "";
+
+		StringBuilder result = new StringBuilder();
+
+		for (Map.Entry<String, String> entry : data.entrySet())
+		{
+			result.append(entry.getKey())
+				  .append(KEY_VALUE_DELIM)
+				  .append(entry.getValue())
+				  .append(PAIRS_DELIM);
+		}
+
+		return result.toString();
 	}
 	
 	/**
