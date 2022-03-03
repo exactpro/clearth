@@ -72,8 +72,8 @@ public class LogsBean extends ClearThBean
 		Map<String, String> definitions = KeyValueUtils.loadKeyValueFile(pathToLogConfig, false);
 		
 		loggers = buildLoggersInfo(definitions, pathToLogConfig);
-		this.keysForAdmin = new HashSet<String>(this.loggers.keySet());
-		this.keysForPowerUser = new HashSet<String>(this.loggers.keySet());
+		this.keysForAdmin = new LinkedHashSet<>(this.loggers.keySet());
+		this.keysForPowerUser = new LinkedHashSet<>(this.loggers.keySet());
 		this.keysForPowerUser.remove(USER_LOG);
 	}
 	
