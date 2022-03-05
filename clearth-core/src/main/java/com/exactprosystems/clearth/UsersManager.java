@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,12 +28,10 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.UnmarshalException;
 
+import com.exactprosystems.clearth.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.utils.ClearThException;
-import com.exactprosystems.clearth.utils.UsersRepairer;
-import com.exactprosystems.clearth.utils.XmlUtils;
 import com.exactprosystems.clearth.xmldata.XmlUser;
 import com.exactprosystems.clearth.xmldata.XmlUsers;
 
@@ -73,9 +71,16 @@ public class UsersManager
 	{
 		saveUsersList(ClearThCore.usersListPath());
 	}
-	
-	public void addUser(XmlUser user) throws JAXBException, IOException
+
+	protected void validateName(String name) throws SettingsException
 	{
+		NameValidator.validate(name);
+	}
+
+	public void addUser(XmlUser user) throws JAXBException, IOException, SettingsException
+	{
+		validateName(user.getName());
+		
 		synchronized (usersListMonitor)
 		{
 			loadUsersList();
@@ -88,7 +93,7 @@ public class UsersManager
 			{
 				String msg = "Error while saving new user";
 				logger.error(msg, e);
-
+				
 				String detailedMsg = msg + ": " + e.getMessage();
 				throw new IOException(detailedMsg, e);
 			}
@@ -96,7 +101,8 @@ public class UsersManager
 		}
 	}
 	
-	public void modifyUsers(List<XmlUser> originalUsers, List<XmlUser> newUsers) throws JAXBException, IOException, ClearThException
+	public void modifyUsers(List<XmlUser> originalUsers, List<XmlUser> newUsers)
+			throws JAXBException, IOException, ClearThException, SettingsException
 	{
 		synchronized (usersListMonitor)
 		{
@@ -231,8 +237,7 @@ public class UsersManager
 	}
 	
 		
-	protected void doModifyUser(XmlUser originalUser, XmlUser newUser) throws ClearThException
-	{
+	protected void doModifyUser(XmlUser originalUser, XmlUser newUser) throws ClearThException, SettingsException {
 		int userIndex = getUserIndexByName(originalUser.getName());
 		if (userIndex < 0)
 		{
@@ -240,6 +245,9 @@ public class UsersManager
 			logger.error(msg);
 			throw new ClearThException(msg);
 		}
+		
+		validateName(newUser.getName());
+		
 		usersList.getUsers().set(userIndex, newUser);
 	}
 

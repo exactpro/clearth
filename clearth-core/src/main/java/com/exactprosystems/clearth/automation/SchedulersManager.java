@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,19 +29,14 @@ import java.util.Map.Entry;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.commons.collections4.CollectionUtils;
+import com.exactprosystems.clearth.utils.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.ClearThException;
-import com.exactprosystems.clearth.utils.CommaBuilder;
-import com.exactprosystems.clearth.utils.KeyValueUtils;
-import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
 
 public class SchedulersManager
 {
@@ -133,6 +128,8 @@ public class SchedulersManager
 	{
 		if (StringUtils.isBlank(schedulerName) || isSchedulerExists(forUser, schedulerName))
 			throw new SettingsException("Scheduler must have non-empty and unique name");
+		
+		NameValidator.validate(schedulerName);
 	}
 	
 	protected Scheduler createScheduler(String forUser, String schedulerName) throws Exception

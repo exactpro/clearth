@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,6 +25,7 @@ import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
 import com.exactprosystems.clearth.connectivity.validation.ConnectionStartValidator;
+import com.exactprosystems.clearth.utils.NameValidator;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -555,6 +556,8 @@ public abstract class ClearThConnectionStorage
 			throw new SettingsException("Connection name cannot be empty.");
 		else if (connectionsByName.containsKey(connectionName))
 			throw new SettingsException(format("Connection with name '%s' already exists.", connectionName));
+		
+		NameValidator.validate(connectionName);
 	}
 
 	public ConnectionStartValidator getConnectionStartValidator()

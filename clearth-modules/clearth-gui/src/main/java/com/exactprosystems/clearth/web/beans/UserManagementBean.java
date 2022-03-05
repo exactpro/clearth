@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -31,6 +31,7 @@ import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.model.SelectItem;
 
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -276,8 +277,9 @@ public class UserManagementBean extends ClearThBean
 		catch (Exception e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
+			canClose = false;
 		}
-		WebUtils.addCanCloseCallback(true);
+		WebUtils.addCanCloseCallback(canClose);
 	}
 
 	public void removeUsers()
