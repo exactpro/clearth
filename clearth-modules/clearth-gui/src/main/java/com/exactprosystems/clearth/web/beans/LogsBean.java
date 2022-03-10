@@ -82,7 +82,7 @@ public class LogsBean extends ClearThBean
 	
 	public List<String> getAllLogsList()
 	{
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 		if (logsDir.exists())
 		{
 			File[] logsFiles = logsDir.listFiles();
@@ -93,6 +93,9 @@ public class LogsBean extends ClearThBean
 						result.add(file.getName());
 				}
 		}
+
+		Collections.sort(result);
+
 		return result;
 	}
 

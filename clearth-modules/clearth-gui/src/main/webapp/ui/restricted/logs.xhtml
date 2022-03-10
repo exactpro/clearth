@@ -17,10 +17,12 @@
                         Here you can manipulate ClearTH logs.
 						<br />
 						<br />
-						<p:selectManyCheckbox id="logsList" value="#{logsBean.selectedLogsList}" layout="grid" columns="2">
-							<f:selectItems value="#{logsBean.allLogsList}" />
-							<p:ajax update="Logs"/>
-						</p:selectManyCheckbox>
+						<div style="max-height: 190.6px; overflow-y: auto">
+							<p:selectManyCheckbox id="logsList" value="#{logsBean.selectedLogsList}" layout="grid" columns="1">
+								<f:selectItems value="#{logsBean.allLogsList}" />
+								<p:ajax update="Logs"/>
+							</p:selectManyCheckbox>
+						</div>
 						<br />
 						<p:commandButton id="selectAllLogs" value="Select all" icon="ui-icon-check"
 										 update=":Logs" action="#{logsBean.selectAllLogs()}"/>
