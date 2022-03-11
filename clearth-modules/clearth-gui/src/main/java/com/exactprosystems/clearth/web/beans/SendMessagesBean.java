@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -32,12 +32,12 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.MessageTemplate;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
@@ -170,9 +170,7 @@ public class SendMessagesBean extends ClearThBean
 		}
 		catch (IOException e)
 		{
-			String msg = "Could not remove template";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not remove template", e, getLogger());
 			return;
 		}
 		
@@ -228,9 +226,7 @@ public class SendMessagesBean extends ClearThBean
 		}
 		catch (JAXBException e)
 		{
-			String msg = "Error while saving template";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while saving template", e, getLogger());
 		}
 	}
 	
@@ -252,9 +248,7 @@ public class SendMessagesBean extends ClearThBean
 		}
 		catch (Exception e)
 		{
-			String msg = "Error while sending message";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while sending message", e, getLogger());
 		}
 	}
 	

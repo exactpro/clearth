@@ -24,7 +24,6 @@ import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.tools.ConfigMakerTool;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.CommaBuilder;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.MatrixUploadHandler;
 import com.exactprosystems.clearth.utils.exception.MatrixUploadHandlerException;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
@@ -34,20 +33,15 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
 
-import javax.activation.MimetypesFileTypeMap;
-
-import static com.exactprosystems.clearth.ClearThCore.configFiles;
 import static com.exactprosystems.clearth.automation.MatrixFileExtensions.isExtensionSupported;
 import static java.lang.String.format;
 
@@ -128,14 +122,11 @@ public class MatricesAutomationBean extends ClearThBean {
 	{
 		try
 		{
-			File f = matrix.getFile();
-			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
+			return WebUtils.downloadFile(matrix.getFile());
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Could not download matrix";
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			getLogger().debug(errMsg, e);
+			WebUtils.logAndGrowlException("Could not download matrix", e, getLogger());
 			return null;
 		}
 	}
@@ -164,9 +155,9 @@ public class MatricesAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			String errorMessage = MessageFormat.format("Unexpected error occurred. File '{0}' cannot be opened",
+			String errMsg = MessageFormat.format("Unexpected error occurred. File '{0}' cannot be opened",
 					uploadedFileName);
-			WebUtils.logAndGrowlException(errorMessage, e, getLogger());
+			WebUtils.logAndGrowlException(errMsg, e, getLogger());
 		}
 	}
 
@@ -235,7 +226,7 @@ public class MatricesAutomationBean extends ClearThBean {
 
 	private List<MatrixIssue> matrixIssuesToList(String header, Map<ActionGeneratorMessageKind, List<String>> issuesMap)
 	{
-		List<MatrixIssue> result = new ArrayList<MatrixIssue>();
+		List<MatrixIssue> result = new ArrayList<>();
 
 		if (!issuesMap.isEmpty())
 		{
@@ -252,13 +243,13 @@ public class MatricesAutomationBean extends ClearThBean {
 
 	private List<MatrixIssue> matricesIssuesToList(Map<String, List<ActionGeneratorMessage>> mes, Set<ActionGeneratorMessageKind> issuesFilter)
 	{
-		List<MatrixIssue> result = new ArrayList<MatrixIssue>();
+		List<MatrixIssue> result = new ArrayList<>();
 
 		if ((mes==null) || (mes.size()==0))
 			return result;
 
-		LinkedHashMap<ActionGeneratorMessageKind, List<String>> errors = new LinkedHashMap<ActionGeneratorMessageKind, List<String>>(),
-				warnings = new LinkedHashMap<ActionGeneratorMessageKind, List<String>>();
+		LinkedHashMap<ActionGeneratorMessageKind, List<String>> errors = new LinkedHashMap<>(),
+				warnings = new LinkedHashMap<>();
 
 		for (Map.Entry<String, List<ActionGeneratorMessage>> entry : mes.entrySet())
 		{
@@ -327,7 +318,8 @@ public class MatricesAutomationBean extends ClearThBean {
 
 	public void reloadLinkedMatrix(MatrixData matrix)
 	{
-		try {
+		try
+		{
 			selectedScheduler().addLinkedMatrix(matrix);
 			MessageUtils.addInfoMessage("Success", "'" + matrix.getName() + "' linked matrix is updated successfully");
 			selectedScheduler().checkDuplicatedMatrixNames();
@@ -397,7 +389,6 @@ public class MatricesAutomationBean extends ClearThBean {
 			String msg = format("Matrix file format must be one of these: %s.",
 					MatrixFileExtensions.supportedExtensionsAsString);
 			MessageUtils.addErrorMessage("Unsupported matrix file format", msg);
-			return;
 		}
 	}
 

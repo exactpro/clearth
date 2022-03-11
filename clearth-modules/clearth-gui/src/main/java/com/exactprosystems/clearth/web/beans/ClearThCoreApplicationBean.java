@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,16 +39,21 @@ public abstract class ClearThCoreApplicationBean extends ClearThBean {
 	private String appContextPath;
 	private boolean appContextPathOverride;
 
-	public String getAppContextPath() {
+	public String getAppContextPath()
+	{
 		return appContextPath;
 	}
-	public boolean isAppContextPathOverride(){
+	public boolean isAppContextPathOverride()
+	{
 		return appContextPathOverride;
 	}
 
-	public ClearThCoreApplicationBean() throws ClearThException {
-		synchronized (ClearThCoreApplicationBean.class) {
-			if (appInstance != null) {
+	public ClearThCoreApplicationBean() throws ClearThException
+	{
+		synchronized (ClearThCoreApplicationBean.class)
+		{
+			if (appInstance != null)
+			{
 				throw new ClearThException("ApplicationBean is already created");
 			}
 			appInstance = this;
@@ -63,7 +68,8 @@ public abstract class ClearThCoreApplicationBean extends ClearThBean {
 
 	protected abstract void initApplication() throws ClearThException;
 
-	protected void initWebApplication() throws ClearThException {
+	protected void initWebApplication() throws ClearThException
+	{
 
 		WebDeploymentConfig webDeploymentConfig = (WebDeploymentConfig) deploymentConfig;
 		this.appContextPath  = webDeploymentConfig.getAppContextPath();
@@ -83,13 +89,15 @@ public abstract class ClearThCoreApplicationBean extends ClearThBean {
 		return new JettyXmlUpdater();
 	}
 
-	protected DeploymentConfig createDeploymentConfig() {
+	protected DeploymentConfig createDeploymentConfig()
+	{
 		return new WebDeploymentConfig();
 	}
 
 	protected abstract ConfigFiles createConfigFiles();
 
-	public static ClearThCoreApplicationBean getInstance() {
+	public static ClearThCoreApplicationBean getInstance()
+	{
 		return appInstance;
 	}
 

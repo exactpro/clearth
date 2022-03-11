@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.web.misc;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.faces.context.FacesContext;
 import java.io.*;
 
@@ -26,6 +27,8 @@ import org.apache.commons.lang.StringUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.context.PrimeFacesContext;
 import org.primefaces.context.RequestContext;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 
@@ -66,6 +69,16 @@ public class WebUtils
 			Utils.closeResource(output);
 		}
 	}
+	
+	public static StreamedContent downloadFile(File file, String fileName) throws FileNotFoundException
+	{
+		return new DefaultStreamedContent(new FileInputStream(file), new MimetypesFileTypeMap().getContentType(file), fileName);
+	}
+	
+	public static StreamedContent downloadFile(File file) throws FileNotFoundException
+	{
+		return downloadFile(file, file.getName());
+	}
 
 	public static boolean addCanCloseCallback(boolean canClose)
 	{
@@ -87,9 +100,10 @@ public class WebUtils
 		return new File(ClearThCore.getInstance().getLogsPath());
 	}
 	
-	public static void logAndGrowlException(String message, Exception e, Logger logger) {
-		logger.error(message, e);
-		MessageUtils.addErrorMessage(message, ExceptionUtils.getDetailedMessage(e));
+	public static void logAndGrowlException(String errMsg, Throwable e, Logger logger)
+	{
+		logger.error(errMsg, e);
+		MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
 	}
 	
 	public static String getMimeType(String fileName)

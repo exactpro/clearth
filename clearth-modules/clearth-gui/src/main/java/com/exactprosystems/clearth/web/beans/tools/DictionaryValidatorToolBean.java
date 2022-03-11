@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,6 +28,7 @@ import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.beans.tree.ComparationNode;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlCodecConfig;
 
 import org.primefaces.model.DefaultTreeNode;
@@ -75,14 +76,14 @@ public class DictionaryValidatorToolBean extends ClearThBean
 		}
 		catch (Exception e)
 		{
-			handleException(textToParseFormat+": could not validate dictionary", e);
+			WebUtils.logAndGrowlException(textToParseFormat+": could not validate dictionary", e, getLogger());
 		}
 		finally
 		{
 			handleErrors(errors);
 		}
 	}
-	
+
 	protected void handleErrors(List<DictionaryValidatorError> errors)
 	{
 		for (DictionaryValidatorError e : errors)
@@ -149,13 +150,6 @@ public class DictionaryValidatorToolBean extends ClearThBean
 		
 		return originalStringsList.toArray(new String[0]);
 	}
-	
-	protected void handleException(String message, Exception e)
-	{
-		getLogger().warn(message, e);
-		MessageUtils.addErrorMessage(message, ExceptionUtils.getDetailedMessage(e));
-	}
-	
 	
 	public boolean isCodecsAvailable()
 	{

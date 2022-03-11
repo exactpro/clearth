@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,8 +18,6 @@
 
 package com.exactprosystems.clearth.web.beans.tools;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.SchedulerData;
 import com.exactprosystems.clearth.tools.matrixupdater.MatrixUpdater;
 import com.exactprosystems.clearth.tools.matrixupdater.MatrixUpdaterException;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Cell;
@@ -35,23 +33,18 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.exactprosystems.clearth.utils.ExceptionUtils.getDetailedMessage;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -111,7 +104,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Error while storing matrices", getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while storing matrices", e, getLogger());
 			return;
 		}
 
@@ -131,11 +124,11 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		{
 			File f = MatrixUpdaterPathHandler.userUploadsAbsoluteDirectory(UserInfoUtils.getUserName())
 					.resolve(URLEncoder.encode(matrixUpdater.getResult().getName(), "UTF-8")).toFile();
-			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
+			return WebUtils.downloadFile(f);
 		}
 		catch (Exception e)
 		{
-			MessageUtils.addErrorMessage("Result download error", getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Result download error", e, getLogger());
 			return null;
 		}
 	}
@@ -223,7 +216,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Error while uploading addition", getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while uploading addition", e, getLogger());
 		}
 	}
 
@@ -283,12 +276,11 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		try
 		{
-			File f = matrixUpdater.saveConfig().toFile();
-			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
+			return WebUtils.downloadFile(matrixUpdater.saveConfig().toFile());
 		}
 		catch (JAXBException | IOException e)
 		{
-			MessageUtils.addErrorMessage("Error while saving config", getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while saving config", e, getLogger());
 			return null;
 		}
 	}
@@ -309,7 +301,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		}
 		catch (MatrixUpdaterException | IOException | JAXBException e)
 		{
-			MessageUtils.addErrorMessage("Error while loading config", getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while loading config", e, getLogger());
 		}
 	}
 

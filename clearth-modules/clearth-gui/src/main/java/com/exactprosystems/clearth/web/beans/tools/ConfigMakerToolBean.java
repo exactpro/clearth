@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,14 +30,11 @@ import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -94,7 +91,7 @@ public class ConfigMakerToolBean extends ClearThBean
 			if (storedUploadedFile == null)
 				return null;
 			File configFile = configMakerTool.makeConfig(storedUploadedFile, destDir, storedUploadedFile.getName());
-			return new DefaultStreamedContent(new FileInputStream(configFile), new MimetypesFileTypeMap().getContentType(configFile), configFile.getName());
+			return WebUtils.downloadFile(configFile);
 		}
 		catch (Exception e)
 		{

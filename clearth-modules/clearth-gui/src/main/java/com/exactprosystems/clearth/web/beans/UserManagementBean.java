@@ -19,19 +19,17 @@
 package com.exactprosystems.clearth.web.beans;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.model.SelectItem;
 
+import com.exactprosystems.clearth.web.misc.*;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
@@ -39,11 +37,6 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.UsersManager;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.CommaBuilder;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
-import com.exactprosystems.clearth.web.misc.MessageUtils;
-import com.exactprosystems.clearth.web.misc.UserInfoUtils;
-import com.exactprosystems.clearth.web.misc.UserPropsToEdit;
-import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.web.misc.users.UserEntry;
 import com.exactprosystems.clearth.xmldata.XmlUser;
 
@@ -298,12 +291,11 @@ public class UserManagementBean extends ClearThBean
 
 			manager.uploadUsersList(storedFile, new File(file.getFileName()).getName());
 			getLogger().info("uploaded users configuration '" + file.getFileName() + "'");
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
-			getLogger().error("Error while working with users configuration from file " + file.getFileName(), e);
-			MessageUtils.addErrorMessage("Error", "Error occurred while working with users configuration from file "
-					+ file.getFileName() + ": " + ExceptionUtils.getDetailedMessage(e));
-			return;
+			WebUtils.logAndGrowlException("Error while working with users configuration from file " + file.getFileName(), 
+					e, getLogger());
 		}
 	}
 
@@ -351,14 +343,11 @@ public class UserManagementBean extends ClearThBean
 	{
 		try
 		{
-			File f = new File(ClearThCore.usersListPath());
-			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
+			return WebUtils.downloadFile(new File(ClearThCore.usersListPath()));
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Could not download user list";
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			getLogger().debug(errMsg, e);
+			WebUtils.logAndGrowlException("Could not download user list", e, getLogger());
 			return null;
 		}
 	}

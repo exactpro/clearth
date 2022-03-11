@@ -27,23 +27,16 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.ConnectionErrorInfo;
 import com.exactprosystems.clearth.utils.CommaBuilder;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
-import com.exactprosystems.clearth.web.misc.MessageUtils;
-import com.exactprosystems.clearth.web.misc.MqConPropsToEdit;
-import com.exactprosystems.clearth.web.misc.UserInfoUtils;
-import com.exactprosystems.clearth.web.misc.WebUtils;
+import com.exactprosystems.clearth.web.misc.*;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.model.SelectItem;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -295,13 +288,11 @@ public class ConnectivityBean extends ClearThBean
 		try
 		{
 			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(type);
-			return new DefaultStreamedContent(new FileInputStream(resultFile), new MimetypesFileTypeMap().getContentType(resultFile), resultFile.getName());
+			return WebUtils.downloadFile(resultFile);
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Error while exporting connections";
-			getLogger().error(errMsg, e);
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while exporting connections", e, getLogger());
 			return null;
 		}
 	}
@@ -555,28 +546,34 @@ public class ConnectivityBean extends ClearThBean
 		return ann.details();
 	}
 
-	public boolean isListenerInfoVisible() {
+	public boolean isListenerInfoVisible()
+	{
 		return listenerInfoVisible;
 	}
 
-	public void setListenerInfoVisible(boolean listenerInfoVisible) {
+	public void setListenerInfoVisible(boolean listenerInfoVisible)
+	{
 		this.listenerInfoVisible = listenerInfoVisible;
 	}
 
-	public boolean isCopy() {
+	public boolean isCopy()
+	{
 		return copy;
 	}
 
-	public void trueCopy() {
+	public void trueCopy()
+	{
 		copy = true;
 	}
 
-	public void trueEdit() {
+	public void trueEdit()
+	{
 		copy = false;
 		copyListners = true;
 	}
 
-	public void trueListners() {
+	public void trueListners()
+	{
 		selectFirstListener();
 		copy = false;
 		copyListners = false;

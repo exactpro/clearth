@@ -27,8 +27,10 @@ import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 
+import org.apache.commons.lang.StringUtils;
+import org.primefaces.model.StreamedContent;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,17 +39,12 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
-import javax.activation.MimetypesFileTypeMap;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
 
 public class LogsBean extends ClearThBean
 {
@@ -141,15 +138,12 @@ public class LogsBean extends ClearThBean
 			File result = new File(outputDir, UserInfoUtils.getUserName()+"_logs.zip");
 			FileOperationUtils.zipFiles(result, filesToZip);
 			result.deleteOnExit();
-			StreamedContent file = new DefaultStreamedContent(new FileInputStream(result), new MimetypesFileTypeMap().getContentType(result), "logs.zip");
 			//selectedLogsList.clear();
-			return file;
+			return WebUtils.downloadFile(result, "logs.zip");
 		}
 		catch (Exception e)
 		{
-			String msg = "Could not download logs";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not download logs", e, getLogger());
 			return null;
 		}
 	}
@@ -198,9 +192,7 @@ public class LogsBean extends ClearThBean
 		}
 		catch (IOException e)
 		{
-			String msg = "Could not clear contents of file '"+logFile.getPath()+"'";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not clear contents of file '"+logFile.getPath()+"'", e, getLogger());
 		}
 	}
 	
@@ -378,13 +370,11 @@ public class LogsBean extends ClearThBean
 			ThreadDumpGenerator threadDumpGenerator = new ThreadDumpGenerator();
 			File result = threadDumpGenerator.writeThreadDump(outputDir, UserInfoUtils.getUserName()+"_thread_dump.txt");
 			result.deleteOnExit();
-			return new DefaultStreamedContent(new FileInputStream(result), new MimetypesFileTypeMap().getContentType(result), "thread_dump.txt");
+			return WebUtils.downloadFile(result, "thread_dump.txt");
 		}
 		catch (Exception e)
 		{
-			String msg = "Could not generate thread dumps";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not generate thread dumps", e, getLogger());
 			return null;
 		}
 	}

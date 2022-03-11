@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,11 +22,10 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.tools.MessageParserTool;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.beans.tree.MessageNode;
-import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlCodecConfig;
 
 import org.apache.commons.lang.StringUtils;
@@ -132,19 +131,13 @@ public class MessageParserToolBean extends ClearThBean
 			for (Map.Entry<String, Exception> entry : exceptionMap.entrySet())
 			{
 				if (entry.getValue() instanceof UnmarshalException)
-					handleException(entry.getKey() + ": could not load dictionary", entry.getValue());
+					WebUtils.logAndGrowlException(entry.getKey() + ": could not load dictionary", entry.getValue(), getLogger());
 				else
-					handleException(entry.getKey() + ": could not parse text", entry.getValue());
+					WebUtils.logAndGrowlException(entry.getKey() + ": could not parse text", entry.getValue(), getLogger());
 			}
 		}
 	}
-	
-	protected void handleException(String message, Exception e)
-	{
-		getLogger().warn(message, e);
-		MessageUtils.addErrorMessage(message, ExceptionUtils.getDetailedMessage(e));
-	}
-	
+
 	public boolean isCodecsAvailable()
 	{
 		return !codecs.getConfigsList().isEmpty();

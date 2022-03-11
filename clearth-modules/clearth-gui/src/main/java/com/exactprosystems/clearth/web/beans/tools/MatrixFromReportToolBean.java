@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,7 +20,6 @@ package com.exactprosystems.clearth.web.beans.tools;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.report.html.ReportParser;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
@@ -59,9 +58,7 @@ public class MatrixFromReportToolBean extends ClearThBean
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Error while making matrix";
-			getLogger().error(errMsg, e);
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while making matrix", e, getLogger());
 			return;
 		}
 		
@@ -73,9 +70,7 @@ public class MatrixFromReportToolBean extends ClearThBean
 		}
 		catch (IOException e)
 		{
-			getLogger().error("error while redirecting to matrix", e);
-			MessageUtils.addErrorMessage("Error occurred while redirecting to matrix", ExceptionUtils.getDetailedMessage(e));
-			return;
+			WebUtils.logAndGrowlException("Error occurred while redirecting to matrix", e, getLogger());
 		}
 	}
 	

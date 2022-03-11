@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,7 +24,6 @@ import com.exactprosystems.clearth.automation.ReportsInfo;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.LogsExtractor;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.beans.ClearThCoreApplicationBean;
@@ -35,16 +34,13 @@ import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
 import org.apache.commons.lang.time.DateUtils;
 import org.primefaces.PrimeFaces;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
-import javax.activation.MimetypesFileTypeMap;
-import javax.faces.bean.ManagedProperty;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.NotDirectoryException;
+
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,14 +51,15 @@ import java.util.List;
 import java.util.Set;
 
 import static com.exactprosystems.clearth.automation.async.AsyncActionsManager.DEFAULT_ASYNC_THREAD_NAME;
-import static com.exactprosystems.clearth.automation.report.ActionReportWriter.JSON_SUFFIX;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class AutomationReportsBean extends ClearThBean {
+public class AutomationReportsBean extends ClearThBean
+{
 
 	protected AutomationBean automationBean;
-	
+
 	protected ReportsInfo selectedReportsInfo;
 	protected List<XmlMatrixInfo> filteredReportsInfo;
 
@@ -77,10 +74,11 @@ public class AutomationReportsBean extends ClearThBean {
 
 	protected List<Step> rtSelectedSteps;
 	protected List<Step> filteredRTSteps;
-	
+
 	public ReportFilters reportFilters;
 
-	public AutomationReportsBean() {
+	public AutomationReportsBean()
+	{
 		this.rtMatrices = new ArrayList<>();
 		this.rtSelectedSteps = new ArrayList<>();
 		this.reportFilters = createReportFilter();
@@ -179,15 +177,15 @@ public class AutomationReportsBean extends ClearThBean {
 		XmlSchedulerLaunches xmlLaunches = getXmlLaunches();
 
 		if (cleanToday)
-            xmlLaunches.clearLaunchInfoList();
+			xmlLaunches.clearLaunchInfoList();
 		else
-			{
-				Date today = Calendar.getInstance().getTime();
-				List<XmlSchedulerLaunchInfo> launches = getLaunches();
+		{
+			Date today = Calendar.getInstance().getTime();
+			List<XmlSchedulerLaunchInfo> launches = getLaunches();
 
-				launches.stream().filter(launchInfo -> !DateUtils.isSameDay(today, launchInfo.getFinished()))
-					.forEach(launchInfo -> xmlLaunches.removeLaunchInfo(launchInfo));
-			}
+			launches.stream().filter(launchInfo -> !DateUtils.isSameDay(today, launchInfo.getFinished()))
+				.forEach(xmlLaunches::removeLaunchInfo);
+		}
 
 
 		getLogger().info("cleared history of launchers in scheduler '"+selectedScheduler().getName()+"'");
@@ -225,13 +223,11 @@ public class AutomationReportsBean extends ClearThBean {
 				getLogger().debug(errMsg);
 				return null;
 			}
-			return new DefaultStreamedContent(new FileInputStream(shortLog), new MimetypesFileTypeMap().getContentType(shortLog), shortLog.getName());
+			return WebUtils.downloadFile(shortLog);
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Could not download logs by run";
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			getLogger().debug(errMsg, e);
+			WebUtils.logAndGrowlException("Could not download logs by run", e, getLogger());
 			return null;
 		}
 	}
@@ -281,7 +277,7 @@ public class AutomationReportsBean extends ClearThBean {
 
 		return asyncThreadNames;
 	}
-	
+
 	// real time
 
 	public List<Matrix> getRtMatrices() {
@@ -338,13 +334,17 @@ public class AutomationReportsBean extends ClearThBean {
 
 	public StreamedContent getZipSelectedReportsWithLogs()
 	{
-		try {
+		try
+		{
 			File shortLog;
-			if (selectedScheduler().isSuspended()) {
+			if (selectedScheduler().isSuspended())
+			{
 				shortLog = extractLogsByTime(LOG_TO_EXTRACT, EXTRACTED_LOG, selectedScheduler().getStartTime(), null);
-			} else
+			}
+			else
 				shortLog = extractLogsBySelectedRun();
-			if (shortLog == null) {
+			if (shortLog == null)
+			{
 				PrimeFaces.current().executeScript("PF('lostLogsDlg').show();");
 				return null;
 			}
@@ -354,12 +354,10 @@ public class AutomationReportsBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Could not download reports with logs";
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			getLogger().debug(errMsg, e);
+			WebUtils.logAndGrowlException("Could not download reports with logs", e, getLogger());
 			return null;
 		}
-		
+
 	}
 
 	public StreamedContent getZipSelectedReports() {

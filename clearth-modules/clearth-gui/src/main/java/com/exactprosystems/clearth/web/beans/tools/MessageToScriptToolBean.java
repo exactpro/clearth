@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,9 +22,9 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.DecodeException;
 import com.exactprosystems.clearth.tools.MessageToScriptTool;
 import com.exactprosystems.clearth.utils.DictionaryLoadException;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlMessageConverterConfig;
 import org.apache.commons.lang.StringUtils;
 
@@ -81,17 +81,21 @@ public class MessageToScriptToolBean extends ClearThBean
 		}
 
 		convertedMessage = "";
-		try {
+		try
+		{
 			convertedMessage = messageToScriptTool.convertMessage(messageToConvert, messageConvertFormat);
 		}
-		catch (DecodeException e) {
-			handleException("Could not decode message", e);
+		catch (DecodeException e)
+		{
+			WebUtils.logAndGrowlException("Could not decode message", e, getLogger());
 		}
-		catch (DictionaryLoadException e) {
-			handleException("Could not load dictionary", e);
+		catch (DictionaryLoadException e)
+		{
+			WebUtils.logAndGrowlException("Could not load dictionary", e, getLogger());
 		}
-		catch (Exception e) {
-			handleException("Error while converting message", e);
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Error while converting message", e, getLogger());
 		}
 	}
 
@@ -105,11 +109,6 @@ public class MessageToScriptToolBean extends ClearThBean
 		return StringUtils.equals(messageConvertFormat, AUTO_FORMAT);
 	}
 
-	private void handleException(String message, Exception e) {
-		getLogger().warn(message, e);
-		MessageUtils.addErrorMessage(message, ExceptionUtils.getDetailedMessage(e));
-	}
-	
 	public boolean isMessageConvertersAvailable()
 	{
 		return messageConverterConfigs.size() > 0;

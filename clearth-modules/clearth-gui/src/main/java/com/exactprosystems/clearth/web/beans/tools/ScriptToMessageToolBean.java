@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,9 +21,9 @@ package com.exactprosystems.clearth.web.beans.tools;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.DecodeException;
 import com.exactprosystems.clearth.tools.ScriptToMessageTool;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlScriptConverterConfig;
 
 import javax.annotation.PostConstruct;
@@ -55,23 +55,22 @@ public class ScriptToMessageToolBean extends ClearThBean
 			return;
 		}
 		convertedScript = "";
-		try {
+		try
+		{
 			convertedScript = scriptToMessageTool.convertScript(scriptToConvert);
 		}
-		catch (IOException e) {
-			handleException("Error while reading input text", e);
+		catch (IOException e)
+		{
+			WebUtils.logAndGrowlException("Error while reading input text", e, getLogger());
 		}
-		catch (DecodeException e) {
-			handleException("Could not decode script", e);
+		catch (DecodeException e)
+		{
+			WebUtils.logAndGrowlException("Could not decode script", e, getLogger());
 		}
-		catch (Exception e) {
-			handleException("Error while converting script!", e);
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Error while converting script", e, getLogger());
 		}
-	}
-
-	protected void handleException(String message, Exception e) {
-		getLogger().warn(message, e);
-		MessageUtils.addErrorMessage(message, ExceptionUtils.getDetailedMessage(e));
 	}
 
 	public boolean isScriptConvertersAvailable()

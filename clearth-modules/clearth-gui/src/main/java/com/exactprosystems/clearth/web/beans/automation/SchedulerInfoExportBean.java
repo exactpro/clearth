@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,10 +19,8 @@
 package com.exactprosystems.clearth.web.beans.automation;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.MatrixData;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoFile;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.SchedulerInfoExportStats;
@@ -30,11 +28,9 @@ import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.activation.MimetypesFileTypeMap;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class SchedulerInfoExportBean extends ClearThBean
@@ -80,9 +75,7 @@ public class SchedulerInfoExportBean extends ClearThBean
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Error while collecting scheduler info files";
-			getLogger().error(errMsg, e);
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while collecting scheduler info files", e, getLogger());
 		}
 	}
 	
@@ -106,13 +99,11 @@ public class SchedulerInfoExportBean extends ClearThBean
 		try
 		{
 			File exportZip = ClearThCore.getInstance().getSchedulerInfoExporter().exportSelectedZip(storage);
-			return new DefaultStreamedContent(new FileInputStream(exportZip), new MimetypesFileTypeMap().getContentType(exportZip), exportZip.getName());
+			return WebUtils.downloadFile(exportZip);
 		}
 		catch (Exception e)
 		{
-			String errMsg = "Could not download scheduler info files";
-			getLogger().error(errMsg, e);
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not download scheduler info files", e, getLogger());
 			return null;
 		}
 	}

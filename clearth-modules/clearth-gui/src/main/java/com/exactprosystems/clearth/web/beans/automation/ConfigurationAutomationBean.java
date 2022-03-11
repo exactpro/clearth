@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,25 +23,20 @@ import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.SchedulerData;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.utils.CommaBuilder;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.faces.event.AjaxBehaviorEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.exactprosystems.clearth.ClearThCore.configFiles;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ConfigurationAutomationBean extends ClearThBean {
@@ -90,14 +85,11 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	{
 		try
 		{
-			File f = new File(selectedScheduler().getSchedulerData().getConfigName());
-			return new DefaultStreamedContent(new FileInputStream(f), new MimetypesFileTypeMap().getContentType(f), f.getName());
+			return WebUtils.downloadFile(new File(selectedScheduler().getSchedulerData().getConfigName()));
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Could not download steps";
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
-			getLogger().debug(errMsg, e);
+			WebUtils.logAndGrowlException("Could not download steps", e, getLogger());
 			return null;
 		}
 	}
@@ -109,13 +101,11 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		try
 		{
 			File resultFile = ClearThCore.getInstance().getSchedulerSettingsTransmitter().exportSettings(schedulerData);
-			return new DefaultStreamedContent(new FileInputStream(resultFile), new MimetypesFileTypeMap().getContentType(resultFile), resultFile.getName());
+			return WebUtils.downloadFile(resultFile);
 		}
 		catch (IOException e)
 		{
-			String errMsg = "Error while exporting scheduler settings";
-			getLogger().error(errMsg, e);
-			MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Error while exporting scheduler settings", e, getLogger());
 			return null;
 		}
 	}
@@ -133,7 +123,6 @@ public class ConfigurationAutomationBean extends ClearThBean {
 
 			ClearThCore.getInstance().getSchedulerSettingsTransmitter().deploySettings(storedSettings, selectedScheduler());
 			MessageUtils.addInfoMessage("Success", "Scheduler settings successfully uploaded");
-
 			getLogger().info("uploaded settings '" + file.getFileName()	+ "' for scheduler '"+selectedScheduler().getName()+"'");
 		}
 		catch (Exception e)
@@ -141,7 +130,6 @@ public class ConfigurationAutomationBean extends ClearThBean {
 			String msg = "Error occurred while working with scheduler settings from file '"+file.getFileName()+"'";
 			getLogger().error(msg, e);
 			MessageUtils.addErrorMessage(msg, e.getMessage());
-			return;
 		}
 	}
 
@@ -158,7 +146,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not save changes in 'weekend is holiday' setting", ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not save changes in 'weekend is holiday' setting", e, getLogger());
 		}
 	}
 
@@ -198,7 +186,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not save changes in base time", ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not save changes in base time", e, getLogger());
 		}
 	}
 
@@ -216,7 +204,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not save changes in business day", ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not save changes in business day", e, getLogger());
 		}
 	}
 
@@ -239,7 +227,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not save changes in base time", ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not save changes in base time", e, getLogger());
 		}
 	}
 
@@ -271,7 +259,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not save changes in calendar", ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not save changes in calendar", e, getLogger());
 		}
 	}
 
@@ -299,7 +287,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not save changes in business day", ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not save changes in business day", e, getLogger());
 		}
 	}
 	
@@ -314,9 +302,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			String msg = "Couldn't save changes for ignoring all connections failures";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Couldn't save changes for ignoring all connections failures", e, getLogger());
 		}
 	}
 	
@@ -376,9 +362,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		}
 		catch (IOException e)
 		{
-			String msg = "Could not save selected connections to ignore failures";
-			getLogger().error(msg, e);
-			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
+			WebUtils.logAndGrowlException("Could not save selected connections to ignore failures", e, getLogger());
 		}
 	}
 	

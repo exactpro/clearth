@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,9 +23,8 @@ import com.exactprosystems.clearth.connectivity.iface.DefaultMessageHelperFactor
 import com.exactprosystems.clearth.connectivity.iface.MessageColumnNode;
 import com.exactprosystems.clearth.connectivity.iface.MessageHelper;
 import com.exactprosystems.clearth.connectivity.iface.MessageHelperFactory;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
-import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlMessageHelperConfig;
 import org.apache.commons.lang.StringUtils;
 
@@ -96,8 +95,8 @@ public class MessageHelperToolBean extends ClearThBean
 		}
 		catch (Exception e)
 		{
-			getLogger().warn("could not create message helper for '" + messageHelperConfig.getName() + "'", e);
-			MessageUtils.addErrorMessage("Could not create message helper for '" + messageHelperConfig.getName() + "'", ExceptionUtils.getDetailedMessage(e));
+			String errMsg = "Could not create message helper for '" + messageHelperConfig.getName() + "'";
+			WebUtils.logAndGrowlException(errMsg, e, getLogger());
 		}
 		this.currentMessageHelpFormat = currentMessageHelpFormat;
 		

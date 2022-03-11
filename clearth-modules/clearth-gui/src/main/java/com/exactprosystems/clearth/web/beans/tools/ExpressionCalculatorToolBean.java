@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -63,29 +63,36 @@ public class ExpressionCalculatorToolBean extends ClearThBean
 		calculator = ClearThCore.getInstance().getToolsFactory().createExpressionCalculatorTool();
 	}
 
-	public void calculateAndCompare() {
-		try {
+	public void calculateAndCompare()
+	{
+		try
+		{
 			clearResults();
 			calculate();
 			compare();
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			getLogger().error("Error while calculating expression", e);
 			result = "failed - "+MatrixFunctions.errorToText(e);
 		}
 	}
 
-	protected void clearResults() {
+	protected void clearResults()
+	{
 		result = null;
 		comparisonResult = null;
 	}
 
-	protected void calculate() throws Exception {
+	protected void calculate() throws Exception
+	{
 		Scheduler scheduler = ClearThCore.getInstance().getSchedulersManager().getSchedulerByName(selectedScheduler, UserInfoUtils.getUserName());
 		getLogger().info("Selected scheduler: " + ((scheduler != null) ? scheduler.getName() : "[null]"));
 		result = calculator.calculate(expression, scheduler);
 	}
 
-	protected void compare() throws ParametersException {
+	protected void compare() throws ParametersException
+	{
 		if ((toCompare != null) && (!toCompare.isEmpty()))
 			comparisonResult = comparisonUtils().compareValues(result, toCompare) ? "Passed" : "Failed";
 		else
@@ -93,17 +100,20 @@ public class ExpressionCalculatorToolBean extends ClearThBean
 	}
 
 	
-	public void clearInput() {
+	public void clearInput()
+	{
 		expression = "";
 		selectedScheduler = null;
 		toCompare = null;
 	}
 
-	public void clearResult() {
+	public void clearResult()
+	{
 		result = null;
 	}
 
-	public boolean isHasResults() {
+	public boolean isHasResults()
+	{
 		return result == null ? false : true;
 	}
 
@@ -113,7 +123,8 @@ public class ExpressionCalculatorToolBean extends ClearThBean
 		return calculator.getVariables();
 	}
 	
-	public void generateNewVar() {
+	public void generateNewVar()
+	{
 		try
 		{
 			addVar(generateVarName(), null);
@@ -125,7 +136,8 @@ public class ExpressionCalculatorToolBean extends ClearThBean
 		verifyVars();
 	}
 
-	public void generateNewVar(int count) {
+	public void generateNewVar(int count)
+	{
 		try
 		{
 			for (int i = 0; i < count; i++)
@@ -138,32 +150,38 @@ public class ExpressionCalculatorToolBean extends ClearThBean
 		verifyVars();
 	}
 
-	protected String generateVarName() {
+	protected String generateVarName()
+	{
 		return MessageFormat.format(GEN_VAR_NAME_PATTERN, genVarNameSuffix++);
 	}
 
-	protected void addVar(String name, String value) throws ParametersException {
+	protected void addVar(String name, String value) throws ParametersException
+	{
 		if (calculator.getVariables().size() >= MAX_VARS_COUNT)
 			throw new ParametersException(MAX_VARS_ERROR);
 		calculator.getVariables().add(new CalculatorVariable(name, value));
 	}
 	
-	public void verifyVars() {
+	public void verifyVars()
+	{
 		calculator.verifyVariables();
 	}
 
 	
-	public void deleteSelectedVar() {
+	public void deleteSelectedVar()
+	{
 		calculator.getVariables().remove(selectedVar);
 		selectedVar = null;
 		verifyVars();
 	}
 
-	public void undefineSelectedVar() {
+	public void undefineSelectedVar()
+	{
 		selectedVar.setValue(null);
 	}
 
-	public void clearVars() {
+	public void clearVars()
+	{
 		calculator.getVariables().clear();
 	}
 	

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,20 +22,17 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.ReportsInfo;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.activation.MimetypesFileTypeMap;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -196,17 +193,17 @@ public class ReportsArchiver {
 			File result = new File(ClearThCore.tempPath() + UserInfoUtils.getUserName() + "_reports.zip");
 			zipFiles(result, filesToZip, names);
 
-			return new DefaultStreamedContent(new FileInputStream(result), new MimetypesFileTypeMap().getContentType(result), "reports.zip");
-
-		} catch (IOException e)
+			return WebUtils.downloadFile(result, "reports.zip");
+		}
+		catch (IOException e)
 		{
-			MessageUtils.addErrorMessage("Could not download reports", ExceptionUtils.getDetailedMessage(e));
-			logger.debug("Could not download reports", e);
+			WebUtils.logAndGrowlException("Could not download reports", e, logger);
 			return null;
 		}
 	}
 
-	public StreamedContent getZipSelectedReportsWithLogs(File shortLog, ReportsInfo reportPath) throws IOException {
+	public StreamedContent getZipSelectedReportsWithLogs(File shortLog, ReportsInfo reportPath) throws IOException
+	{
 		List<File> filesToZip = new ArrayList<>();
 		List<String> names = new ArrayList<>();
 
@@ -218,8 +215,7 @@ public class ReportsArchiver {
 		File result = new File(ClearThCore.tempPath() + UserInfoUtils.getUserName() + "_reports_logs.zip");
 		zipFiles(result, filesToZip, names);
 
-		return new DefaultStreamedContent(new FileInputStream(result), new MimetypesFileTypeMap().getContentType(result), "reports_logs.zip");
-		
+		return WebUtils.downloadFile(result, "reports_logs.zip");
 	}
 	
 	
