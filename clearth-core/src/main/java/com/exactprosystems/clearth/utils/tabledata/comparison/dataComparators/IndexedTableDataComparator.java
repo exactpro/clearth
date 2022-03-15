@@ -94,18 +94,12 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 				expectedRow = expectedReader.readRow();
 				if (actualReadMore)
 					actualStorage.add(actualReader.readRow());
-				actualRow = actualStorage.findAndRemove(expectedRow);
-				
-				if (actualRow == null)
-					expectedStorage.add(expectedRow);
+				actualRow = findActualRowByExpectedRow(expectedRow);
 			}
 			else
 			{
 				actualRow = actualReader.readRow();
-				expectedRow = expectedStorage.findAndRemove(actualRow);
-				
-				if (expectedRow == null)
-					actualStorage.add(actualRow);
+				expectedRow = findExpectedRowByActualRow(actualRow);
 			}
 		}
 		while ((expectedRow == null || actualRow == null) && hasMoreRows());
@@ -121,8 +115,46 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	{
 		return rowMatcher;
 	}
-	
-	
+
+	protected TableRow<A, B> findActualRowByExpectedRow(TableRow<A, B> expectedRow)
+	{
+		return findByRow(expectedRow, true);
+	}
+
+	protected TableRow<A, B> findExpectedRowByActualRow(TableRow<A, B> actualRow)
+	{
+		return findByRow(actualRow, false);
+	}
+
+	protected TableRow<A, B> findByRow(TableRow<A, B> inputRow, boolean isExpectedRow)
+	{
+		IndexedTableData<A, B, C> storageToSave;
+		IndexedTableData<A, B, C> storageToRemove;
+
+		if (isExpectedRow)
+		{
+			storageToSave = expectedStorage;
+			storageToRemove = actualStorage;
+		}
+		else
+		{
+			storageToSave = actualStorage;
+			storageToRemove = expectedStorage;
+		}
+
+		TableRow<A, B> targetRow = findAndRemoveFromStorage(storageToRemove, inputRow, isExpectedRow);
+
+		if (targetRow == null)
+			storageToSave.add(inputRow);
+
+		return targetRow;
+	}
+
+	protected TableRow<A, B> findAndRemoveFromStorage(IndexedTableData<A, B, C> storage, TableRow<A, B> row, boolean isExpectedRow)
+	{
+		return storage.findAndRemove(row);
+	}
+
 	/**
 	 * Returns some table row (e.g. a first one) from table data storage.
 	 * Could be used to pull stored rows when sources were read completely.
