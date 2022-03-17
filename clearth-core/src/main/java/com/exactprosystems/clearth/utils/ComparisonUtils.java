@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.utils;
 
-import com.exactprosystems.clearth.automation.MatrixFunctions;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
@@ -46,7 +45,6 @@ import static org.apache.commons.lang.StringUtils.*;
 
 public class ComparisonUtils
 {
-
 	private static final Logger logger = LoggerFactory.getLogger(ComparisonUtils.class);
 
 	public enum InfoIndication {
@@ -257,16 +255,14 @@ public class ComparisonUtils
 
 
 	/**
-	 * This method should be used to check if given expected value is better used with {@link #compareValues(String, String)} method for correct comparison
+	 * This method should be used to check if given expected value is better to use with
+	 * {@link #compareValues(String, String)} method for correct comparison.
 	 *
 	 * @param value concerned
 	 * @return true if given expected value should be used with compareValues() method
 	 */
 	public boolean isForCompareValues(String value)
 	{
-		if ((!StringUtils.contains(value,'@')) || (!StringUtils.contains(value, MatrixFunctions.FORMULA_START)))
-			return false;
-
 		return isSpecialValue(value) || isSpecialFunction(value) || contains(trim(value), PATTERN_START);
 	}
 
