@@ -21,17 +21,15 @@ package com.exactprosystems.clearth.web.beans;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.model.SelectItem;
 
-import com.exactprosystems.clearth.utils.SettingsException;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -52,13 +50,13 @@ import com.exactprosystems.clearth.xmldata.XmlUser;
 public class UserManagementBean extends ClearThBean
 {
 	private final UsersManager manager = ClearThCore.getInstance().getUsersManager();
-	private final List<UserEntry> selectedUsers = new ArrayList<UserEntry>();
+	private final List<UserEntry> selectedUsers = new ArrayList<>();
 	private List<UserEntry> originalSelectedUsers = null;
 	private final UserPropsToEdit userProps;
 
 	private List<UserEntry> users;
-	private Date lastUpdated;
-	
+	private Instant lastUpdated;
+
 	public UserManagementBean()
 	{
 		userProps = createUserPropsToEdit();
@@ -89,32 +87,14 @@ public class UserManagementBean extends ClearThBean
 		return result;
 	}
 
-	private void sortUsersList()
-	{
-		Collections.sort(users, new Comparator<UserEntry>()
-		{
-			@Override
-			public int compare(UserEntry o1, UserEntry o2)
-			{
-				return o1.getName().compareToIgnoreCase(o2.getName());
-			}
-		});
-	}
-
-	public List<UserEntry> refreshUsersList()
-	{
-		users = UserEntry.createList(manager.getUsers().getUsers());
-		lastUpdated = new Date();
-		return users;
-	}
-
 	public List<UserEntry> getUsers()
 	{
-		if (isUsersListOutdated())
+		if(isUsersListOutdated())
 		{
-			refreshUsersList();
-			sortUsersList();
+			lastUpdated = Instant.now();
+			users = UserEntry.createList(manager.getUsers());
 		}
+
 		return users;
 	}
 
@@ -122,8 +102,8 @@ public class UserManagementBean extends ClearThBean
 	{
 		if (lastUpdated == null)
 			return true;
-		Date xmlListDate = manager.getUsersListDate();
-		return xmlListDate.after(lastUpdated);
+		Instant xmlListDate = manager.getUserListDate();
+		return xmlListDate.isAfter(lastUpdated);
 	}
 
 	@PostConstruct
@@ -142,7 +122,7 @@ public class UserManagementBean extends ClearThBean
 		this.originalSelectedUsers = selectedUsers;
 		this.selectedUsers.clear();
 		for (UserEntry u : originalSelectedUsers)
-			this.selectedUsers.add((UserEntry)u.clone());
+			this.selectedUsers.add(u.clone());
 	}
 	
 	public UserEntry getOneSelectedUser()
@@ -169,15 +149,6 @@ public class UserManagementBean extends ClearThBean
 		selectedUsers.clear();
 	}
 	
-	
-	private boolean userExists(UserEntry user)
-	{
-		String nameOfUser = user.getName();
-		for (UserEntry u : getUsers())
-			if (u.getName().equals(nameOfUser))
-				return true;
-		return false;
-	}
 
 	private void warnUserExists(UserEntry user)
 	{
@@ -196,10 +167,10 @@ public class UserManagementBean extends ClearThBean
 		userToEdit.setPasswordText(propsToEdit.isPassword() ? changes.getPasswordText() : original.getPasswordText());
 		userToEdit.setRole(propsToEdit.isRole() ? changes.getRole() : original.getRole());
 	}
-	
+
 	protected List<XmlUser> userEntriesToXmlUsers(List<UserEntry> users)
 	{
-		List<XmlUser> result = new ArrayList<XmlUser>();
+		List<XmlUser> result = new ArrayList<>();
 		for (UserEntry u : users)
 			result.add(u.getXmlUser());
 		return result;
@@ -238,7 +209,7 @@ public class UserManagementBean extends ClearThBean
 		{
 			if (isNewUser)
 			{
-				if (userExists(firstUser))
+				if (manager.isUserExists(firstUser.getName()))
 				{
 					warnUserExists(firstUser);
 					WebUtils.addCanCloseCallback(false);
@@ -251,7 +222,7 @@ public class UserManagementBean extends ClearThBean
 			}
 			else
 			{
-				if (!originalSelectedUsers.get(0).getName().equals(firstUser.getName()) && userExists(firstUser))
+				if (!originalSelectedUsers.get(0).getName().equals(firstUser.getName()) && manager.isUserExists(firstUser.getName()))
 				{
 					warnUserExists(firstUser);
 					WebUtils.addCanCloseCallback(false);
@@ -270,7 +241,7 @@ public class UserManagementBean extends ClearThBean
 					CommaBuilder cb = new CommaBuilder();
 					for (UserEntry u : selectedUsers)
 						cb.append("'"+u.getName()+"'");
-					getLogger().info("modified users "+cb.toString());
+					getLogger().info("modified users {}", cb);
 				}
 			}
 		}
@@ -297,7 +268,7 @@ public class UserManagementBean extends ClearThBean
 				CommaBuilder cb = new CommaBuilder();
 				for (UserEntry u : originalSelectedUsers)
 					cb.append("'"+u.getName()+"'");
-				getLogger().info("removed users "+cb.toString());
+				getLogger().info("removed users {}", cb);
 			}
 		}
 		catch (Exception e)
@@ -350,7 +321,7 @@ public class UserManagementBean extends ClearThBean
 	{
 		if (!canInteractWithUserList())
 			return;
-		
+
 		for (UserEntry user : selectedUsers)
 		{
 			try
@@ -366,7 +337,7 @@ public class UserManagementBean extends ClearThBean
 			}
 		}
 	}
-	
+
 	public boolean canInteractWithUserList()
 	{
 		if (UserInfoUtils.isAdmin())

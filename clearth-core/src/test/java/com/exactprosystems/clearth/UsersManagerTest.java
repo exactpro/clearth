@@ -80,14 +80,14 @@ public class UsersManagerTest
 
 	@Test(dataProvider = "valid-names")
 	public void testAddingUserWithValidName(String name)
-			throws JAXBException, IOException, SettingsException, ClearThException
+			throws Exception
 	{
 		XmlUser user = new XmlUser();
 		user.setName(name);
 		manager.addUser(user);
 		try
 		{
-			Assert.assertTrue(manager.usersList.getUsers().stream().anyMatch(x -> x.getName().equals(name)));
+			Assert.assertTrue(manager.userList.stream().anyMatch(u -> u.getName().equals(name)));
 		}
 		finally
 		{
@@ -96,8 +96,8 @@ public class UsersManagerTest
 	}
 
 	@Test(expectedExceptions = SettingsException.class, dataProvider = "invalid-names")
-	public void testAddingUserWithInvalidName(String name) 
-			throws JAXBException, IOException, SettingsException
+	public void testAddingUserWithInvalidName(String name)
+			throws JAXBException, ClearThException, SettingsException
 	{
 		XmlUser user = new XmlUser();
 		user.setName(name);
@@ -106,7 +106,7 @@ public class UsersManagerTest
 
 	@Test(dataProvider = "valid-names")
 	public void testEditingUserWithValidName(String name)
-			throws JAXBException, IOException, SettingsException, ClearThException
+			throws JAXBException, ClearThException, SettingsException
 	{
 		XmlUser originalUser = new XmlUser(), 
 				newUser = new XmlUser();
@@ -118,7 +118,7 @@ public class UsersManagerTest
 		manager.modifyUsers(Collections.singletonList(originalUser), Collections.singletonList(newUser));
 		try
 		{
-			Assert.assertTrue(manager.usersList.getUsers().stream().anyMatch(x -> x.getName().equals(name)));
+			Assert.assertTrue(manager.userList.stream().anyMatch(u -> u.getName().equals(name)));
 		}
 		finally
 		{
@@ -128,7 +128,7 @@ public class UsersManagerTest
 
 	@Test(expectedExceptions = SettingsException.class, dataProvider = "invalid-names")
 	public void testEditingUserWithInvalidName(String name)
-			throws JAXBException, IOException, SettingsException, ClearThException
+			throws JAXBException, ClearThException, SettingsException
 	{
 		XmlUser originalUser = new XmlUser(), 
 				newUser = new XmlUser();

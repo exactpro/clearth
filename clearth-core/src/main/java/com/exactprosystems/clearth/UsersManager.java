@@ -22,8 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.List;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.UnmarshalException;
@@ -38,153 +42,187 @@ import com.exactprosystems.clearth.xmldata.XmlUsers;
 public class UsersManager
 {
 	private static final Logger logger = LoggerFactory.getLogger(UsersManager.class);
-	
-	protected volatile XmlUsers usersList;
-	protected volatile Date usersListDate;
-	protected final Object usersListMonitor = new Object(); // Required as usersList is reset on reload
-	
+	private final Lock lock = new ReentrantLock();
+
+	protected Map<String, XmlUser> userMap;
+	protected List<XmlUser> userList;
+	protected volatile Instant userListDate;
+
 	public void init() throws JAXBException, IOException
 	{
-		loadUsersList();
+		loadUsers(getXmlUsers(ClearThCore.usersListPath()));
+		userListDate = Instant.now();
 	}
 	
-	public void uploadUsersList(File uploadedFile, String originalFileName) throws JAXBException, IOException
+	public void uploadUsersList(File uploadedFile, String originalFileName)
+			throws JAXBException, IOException
 	{
-		synchronized (usersListMonitor)
+		lock.lock();
+		try
 		{
-			usersList = loadUsers(uploadedFile.getAbsolutePath());
+			loadUsers(getXmlUsers(uploadedFile.getAbsolutePath()));
 			saveUsersList();
-			usersListDate = new Date();
+		}
+		finally
+		{
+			lock.unlock();
 		}
 	}
 	
-	public void loadUsersList() throws JAXBException, IOException
+	protected void loadUsers(XmlUsers xmlUsers)
 	{
-		synchronized (usersListMonitor)
+		lock.lock();
+		try
 		{
-			usersList = loadUsers(ClearThCore.usersListPath());
-			usersListDate = new Date();
+			userList = new CopyOnWriteArrayList<>(xmlUsers.getUsers());
+			userList.sort((o1,o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+			userMap = new ConcurrentHashMap<>();
+
+			fillUserMap();
+		}
+		finally
+		{
+			lock.unlock();
 		}
 	}
 	
-	public void saveUsersList() throws JAXBException
+	private void saveUsersList() throws JAXBException
 	{
-		saveUsersList(ClearThCore.usersListPath());
-	}
-
-	protected void validateName(String name) throws SettingsException
-	{
-		NameValidator.validate(name);
-	}
-
-	public void addUser(XmlUser user) throws JAXBException, IOException, SettingsException
-	{
-		validateName(user.getName());
-		
-		synchronized (usersListMonitor)
+		lock.lock();
+		try
 		{
-			loadUsersList();
-			usersList.getUsers().add(user);
-			try
-			{
-				saveUsersList();
-			}
-			catch (Exception e)
-			{
-				String msg = "Error while saving new user";
-				logger.error(msg, e);
-				
-				String detailedMsg = msg + ": " + e.getMessage();
-				throw new IOException(detailedMsg, e);
-			}
-			loadUsersList();
+			userListDate = Instant.now();
+			saveUsersList(ClearThCore.usersListPath());
+		}
+		finally
+		{
+			lock.unlock();
+		}
+	}
+
+	public void addUser(XmlUser user) throws SettingsException, ClearThException, JAXBException
+	{
+		lock.lock();
+		try
+		{
+			validateUser(user);
+			
+			if(isUserExists(user.getName()))
+				throw new ClearThException("User already exists");
+
+			userMap.put(user.getName(), user);
+			addToList(user);
+
+			saveUsersList();
+		}
+		catch (JAXBException e)
+		{
+			String msg = "Error while saving new user";
+			logger.error(msg, e);
+			
+			String detailedMsg = msg + ": " + e.getMessage();
+			throw new JAXBException(detailedMsg, e);
+		}
+		finally
+		{
+			lock.unlock();
 		}
 	}
 	
 	public void modifyUsers(List<XmlUser> originalUsers, List<XmlUser> newUsers)
-			throws JAXBException, IOException, ClearThException, SettingsException
+			throws JAXBException, ClearThException, SettingsException
 	{
-		synchronized (usersListMonitor)
+		lock.lock();
+		try
 		{
-			loadUsersList();
-			for (int i = 0; i < newUsers.size(); i++)
-				doModifyUser(originalUsers.get(i), newUsers.get(i));
-			
 			try
+			{
+				for(int i=0; i<newUsers.size(); i++)
+					doModifyUser(originalUsers.get(i), newUsers.get(i));
+			}
+			finally
 			{
 				saveUsersList();
 			}
-			catch (Exception e)
-			{
-				String msg = "Error while saving users list after modifying it";
-				logger.error(msg, e);
-				throw new IOException(msg, e);
-			}
-			loadUsersList();
+		}
+		catch (JAXBException e)
+		{
+			String msg = "Error while saving users list after modifying it";
+			logger.error(msg, e);
+			
+			String detailedMsg = msg + ": " + e.getMessage();
+			throw new JAXBException(detailedMsg, e);
+		}
+		finally
+		{
+			lock.unlock();
 		}
 	}
 	
-	public void removeUsers(List<XmlUser> users) throws ClearThException, JAXBException, IOException
+	public void removeUsers(List<XmlUser> users) throws ClearThException, JAXBException
 	{
-		synchronized (usersListMonitor)
+		lock.lock();
+		try
 		{
-			loadUsersList();
-			
 			try
 			{
-				for (XmlUser u : users)
+				for(XmlUser user : users)
 				{
-					int userIndex = getUserIndexByName(u.getName());
-					if (userIndex >= 0)
-						usersList.getUsers().remove(userIndex);
-					else
-						throw new ClearThException("User '"+u.getName()+"' does not exist");
+					int index = getUserIndexByName(user.getName());
+
+					userMap.remove(user.getName());
+					userList.remove(index);
 				}
 			}
 			finally
 			{
-				try
-				{
-					saveUsersList();
-				}
-				catch (Exception e)
-				{
-					String msg = "Error while saving users list after users removal";
-					logger.error(msg, e);
-					throw new IOException(msg, e);
-				}
-				loadUsersList();
+				saveUsersList();
 			}
+		}
+		catch (JAXBException e)
+		{
+			String msg = "Error while saving users list after users removal";
+			logger.error(msg, e);
+			
+			String detailedMsg = msg + ": " + e.getMessage();
+			throw new JAXBException(detailedMsg, e);
+		}
+		finally
+		{
+			lock.unlock();
 		}
 	}
 
 	public XmlUser isUserAllowed(String userName, String password)
 	{
-		if (usersList == null)
+		if (userMap.isEmpty())
 		{
 			logger.error("No users defined");
 			return null;
 		}
-		
-		for (XmlUser user : usersList.getUsers())
-		{
-			if (userName.equals(user.getName()) && isValidPassword(password, user.getPassword()))
-				return user;
-		}
+
+		XmlUser user = userMap.get(userName);
+
+		if (user!=null && isValidPassword(password, user.getPassword()))
+			return user;
+
 		return null;
 	}
-	
-	
-	public XmlUsers getUsers()
+
+	public boolean isUserExists(String userName)
 	{
-		return usersList;
+		return userMap.containsKey(userName);
 	}
-	
-	public Date getUsersListDate()
+
+	public List<XmlUser> getUsers()
 	{
-		return usersListDate;
+		return Collections.unmodifiableList(userList);
 	}
-	
+
+	public Instant getUserListDate()
+	{
+		return userListDate;
+	}
 
 	protected XmlUsers loadUsersFromFile(String usersFileName) throws JAXBException, IOException
 	{
@@ -196,7 +234,7 @@ public class UsersManager
 		return new UsersRepairer();
 	}
 
-	protected XmlUsers loadUsers(String usersFileName) throws JAXBException, IOException
+	protected XmlUsers getXmlUsers(String usersFileName) throws JAXBException, IOException
 	{
 		try
 		{
@@ -204,7 +242,7 @@ public class UsersManager
 		}
 		catch (UnmarshalException e)
 		{
-			logger.warn("Error occured while loading users list from '{}' file", usersFileName, e);
+			logger.warn("Error occurred while loading users list from '{}' file", usersFileName, e);
 			return repairUsers(usersFileName);
 		}
 	}
@@ -224,7 +262,7 @@ public class UsersManager
 		}
 		catch (Exception e2)
 		{
-			logger.warn("Error occured while loading users list from fixed file", e2);
+			logger.warn("Error occurred while loading users list from fixed file", e2);
 			logger.info("Resetting users list to empty state...");
 			repairer.resetUsersFile(usersFileName);  //Resetting file to empty to avoid "fixing" it next time thus re-writing original file backup
 		}
@@ -233,35 +271,26 @@ public class UsersManager
 
 	protected void saveUsersList(String usersFileName) throws JAXBException
 	{
-		XmlUtils.marshalObject(usersList, usersFileName);
-	}
-	
-		
-	protected void doModifyUser(XmlUser originalUser, XmlUser newUser) throws ClearThException, SettingsException {
-		int userIndex = getUserIndexByName(originalUser.getName());
-		if (userIndex < 0)
-		{
-			String msg = "User '"+originalUser.getName()+"' doesn't exist, cannot modify";
-			logger.error(msg);
-			throw new ClearThException(msg);
-		}
-		
-		validateName(newUser.getName());
-		
-		usersList.getUsers().set(userIndex, newUser);
+		XmlUtils.marshalObject(createXmlUsers(), usersFileName);
 	}
 
-	
-	private int getUserIndexByName(String userName)
+	protected void doModifyUser(XmlUser originalUser, XmlUser newUser)
+			throws ClearThException, SettingsException
 	{
-		for (int i = 0; i < usersList.getUsers().size(); i++)
-		{
-			if (userName.equals(usersList.getUsers().get(i).getName()))
-				return i;
-		}
-		return -1;
+		int index = getUserIndexByName(originalUser.getName());
+		
+		validateUser(newUser);
+		
+		userMap.remove(originalUser.getName(), originalUser);
+		userMap.put(newUser.getName(), newUser);
+		userList.set(index, newUser);
 	}
 	
+	protected void validateUser(XmlUser user) throws SettingsException
+	{
+		NameValidator.validate(user.getName());
+	}
+
 	private boolean isValidPassword(String input, String expected)
 	{
 		try
@@ -276,5 +305,45 @@ public class UsersManager
 		}
 
 		return false;
+	}
+
+	private int getUserIndexByName(String userName) throws ClearThException
+	{
+		XmlUser user = userMap.get(userName);
+
+		if(user == null)
+			throw new ClearThException("User '" + userName + "' does not exist");
+
+		return userList.indexOf(user);
+	}
+
+	private void fillUserMap()
+	{
+		userList.forEach(user -> userMap.put(user.getName(), user));
+	}
+
+	private XmlUsers createXmlUsers()
+	{
+		lock.lock();
+		try
+		{
+			XmlUsers xmlUsers = new XmlUsers();
+
+			List<XmlUser> temp = xmlUsers.getUsers();
+			temp.addAll(userList);
+
+			return xmlUsers;
+		}
+		finally
+		{
+			lock.unlock();
+		}
+	}
+
+	private void addToList(XmlUser user)
+	{
+		Comparator<XmlUser> comp = (o1,o2) -> o1.getName().compareToIgnoreCase(o2.getName());
+		int to = Math.abs(Collections.binarySearch(userList, user, comp))-1;
+		userList.add(to, user);
 	}
 }
