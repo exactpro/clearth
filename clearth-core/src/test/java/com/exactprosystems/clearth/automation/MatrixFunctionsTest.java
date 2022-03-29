@@ -169,7 +169,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "trim")
-	Object[][] createDataForTrimLeft()
+	public Object[][] createDataForTrimLeft()
 	{
 		return new Object[][]
 				{
@@ -197,7 +197,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 
 	@DataProvider(name = "add-zeros")
-	Object[][] createDataForAddZeros()
+	public Object[][] createDataForAddZeros()
 	{
 		return new Object[][]
 				{
@@ -216,7 +216,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "add-zeros-with-zeros")
-	Object[][] createDataForAddZerosWithZeros()
+	public Object[][] createDataForAddZerosWithZeros()
 	{
 		return new Object[][]
 				{
@@ -236,7 +236,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "add-zeros-with-delimiter")
-	Object[][] createDataForAddZerosWithDelimiter()
+	public Object[][] createDataForAddZerosWithDelimiter()
 	{
 		return new Object[][]
 				{
@@ -259,7 +259,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 
 	@DataProvider(name = "trim-zeros")
-	Object[][] createDataForTrimZeros()
+	public Object[][] createDataForTrimZeros()
 	{
 		return new Object[][]
 				{
@@ -282,7 +282,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 
 	@DataProvider(name = "avg")
-	Object[][] createDataForAvg()
+	public Object[][] createDataForAvg()
 	{
 		return new Object[][]
 				{
@@ -319,7 +319,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 
 	@DataProvider(name = "add-sub")
-	Object[][] createDataForAdd()
+	public Object[][] createDataForAdd()
 	{
 		return new Object[][]
 				{
@@ -398,7 +398,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 
 	@DataProvider(name = "mul-div")
-	Object[][] createDataForMul()
+	public Object[][] createDataForMul()
 	{
 		return new Object[][]
 				{
@@ -485,7 +485,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 
 	@DataProvider(name = "min-max")
-	Object[][] createDataForMinMax()
+	public Object[][] createDataForMinMax()
 	{
 		return new Object[][]
 				{
@@ -548,7 +548,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "to-big-dec-from-string")
-	Object[][] createDataForToBigDecimal()
+	public Object[][] createDataForToBigDecimal()
 	{
 		return new Object[][]
 				{
@@ -589,7 +589,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "to-big-dec-from-string-with-dec-sep")
-	Object[][] createDataForToBigDecimalWithDecSeparator()
+	public Object[][] createDataForToBigDecimalWithDecSeparator()
 	{
 		return new Object[][]
 				{
@@ -638,7 +638,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "to-big-dec-from-string-with-group-sep")
-	Object[][] createDataForToBigDecimalWithGroupSeparator()
+	public Object[][] createDataForToBigDecimalWithGroupSeparator()
 	{
 		return new Object[][]
 				{
@@ -707,7 +707,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "round")
-	Object[][] createDataForRound()
+	public Object[][] createDataForRound()
 	{
 		return new Object[][]
 				{
@@ -768,7 +768,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "value-generator")
-	Object[][] createDataForIdGenerator()
+	public Object[][] createDataForIdGenerator()
 	{
 		return new Object[][]
 				{
@@ -819,7 +819,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "date-format")
-	Object[][] createDataForDateTimeFormat()
+	public Object[][] createDataForDateTimeFormat()
 	{
 		return new Object[][]
 				{
@@ -923,7 +923,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "end-of-month")
-	Object[][] createDataForEndOfMonth()
+	public Object[][] createDataForEndOfMonth()
 	{
 		return new Object[][]
 				{
@@ -958,7 +958,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "get-time")
-	Object[][] createDataForGetTime()
+	public Object[][] createDataForGetTime()
 	{
 		return new Object[][]
 				{
@@ -1006,7 +1006,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "time")
-	Object[][] createDataForTime()
+	public Object[][] createDataForTime()
 	{
 		return new Object[][]
 				{
@@ -1176,7 +1176,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "time-without-business-day")
-	Object[][] createDataForTimeWithoutBusinessDay()
+	public Object[][] createDataForTimeWithoutBusinessDay()
 	{
 		return new Object[][]
 				{
@@ -1258,7 +1258,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "time-BT")
-	Object[][] createDataForTimeBT()
+	public Object[][] createDataForTimeBT()
 	{
 		return new Object[][]
 				{
@@ -1395,7 +1395,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "time-including-holidays")
-	Object[][] createDataForTimeIncludingHolidays()
+	public Object[][] createDataForTimeIncludingHolidays()
 	{
 		return new Object[][]
 				{
@@ -1445,7 +1445,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "holiday")
-	Object[][] createDataForHoliday()
+	public Object[][] createDataForHoliday()
 	{
 		return new Object[][]
 				{
@@ -1531,7 +1531,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "holiday-exception")
-	Object[][] createDataForHolidayException()
+	public Object[][] createDataForHolidayException()
 	{
 		return new Object[][]
 				{
@@ -1565,7 +1565,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@DataProvider(name = "date")
-	Object[][] createDataForDate()
+	public Object[][] createDataForDate()
 	{
 		return new Object[][]
 				{
@@ -1610,7 +1610,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 
 	@DataProvider(name = "calculate-expression")
-	Object[][] createDataForCalculateExpression()
+	public Object[][] createDataForCalculateExpression()
 	{
 
 		Calendar calendar = new GregorianCalendar(2020, Calendar.APRIL, 15);
@@ -1640,6 +1640,9 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		return new Object[][]
 				{
 						// Expression, param name, mvelVars, fixed IDs, current action, expected result
+						{"@{123.param1}", null, mvelVars, fixedIDs, null, "1"},
+						{"@{234.param2}", null, mvelVars, fixedIDs, null, "2"},
+						{"@{345.param5}", null, mvelVars, fixedIDs, null, "5"},
 						{"@{mul(a,b+c)}", null, mvelVars, fixedIDs, null, "5"},
 						{"@{123.param1 + a}", null, mvelVars, fixedIDs, null, "11"},
 						{"@{mul(234.param2, 345.param5)}", null, mvelVars, fixedIDs, null, "10"},
@@ -1697,8 +1700,59 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 	@Test(dataProvider = "calculate-expression")
 	public void checkCalculateExpression(String expression, String paramName, Map<String, Object> mvelVars,
-	                                     Map<String, String> fixedIDs, Action currentAction,
-	                                     Object expectedResult) throws Exception
+										 Map<String, String> fixedIDs, Action currentAction,
+										 Object expectedResult) throws Exception
+	{
+		MatrixFunctions mf = getMatrixFunctionsForCalcExp();
+
+		ObjectWrapper iterationWrapper = new ObjectWrapper(0);
+		Object actualResult = mf.calculateExpression(expression, paramName, mvelVars, fixedIDs,
+				currentAction, iterationWrapper);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@DataProvider(name = "absentReferencesData")
+	public Object[][] createAbsentReferencesData()
+	{
+		Map<String, Object> mvelVars = new HashMap<>();
+		mvelVars.put("params", "");
+
+		Map<String, String> fixedIDs = new HashMap<>();
+		fixedIDs.put("123", "params");
+
+		return new Object[][]
+				{
+						{"@{123.Unknown}", mvelVars, fixedIDs},
+						{"@{123.Number}", mvelVars, fixedIDs},
+						{"@{123.Else}", mvelVars, fixedIDs},
+						{"@{123.String}", mvelVars, fixedIDs},
+						{"@{123.Object}", mvelVars, fixedIDs},
+						{"@{123.Random}", mvelVars, fixedIDs},
+				};
+	}
+
+	@Test(dataProvider = "absentReferencesData")
+	public void referenceToAbsentParameter(String expression, Map<String, Object> mvelVars, Map<String, String> fixedIDs)
+	{
+		MatrixFunctions mf = getMatrixFunctionsForCalcExp();
+
+		try
+		{
+			mf.calculateExpression(expression, null, mvelVars, fixedIDs, null, new ObjectWrapper(0));
+		}
+		catch (Exception e)
+		{
+			assertEquals(MatrixFunctions.errorToText(e), "Incorrect formula");
+		}
+	}
+
+	@AfterMethod
+	public void tearDown() throws IOException
+	{
+		FileUtils.cleanDirectory(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.toFile());
+	}
+
+	private MatrixFunctions getMatrixFunctionsForCalcExp()
 	{
 		Calendar calendar = new GregorianCalendar(2020, Calendar.APRIL, 4);
 		MatrixFunctions functionsWithOwnCalendar = new MatrixFunctions(funWithHolidaysWithWeekends.holidays, funWithHolidaysWithWeekends.businessDay,
@@ -1707,16 +1761,6 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		MatrixFunctions mf = spy(functionsWithOwnCalendar);
 		when(mf.getCalendar()).thenAnswer(i -> calendar.clone());
 
-		ObjectWrapper iterationWrapper = new ObjectWrapper(0);
-		Object actualResult = mf.calculateExpression(expression, paramName, mvelVars, fixedIDs,
-				currentAction, iterationWrapper);
-		assertEquals(actualResult, expectedResult);
-	}
-
-
-	@AfterMethod
-	public void tearDown() throws IOException
-	{
-		FileUtils.cleanDirectory(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.toFile());
+		return mf;
 	}
 }

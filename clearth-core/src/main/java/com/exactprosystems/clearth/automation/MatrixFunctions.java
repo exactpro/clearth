@@ -979,6 +979,9 @@ public class MatrixFunctions
 
 			Object resultObj = MVEL.executeExpression(compiledExp, this, mvelVars);  //if mvelVars is null it will only calculate function results, but will not follow references
 
+			if(resultObj instanceof Class)
+				throw new ParametersException("Incorrect formula");
+
 			if (before.isEmpty() && after.isEmpty() && !(resultObj instanceof String)) {
 				return resultObj;
 			}
