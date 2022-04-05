@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -35,6 +35,8 @@ public class ListenerConfiguration
 	protected String type;
 	@XmlElement(name = "Settings")
 	protected String settings;
+	@XmlElement(name = "Active")
+	protected boolean active;
 	
 	protected ReceiveListener implementation;
 	
@@ -44,14 +46,16 @@ public class ListenerConfiguration
 		type = null;
 		settings = null;
 		implementation = null;
+		active = true;
 	}
 	
-	public ListenerConfiguration(String name, String type, String settings)
+	public ListenerConfiguration(String name, String type, String settings, boolean isActive)
 	{
 		this.name = name;
 		this.type = type;
 		this.settings = settings;
 		this.implementation = null;
+		this.active = isActive;
 	}
 	
 	public ListenerConfiguration(ListenerConfiguration cfg)
@@ -60,6 +64,7 @@ public class ListenerConfiguration
 		this.type = cfg.type;
 		this.settings = cfg.settings;
 		this.implementation = cfg.implementation;
+		this.active = cfg.active;
 	}
 	
 	
@@ -106,10 +111,21 @@ public class ListenerConfiguration
 		this.implementation = implementation;
 	}
 
+
+	public boolean isActive()
+	{
+		return active;
+	}
+
+	public void setActive(boolean active)
+	{
+		this.active = active;
+	}
+
 	@Override
 	public String toString()
 	{
-		return format("Listener name='%s', type='%s', settings='%s', implementation='%s'",
-				name, type, settings, (implementation != null) ? implementation.getClass() : null);
+		return format("Listener name='%s', type='%s', settings='%s', implementation='%s', active='%s'",
+				name, type, settings, (implementation != null) ? implementation.getClass() : null, active);
 	}
 }

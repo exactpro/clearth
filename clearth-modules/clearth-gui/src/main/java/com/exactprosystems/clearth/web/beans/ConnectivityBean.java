@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -55,7 +55,7 @@ public class ConnectivityBean extends ClearThBean
 	private List<ClearThConnection<?, ?>> originalSelectedCons = null;
 	private final MqConPropsToEdit mqConProps;
 	
-	private ListenerConfiguration newListener = new ListenerConfiguration("",defaultListenerType,""), 
+	private ListenerConfiguration newListener = new ListenerConfiguration("",defaultListenerType,"", true),
 			selectedListener = null;
 	private boolean copy = false;
 	private boolean copyListners = true;
@@ -66,7 +66,7 @@ public class ConnectivityBean extends ClearThBean
 	private String username;
 	private List<ClearThConnection<?, ?>> connections;
 	protected String selectedType;
-
+	
 	public ConnectivityBean()
 	{
 		mqConProps = createMqConPropsToEdit();
@@ -331,7 +331,7 @@ public class ConnectivityBean extends ClearThBean
 
 	private void refreshConnectionList()
 	{
-		Collections.sort(connections, (o1, o2) -> {
+		connections.sort((o1, o2) -> {
 			boolean isC1Fav = isFavorite(o1);
 			boolean isC2Fav = isFavorite(o2);
 			if (isC1Fav == isC2Fav) {
@@ -346,7 +346,7 @@ public class ConnectivityBean extends ClearThBean
 	{
 		if (connections == null || ClearThCore.connectionStorage().getConnections().size() != connections.size())
 		{
-			this.connections = new ArrayList<ClearThConnection<?, ?>>(ClearThCore.connectionStorage().getConnections());
+			this.connections = new ArrayList<>(ClearThCore.connectionStorage().getConnections());
 			refreshConnectionList();
 		}
 		return this.connections;
@@ -354,11 +354,11 @@ public class ConnectivityBean extends ClearThBean
 
 	protected List<ClearThConnection<?, ?>> getXConnections(String type)
 	{
-		List<ClearThConnection<?, ?>> res = new ArrayList<ClearThConnection<?, ?>>();
+		List<ClearThConnection<?, ?>> res = new ArrayList<>();
 		List<ClearThConnection<?, ?>> list = getConnections();
 		for (ClearThConnection<?, ?> con : list)
 			if (type.equals(con.getType()))
-				res.add((ClearThConnection<?, ?>)con);
+				res.add(con);
 		return res;
 	}
 
@@ -493,7 +493,7 @@ public class ConnectivityBean extends ClearThBean
 	{
 		((ClearThMessageConnection<?, ?>)getOneSelectedConnection()).addListener(newListener);
 		setSelectedListener(newListener);
-		newListener = new ListenerConfiguration("", defaultListenerType, "");
+		newListener = new ListenerConfiguration("", defaultListenerType, "", true);
 		noListenersInfo = false;
 	}
 
@@ -600,18 +600,17 @@ public class ConnectivityBean extends ClearThBean
 	{
 		return selectedType;
 	}
-
+	
 	public void setSelectedType(String selectedType)
 	{
 		this.selectedType = selectedType;
 	}
-
+	
 	public void changeListenerType()
 	{
 		getSelectedListener().setType(selectedType);
 	}
-
-
+	
 	public boolean isFavorite(ClearThConnection<?, ?> con)
 	{
 		return this.favoriteConnectionList.contains(con.getName());

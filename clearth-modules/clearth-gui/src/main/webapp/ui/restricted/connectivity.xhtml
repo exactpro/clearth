@@ -289,6 +289,10 @@
 									</c:if>
 								</p:selectOneMenu>
 								<br/>
+								<p:selectBooleanCheckbox id="listenersDlgListenerActivity" value="#{connectivityBean.selectedListener.active}" />
+								<p:outputLabel style="font-weight: bold; margin-left: 5px;" for="listenersDlgListenerActivity" value="Active"/>
+								<br/>
+								<br/>
 								<p:outputLabel style="font-weight: bold" for="listenersDlgListenerName" value="Name:"/>
 								<p:inputText id="listenersDlgListenerName" value="#{connectivityBean.selectedListener.name}"
 											 styleClass="fillAvailableWidth margin-bottom">

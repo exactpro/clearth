@@ -160,6 +160,9 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		{
 			for (ListenerConfiguration cfg : configurations)
 			{
+				if(!cfg.isActive())
+					continue;
+
 				String listenerName = cfg.getName();
 				String listenerType = cfg.getType();
 				getLogger().debug("Adding listener {} ({}) to connection '{}'", listenerName, listenerType, name);
@@ -169,7 +172,8 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 				cfg.setImplementation(listenerImpl);
 				implementations.add(listenerImpl);
 			}
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			for (ReceiveListener listener : implementations)
 				listener.dispose();
@@ -187,7 +191,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	protected ReceiveListener createListener(String name, String type, String settings) 
 			throws SettingsException, ConnectivityException
 	{
-		ReceiveListener listener = null;
+		ReceiveListener listener;
 		Map<String, String> settingsMap = KeyValueUtils.parseKeyValueString(settings, ";", true);
 		try {
 			switch (listenerTypeByLabel(type))
