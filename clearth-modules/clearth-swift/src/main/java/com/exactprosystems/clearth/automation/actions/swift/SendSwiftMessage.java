@@ -29,9 +29,9 @@ import com.exactprosystems.clearth.messages.MessageBuilder;
 public class SendSwiftMessage extends SendMessageAction<ClearThSwiftMessage>
 {
 	@Override
-	public MessageBuilder<ClearThSwiftMessage> getMessageBuilder(Set<String> serviceParameters)
+	public MessageBuilder<ClearThSwiftMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
 	{
-		return new ClearThSwiftMessageBuilder(serviceParameters);
+		return new ClearThSwiftMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	@Override

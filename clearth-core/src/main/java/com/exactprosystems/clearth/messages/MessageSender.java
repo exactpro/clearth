@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,5 +39,5 @@ public interface MessageSender<M extends ClearThMessage<M>>
 	 * @throws ConnectivityException if connection to message destination is broken
 	 * @throws EncodeException if given message cannot be encoded before writing it to destination
 	 */
-	public String sendMessage(M message) throws IOException, ConnectivityException, EncodeException;
+	Object sendMessage(M message) throws IOException, ConnectivityException, EncodeException;
 }

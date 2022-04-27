@@ -1,0 +1,4 @@
+#ID,#Globalstep,#Action,#MsgType,#Field1,#MetaField1,#MetaField2
+id1,Step1,CustomSendMessageAction,Type1,Value1,MetaValue1,MetaValue2
+#ID,#Globalstep,#Action,#MsgType,#Field1
+id2,Step1,CustomSendMessageAction,Type2,Value2

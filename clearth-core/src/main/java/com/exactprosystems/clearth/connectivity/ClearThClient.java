@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,12 +20,9 @@ package com.exactprosystems.clearth.connectivity;
 
 import java.util.List;
 
-import com.exactprosystems.clearth.messages.StringMessageSender;
+import com.exactprosystems.clearth.messages.PlainMessageSender;
 
-/**
- *         25 November 2016
- */
-public interface ClearThClient extends StringMessageSender
+public interface ClearThClient extends PlainMessageSender
 {
 	void addReceiveListener(ReceiveListener listener);
 	

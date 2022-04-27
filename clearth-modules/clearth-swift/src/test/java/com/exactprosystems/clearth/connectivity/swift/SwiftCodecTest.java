@@ -257,7 +257,7 @@ public class SwiftCodecTest
 	private static ClearThSwiftMessage message(Map<String, String> fields, ClearThSwiftMessage... subMessages)
 	{
 		return new ClearThSwiftMessage(new LinkedHashMap<>(fields), subMessages.length == 0 ? null :
-				Arrays.asList(subMessages));
+				Arrays.asList(subMessages), null);
 	}
 
 }

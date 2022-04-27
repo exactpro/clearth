@@ -16,37 +16,37 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.messages;
+package com.exactprosystems.clearth.connectivity.validation;
 
-import java.io.IOException;
-
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.connectivity.DecodeException;
 import com.exactprosystems.clearth.connectivity.EncodeException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
-import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
+import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
+import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
 
-/**
- * Message sender that encodes {@link ClearThMessage} and writes it to given {@link PlainMessageSender}
- * @author vladimir.panarin
- */
-public class ClearThMessageSender<M extends ClearThMessage<M>> implements MessageSender<M>
+public class PlainCodec implements ICodec
 {
-	protected final ICodec codec;
-	protected final PlainMessageSender sender;
-	
-	public ClearThMessageSender(ICodec codec, PlainMessageSender sender)
+	@Override
+	public String encode(ClearThMessage<?> message) throws EncodeException
 	{
-		this.codec = codec;
-		this.sender = sender;
+		return message.toString();
 	}
 	
 	@Override
-	public Object sendMessage(M message) throws IOException, ConnectivityException, EncodeException
+	public ClearThMessage<?> decode(String message) throws DecodeException
 	{
-		Object encoded = codec.encode(message);
-		ClearThMessageMetadata metadata = message.getMetadata();
-		return metadata != null ? sender.sendMessage(new EncodedClearThMessage(encoded, metadata)) : sender.sendMessage(encoded);
+		ClearThMessage<?> result = new SimpleClearThMessage();
+		result.addField(ClearThMessageCollector.MESSAGE, message);
+		return result;
 	}
+	
+	@Override
+	public ClearThMessage<?> decode(String message, String type) throws DecodeException
+	{
+		ClearThMessage<?> result = decode(message);
+		result.addField(ClearThMessage.MSGTYPE, type);
+		return result;
+	}
+
 }

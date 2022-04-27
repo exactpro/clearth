@@ -98,6 +98,7 @@ public class SimpleClearThMessage extends ClearThMessage<SimpleClearThMessage>
 			}
 		}
 		copy.setEncodedMessage(this.getEncodedMessage());
+		copy.setMetadata(this.getMetadata());
 		return copy;
 	}
 

@@ -16,27 +16,24 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.xml;
+package com.exactprosystems.clearth.automation.actions.sendMessage;
 
-import java.util.Set;
+import com.exactprosystems.clearth.automation.GlobalContext;
+import com.exactprosystems.clearth.automation.actions.SendPlainMessage;
+import com.exactprosystems.clearth.messages.PlainMessageSender;
 
-import com.exactprosystems.clearth.automation.actions.SendMessageAction;
-import com.exactprosystems.clearth.connectivity.xml.ClearThXmlMessage;
-import com.exactprosystems.clearth.connectivity.xml.ClearThXmlMessageBuilder;
-import com.exactprosystems.clearth.connectivity.xml.XmlCodec;
-import com.exactprosystems.clearth.messages.MessageBuilder;
-
-public class SendXmlMessage extends SendMessageAction<ClearThXmlMessage>
+public class CustomSendPlainMessage extends SendPlainMessage
 {
-	@Override
-	public MessageBuilder<ClearThXmlMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
+	private static PlainMessageSender sender;
+	
+	public static void setSender(PlainMessageSender sender)
 	{
-		return new ClearThXmlMessageBuilder(serviceParameters, metaFields);
+		CustomSendPlainMessage.sender = sender;
 	}
 	
 	@Override
-	protected String getDefaultCodecName()
+	protected PlainMessageSender getCustomMessageSender(GlobalContext globalContext)
 	{
-		return XmlCodec.DEFAULT_CODEC_NAME;
+		return sender;
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,6 +36,7 @@ public abstract class ClearThMessage<T extends ClearThMessage<T>>
 			MSGCOUNT = "MsgCount";
 	
 	private List<T> subMessages = null;
+	private ClearThMessageMetadata metadata = null;
 	
 	private String encodedMessage;
 
@@ -192,6 +193,35 @@ public abstract class ClearThMessage<T extends ClearThMessage<T>>
 	}
 	
 	
+	public Object getMetaField(String name)
+	{
+		return metadata != null ? metadata.getField(name) : null;
+	}
+	
+	public void addMetaField(String name, Object value)
+	{
+		checkMetadataExists();
+		metadata.addField(name, value);
+	}
+	
+	public ClearThMessageMetadata getMetadata()
+	{
+		return metadata;
+	}
+	
+	public void setMetadata(ClearThMessageMetadata metadata)
+	{
+		this.metadata = metadata;
+	}
+	
+	
+	private void checkMetadataExists()
+	{
+		if (metadata == null)
+			metadata = new ClearThMessageMetadata();
+	}
+	
+	
 	protected void appendFieldToString(String fieldName, String fieldValue, String indent, LineBuilder lb)
 	{
 		lb.add(indent).add(fieldName).add(" = '").add(fieldValue).append("'");
@@ -255,7 +285,7 @@ public abstract class ClearThMessage<T extends ClearThMessage<T>>
 			return true;
 
 		if (!(object instanceof ClearThMessage))
-			return false;		
+			return false;
 		
 		// ClearThJsonMessage !eq ClearThXmlMessage
 		Class<?> thisClass = this.getClass();
@@ -273,6 +303,9 @@ public abstract class ClearThMessage<T extends ClearThMessage<T>>
 			if (!ObjectUtils.equals(this.getFieldObject(fieldName), message.getFieldObject(fieldName)))
 				return false;
 		}
+		
+		if (!Objects.equals(this.getMetadata(), message.getMetadata()))
+			return false;
 
 		if (this.hasSubMessages())
 			return message.hasSubMessages() && this.getSubMessages().equals(message.getSubMessages());

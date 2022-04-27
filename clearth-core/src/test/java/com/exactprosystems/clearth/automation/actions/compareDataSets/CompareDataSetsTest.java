@@ -19,25 +19,19 @@
 package com.exactprosystems.clearth.automation.actions.compareDataSets;
 
 import com.exactprosystems.clearth.ApplicationManager;
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.LoggerStub;
-import com.exactprosystems.clearth.automation.ActionGenerator;
-import com.exactprosystems.clearth.automation.ActionMetaData;
+import com.exactprosystems.clearth.automation.TestActionUtils;
 import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
 import org.testng.Assert;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import static com.exactprosystems.clearth.ApplicationManager.*;
 
@@ -49,21 +43,12 @@ public class CompareDataSetsTest {
     private static final Path CONFIGS_DIR = TEST_DATA.resolve("configs");
     private static final Path CONFIG = CONFIGS_DIR.resolve("config.cfg");
     private static ApplicationManager clearThManager;
-    private static final Logger logger = new LoggerStub();
-    private static Map<String, ActionMetaData> extraActionsMapping;
-    private static Map<String, ActionMetaData> originActionsMapping;
+    private static Set<String> extraActions;
 
     @Test
     public void testSourceParamAsOptional() throws ClearThException, IOException, AutomationException {
 
-        Scheduler scheduler = clearThManager.getScheduler(ADMIN, ADMIN);
-        scheduler.clearSteps();
-
-        clearThManager.loadSteps(scheduler, CONFIG.toFile());
-        clearThManager.loadMatrices(scheduler, MATRICES_DIR.toFile());
-
-        scheduler.start(ADMIN);
-        waitForSchedulerToStop(scheduler, 100, 5000);
+        Scheduler scheduler = TestActionUtils.runScheduler(clearThManager, ADMIN, ADMIN, CONFIG, MATRICES_DIR, 5000);
         Assert.assertTrue(scheduler.isSuccessful());
     }
 
@@ -71,36 +56,20 @@ public class CompareDataSetsTest {
     public static void startTestApp() throws ClearThException
     {
         clearThManager = new ApplicationManager();
-        addExtraActionsMapping();
-    }
-
-    private static void addExtraActionsMapping()
-    {
-        originActionsMapping = ClearThCore.getInstance().getActionFactory().getActionsMapping();
-        extraActionsMapping = ActionGenerator.loadActionsMapping(ACTIONS_MAPPING_PATH.toString(), true, logger);
-        originActionsMapping.putAll(extraActionsMapping);
+        extraActions = TestActionUtils.addCustomActions(ACTIONS_MAPPING_PATH).keySet();
     }
 
     @After
     public void clearSchedulerData()
     {
-        SchedulersManager manager = ClearThCore.getInstance().getSchedulersManager();
-        List<Scheduler> userSchedulers = manager.getUserSchedulers(ADMIN);
-        userSchedulers.clear();
+        TestActionUtils.resetUserSchedulers(ADMIN);
     }
 
     @AfterClass
     public static void disposeTestApp() throws IOException
     {
-        removeExtraActionsMapping();
-        if (clearThManager != null) clearThManager.dispose();
-    }
-
-    private static void removeExtraActionsMapping()
-    {
-        for (String actionName : extraActionsMapping.keySet())
-        {
-            originActionsMapping.remove(actionName);
-        }
+        TestActionUtils.removeCustomActions(extraActions);
+        if (clearThManager != null)
+          clearThManager.dispose();
     }
 }

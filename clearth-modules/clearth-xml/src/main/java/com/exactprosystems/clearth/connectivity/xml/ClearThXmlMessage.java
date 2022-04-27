@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -80,6 +80,7 @@ public class ClearThXmlMessage extends ClearThMessage<ClearThXmlMessage>
 		for (ClearThXmlMessage subMessage : getSubMessages())
 			cloned.addSubMessage(subMessage.cloneMessage());
 		cloned.setEncodedMessage(this.getEncodedMessage());
+		cloned.setMetadata(this.getMetadata());
 		return cloned;
 	}
 

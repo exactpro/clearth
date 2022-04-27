@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -44,9 +44,9 @@ import org.apache.commons.lang3.StringUtils;
 public class ReceiveXmlMessage extends ReceiveMessageAction<ClearThXmlMessage>
 {
 	@Override
-	public MessageBuilder<ClearThXmlMessage> getMessageBuilder(Set<String> serviceParameters)
+	public MessageBuilder<ClearThXmlMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
 	{
-		return new ClearThXmlMessageBuilder(serviceParameters);
+		return new ClearThXmlMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	@Override

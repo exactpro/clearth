@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -46,7 +46,8 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		try
 		{
 			beforeSend(msg, stepContext, matrixContext, globalContext);
-			String ans = sender.sendMessage(msg);
+			Object sendOutcome = sender.sendMessage(msg);
+			String ans = sendOutcome != null ? sendOutcome.toString() : null;
 			afterSend(msg, ans, stepContext, matrixContext, globalContext);
 			
 			if (timeout > 0)
@@ -97,7 +98,7 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		return new ConnectionFinder();
 	}
 	
-	protected StringMessageSender getStringSender(GlobalContext globalContext) throws FailoverException
+	protected PlainMessageSender getPlainSender(GlobalContext globalContext) throws FailoverException
 	{
 		String connName = getInputParam(CONNECTIONNAME, "");
 		if (!connName.isEmpty())
@@ -114,23 +115,23 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		if (!getInputParam(FILENAME, "").isEmpty())
 			return getFileSender();
 		
-		StringMessageSender result = getCustomMessageSender(globalContext);
+		PlainMessageSender result = getCustomMessageSender(globalContext);
 		if (result == null)
 			throw ResultException.failed("No '" + CONNECTIONNAME + "' or '" + FILENAME + "' parameters specified");
 		return result;
 	}
 
-	private StringMessageSender getFileSender()
+	private PlainMessageSender getFileSender()
 	{
 		File file = InputParamsUtils.getRequiredFile(getInputParams(), FILENAME);
-		return new StringMessageFileSender(file);
+		return new PlainMessageFileSender(file);
 	}
 
 	protected MessageSender<T> getMessageSender(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws FailoverException
 	{
 		ICodec codec = getCodec(globalContext);
-		StringMessageSender stringSender = getStringSender(globalContext);
+		PlainMessageSender stringSender = getPlainSender(globalContext);
 		return new ClearThMessageSender<T>(codec, stringSender);
 	}
 	
@@ -142,7 +143,7 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 	{
 	}
 
-	protected StringMessageSender getCustomMessageSender(GlobalContext globalContext)
+	protected PlainMessageSender getCustomMessageSender(GlobalContext globalContext)
 	{
 		return null;
 	}

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.exactprosystems.clearth.connectivity.*;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ import org.slf4j.Logger;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.listeners.FileReceiveListener;
 import com.exactprosystems.clearth.connectivity.listeners.ProxyListener;
-import com.exactprosystems.clearth.messages.StringMessageSender;
+import com.exactprosystems.clearth.messages.PlainMessageSender;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.Utils;
@@ -50,11 +51,11 @@ import static org.apache.commons.lang.StringUtils.isBlank;
  */
 public abstract class ClearThMessageConnection<C extends ClearThMessageConnection<C,S>, 
 								S extends ClearThConnectionSettings<S>>
-		extends ClearThConnection<C,S> implements StringMessageSender
+		extends ClearThConnection<C,S> implements PlainMessageSender
 {
 	
 	@XmlElementWrapper
-	protected List<ListenerConfiguration> listeners = new ArrayList<ListenerConfiguration>();
+	protected List<ListenerConfiguration> listeners = new ArrayList<>();
 	
 	protected ClearThClient client;
 	
@@ -62,16 +63,21 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	{
 		super();
 	}
-	
+
 	@Override
-	public String sendMessage(String message) throws IOException, ConnectivityException
+	public Object sendMessage(Object message) throws IOException, ConnectivityException
 	{
-		if (!running)
-			throw new ConnectionException("Connection '"+name+"' is not running");
+		checkRunning();
 		return client.sendMessage(message);
 	}
-	
-	
+
+	@Override
+	public Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	{
+		checkRunning();
+		return client.sendMessage(message);
+	}
+
 	public void copy(C copyFrom)  //Used when changing settings of connection by supplying settings in another one, but new instance shouldn't be created
 	{
 		this.name = copyFrom.name;
@@ -82,7 +88,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 			this.listeners = null;
 		else
 		{
-			this.listeners = new ArrayList<ListenerConfiguration>(copyFrom.listeners.size());
+			this.listeners = new ArrayList<>(copyFrom.listeners.size());
 			for (ListenerConfiguration configuration : copyFrom.listeners)
 			{
 				this.listeners.add(new ListenerConfiguration(configuration));
@@ -127,7 +133,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	{
 		if (listeners != null)
 			return listeners;
-		else return (listeners = new ArrayList<ListenerConfiguration>());
+		else return (listeners = new ArrayList<>());
 	}
 
 	public void setListeners(List<ListenerConfiguration> listeners)
@@ -148,7 +154,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	protected List<ReceiveListener> createListeners(List<ListenerConfiguration> configurations)
 		throws SettingsException, ConnectivityException
 	{
-		List<ReceiveListener> implementations = new ArrayList<ReceiveListener>(configurations.size());
+		List<ReceiveListener> implementations = new ArrayList<>(configurations.size());
 
 		try
 		{
@@ -156,7 +162,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 			{
 				String listenerName = cfg.getName();
 				String listenerType = cfg.getType();
-				getLogger().debug("Adding listener {} ({}) to connection '{}'", new Object[] {listenerName, listenerType, name});
+				getLogger().debug("Adding listener {} ({}) to connection '{}'", listenerName, listenerType, name);
 
 				ReceiveListener listenerImpl = createListener(listenerName, listenerType, cfg.getSettings());
 
@@ -223,7 +229,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 			{
 				settingsString.append(Utils.EOL).append(setting.getKey()).append("=").append(setting.getValue());
 			}
-			getLogger().info("Listener '"+name+"' ("+type+") settings:"+settingsString.toString());
+			getLogger().info("Listener '"+name+"' ("+type+") settings:"+ settingsString);
 		}
 		
 		return listener;
@@ -303,5 +309,12 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		if (names.length < 2)
 			return ClearThCore.getInstance().createCodec(type);
 		return new MultiCodec(names);
+	}
+	
+	
+	private void checkRunning() throws ConnectionException
+	{
+		if (!running)
+			throw new ConnectionException("Connection '"+name+"' is not running");
 	}
 }

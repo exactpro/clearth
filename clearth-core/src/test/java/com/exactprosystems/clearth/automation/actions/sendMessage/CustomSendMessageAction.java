@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,27 +16,50 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.flat;
+package com.exactprosystems.clearth.automation.actions.sendMessage;
 
 import java.util.Set;
 
+import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.actions.SendMessageAction;
-import com.exactprosystems.clearth.connectivity.flat.FlatMessageCodec;
+import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
+import com.exactprosystems.clearth.connectivity.validation.PlainCodec;
 import com.exactprosystems.clearth.messages.MessageBuilder;
+import com.exactprosystems.clearth.messages.PlainMessageSender;
 
-public class SendFlatMessageAction extends SendMessageAction<SimpleClearThMessage>
+public class CustomSendMessageAction extends SendMessageAction<SimpleClearThMessage>
 {
+	private static PlainMessageSender sender;
+	
+	public static void setSender(PlainMessageSender sender)
+	{
+		CustomSendMessageAction.sender = sender;
+	}
+	
+	
 	@Override
 	public MessageBuilder<SimpleClearThMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
 	{
 		return new SimpleClearThMessageBuilder(serviceParameters, metaFields);
 	}
-
+	
 	@Override
 	protected String getDefaultCodecName()
 	{
-		return FlatMessageCodec.DEFAULT_CODEC_NAME;
+		return null;
+	}
+	
+	@Override
+	protected PlainMessageSender getCustomMessageSender(GlobalContext globalContext)
+	{
+		return sender;
+	}
+	
+	@Override
+	protected ICodec getCodec(GlobalContext globalContext)
+	{
+		return new PlainCodec();
 	}
 }

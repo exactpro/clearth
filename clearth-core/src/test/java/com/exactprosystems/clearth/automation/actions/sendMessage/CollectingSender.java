@@ -16,27 +16,37 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.xml;
+package com.exactprosystems.clearth.automation.actions.sendMessage;
 
-import java.util.Set;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.exactprosystems.clearth.automation.actions.SendMessageAction;
-import com.exactprosystems.clearth.connectivity.xml.ClearThXmlMessage;
-import com.exactprosystems.clearth.connectivity.xml.ClearThXmlMessageBuilder;
-import com.exactprosystems.clearth.connectivity.xml.XmlCodec;
-import com.exactprosystems.clearth.messages.MessageBuilder;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.messages.PlainMessageSender;
 
-public class SendXmlMessage extends SendMessageAction<ClearThXmlMessage>
+public class CollectingSender implements PlainMessageSender
 {
+	private final List<Object> sentMessages = new ArrayList<>();
+	
 	@Override
-	public MessageBuilder<ClearThXmlMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
+	public Object sendMessage(Object message) throws IOException, ConnectivityException
 	{
-		return new ClearThXmlMessageBuilder(serviceParameters, metaFields);
+		sentMessages.add(message);
+		return null;
 	}
 	
 	@Override
-	protected String getDefaultCodecName()
+	public Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
-		return XmlCodec.DEFAULT_CODEC_NAME;
+		sentMessages.add(message);
+		return null;
+	}
+	
+	
+	public List<Object> getSentMessages()
+	{
+		return sentMessages;
 	}
 }

@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.ibm.mq.MQException;
 
@@ -187,11 +188,11 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 		this.settings.autoConnect = autoConnect;
 	}
 	
-	public void sendByteMessage(byte[] message) throws ConnectionException, IOException, MQException
+	public void sendByteMessage(byte[] message, ClearThMessageMetadata metadata) throws ConnectionException, IOException, MQException
 	{
 		if (!running)
 			throw new ConnectionException("Connection '"+name+"' is not running");
-		((MQClient)client).sendByteMessage(message);
+		((MQClient)client).sendByteMessage(message, metadata);
 	}
 	
 	@Override

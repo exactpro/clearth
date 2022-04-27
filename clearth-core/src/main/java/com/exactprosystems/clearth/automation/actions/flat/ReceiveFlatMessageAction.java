@@ -46,9 +46,9 @@ import com.exactprosystems.clearth.utils.CommaBuilder;
 public class ReceiveFlatMessageAction extends ReceiveMessageAction<SimpleClearThMessage>
 {
 	@Override
-	public MessageBuilder<SimpleClearThMessage> getMessageBuilder(Set<String> serviceParameters)
+	public MessageBuilder<SimpleClearThMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
 	{
-		return new SimpleClearThMessageBuilder(serviceParameters);
+		return new SimpleClearThMessageBuilder(serviceParameters, metaFields);
 	}
 
 	@Override

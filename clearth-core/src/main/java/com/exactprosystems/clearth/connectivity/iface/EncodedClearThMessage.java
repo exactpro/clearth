@@ -16,27 +16,33 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.xml;
+package com.exactprosystems.clearth.connectivity.iface;
 
-import java.util.Set;
+import java.util.HashMap;
 
-import com.exactprosystems.clearth.automation.actions.SendMessageAction;
-import com.exactprosystems.clearth.connectivity.xml.ClearThXmlMessage;
-import com.exactprosystems.clearth.connectivity.xml.ClearThXmlMessageBuilder;
-import com.exactprosystems.clearth.connectivity.xml.XmlCodec;
-import com.exactprosystems.clearth.messages.MessageBuilder;
-
-public class SendXmlMessage extends SendMessageAction<ClearThXmlMessage>
+public class EncodedClearThMessage
 {
-	@Override
-	public MessageBuilder<ClearThXmlMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
-	{
-		return new ClearThXmlMessageBuilder(serviceParameters, metaFields);
-	}
-	
-	@Override
-	protected String getDefaultCodecName()
-	{
-		return XmlCodec.DEFAULT_CODEC_NAME;
-	}
+    private final Object payload;
+    private final ClearThMessageMetadata metadata;
+
+    public EncodedClearThMessage(Object payload, ClearThMessageMetadata metadata)
+    {
+        this.payload = payload;
+        this.metadata = metadata;
+    }
+
+    public EncodedClearThMessage(Object payload)
+    {
+        this(payload, null);
+    }
+
+    public Object getPayload()
+    {
+        return payload;
+    }
+
+    public ClearThMessageMetadata getMetadata()
+    {
+        return metadata;
+    }
 }

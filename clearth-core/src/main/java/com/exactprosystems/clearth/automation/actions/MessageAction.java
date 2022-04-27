@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation.actions;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -29,6 +30,8 @@ import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.MatrixContext;
 import com.exactprosystems.clearth.automation.Preparable;
 import com.exactprosystems.clearth.automation.SchedulerStatus;
+import com.exactprosystems.clearth.automation.actions.metadata.MetaFieldsGetter;
+import com.exactprosystems.clearth.automation.actions.metadata.SimpleMetaFieldsGetter;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.messages.MessageBuilder;
@@ -40,6 +43,7 @@ public abstract class MessageAction<T extends ClearThMessage<T>> extends Action 
 			REPEATINGGROUPS = "RepeatingGroups", 
 			FILENAME = "FileName",
 			CODEC = "Codec",
+			META_FIELDS = "MetaFields",
 			READ_FROM_CONTEXT_PARAM = "ReadFromContext",
 			
 			CODECNAME_POSTFIX = " codec";
@@ -50,7 +54,7 @@ public abstract class MessageAction<T extends ClearThMessage<T>> extends Action 
 	}
 	
 	
-	public abstract MessageBuilder<T> getMessageBuilder(Set<String> serviceParameters);
+	public abstract MessageBuilder<T> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields);
 	protected abstract String getDefaultCodecName();
 	public abstract boolean isIncoming();
 	
@@ -69,8 +73,10 @@ public abstract class MessageAction<T extends ClearThMessage<T>> extends Action 
 	
 	public T buildMessage(MatrixContext matrixContext)
 	{
-		return getMessageBuilder(getServiceParameters())
-				.fields(getInputParams())
+		Map<String, String> ip = getInputParams();
+		return getMessageBuilder(getServiceParameters(), getMetaFields())
+				.fields(ip)
+				.metaFields(ip)
 				.rgs(matrixContext, this)
 				.type(inputParams.get(ClearThMessage.MSGTYPE))
 				.build();
@@ -83,6 +89,15 @@ public abstract class MessageAction<T extends ClearThMessage<T>> extends Action 
 		result.add(CONNECTIONNAME);
 		result.add(REPEATINGGROUPS);
 		result.add(CODEC);
+		result.add(META_FIELDS);
+		return result;
+	}
+	
+	protected Set<String> getMetaFields()
+	{
+		MetaFieldsGetter metaGetter = getMetaFieldsGetter();
+		Set<String> result = metaGetter.getFields(inputParams);
+		metaGetter.checkFields(result, inputParams);
 		return result;
 	}
 	
@@ -113,5 +128,10 @@ public abstract class MessageAction<T extends ClearThMessage<T>> extends Action 
 	protected ICodec getCodec(GlobalContext globalContext)
 	{
 		return (ICodec)globalContext.getLoadedContext(getCodecNameInContext());
+	}
+	
+	protected MetaFieldsGetter getMetaFieldsGetter()
+	{
+		return new SimpleMetaFieldsGetter(false);
 	}
 }

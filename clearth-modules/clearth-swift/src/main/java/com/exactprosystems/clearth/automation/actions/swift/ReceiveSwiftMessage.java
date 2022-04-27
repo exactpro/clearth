@@ -40,9 +40,9 @@ import org.apache.commons.lang3.StringUtils;
 public class ReceiveSwiftMessage extends ReceiveMessageAction<ClearThSwiftMessage>
 {
 	@Override
-	public MessageBuilder<ClearThSwiftMessage> getMessageBuilder(Set<String> serviceParameters)
+	public MessageBuilder<ClearThSwiftMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
 	{
-		return new ClearThSwiftMessageBuilder(serviceParameters);
+		return new ClearThSwiftMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	@Override

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,6 +21,8 @@ package com.exactprosystems.clearth.connectivity;
 import java.io.IOException;
 import java.util.*;
 
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import org.slf4j.Logger;
 
 import com.exactprosystems.clearth.utils.LineBuilder;
@@ -37,7 +39,7 @@ import com.ibm.mq.constants.MQConstants;
 import static com.exactprosystems.clearth.connectivity.MQExceptionUtils.isConnectionBroken;
 import static org.apache.commons.lang.StringUtils.isWhitespace;
 
-public abstract class MQClient extends BasicClearThClient implements ClearThClient
+public abstract class MQClient extends BasicClearThClient
 {
 	public static final int DEFAULT_PORT = 1414;
 	public static final String DEFAULT_HOST = "localhost";
@@ -209,41 +211,23 @@ public abstract class MQClient extends BasicClearThClient implements ClearThClie
 	}
 	
 	@Override
-	public String sendMessage(String message) throws IOException, ConnectivityException
+	public Object sendMessage(Object message) throws IOException, ConnectivityException
 	{
-		synchronized (sendMonitor)
-		{
-			if (sendQueue == null)
-				throw new ConnectionException("Send queue not specified for '" + name + "'");
-			
-			Logger logger = getLogger();
-			MQMessage msg = prepareMQMessage(message);
-			if (logger.isTraceEnabled())
-				logger.trace(name+" sends message: "+Utils.EOL+message+Utils.EOL+"header: "+Utils.EOL+messageHeaderToString(msg));
-			else if (logger.isDebugEnabled())
-				logger.debug(name+" sends message: "+Utils.EOL+message);
-			
-			try
-			{
-				sendQueue.put(msg, createPutMessageOptions(msg));
-				if (logger.isTraceEnabled())
-					logger.trace(name+" has sent message successfully");
-				incSent();
-			}
-			catch (MQException e)
-			{
-				handleSendError(e, message);
-			}
-			return message;
-		}
+		return sendMessage(message, null);
 	}
 	
-	public void sendByteMessage(byte[] raw) throws IOException, MQException
+	@Override
+	public Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	{
+		return sendMessage(message.getPayload(), message.getMetadata());
+	}
+	
+	public void sendByteMessage(byte[] raw, ClearThMessageMetadata metadata) throws IOException, MQException
 	{
 		Logger logger = getLogger();
-		MQMessage msg = prepareMQMessage(raw);
+		MQMessage msg = prepareMQMessage(raw, metadata);
 		if (logger.isTraceEnabled())
-			logger.trace(name+" sends message: "+Utils.EOL+new String(raw)+Utils.EOL+"header: "+Utils.EOL+messageHeaderToString(msg));
+			logger.trace(name+" sends byte message: "+Utils.EOL+new String(raw)+Utils.EOL+"header: "+Utils.EOL+messageHeaderToString(msg));
 		else if (logger.isDebugEnabled())
 			logger.debug(name+" sends byte message: "+Utils.EOL+new String(raw));
 		
@@ -256,6 +240,39 @@ public abstract class MQClient extends BasicClearThClient implements ClearThClie
 	
 	/* Methods to override */
 	
+	protected Object sendMessage(Object payload, ClearThMessageMetadata metadata)
+			throws IOException, ConnectivityException
+	{
+		synchronized (sendMonitor)
+		{
+			if (sendQueue == null)
+				throw new ConnectionException("Send queue not specified for '" + name + "'");
+			
+			Logger logger = getLogger();
+			
+			MQMessage msg = prepareMQMessage(payload, metadata);
+			
+			if (logger.isTraceEnabled())
+				logger.trace(name+" sends message: "+Utils.EOL+payload+Utils.EOL+"header: "+Utils.EOL+messageHeaderToString(msg));
+			else if (logger.isDebugEnabled())
+				logger.debug(name+" sends message: "+Utils.EOL+payload);
+			
+			try
+			{
+				sendQueue.put(msg, createPutMessageOptions(msg));
+				if (logger.isTraceEnabled())
+					logger.trace(name+" has sent message successfully");
+				incSent();
+			}
+			catch (MQException e)
+			{
+				handleSendError(e, payload);
+			}
+			
+			return payload;
+		}
+	}
+
 	protected MQMessage prepareMQMessage()
 	{
 		MQMessage result = new MQMessage();
@@ -265,15 +282,15 @@ public abstract class MQClient extends BasicClearThClient implements ClearThClie
 		return result;
 	}
 	
-	protected MQMessage prepareMQMessage(String message) throws IOException
+	protected MQMessage prepareMQMessage(Object message, ClearThMessageMetadata metadata) throws IOException
 	{
 		MQMessage result = prepareMQMessage();
-		if (message!=null)
-			result.writeString(message);
+		if (message != null)
+			result.writeString(message.toString());
 		return result;
 	}
 	
-	protected MQMessage prepareMQMessage(byte[] raw) throws IOException
+	protected MQMessage prepareMQMessage(byte[] raw, ClearThMessageMetadata metadata) throws IOException
 	{
 		MQMessage result = prepareMQMessage();
 		result.write(raw);

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.messages;
 
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -25,19 +27,25 @@ import java.io.IOException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class StringMessageFileSender implements StringMessageSender
+public class PlainMessageFileSender implements PlainMessageSender
 {
 	private final File file;
 
-	public StringMessageFileSender(File file)
+	public PlainMessageFileSender(File file)
 	{
 		this.file = file;
 	}
 
 	@Override
-	public String sendMessage(String message) throws IOException
+	public String sendMessage(Object message) throws IOException
 	{
-		FileUtils.writeStringToFile(file, message, UTF_8);
-		return message;
+		FileUtils.writeStringToFile(file, message.toString(), UTF_8);
+		return message.toString();
+	}
+
+	@Override
+	public Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	{
+		return sendMessage(message.getPayload());
 	}
 }

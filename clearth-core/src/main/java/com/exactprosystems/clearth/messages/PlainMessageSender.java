@@ -21,32 +21,28 @@ package com.exactprosystems.clearth.messages;
 import java.io.IOException;
 
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.connectivity.EncodeException;
-import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.ICodec;
 
 /**
- * Message sender that encodes {@link ClearThMessage} and writes it to given {@link PlainMessageSender}
- * @author vladimir.panarin
+ * Interface for classes that send plain messages
  */
-public class ClearThMessageSender<M extends ClearThMessage<M>> implements MessageSender<M>
+public interface PlainMessageSender
 {
-	protected final ICodec codec;
-	protected final PlainMessageSender sender;
+	/**
+	 * Sends given message. Can return some object as outcome
+	 * @param message to send
+	 * @return sending outcome, if present
+	 * @throws IOException if message cannot be sent due to I/O error
+	 * @throws ConnectivityException if connection to message destination is broken
+	 */
+	Object sendMessage(Object message) throws IOException, ConnectivityException;
 	
-	public ClearThMessageSender(ICodec codec, PlainMessageSender sender)
-	{
-		this.codec = codec;
-		this.sender = sender;
-	}
-	
-	@Override
-	public Object sendMessage(M message) throws IOException, ConnectivityException, EncodeException
-	{
-		Object encoded = codec.encode(message);
-		ClearThMessageMetadata metadata = message.getMetadata();
-		return metadata != null ? sender.sendMessage(new EncodedClearThMessage(encoded, metadata)) : sender.sendMessage(encoded);
-	}
+	/**
+	 * Sends given message. Can return some object as outcome
+	 * @param encoded message with metadata to send
+	 * @return sending outcome, if present
+	 * @throws IOException if message cannot be sent due to I/O error
+	 * @throws ConnectivityException if connection to message destination is broken
+	 */
+	Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException;
 }

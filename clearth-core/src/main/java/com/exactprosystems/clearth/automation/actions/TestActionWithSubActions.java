@@ -27,7 +27,7 @@ public class TestActionWithSubActions extends Action
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 	{
-		MessageBuilder<SimpleClearThMessage> builder = new SimpleClearThMessageBuilder(Collections.singleton(REPEATINGGROUPS));
+		MessageBuilder<SimpleClearThMessage> builder = new SimpleClearThMessageBuilder(Collections.singleton(REPEATINGGROUPS), null);
 		SimpleClearThMessage message = builder
 				.fields(getInputParams())
 				.rgs(matrixContext, this)

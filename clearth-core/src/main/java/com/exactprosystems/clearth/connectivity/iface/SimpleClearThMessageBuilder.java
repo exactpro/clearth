@@ -29,9 +29,9 @@ public class SimpleClearThMessageBuilder extends MessageBuilder<SimpleClearThMes
 		super();
 	}
 	
-	public SimpleClearThMessageBuilder(Set<String> serviceParameters)
+	public SimpleClearThMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
 	{
-		super(serviceParameters);
+		super(serviceParameters, metaFields);
 	}
 	
 	

@@ -307,7 +307,7 @@ public abstract class BasicClearThClient implements ClearThClient
 		return 0;
 	}
 	
-	protected void handleSendError(Throwable error, final String message) throws ConnectivityException
+	protected void handleSendError(Throwable error, final Object message) throws ConnectivityException
 	{
 		if (isConnectionBrokenError(error))  //Broken connection indicates a need to make one reconnect attempt
 		{

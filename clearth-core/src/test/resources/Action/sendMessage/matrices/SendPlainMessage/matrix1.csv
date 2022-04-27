@@ -1,0 +1,4 @@
+#ID,#Globalstep,#Action,#Message,#MetaField1,#MetaField2
+id1,Step1,CustomSendPlainMessage,TestMessageContent1,MetaValue1,MetaValue2
+#ID,#Globalstep,#Action,#Message
+id2,Step1,CustomSendPlainMessage,TestMessageContent2

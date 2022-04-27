@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,10 +19,12 @@
 package com.exactprosystems.clearth.messages;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +49,8 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	private static final Logger logger = LoggerFactory.getLogger(MessageBuilder.class);
 	
 	protected M message;
-	protected final Set<String> serviceParameters;
+	protected final Set<String> serviceParameters,
+			metaFields;
 	protected MatrixContext matrixContext;  //Context to search for RGs by action parameter
 	protected Action action;  //Action to add sub-actions data while searching for RGs
 	protected List<String> rgErrors;
@@ -56,12 +59,14 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	{
 		message = createMessage();
 		serviceParameters = null;
+		metaFields = null;
 	}
 	
-	public MessageBuilder(Set<String> serviceParameters)
+	public MessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
 	{
 		message = createMessage();
-		this.serviceParameters = serviceParameters;
+		this.serviceParameters = serviceParameters != null ? Collections.unmodifiableSet(serviceParameters) : null;
+		this.metaFields = metaFields != null ? Collections.unmodifiableSet(metaFields) : null;
 	}
 	
 	
@@ -77,6 +82,14 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	public Set<String> getServiceParameters()
 	{
 		return serviceParameters;
+	}
+	
+	/**
+	 * @return set of field names whose values to be used as metadata fields and not as message fields
+	 */
+	public Set<String> getMetaFields()
+	{
+		return metaFields;
 	}
 
 	
@@ -103,7 +116,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	
 	public MessageBuilder<M> field(String name, String value)
 	{
-		if (isServiceParameter(name))
+		if (isServiceParameter(name) || isMetaField(name))
 			return this;
 		
 		message.addField(name, value);
@@ -112,9 +125,33 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	
 	public MessageBuilder<M> fields(Map<String, String> fields)
 	{
-		//TODO add fields directly to message with addAll, not one by one. Don't forget to filter them by serviceParameters
+		//TODO add fields directly to message with addAll, not one by one. Don't forget to filter them by serviceParameters and metaFields
 		for (Entry<String, String> f : fields.entrySet())
 			field(f.getKey(), f.getValue());
+		return this;
+	}
+	
+	
+	public MessageBuilder<M> metaField(String name, String value)
+	{
+		if (!isMetaField(name))
+			return this;
+		
+		message.addMetaField(name, value);
+		return this;
+	}
+	
+	public MessageBuilder<M> metaFields(Map<String, String> fields)
+	{
+		if (CollectionUtils.isEmpty(metaFields))
+			return this;
+		
+		for (String f : metaFields)
+		{
+			String value = fields.get(f);
+			if (!StringUtils.isEmpty(value))
+				message.addMetaField(f, value);
+		}
 		return this;
 	}
 	
@@ -186,6 +223,11 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	protected boolean isServiceParameter(String name)
 	{
 		return (serviceParameters != null) && (serviceParameters.contains(name));
+	}
+	
+	protected boolean isMetaField(String name)
+	{
+		return (metaFields != null) && (metaFields.contains(name));
 	}
 	
 	

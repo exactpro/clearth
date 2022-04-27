@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,24 +16,15 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.messages;
+package com.exactprosystems.clearth.automation.actions.metadata;
 
-import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.automation.exceptions.ResultException;
 
-/**
- * Interface for classes that send string messages
- * @author vladimir.panarin
- */
-public interface StringMessageSender
+public interface MetaFieldsGetter
 {
-	/**
-	 * Sends given message. Can return some text as outcome
-	 * @param message to send
-	 * @return sending outcome, if present
-	 * @throws IOException if message cannot be sent due to I/O error
-	 * @throws ConnectivityException if connection to message destination is broken
-	 */
-	public String sendMessage(String message) throws IOException, ConnectivityException;
+	Set<String> getFields(Map<String, String> inputParams);
+	void checkFields(Set<String> metaFields, Map<String, String> inputParams) throws ResultException;
 }

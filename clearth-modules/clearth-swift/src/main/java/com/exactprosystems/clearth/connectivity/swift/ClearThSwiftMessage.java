@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.connectivity.swift;
 
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -43,7 +44,7 @@ public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 		this.metaData = initMetaData(tags);
 	}
 	
-	public ClearThSwiftMessage(LinkedHashMap<String, String> map, List<ClearThSwiftMessage> subMessages)
+	public ClearThSwiftMessage(LinkedHashMap<String, String> map, List<ClearThSwiftMessage> subMessages, ClearThMessageMetadata metadata)
 	{
 		this.tags = new LinkedHashMap<String, String>(map);
 		if (subMessages!=null)
@@ -52,10 +53,11 @@ public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 				addSubMessage(subMsg);
 		}
 		this.metaData = initMetaData(tags);
+		setMetadata(metadata);
 	}
 
 	public ClearThSwiftMessage(LinkedHashMap<String, String> map, List<ClearThSwiftMessage> subMessages, 
-			SwiftMetaData smd)
+			SwiftMetaData smd, ClearThMessageMetadata metadata)
 	{
 		this.tags = new LinkedHashMap<String, String>(map);
 		if (subMessages!=null)
@@ -66,6 +68,7 @@ public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 		this.metaData = smd != null ?
 				smd :
 				initMetaData(tags);
+		setMetadata(metadata);
 	}
 
 	protected SwiftMetaData initMetaData(Map<String, String> tags)
@@ -160,7 +163,7 @@ public class ClearThSwiftMessage extends ClearThMessage<ClearThSwiftMessage>
 		else
 			newSubMsgs = null;
 		
-		return new ClearThSwiftMessage(newTags, newSubMsgs, new SwiftMetaData(metaData));
+		return new ClearThSwiftMessage(newTags, newSubMsgs, new SwiftMetaData(metaData), getMetadata());
 	}
 	
 	

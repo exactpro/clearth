@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -87,7 +87,7 @@ public class MessageComparatorTest extends ReceiveMessageAction<SimpleClearThMes
     }
 
     @Override
-    public MessageBuilder<SimpleClearThMessage> getMessageBuilder(Set<String> serviceParameters) {
+    public MessageBuilder<SimpleClearThMessage> getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields) {
         return null;
     }
 
