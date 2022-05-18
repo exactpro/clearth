@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
@@ -41,22 +43,21 @@ public class MessageBuilderTest
 			FIELD = "Field",
 			FIELD_VALUE = "Value123",
 			CON1 = "Con1";
-	
+
 	@BeforeClass
 	public void init()
 	{
 		Set<String> serviceParams = new HashSet<>(Arrays.asList(MessageAction.CONNECTIONNAME, MessageAction.META_FIELDS)),
 				metaFields = new HashSet<>(Arrays.asList(META_FIELD));
 		builder = new SimpleClearThMessageBuilder(serviceParams, metaFields);
-		
+
 		inputParams = new HashMap<>();
 		inputParams.put(MessageAction.CONNECTIONNAME, CON1);
 		inputParams.put(MessageAction.META_FIELDS, META_FIELD);
 		inputParams.put(FIELD, FIELD_VALUE);
 		inputParams.put(META_FIELD, META_FIELD_VALUE);
 	}
-	
-	
+
 	@Test(description = "Only non-service and non-meta fields are added to message")
 	public void fieldsAdded()
 	{
@@ -88,7 +89,7 @@ public class MessageBuilderTest
 	public void metaAdded()
 	{
 		ClearThMessage<?> message = builder.metaFields(inputParams).build();
-		
+
 		SoftAssert soft = new SoftAssert();
 		soft.assertEquals(message.getMetaField(META_FIELD), META_FIELD_VALUE, "meta field");
 		soft.assertNull(message.getMetaField(MessageAction.CONNECTIONNAME), "service paramter");
@@ -109,5 +110,19 @@ public class MessageBuilderTest
 		soft.assertNull(message.getMetaField(MessageAction.CONNECTIONNAME));
 		soft.assertNull(message.getMetaField(FIELD));
 		soft.assertAll();
+	}
+
+	@Test
+	public void testIfBuilderAffectMessage()
+	{
+		ClearThMessage<?> message = builder
+				.field("field1", "value1")
+				.field("field2", "value2")
+				.field("field3", "value3")
+				.build();
+
+		builder.field("field100", "value100");
+
+		Assert.assertEquals(message.getField("field100"), null);
 	}
 }

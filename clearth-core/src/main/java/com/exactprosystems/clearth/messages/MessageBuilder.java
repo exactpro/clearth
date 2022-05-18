@@ -99,6 +99,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	 */
 	public MessageBuilder<M> type(String type)
 	{
+		checkAndInit();
 		message.removeField(ClearThMessage.SUBMSGTYPE);
 		message.addField(ClearThMessage.MSGTYPE, type);
 		return this;
@@ -110,12 +111,14 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	 */
 	public MessageBuilder<M> subMessageType(String subMessageType)
 	{
+		checkAndInit();
 		message.removeField(ClearThMessage.MSGTYPE);
 		return field(ClearThMessage.SUBMSGTYPE, subMessageType);
 	}
 	
 	public MessageBuilder<M> field(String name, String value)
 	{
+		checkAndInit();
 		if (isServiceParameter(name) || isMetaField(name))
 			return this;
 		
@@ -134,6 +137,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	
 	public MessageBuilder<M> metaField(String name, String value)
 	{
+		checkAndInit();
 		if (!isMetaField(name))
 			return this;
 		
@@ -143,6 +147,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	
 	public MessageBuilder<M> metaFields(Map<String, String> fields)
 	{
+		checkAndInit();
 		if (CollectionUtils.isEmpty(metaFields))
 			return this;
 		
@@ -158,12 +163,14 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	
 	public MessageBuilder<M> rg(M rg)
 	{
+		checkAndInit();
 		message.addSubMessage(rg);
 		return this;
 	}
 	
 	public MessageBuilder<M> rgs(List<M> rgs)
 	{
+		checkAndInit();
 		message.getSubMessages().addAll(rgs);
 		return this;
 	}
@@ -215,10 +222,9 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 	public M build()
 	{
 		M result = message;
-		message = createMessage();
+		message = null;
 		return result;
 	}
-	
 	
 	protected boolean isServiceParameter(String name)
 	{
@@ -315,5 +321,11 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 		if (skipState)
 			logger.info("Repeating group '{}' skipped", groupId);
 		return skipState;
+	}
+
+	private void checkAndInit()
+	{
+		if(message == null)
+			message = createMessage();
 	}
 }
