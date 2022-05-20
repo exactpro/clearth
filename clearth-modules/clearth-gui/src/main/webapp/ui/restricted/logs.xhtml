@@ -31,14 +31,15 @@
 										 update=":Logs" action="#{logsBean.deselectAllLogs()}"/>
 						<br />
 						<br />
+						<ui:param name="isNoLogsSelected" value="#{logsBean.selectedLogsList.isEmpty()}" />
 						<p:commandButton id="downloadLogs" value="Download" ajax="false"
-										 icon="ui-icon-arrowthickstop-1-s">
+										 icon="ui-icon-arrowthickstop-1-s" disabled="#{isNoLogsSelected}">
 							<p:fileDownload value="#{logsBean.logsZip}" update=":Logs" />
 						</p:commandButton>
 						&#160;
                         <c:if test="${userBean.admin}">
                             <p:commandButton value="Clear" onclick="PF('logsClearingDlg').show();" icon="ui-icon-trash" 
-                            		rendered="#{!logsBean.selectedLogsList.isEmpty()}" />
+                            		disabled="#{isNoLogsSelected}" />
 
                             <p:confirmDialog widgetVar="logsClearingDlg" closeOnEscape="true" modal="true"
                                              width="400"
@@ -81,36 +82,39 @@
 					<p:panelGrid columns="3">
 						<p:selectOneMenu id="currentLogger" value="#{logsBean.currentLogger}"
 										 style="width:300px;" appendTo="@this">
-							<f:selectItem itemLabel="&lt;Choose a logger to manipulate&gt;" itemValue="#{null}" />
+							<f:selectItem itemLabel="&lt;Choose a logger to manipulate&gt;" itemValue="" />
 							<f:selectItems value="#{logsBean.getLoggers(userBean.admin)}" var="lg" itemLabel="#{lg}" itemValue="#{lg}" />
-							<p:ajax event="change" update="LogLevel TestLogger :Growl" process="@this" />
+							<p:ajax event="change" update=":LoggingLevel :Growl" process="@this" />
 						</p:selectOneMenu>
 						<h:outputText id="LogLevel" value="#{logsBean.loggingLevel}" />
 					</p:panelGrid>
 					<br />
-					<h:outputText value="Change logging level: " />
-					<p:commandButton value="Trace"   		actionListener="#{logsBean.setLoggingLevel('TRACE')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Debug"   		actionListener="#{logsBean.setLoggingLevel('DEBUG')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Info"    		actionListener="#{logsBean.setLoggingLevel('INFO')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Warn"    		actionListener="#{logsBean.setLoggingLevel('WARN')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Error"   		actionListener="#{logsBean.setLoggingLevel('ERROR')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="No logging"     actionListener="#{logsBean.setLoggingLevel('OFF')}"   update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton id="TestLogger" value="Test logger" actionListener="#{logsBean.testLogging}" update="LogLevel"
-									 style="margin-left:20px;" disabled="#{logsBean.currentLogger == 'None'}" />
-					<br />
-					<br />
-					<br />
+					<p:outputPanel id="ChangingLevelPanel">
+						<ui:param name="isCurrentLoggerEmpty" value="#{logsBean.currentLogger.isEmpty()}"/>
+						<h:outputText value="Change logging level: " />
+						<p:commandButton value="Trace"   		actionListener="#{logsBean.setLoggingLevel('TRACE')}" update=":LoggingLevel :Growl" disabled="#{isCurrentLoggerEmpty}" />
+						<p:commandButton value="Debug"   		actionListener="#{logsBean.setLoggingLevel('DEBUG')}" update=":LoggingLevel :Growl" disabled="#{isCurrentLoggerEmpty}" />
+						<p:commandButton value="Info"    		actionListener="#{logsBean.setLoggingLevel('INFO')}"  update=":LoggingLevel :Growl" disabled="#{isCurrentLoggerEmpty}" />
+						<p:commandButton value="Warn"    		actionListener="#{logsBean.setLoggingLevel('WARN')}"  update=":LoggingLevel :Growl" disabled="#{isCurrentLoggerEmpty}" />
+						<p:commandButton value="Error"   		actionListener="#{logsBean.setLoggingLevel('ERROR')}" update=":LoggingLevel :Growl" disabled="#{isCurrentLoggerEmpty}" />
+						<p:commandButton value="No logging"     actionListener="#{logsBean.setLoggingLevel('OFF')}"   update=":LoggingLevel :Growl" disabled="#{isCurrentLoggerEmpty}" />
+						<p:commandButton id="TestLogger" value="Test logger" actionListener="#{logsBean.testLogging}" update="LogLevel" disabled="#{isCurrentLoggerEmpty}"
+										 style="margin-left:20px;" />
+						<br />
+						<br />
+						<br />
+					</p:outputPanel>
 					<h:outputText value="Current logging level for all loggers: " />
 					<h:outputText id="AllLogLevel" value="#{logsBean.allLoggingLevel}" />
 					<br />
 					<br />
 					<h:outputText value="Change logging level for all loggers: " />
-					<p:commandButton value="Trace"   		actionListener="#{logsBean.setAllLoggingLevels('TRACE')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Debug"   		actionListener="#{logsBean.setAllLoggingLevels('DEBUG')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Info"    		actionListener="#{logsBean.setAllLoggingLevels('INFO')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Warn"    		actionListener="#{logsBean.setAllLoggingLevels('WARN')}"  update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="Error"   		actionListener="#{logsBean.setAllLoggingLevels('ERROR')}" update="LogLevel AllLogLevel :LoggingLevel :Growl" />
-					<p:commandButton value="No logging"     actionListener="#{logsBean.setAllLoggingLevels('OFF')}"   update="LogLevel AllLogLevel :LoggingLevel :Growl" />
+					<p:commandButton value="Trace"   		actionListener="#{logsBean.setAllLoggingLevels('TRACE')}" update=":LoggingLevel :Growl" />
+					<p:commandButton value="Debug"   		actionListener="#{logsBean.setAllLoggingLevels('DEBUG')}" update=":LoggingLevel :Growl" />
+					<p:commandButton value="Info"    		actionListener="#{logsBean.setAllLoggingLevels('INFO')}"  update=":LoggingLevel :Growl" />
+					<p:commandButton value="Warn"    		actionListener="#{logsBean.setAllLoggingLevels('WARN')}"  update=":LoggingLevel :Growl" />
+					<p:commandButton value="Error"   		actionListener="#{logsBean.setAllLoggingLevels('ERROR')}" update=":LoggingLevel :Growl" />
+					<p:commandButton value="No logging"     actionListener="#{logsBean.setAllLoggingLevels('OFF')}"   update=":LoggingLevel :Growl" />
 					<br />
 					<br />
 					<br />

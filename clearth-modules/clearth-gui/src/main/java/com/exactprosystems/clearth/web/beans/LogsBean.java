@@ -52,11 +52,10 @@ import org.primefaces.model.StreamedContent;
 public class LogsBean extends ClearThBean
 {
 	private static final String USER_LOG = "User activity log";
-	
 	private final File logsDir, outputDir;
-	private List<String> selectedLogsList = new ArrayList<String>();
+	private List<String> selectedLogsList = new ArrayList<>();
 	
-	private String currentLogger = null;
+	private String currentLogger = "";
 	private final Map<String, Logger[]> loggers;
 
 	private Set<String> keysForAdmin;
@@ -102,7 +101,6 @@ public class LogsBean extends ClearThBean
 
 		return result;
 	}
-
 	
 	public List<String> getSelectedLogsList()
 	{
@@ -137,7 +135,7 @@ public class LogsBean extends ClearThBean
 			if (!outputDir.exists())
 				outputDir.mkdir();
 			
-			List<File> filesToZip = new ArrayList<File>();
+			List<File> filesToZip = new ArrayList<>();
 			for (String logName : selectedLogsList)
 				filesToZip.add(new File(logsDir, logName));
 			File result = new File(outputDir, UserInfoUtils.getUserName()+"_logs.zip");
@@ -226,7 +224,7 @@ public class LogsBean extends ClearThBean
 	
 	protected Map<String, Logger[]> buildLoggersInfo(Map<String, String> definitions, String pathOfConfig)
 	{
-		Map<String, Logger[]> result = new LinkedHashMap<String, Logger[]>();
+		Map<String, Logger[]> result = new LinkedHashMap<>();
 		for (Entry<String, String> entry : definitions.entrySet())
 		{
 			List<Logger> loggerObjects = getLoggersForPackages(entry.getKey(), entry.getValue(), pathOfConfig);
@@ -258,12 +256,13 @@ public class LogsBean extends ClearThBean
 	
 	public String getCurrentLogger()
 	{
-		return currentLogger == null ? "None" : currentLogger;
+		return currentLogger;
 	}
 
 	public void setCurrentLogger(String currentLogger)
 	{
-		if (USER_LOG.equals(currentLogger) && !UserInfoUtils.isAdmin()) {
+		if (USER_LOG.equals(currentLogger) && !UserInfoUtils.isAdmin())
+		{
 			MessageUtils.addErrorMessage("Denied", "You don't have sufficient permissions to change this logger. This incident will be reported.");
 			return;
 		}
@@ -283,10 +282,11 @@ public class LogsBean extends ClearThBean
 	{
 		int count = 0;
 		String lvl = "no loggers";
-		for (String key : loggers.keySet()) {
-			if (count == 0) {
+		for (String key : loggers.keySet())
+		{
+			if (count == 0)
 				lvl = loggers.get(key)[0].getLevel().toString();
-			}
+
 			if (!loggers.get(key)[0].getLevel().toString().equals(lvl))
 				return "various levels";
 			count++;
@@ -296,11 +296,6 @@ public class LogsBean extends ClearThBean
 	
 	public void setLoggingLevel(String lvl)
 	{
-		if (currentLogger == null) {
-			MessageUtils.addWarningMessage("No logger selected", "Choose logger before setting logger level");
-			return;
-		}
-		
 		Level level = Level.toLevel(lvl);
 		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
 		Configuration config = ctx.getConfiguration();
@@ -317,13 +312,13 @@ public class LogsBean extends ClearThBean
 	public void setAllLoggingLevels(String lvl)
 	{
 		Set<String> loggerKeys;
-		if (UserInfoUtils.isAdmin()) {
+
+		if (UserInfoUtils.isAdmin())
 			loggerKeys = this.keysForAdmin;
-		} else if (UserInfoUtils.isPowerUser()) {
+		else if (UserInfoUtils.isPowerUser())
 			loggerKeys = this.keysForPowerUser;
-		} else {
+		else
 			loggerKeys = Collections.emptySet();
-		}
 		
 		Level level = Level.toLevel(lvl);
 		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
@@ -350,7 +345,7 @@ public class LogsBean extends ClearThBean
 	public void testLogging()
 	{
 		Logger[] selectedLoggers;
-		if (currentLogger == null || (selectedLoggers = loggers.get(currentLogger)) == null)
+		if (StringUtils.isEmpty(currentLogger) || (selectedLoggers = loggers.get(currentLogger)) == null)
 			return;
 		
 		for (Logger loggerObject : selectedLoggers)
