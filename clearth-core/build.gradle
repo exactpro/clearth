@@ -94,3 +94,7 @@ publishing {
 		}
 	}
 }
+
+artifactoryPublish {
+	publications(publishing.publications.core)
+}

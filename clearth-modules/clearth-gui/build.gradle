@@ -39,3 +39,7 @@ publishing {
 		}
 	}
 }
+
+artifactoryPublish {
+	publications(publishing.publications.gui)
+}

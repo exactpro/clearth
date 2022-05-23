@@ -50,3 +50,7 @@ publishing {
 		}
 	}
 }
+
+artifactoryPublish {
+	publications(publishing.publications.swift)
+}

@@ -9,3 +9,7 @@ publishing {
 		}
 	}
 }
+
+artifactoryPublish {
+	publications(publishing.publications.style)
+}
