@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,7 +45,7 @@ public class DefaultMQClient extends MQClient
 	@Override
 	protected ValueGenerator getValueGenerator()
 	{
-		return valueGenerators().getGenerator("lastgenerated_"+this.name+".txt", "");
+		return valueGenerators().getGenerator("lastgenerated_"+this.name+".txt");
 	}
 
 	@Override

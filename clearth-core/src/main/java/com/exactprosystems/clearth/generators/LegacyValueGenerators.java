@@ -16,51 +16,28 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth;
+package com.exactprosystems.clearth.generators;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.io.FilenameUtils;
 
-public abstract class ValueGenerators
+import com.exactprosystems.clearth.ValueGenerator;
+import com.exactprosystems.clearth.ValueGenerators;
+
+@Deprecated
+public class LegacyValueGenerators extends ValueGenerators
 {
-	protected final ValueGenerator commonGenerator;
-	protected final Map<String, ValueGenerator> generators = new ConcurrentHashMap<>();
-	
-	public ValueGenerators()
+	@Override
+	protected ValueGenerator createGenerator(String id)
 	{
-		this.commonGenerator = createCommonGenerator();
+		LegacyValueGenerator cg = (LegacyValueGenerator)getCommonGenerator();
+		String oldFileName = cg.getLastGenFileName();
+		String newId = String.format("%s_%s.%s", FilenameUtils.getBaseName(oldFileName), id, FilenameUtils.getExtension(oldFileName));
+		return new LegacyValueGenerator(newId, "");
 	}
 	
-	
-	protected abstract ValueGenerator createGenerator(String id);
-	
-	
-	public ValueGenerator getCommonGenerator()
-	{
-		return commonGenerator;
-	}
-	
-	public ValueGenerator getGenerator(String id)
-	{
-		ValueGenerator result = generators.get(id);
-		if (result != null)
-			return result;
-		
-		synchronized (generators)
-		{
-			result = generators.get(id);
-			if (result != null)
-				return result;
-			
-			result = createGenerator(id);
-			generators.put(id, result);
-			return result;
-		}
-	}
-	
-	
+	@Override
 	protected ValueGenerator createCommonGenerator()
 	{
-		return createGenerator(null);
+		return new LegacyValueGenerator("lastgen.txt", "");
 	}
 }

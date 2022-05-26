@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,6 +23,8 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.ValueGenerator;
 import com.exactprosystems.clearth.ValueGenerators;
 import com.exactprosystems.clearth.automation.exceptions.FunctionException;
+import com.exactprosystems.clearth.generators.LegacyValueGenerator;
+import com.exactprosystems.clearth.generators.LegacyValueGenerators;
 import com.exactprosystems.clearth.utils.ObjectWrapper;
 import com.exactprosystems.clearth.utils.javaFunction.FunctionWithException;
 import org.apache.commons.io.FileUtils;
@@ -99,7 +101,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	{
 		prepareFilesForValueGenerators();
 		ValueGenerator valueGenerator =
-				new ValueGenerator(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.resolve(DEFAULT_GENERATOR_FILE).toString(),
+				new LegacyValueGenerator(MATRIX_FUNCTIONS_TEST_OUTPUT_DIR.resolve(DEFAULT_GENERATOR_FILE).toString(),
 						"default");
 
 		Map<String, Boolean> holidays = new HashMap<>();
@@ -162,7 +164,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	@Override
 	protected void mockOtherApplicationFields(ClearThCore application)
 	{
-		ValueGenerators valueGenerators = new ValueGenerators();
+		ValueGenerators valueGenerators = new LegacyValueGenerators();
 		when(application.getValueGenerators()).thenReturn(valueGenerators);
 	}
 

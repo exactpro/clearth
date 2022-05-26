@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.BasicTestNgTest;
 import com.exactprosystems.clearth.ValueGenerator;
+
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 

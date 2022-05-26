@@ -30,6 +30,7 @@ import com.exactprosystems.clearth.connectivity.connections.*;
 import com.exactprosystems.clearth.connectivity.iface.DefaultCodecFactory;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
+import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
 import com.exactprosystems.clearth.tools.ToolsManager;
 import com.exactprosystems.clearth.utils.sql.ClearThDbConnection;
 import com.exactprosystems.clearth.tools.ToolsFactory;
@@ -403,7 +404,7 @@ public abstract class ClearThCore
 	
 	protected ValueGenerators createValueGenerators()
 	{
-		return new ValueGenerators();
+		return new IncrementingValueGenerators();
 	}
 	
 	protected ExecutorFactory createExecutorFactory(ValueGenerators valueGenerators)

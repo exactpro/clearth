@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -37,7 +37,8 @@ public abstract class MatrixFunctionsFactory<T extends MatrixFunctions> {
 		{
 			Constructor<T> constructor = functions.getConstructor(Map.class, Date.class, Date.class, boolean.class, ValueGenerator.class);
 			return constructor.newInstance(holidays, businessDay, baseTime, weekendHoliday, valueGenerator);
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			throw new RuntimeException("Cannot create Matrix Functions", e);
 		}

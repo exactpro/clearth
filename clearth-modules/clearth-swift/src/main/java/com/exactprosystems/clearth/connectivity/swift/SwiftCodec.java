@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,7 +36,6 @@ import com.prowidesoftware.swift.model.SwiftBlock4;
 import com.prowidesoftware.swift.model.SwiftBlock5;
 import com.prowidesoftware.swift.model.SwiftMessage;
 import com.prowidesoftware.swift.model.Tag;
-import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,12 +56,6 @@ import java.util.regex.Pattern;
 import static com.exactprosystems.clearth.connectivity.Dictionary.MSG_DESC_NOT_FOUND_IN_DICTIONARY;
 import static com.exactprosystems.clearth.connectivity.Dictionary.msgDescDoesNotFitError;
 import static com.exactprosystems.clearth.utils.Utils.EOL;
-
-/**
- * 
- * @author vladimir.panarin
- * 
- */
 
 public class SwiftCodec implements ICodec
 {

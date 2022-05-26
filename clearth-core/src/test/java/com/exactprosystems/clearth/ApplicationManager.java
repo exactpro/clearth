@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,7 @@ package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import org.apache.commons.io.FileUtils;
@@ -234,7 +235,7 @@ public class ApplicationManager
 		when(core.getAdditionalTemplateParams()).thenReturn(null);
 		when(core.isUserSchedulersAllowed()).thenReturn(false);
 		when(core.getLogger()).thenReturn(coreLogger);
-		when(core.getValueGenerators()).thenReturn(new ValueGenerators());
+		when(core.getValueGenerators()).thenReturn(new IncrementingValueGenerators());
 		when(core.createStepFactory()).thenReturn(createStepFactory());
 		doReturn(createExecutorFactory(core.getValueGenerators().getCommonGenerator()))
 				.when(core).createExecutorFactory(any(ValueGenerators.class));

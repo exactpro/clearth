@@ -16,47 +16,30 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth;
+package com.exactprosystems.clearth.generators;
 
-public abstract class ValueGenerator
+import java.util.concurrent.atomic.AtomicLong;
+
+import com.exactprosystems.clearth.ValueGenerator;
+
+public class IncrementingValueGenerator extends ValueGenerator
 {
-	private volatile String lastGeneratedValue;
+	private final AtomicLong counter;
 	
-	public String generateValue(int length)
+	public IncrementingValueGenerator(long initialValue)
 	{
-		String value = newValue();
-		value = adjustLength(value, length);
-		lastGeneratedValue = value;
-		return value;
+		counter = new AtomicLong(initialValue);
+	}
+	
+	@Override
+	protected String newValue()
+	{
+		return Long.toString(counter.incrementAndGet());
 	}
 	
 	
-	protected abstract String newValue();
-	
-	public String getLastGeneratedValue()
+	public long getCurrentValue()
 	{
-		return lastGeneratedValue;
-	}
-	
-	protected void setLastGeneratedValue(String lastGeneratedValue)
-	{
-		this.lastGeneratedValue = lastGeneratedValue;
-	}
-	
-	
-	private String adjustLength(String value, int length)
-	{
-		int vl = value.length();
-		if (vl == length)
-			return value;
-		
-		if (vl > length)
-			return value.substring(vl-length);
-		
-		StringBuilder sb = new StringBuilder();
-		for (int i = vl; i < length; i++)
-			sb.append("0");
-		sb.append(value);
-		return sb.toString();
+		return counter.get();
 	}
 }

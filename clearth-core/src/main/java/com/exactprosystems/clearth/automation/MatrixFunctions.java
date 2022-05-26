@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,7 +25,6 @@ import com.exactprosystems.clearth.automation.functions.MethodDataModel;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.*;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
@@ -610,16 +609,13 @@ public class MatrixFunctions
 		ValueGenerator valueGenerator = valueGenerators.get(generatorId);
 		if (valueGenerator == null)
 		{
-			ValueGenerator defaultGenerator = valueGenerators.get(DEFAULT_VALUE_GENERATOR);
-			String oldFileName = defaultGenerator.getLastGenFileName(),
-					newFileName = String.format("%s_%s.%s", FilenameUtils.getBaseName(oldFileName), generatorId, FilenameUtils.getExtension(oldFileName));
-			valueGenerator = valueGenerators().getGenerator(newFileName, defaultGenerator.getGeneratorPrefix());
+			valueGenerator = valueGenerators().getGenerator(generatorId);
 			valueGenerators.put(generatorId, valueGenerator);
 		}
-
+		
 		if (pattern.isEmpty())
 			return "";
-
+		
 		StringBuilder result = new StringBuilder();
 		int len = 0;
 		for (int i = 0; i < pattern.length(); i++)
