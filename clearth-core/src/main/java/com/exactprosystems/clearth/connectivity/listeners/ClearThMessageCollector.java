@@ -39,10 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +56,8 @@ import java.util.concurrent.atomic.AtomicLong;
 		+ "<li><b>maxAge=&lt;value&gt;</b> &mdash; hours after which a message will be removed from collector.</li>"
 		+ "<li><b>failedMaxAge=&lt;value&gt;</b> &mdash; hours after which a message will be removed from failed-to-parse messages. Default value is '6'.</li>"
 		+ "<li><b>storeFailed=&lt;true/false&gt;</b> &mdash; indicates if failed-to-parse messages should be stored in collector for further analysis. <br/>Please note that they occupy memory if stored. Default value is 'true'.</li>"
+		+ "<li><b>allowedTypes=&lt;type&gt;</b> &mdash; If it exists messages of other types are ignored. Separate allowed types with comma (,).</li>"
+		+ "<li><b>forbiddenTypes=&lt;type&gt;</b> &mdash; If it exists messages of specified types are ignored. Separate forbidden types with comma (,).</li>"
 		+ "</ul>" + "All settings are optional.")
 public class ClearThMessageCollector extends ReceiveListener
 {
@@ -73,7 +72,11 @@ public class ClearThMessageCollector extends ReceiveListener
 	public static final String STORE_RECEIVING_TIMESTAMP_SETTING = "storetimestamp";
 	public static final String MESSAGE = "Message";
 	public static final String DEFAULT_MESSAGE_END_INDICATOR = Utils.EOL + Utils.EOL;
+	public static final String ALLOWED_TYPES = "allowedtypes";
+	public static final String FORBIDDEN_TYPES = "forbiddentypes";
 	private static final String STORE_THREAD_NAME = "FileContentStorage";
+
+	private static final String DELIMITER = ",";
 
 	private static final int DEBUG_LOG_MSG_SIZE_LIMIT = 1024; //1 KB
 	private static final double DEFAULT_MAX_AGE = -1;
@@ -90,6 +93,9 @@ public class ClearThMessageCollector extends ReceiveListener
 	protected ContentStorage<ReceivedClearThMessage, ReceivedStringMessage> contentStorage;
 	private final boolean storeFailedMessages;
 	private final boolean storeTimestamp;
+
+	private Set<String> filteredTypes;
+	private boolean filterForAllowedTypes = true;
 
 	private final ScheduledExecutorService collectorCleaner;
 	private final double maxAgeDouble;
@@ -114,7 +120,7 @@ public class ClearThMessageCollector extends ReceiveListener
 		storeFailedMessages = handler.getBoolean(STOREFAILEDMESSAGES_SETTING, true);
 		storeTimestamp = handler.getBoolean(STORE_RECEIVING_TIMESTAMP_SETTING, false);
 
-		String	maxAge = handler.getString(MAXAGE_SETTING),
+		String maxAge = handler.getString(MAXAGE_SETTING),
 				failedMaxAge = handler.getString(FAILEDMAXAGE_SETTING);
 
 		if (maxAge != null)
@@ -138,7 +144,10 @@ public class ClearThMessageCollector extends ReceiveListener
 		{
 			failedMaxAgeDouble = DEFAULT_FAILED_MAX_AGE;
 		}
-		
+
+		Set<String> allowedTypes = handler.getSet(ALLOWED_TYPES, DELIMITER);
+		Set<String> forbiddenTypes = handler.getSet(FORBIDDEN_TYPES, DELIMITER);
+		processFilteredTypes(allowedTypes, forbiddenTypes);
 
 		try
 		{
@@ -191,6 +200,13 @@ public class ClearThMessageCollector extends ReceiveListener
 					cthMessage = codec.decode(message);
 				}
 			}
+
+			if (!validateType(cthMessage.getField(ClearThMessage.MSGTYPE)))
+			{
+				getLogger().trace("Skipped message: " + cthMessage);
+				return;
+			}
+
 
 			getLogger().trace("Adding message: {}, \r\ntimestamp: {}", cthMessage, time);
 			ReceivedClearThMessage receivedMessage = new ReceivedClearThMessage(id, time, cthMessage);
@@ -519,5 +535,30 @@ public class ClearThMessageCollector extends ReceiveListener
 	{
 		if (contentStorage instanceof WritingContentStorage)
 			((WritingContentStorage<?,?>) contentStorage).setWriteBeforeDispose(writeBeforeDispose);
+	}
+
+	private void processFilteredTypes(Set<String> allowedTypes, Set<String> forbiddenTypes)
+		throws SettingsException
+	{
+		if (!allowedTypes.isEmpty() && !forbiddenTypes.isEmpty())
+			throw new SettingsException("Error in Collector settings: " + ALLOWED_TYPES + " and " + FORBIDDEN_TYPES + " cannot be used together");
+		else if (!forbiddenTypes.isEmpty())
+		{
+			filteredTypes = forbiddenTypes;
+			filterForAllowedTypes = false;
+		}
+		else
+			filteredTypes = allowedTypes;
+	}
+
+	private boolean validateType(String messageType)
+	{
+		if(filteredTypes.isEmpty())
+			return true;
+
+		if (filterForAllowedTypes && !filteredTypes.contains(messageType))
+			return false;
+
+		return filterForAllowedTypes || !filteredTypes.contains(messageType);
 	}
 }
