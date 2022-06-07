@@ -737,6 +737,20 @@ public class MatrixFunctions
 	@MethodDataModel(
 			group = "Math",
 			args = "Number a, Number b",
+			description = "Returns a random number from given range",
+			usage = "random(10, 500)"
+	)
+	public Number random(Object a, Object b)
+	{
+		int min = toNumber(a).intValue();
+		int max = toNumber(b).intValue();
+
+		return (new Random().nextInt(max-min+1)+min);
+	}
+
+	@MethodDataModel(
+			group = "Math",
+			args = "Number a, Number b",
 			description = "Returns the greater of two given numbers.",
 			usage = "max(1, 2)"
 	)

@@ -793,6 +793,12 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 
+	@Test(expectedExceptions = IllegalArgumentException.class)
+	public void checkIfMinGreaterThanMax()
+	{
+		funWithHolidaysWithWeekends.random(1,0);
+	}
+
 	@DataProvider(name = "value-generator")
 	public Object[][] createDataForIdGenerator()
 	{
@@ -1666,6 +1672,9 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		return new Object[][]
 				{
 						// Expression, param name, mvelVars, fixed IDs, current action, expected result
+						{"@{random(5, 5)}", null, mvelVars, fixedIDs, null, 5},
+						{"@{random(500.0, 500)}", null, mvelVars, fixedIDs, null, 500},
+						{"@{random(1.0, 1.0)}", null, mvelVars, fixedIDs, null, 1},
 						{"@{123.param1}", null, mvelVars, fixedIDs, null, "1"},
 						{"@{234.param2}", null, mvelVars, fixedIDs, null, "2"},
 						{"@{345.param5}", null, mvelVars, fixedIDs, null, "5"},
