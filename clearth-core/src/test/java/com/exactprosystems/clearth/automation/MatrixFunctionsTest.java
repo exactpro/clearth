@@ -767,6 +767,32 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		assertEquals(actualResult, expectedRoundDownResult);
 	}
 
+	@DataProvider(name = "append-prepend")
+	public Object[][] createDataForAppendPrependFunc()
+	{
+		return new Object[][]
+				{
+						// String value, String character, int length, String appendResult, String prependResult
+						{"123456", 'X', 10, "123456XXXX", "XXXX123456"},
+						{"123456", 'X', 1, "123456", "123456"},
+				};
+	}
+
+	@Test(dataProvider = "append-prepend")
+	public void checkAppend(String value, char character, int length, String expectedResult, String prepend)
+	{
+		String actualResult = funWithHolidaysWithWeekends.append(value, character, length);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@Test(dataProvider = "append-prepend")
+	public void checkPrepend(String value, char character, int length, String append, String expectedResult)
+	{
+		String actualResult = funWithHolidaysWithWeekends.prepend(value, character, length);
+		assertEquals(actualResult, expectedResult);
+	}
+
+
 	@DataProvider(name = "value-generator")
 	public Object[][] createDataForIdGenerator()
 	{
@@ -1695,6 +1721,10 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 								null, mvelVars, null, null, "112000"},
 						{"@{date8(endOfMonth(timeIncludingHolidays(1591862233915L, 25)))}",
 								null, mvelVars, null, null, "20200731"},
+						{"@{append('123456', 'X', 10)}", null, mvelVars, fixedIDs, null, "123456XXXX"},
+						{"@{prepend('123456', 'X', 10)}", null, mvelVars, fixedIDs, null, "XXXX123456"},
+						{"@{append('123456', 'x', 3)}", null, mvelVars, fixedIDs, null, "123456"},
+						{"@{prepend('123456', 'x', 3)}", null, mvelVars, fixedIDs, null, "123456"},
 				};
 	}
 

@@ -638,6 +638,29 @@ public class MatrixFunctions
 		return result.toString();
 	}
 
+	@MethodDataModel(
+			group = "String",
+			args = "String value, char character, int length",
+			description = "Returns given value appended with specified character till needed length",
+			usage = "append('12345', 'X', 10)"
+	)
+	public String append(String value, char character, int length)
+	{
+		return value + StringUtils.repeat(Character.toString(character), length-value.length());
+	}
+
+	@MethodDataModel(
+			group = "String",
+			args = "String value, char character, int length",
+			description = "Returns given value prepended with specified character till needed length",
+			usage = "prepend('12345', 'X', 10)"
+	)
+	public String prepend(String value, char character, int length)
+	{
+		return StringUtils.repeat(Character.toString(character), length-value.length()) + value;
+	}
+
+
 	public String addZeros(String value)
 	{
 		return addZeros(value, 0, ".");
