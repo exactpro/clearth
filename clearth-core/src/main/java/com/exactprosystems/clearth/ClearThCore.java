@@ -285,11 +285,11 @@ public abstract class ClearThCore
 			prepareRealTimeReport();
 
 			googleMatricesConfiguration = loadGoogleSpreadsheetMatricesConfig();
-			
-			initOtherEntities(otherEntities);  //Point of extension with project-specific objects
-			initConnectionStorage();
+
 			initSchedulersManager();
+			initConnectionStorage();
 			initFavoriteConnectionManager();
+			initOtherEntities(otherEntities);  //Point of extension with project-specific objects
 			initFinish(depConfig);
 		}
 		catch (Throwable e)
