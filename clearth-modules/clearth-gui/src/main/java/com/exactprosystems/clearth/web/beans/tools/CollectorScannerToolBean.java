@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,12 +22,23 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.CollectorMessage;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.tools.CollectorScannerTool;
+import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
+import com.exactprosystems.clearth.web.misc.WebUtils;
+import org.apache.commons.lang.StringUtils;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.event.AjaxBehaviorEvent;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,7 +47,11 @@ import java.util.List;
  */
 public class CollectorScannerToolBean extends ClearThBean
 {
-	protected static final List<String> noCollector = new ArrayList<String>();
+	private static final String ELLIPSIS = "...";
+	private static final int MAX_MSG_LENGTH = 100000, // 100 kB
+							 MAX_LENGTH = MAX_MSG_LENGTH + ELLIPSIS.length();
+
+	protected static final List<String> noCollector = new ArrayList<>();
 	protected static final List<CollectorMessage> noMessages;
 	protected List<CollectorMessage> correctMessages = null, failedMessages = null;
 	protected ClearThMessageConnection<?, ?> selectedConnection;
@@ -131,6 +146,53 @@ public class CollectorScannerToolBean extends ClearThBean
 		return correctMessages;
 	}
 
+	public String processMessage(String  message)
+	{
+		if (message.length() > MAX_LENGTH)
+			return message.substring(0, MAX_MSG_LENGTH) + ELLIPSIS;
+		return message;
+	}
+
+	public StreamedContent downloadParsedMessages()
+	{
+		return downloadMessages(false, getCollectorMessages(), "parsed");
+	}
+	public StreamedContent downloadFailedMessages()
+	{
+		return downloadMessages(true, getCollectorMessagesFailed(), "failed");
+	}
+	public StreamedContent downloadRawMessages()
+	{
+		return downloadMessages(true, getCollectorMessages(), "raw");
+	}
+	public StreamedContent downloadMessages(boolean raw, Collection<CollectorMessage> messages, String prefix)
+	{
+		String conName = getSelectedConnection();
+		if(StringUtils.isEmpty(conName))
+			return null;
+
+		try
+		{
+			Path path = Paths.get(ClearThCore.getInstance().getTempDirPath());
+			
+			File result = Files.createTempFile(path, prefix + "_messages_", ".zip").toFile();
+			File file = Files.createTempFile(path, conName+"_", ".txt").toFile();
+			
+			writeMessages(raw, messages, file);
+			
+			FileOperationUtils.zipFiles(result, new File[]{file});
+			
+			return new DefaultStreamedContent(new FileInputStream(result),
+											  new MimetypesFileTypeMap().getContentType(result),
+											  result.getName());
+		}
+		catch (IOException e)
+		{
+			WebUtils.logAndGrowlException("Error while downloading messages", e, getLogger());
+			return null;
+		}
+	}
+
 	public List<CollectorMessage> getCollectorMessagesFailed()
 	{
 		return failedMessages;
@@ -172,5 +234,19 @@ public class CollectorScannerToolBean extends ClearThBean
 	public void setCollectorScannerMessagesTab(int collectorScannerMessagesTab)
 	{
 		this.collectorScannerMessagesTab = collectorScannerMessagesTab;
+	}
+
+	private void writeMessages(boolean raw, Collection<CollectorMessage> messages, File file)
+		throws IOException
+	{
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file)))
+		{
+			for(CollectorMessage message : messages)
+			{
+				writer.write(raw ? message.getMessage() : message.getParsedMessage());
+				writer.newLine();
+				writer.newLine();
+			}
+		}
 	}
 }

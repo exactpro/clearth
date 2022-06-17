@@ -254,10 +254,15 @@
 						<h:outputText value="Vertical flow" />
 					</h:panelGrid>
 					<p:selectOneButton id="cmsButtons" value="#{collectorScannerToolBean.collectorScannerMessagesTab}">
-						<p:ajax listener="#{collectorScannerToolBean.loadMessages}" update="csm cmsButtons"/>
+						<p:ajax listener="#{collectorScannerToolBean.loadMessages}" update=":CollectorMessagesForm csm cmsButtons"/>
 						<f:selectItem itemLabel="Correct messages" itemValue="0" />
 						<f:selectItem itemLabel="Failed messages" itemValue="1" itemDisabled="#{collectorScannerToolBean.collectorMessagesFailed==null}"/>
 					</p:selectOneButton>
+					<p:commandButton value="Download messages" ajax="false"
+									 rendered="#{collectorScannerToolBean.collectorScannerMessagesTab==1}"
+									 icon="ui-icon-arrowthickstop-1-s">
+						<p:fileDownload value="#{collectorScannerToolBean.downloadFailedMessages()}"/>
+					</p:commandButton>
 					<br/>
 					<p:outputPanel id="csm" style="margin-top:10px;">
 						<p:outputPanel style="line-height: 120%;" rendered="#{collectorScannerToolBean.collectorScannerMessagesTab==0}">
@@ -266,6 +271,12 @@
 								<f:selectItem itemLabel="Message" itemValue="0" />
 								<f:selectItem itemLabel="Parse" itemValue="1" />
 							</p:selectOneButton>
+							<p:commandButton value="Download messages" ajax="false"
+											 icon="ui-icon-arrowthickstop-1-s" disabled="#{collectorScannerToolBean.selectedConnection eq null}">
+								<p:fileDownload value="#{toolsBean.collectorScannerTab==0 ?
+															collectorScannerToolBean.downloadRawMessages() :
+															collectorScannerToolBean.downloadParsedMessages()}"/>
+							</p:commandButton>
 							<br/>
 							<br/>
 							<p:dataGrid id="CollectorMessages" styleClass="fullWidth toBottom" var="msg" value="#{collectorScannerToolBean.collectorMessages}" columns="1" rows="1" paginator="true"
@@ -276,7 +287,10 @@
 								<h:outputText value="#{msg.getTimestamp()}">
 									<f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss.SSS"/>
 								</h:outputText>
-								<p:inputTextarea value="#{toolsBean.collectorScannerTab == 1 ? msg.getParsedMessage() : msg.getMessage()}" autoResize="false" readonly="true" style="resize: none; font-family: Lucida Console, Courier New, monotype; width: 100%; min-height:200px; height: 95%; padding: 0;" />
+								<p:inputTextarea value="#{toolsBean.collectorScannerTab == 1 ?
+															collectorScannerToolBean.processMessage(msg.getParsedMessage()) :
+															collectorScannerToolBean.processMessage(msg.getMessage())}"
+												 autoResize="false" readonly="true" style="resize: none; font-family: Lucida Console, Courier New, monotype; width: 100%; min-height:200px; height: 95%; padding: 0;" />
 							</p:dataGrid>
 						</p:outputPanel>
 						<p:outputPanel style="line-height: 120%;" rendered="#{collectorScannerToolBean.collectorScannerMessagesTab==1}">
@@ -288,7 +302,8 @@
 								<h:outputText value="#{msgFailed.getTimestamp()}">
 									<f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss.SSS"/>
 								</h:outputText>
-								<p:inputTextarea value="#{msgFailed.getMessage()}" autoResize="false" readonly="true" style="resize: none; font-family: Lucida Console, Courier New, monotype; width: 100%; min-height:200px; height: 95%; padding: 0;" />
+								<p:inputTextarea value="#{collectorScannerToolBean.processMessage(msgFailed.getMessage())}"
+												 autoResize="false" readonly="true" style="resize: none; font-family: Lucida Console, Courier New, monotype; width: 100%; min-height:200px; height: 95%; padding: 0;" />
 							</p:dataGrid>
 						</p:outputPanel>
 					</p:outputPanel>
