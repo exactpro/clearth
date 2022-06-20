@@ -44,12 +44,9 @@ public class MatrixProviderHolder
 	{
 		if (LocalMatrixProvider.TYPE.equals(type))
 			return new LocalMatrixProvider(link);
-		if (GoogleSpreadsheetsMatrixProvider.TYPE.equals(type))
-			return new GoogleSpreadsheetsMatrixProvider(link, ClearThCore.getInstance().getGoogleMatricesConfiguration());
 		if (RemoteMatrixProvider.TYPE.equals(type))
 			return new RemoteMatrixProvider(link);
-		else
 		// FIXME: to replace exception type
-			throw new SettingsException("Unknown type of matrix provider: " + type);
+		throw new SettingsException("Unknown type of matrix provider: " + type);
 	}
 }

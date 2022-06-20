@@ -43,7 +43,7 @@ dependencies {
 	compile "com.ibm.mq:com.ibm.mq.allclient:9.2.5.0"
 
 	compile "commons-beanutils:commons-beanutils:1.9.4"
-	compile "commons-codec:commons-codec:1.13"
+	compile "commons-codec:commons-codec:1.15"
 	compile "org.apache.commons:commons-collections4:4.4"
 	compile "org.apache.commons:commons-configuration2:2.7"
 	compile "org.apache.commons:commons-csv:1.5"
@@ -53,7 +53,6 @@ dependencies {
 	compile "commons-lang:commons-lang:2.6"
 	compile "commons-logging:commons-logging:1.2"
 	compile "org.freemarker:freemarker:2.3.30"
-	compile "com.google.apis:google-api-services-drive:v3-rev197-1.25.0"
 	
 	compile "net.sourceforge.javacsv:javacsv:2.0"
 	compile "com.fasterxml.jackson.core:jackson-databind:2.13.2.2"

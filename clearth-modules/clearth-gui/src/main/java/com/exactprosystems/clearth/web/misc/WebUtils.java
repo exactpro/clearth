@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,23 +18,16 @@
 
 package com.exactprosystems.clearth.web.misc;
 
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import java.io.*;
-import java.net.URI;
-import java.nio.charset.Charset;
-import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.context.PrimeFacesContext;
 import org.primefaces.context.RequestContext;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
@@ -42,8 +35,6 @@ import com.exactprosystems.clearth.utils.Utils;
 
 public class WebUtils
 {
-	private static final Logger logger = LoggerFactory.getLogger(WebUtils.class);
-
 	public static String getContext()
 	{
 		String result = FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath();
@@ -95,16 +86,7 @@ public class WebUtils
 	{
 		return new File(ClearThCore.getInstance().getLogsPath());
 	}
-
-	public static String getURLParam(String url, String urlParam) throws Exception {
-		final List<NameValuePair> params = URLEncodedUtils.parse(new URI(url), Charset.forName(Utils.UTF8));
-		for (NameValuePair param : params) {
-			if (param.getName().equals(urlParam))
-				return param.getValue();
-		}
-		throw new Exception("URL '" + url + "' does not contain param '" + urlParam + "'");
-	}
-
+	
 	public static void logAndGrowlException(String message, Exception e, Logger logger) {
 		logger.error(message, e);
 		MessageUtils.addErrorMessage(message, ExceptionUtils.getDetailedMessage(e));

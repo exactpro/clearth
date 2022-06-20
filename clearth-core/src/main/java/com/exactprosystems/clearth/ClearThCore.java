@@ -19,7 +19,6 @@
 package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.automation.*;
-import com.exactprosystems.clearth.automation.matrix.linked.GoogleSpreadsheetsConfiguration;
 import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
 import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoExporter;
 import com.exactprosystems.clearth.automation.schedulerinfo.template.SchedulerInfoTemplatesProcessor;
@@ -86,8 +85,6 @@ public abstract class ClearThCore
 	protected SchedulerInfoExporter schedulerInfoExporter;
 	protected ConnectionsTransmitter connectionsTransmitter;
 	
-	protected GoogleSpreadsheetsConfiguration googleMatricesConfiguration;
-
 	protected ClearThVersion cthVersion;
 
 	protected ComparisonUtils comparisonUtils;
@@ -283,8 +280,6 @@ public abstract class ClearThCore
 			configureReportTemplates(reportTemplatesProcessor);
 			schedulerInfoTemplatesProcessor = createSchedulerInfoTemplatesProcessor();
 			prepareRealTimeReport();
-
-			googleMatricesConfiguration = loadGoogleSpreadsheetMatricesConfig();
 
 			initSchedulersManager();
 			initConnectionStorage();
@@ -571,10 +566,6 @@ public abstract class ClearThCore
 	protected abstract void initOtherEntities(Object... otherEntities) throws Exception;
 	public abstract boolean isUserSchedulersAllowed();
 
-	protected GoogleSpreadsheetsConfiguration loadGoogleSpreadsheetMatricesConfig() throws Exception {
-		return GoogleSpreadsheetsConfiguration.disable();
-	}
-	
 	/*** "Files root" routines for absolute paths ***/
 	
 	public String getFilesRoot()
@@ -964,9 +955,5 @@ public abstract class ClearThCore
 	public String getRepositoryPath()
 	{
 		return "";
-	}
-
-	public GoogleSpreadsheetsConfiguration getGoogleMatricesConfiguration() {
-		return googleMatricesConfiguration;
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -65,18 +65,12 @@ public class MatricesAutomationBean extends ClearThBean {
 
 	protected MatrixData selectedLinkedMatrix = null;
 	
-	protected boolean googleSpreadsheetsAvailable;
 	
-
-
 	public MatricesAutomationBean()
 	{
 		this.selectedMatrices = new ArrayList<>();
 		this.matrixUploadHandler = createMatrixUploadHandler();
 		this.createLinkedMatrix();
-		
-		this.googleSpreadsheetsAvailable = ClearThCore.getInstance().getGoogleMatricesConfiguration().isEnabled();
-		
 	}
 
 	protected Scheduler selectedScheduler() {
@@ -410,15 +404,5 @@ public class MatricesAutomationBean extends ClearThBean {
 	public void editLinkedMatrix(MatrixData matrix)
 	{
 		selectedLinkedMatrix = matrix.clone();
-	}
-
-	public String getGoogleSpreadsheetsHelp()
-	{
-		return "Please share the document for\n" + ClearThCore.getInstance()
-				.getGoogleMatricesConfiguration().getServiceEmail();
-	}
-
-	public boolean isGoogleSpreadsheetsAvailable() {
-		return googleSpreadsheetsAvailable;
 	}
 }
