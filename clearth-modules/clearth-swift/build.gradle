@@ -1,12 +1,5 @@
-configurations {
-	all {
-		resolutionStrategy {
-			force 'org.apache.commons:commons-lang3:3.12.0'
-		}
-	}
-}
 dependencies {
-	compile "com.prowidesoftware:pw-swift-core:SRU2021-9.2.8"
+	compile "com.prowidesoftware:pw-swift-core:SRU2021-9.2.13"
 }
 
 generateJavaFromXsd {
