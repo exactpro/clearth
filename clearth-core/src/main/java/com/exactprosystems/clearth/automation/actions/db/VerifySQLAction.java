@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.actions.db;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.TimeoutAwaiter;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
@@ -445,7 +446,7 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 	protected void prepare() throws Exception
 	{
 		super.prepare();
-		getGlobalContext().setLoadedContext(getMappingName(), loadVerificationMapping(getMappingFileName()));
+		getGlobalContext().setLoadedContext(getMappingName(), loadVerificationMapping(ClearThCore.rootRelative(getMappingFileName())));
 		useCheckPointer();
 	}
 	
@@ -462,7 +463,7 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 				for (Object key : cp.keySet())
 					params.put((String)key, (String)cp.get(key));
 
-				getGlobalContext().setLoadedContext(getQueryName(), SQLUtils.loadQuery(getQueryCPFileName()));
+				getGlobalContext().setLoadedContext(getQueryName(), SQLUtils.loadQuery(ClearThCore.rootRelative(getQueryCPFileName())));
 			}
 			else 
 				getLogger().debug("CheckPointer has not been set by action '" + cpActionId + "'. Using default query");

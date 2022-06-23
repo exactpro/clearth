@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.actions.db;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.report.Result;
@@ -128,7 +129,7 @@ public abstract class SQLAction extends Action
 
 	protected void prepare() throws Exception
 	{
-		getGlobalContext().setLoadedContext(getQueryName(), SQLUtils.loadQuery(getQueryFileName()));
+		getGlobalContext().setLoadedContext(getQueryName(), SQLUtils.loadQuery(ClearThCore.rootRelative(getQueryFileName())));
 	}
 
 	protected abstract String getQueryName();
