@@ -1652,6 +1652,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		actionParams.put("param3", "3");
 		actionParams.put("param4", "4");
 		actionParams.put("param5", "5");
+		actionParams.put("Integer", "10");
 
 		Map<String, Object> mvelVars = new HashMap<>();
 		mvelVars.put("params", actionParams);
@@ -1671,69 +1672,72 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 		return new Object[][]
 				{
-						// Expression, param name, mvelVars, fixed IDs, current action, expected result
-						{"@{random(5, 5)}", null, mvelVars, fixedIDs, null, 5},
-						{"@{random(500.0, 500)}", null, mvelVars, fixedIDs, null, 500},
-						{"@{random(1.0, 1.0)}", null, mvelVars, fixedIDs, null, 1},
-						{"@{123.param1}", null, mvelVars, fixedIDs, null, "1"},
-						{"@{234.param2}", null, mvelVars, fixedIDs, null, "2"},
-						{"@{345.param5}", null, mvelVars, fixedIDs, null, "5"},
-						{"@{mul(a,b+c)}", null, mvelVars, fixedIDs, null, "5"},
-						{"@{123.param1 + a}", null, mvelVars, fixedIDs, null, "11"},
-						{"@{mul(234.param2, 345.param5)}", null, mvelVars, fixedIDs, null, "10"},
-						{"@{234.param3.equals('3')}", null, mvelVars, fixedIDs, null, true},
-						{"@{add(asNumber('18'), asNumber('12.00', 0))}", null, mvelVars, fixedIDs, null,
-								"30"},
+					// Expression, param name, mvelVars, fixed IDs, current action, expected result
+					{"@{(int)1 + (int)2}", null, mvelVars, fixedIDs, null, 3},
+					{"@{(int)1 + (int)(123.Integer)}", null, mvelVars, fixedIDs, null, 11},
+					{"@{(int)1 + 123.Integer}", null, mvelVars, fixedIDs, null, "110"},
+					{"@{random(5, 5)}", null, mvelVars, fixedIDs, null, 5},
+					{"@{random(500.0, 500)}", null, mvelVars, fixedIDs, null, 500},
+					{"@{random(1.0, 1.0)}", null, mvelVars, fixedIDs, null, 1},
+					{"@{123.param1}", null, mvelVars, fixedIDs, null, "1"},
+					{"@{234.param2}", null, mvelVars, fixedIDs, null, "2"},
+					{"@{345.param5}", null, mvelVars, fixedIDs, null, "5"},
+					{"@{mul(a,b+c)}", null, mvelVars, fixedIDs, null, "5"},
+					{"@{123.param1 + a}", null, mvelVars, fixedIDs, null, "11"},
+					{"@{mul(234.param2, 345.param5)}", null, mvelVars, fixedIDs, null, "10"},
+					{"@{234.param3.equals('3')}", null, mvelVars, fixedIDs, null, true},
+					{"@{add(asNumber('18'), asNumber('12.00', 0))}", null, mvelVars, fixedIDs, null,
+							"30"},
 
-						{"@{time6(time(days, months, years, hours))}", null, mvelVars, fixedIDs, null, "000000"},
-						{"@{date8(time(days, months, years))}", null, mvelVars, fixedIDs, null, "20200601"},
-						{"@{date8(time(days, months))}", null, mvelVars, fixedIDs, null, "20190603"},
-						{"@{date8(time(days))}", null, mvelVars, fixedIDs, null, "20190506"},
+					{"@{time6(time(days, months, years, hours))}", null, mvelVars, fixedIDs, null, "000000"},
+					{"@{date8(time(days, months, years))}", null, mvelVars, fixedIDs, null, "20200601"},
+					{"@{date8(time(days, months))}", null, mvelVars, fixedIDs, null, "20190603"},
+					{"@{date8(time(days))}", null, mvelVars, fixedIDs, null, "20190506"},
 
-						{"@{timeIncludingHolidays(1557093600000, 3)}", null, mvelVars, fixedIDs, null, 1557784800000L},
+					{"@{timeIncludingHolidays(1557093600000, 3)}", null, mvelVars, fixedIDs, null, 1557784800000L},
 
-						// for GMT+0: 1557144000000L ->  05/06/2019 12:00:00
-						// 1557576000000L -> 05/11/2019 12:00:00
-						{"@{holiday(1557144000000)}", null, mvelVars, fixedIDs, null, 1557576000000L},
-						// 1557230400000L -> 05/07/2019 12:00:00
-						{"@{holiday(1557144000000, 'any')}", null, mvelVars, fixedIDs, null, 1557230400000L},
-						// 1558267200000L -> 05/19/2019 12:00:00
-						{"@{holiday(1557144000000, 3)}", null, mvelVars, fixedIDs, null, 1558267200000L},
-						// 1557576000000L -> 05/11/2019 12:00:00
-						{"@{holiday(1557144000000, 'any', 3)}", null, mvelVars, fixedIDs, null, 1557576000000L},
+					// for GMT+0: 1557144000000L ->  05/06/2019 12:00:00
+					// 1557576000000L -> 05/11/2019 12:00:00
+					{"@{holiday(1557144000000)}", null, mvelVars, fixedIDs, null, 1557576000000L},
+					// 1557230400000L -> 05/07/2019 12:00:00
+					{"@{holiday(1557144000000, 'any')}", null, mvelVars, fixedIDs, null, 1557230400000L},
+					// 1558267200000L -> 05/19/2019 12:00:00
+					{"@{holiday(1557144000000, 3)}", null, mvelVars, fixedIDs, null, 1558267200000L},
+					// 1557576000000L -> 05/11/2019 12:00:00
+					{"@{holiday(1557144000000, 'any', 3)}", null, mvelVars, fixedIDs, null, 1557576000000L},
 
-						{"@{date8(sysTime(days, months, years, hours))}", null, mvelVars, fixedIDs, null, "20210505"},
-						{"@{date8(sysTime(days, months, years))}", null, mvelVars, fixedIDs, null, "20210505"},
-						{"@{date8(sysTime(days, months))}", null, mvelVars, fixedIDs, null, "20200505"},
-						{"@{date8(sysTime(days))}", null, mvelVars, fixedIDs, null, "20200406"},
+					{"@{date8(sysTime(days, months, years, hours))}", null, mvelVars, fixedIDs, null, "20210505"},
+					{"@{date8(sysTime(days, months, years))}", null, mvelVars, fixedIDs, null, "20210505"},
+					{"@{date8(sysTime(days, months))}", null, mvelVars, fixedIDs, null, "20200505"},
+					{"@{date8(sysTime(days))}", null, mvelVars, fixedIDs, null, "20200406"},
 
-						{"@{toBigDecimal(234.param3)}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(3)},
-						{"@{toBigDecimal('10.0','.')}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(10.0)},
-						{"@{toBigDecimal('10.0','.', ' ')}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(10.0)},
+					{"@{toBigDecimal(234.param3)}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(3)},
+					{"@{toBigDecimal('10.0','.')}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(10.0)},
+					{"@{toBigDecimal('10.0','.', ' ')}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(10.0)},
 
-						{"@{mul(100.00, 200.00)}", null, mvelVars, null, null, "20000"},
-						{"@{min(mul(round(5.1, 0), roundUp(10.3, 0)), max(avg(5.0, div(49.0, 7.0)), roundDown(3.7, " +
-								"1)" +
-								"))}", null, mvelVars, null, null, BigDecimal.valueOf(6.0)},
-						{"@{min(mul(round(5.1, 0), roundUp(10.3, 0)), max(avg(5.0, div(49.0, asNumber(trimZeros('7" +
-								".00, 1')))), roundDown(3.7, 1)))}",
-								null, mvelVars, null, null, BigDecimal.valueOf(6.0)},
-						{"@{mul(sub( asNumber(addZeros('10.0', 3)), 4), add(asNumber(addZeros('10.0',2,'.')), 10, 1)" +
-								")}",
-								null, mvelVars, null, null, "120"},
-						{"@{toBigDecimal(trimleft('100.00',2) + trimright('200.00',2))}",
-								null, mvelVars, null, null, BigDecimal.valueOf(1000)},
-						{"@{reformat(format(parseDate('20-12-2018','dd-MM-yyyy'),'yyyy/MM/dd hh:mm:ss'),'yyyy/MM/dd " +
-								"hh:mm:ss', 'dd/MM/yyyy" +
-								" hh:mm:ss')}", null, mvelVars, null, null, "20/12/2018 12:00:00"},
-						{"@{time6(milliseconds('01-11-2019-11-20','dd-MM-yyyy-hh-mm'))}",
-								null, mvelVars, null, null, "112000"},
-						{"@{date8(endOfMonth(timeIncludingHolidays(1591862233915L, 25)))}",
-								null, mvelVars, null, null, "20200731"},
-						{"@{append('123456', 'X', 10)}", null, mvelVars, fixedIDs, null, "123456XXXX"},
-						{"@{prepend('123456', 'X', 10)}", null, mvelVars, fixedIDs, null, "XXXX123456"},
-						{"@{append('123456', 'x', 3)}", null, mvelVars, fixedIDs, null, "123456"},
-						{"@{prepend('123456', 'x', 3)}", null, mvelVars, fixedIDs, null, "123456"},
+					{"@{mul(100.00, 200.00)}", null, mvelVars, null, null, "20000"},
+					{"@{min(mul(round(5.1, 0), roundUp(10.3, 0)), max(avg(5.0, div(49.0, 7.0)), roundDown(3.7, " +
+							"1)" +
+							"))}", null, mvelVars, null, null, BigDecimal.valueOf(6.0)},
+					{"@{min(mul(round(5.1, 0), roundUp(10.3, 0)), max(avg(5.0, div(49.0, asNumber(trimZeros('7" +
+							".00, 1')))), roundDown(3.7, 1)))}",
+							null, mvelVars, null, null, BigDecimal.valueOf(6.0)},
+					{"@{mul(sub( asNumber(addZeros('10.0', 3)), 4), add(asNumber(addZeros('10.0',2,'.')), 10, 1)" +
+							")}",
+							null, mvelVars, null, null, "120"},
+					{"@{toBigDecimal(trimleft('100.00',2) + trimright('200.00',2))}",
+							null, mvelVars, null, null, BigDecimal.valueOf(1000)},
+					{"@{reformat(format(parseDate('20-12-2018','dd-MM-yyyy'),'yyyy/MM/dd hh:mm:ss'),'yyyy/MM/dd " +
+							"hh:mm:ss', 'dd/MM/yyyy" +
+							" hh:mm:ss')}", null, mvelVars, null, null, "20/12/2018 12:00:00"},
+					{"@{time6(milliseconds('01-11-2019-11-20','dd-MM-yyyy-hh-mm'))}",
+							null, mvelVars, null, null, "112000"},
+					{"@{date8(endOfMonth(timeIncludingHolidays(1591862233915L, 25)))}",
+							null, mvelVars, null, null, "20200731"},
+					{"@{append('123456', 'X', 10)}", null, mvelVars, fixedIDs, null, "123456XXXX"},
+					{"@{prepend('123456', 'X', 10)}", null, mvelVars, fixedIDs, null, "XXXX123456"},
+					{"@{append('123456', 'x', 3)}", null, mvelVars, fixedIDs, null, "123456"},
+					{"@{prepend('123456', 'x', 3)}", null, mvelVars, fixedIDs, null, "123456"},
 				};
 	}
 
@@ -1761,12 +1765,12 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 		return new Object[][]
 				{
-						{"@{123.Unknown}", mvelVars, fixedIDs},
-						{"@{123.Number}", mvelVars, fixedIDs},
-						{"@{123.Else}", mvelVars, fixedIDs},
-						{"@{123.String}", mvelVars, fixedIDs},
-						{"@{123.Object}", mvelVars, fixedIDs},
-						{"@{123.Random}", mvelVars, fixedIDs},
+					{"@{123.Unknown}", mvelVars, fixedIDs},
+					{"@{123.Number}", mvelVars, fixedIDs},
+					{"@{123.Else}", mvelVars, fixedIDs},
+					{"@{123.String}", mvelVars, fixedIDs},
+					{"@{123.Object}", mvelVars, fixedIDs},
+					{"@{123.Random}", mvelVars, fixedIDs},
 				};
 	}
 

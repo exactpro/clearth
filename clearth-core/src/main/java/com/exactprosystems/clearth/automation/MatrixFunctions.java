@@ -898,7 +898,13 @@ public class MatrixFunctions
 	}
 	
 	public Object calculateExpression(String expression, String paramName, Map<String, Object> mvelVars,
-									  Map<String, String> fixedIDs, Action currentAction, ObjectWrapper iterationWrapper) throws Exception
+	                                  Map<String, String> fixedIDs, Action currentAction, ObjectWrapper iterationWrapper) throws Exception
+	{
+		return calculateExpression(expression, paramName, mvelVars, fixedIDs, currentAction, iterationWrapper, true);
+	}
+	
+	private Object calculateExpression(String expression, String paramName, Map<String, Object> mvelVars,
+									  Map<String, String> fixedIDs, Action currentAction, ObjectWrapper iterationWrapper, boolean needClassCheck) throws Exception
 	{
 		Integer iteration = (Integer) iterationWrapper.getObject();
 		do
@@ -974,7 +980,7 @@ public class MatrixFunctions
 							if (!param.isEmpty()) {
 								iterationWrapper.setObject(iteration);
 								param = FORMULA_START + param + FORMULA_END;
-								Object paramObj = calculateExpression(param, paramName + "_TMP_MVEL", mvelVars, fixedIDs, currentAction, iterationWrapper);
+								Object paramObj = calculateExpression(param, paramName + "_TMP_MVEL", mvelVars, fixedIDs, currentAction, iterationWrapper, false);
 								param = processExpressionResult(paramObj);
 							}
 
@@ -1016,8 +1022,8 @@ public class MatrixFunctions
 
 			Object resultObj = MVEL.executeExpression(compiledExp, this, mvelVars);  //if mvelVars is null it will only calculate function results, but will not follow references
 
-			if(resultObj instanceof Class)
-				throw new ParametersException("Incorrect formula");
+			if(needClassCheck && (resultObj instanceof Class))
+					throw new ParametersException("Incorrect formula");
 
 			if (before.isEmpty() && after.isEmpty() && !(resultObj instanceof String)) {
 				return resultObj;
