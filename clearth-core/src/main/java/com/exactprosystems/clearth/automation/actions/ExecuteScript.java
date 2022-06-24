@@ -19,9 +19,7 @@
 package com.exactprosystems.clearth.automation.actions;
 
 import java.io.*;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import org.apache.commons.exec.*;
@@ -57,6 +55,7 @@ public class ExecuteScript extends Action {
 	protected String executableName, shellOption;
 
 	protected File workingDir;
+	protected Map<String, String> envVars;
 
 
 	@Override
@@ -67,6 +66,7 @@ public class ExecuteScript extends Action {
 
 		String workingDirPath = InputParamsUtils.getStringOrDefault(inputParams, WORKING_DIRECTORY, getDefaultWorkingDir());
 		workingDir = new File(ClearThCore.rootRelative(workingDirPath));
+		envVars = createEnvironmentVars(stepContext, matrixContext, globalContext);
 
 		String command = buildCommand(getInputParams());
 		String parameters = buildScriptParameters(getInputParams());
@@ -126,7 +126,7 @@ public class ExecuteScript extends Action {
 		ScriptResult res;
 		try
 		{
-			res = ScriptUtils.executeScript(command, workingDir);
+			res = ScriptUtils.executeScript(command, workingDir, envVars);
 		}
 		catch (ExecuteException e)
 		{
@@ -198,7 +198,7 @@ public class ExecuteScript extends Action {
 		{
 			try
 			{
-				res = ScriptUtils.executeScript(command, executableName, shellOption, null, null, workingDir);
+				res = ScriptUtils.executeScript(command, executableName, shellOption, null, null, workingDir, envVars);
 			}
 			catch (IOException e)
 			{
@@ -219,11 +219,12 @@ public class ExecuteScript extends Action {
 		{
 			if (executableName != null)
 			{
-				ScriptUtils.executeScriptAsync(command, executableName, shellOption, null, messageComplete, messageFail, workingDir);
+				ScriptUtils.executeScriptAsync(command, executableName, shellOption, null, messageComplete,
+						messageFail, workingDir, envVars);
 			}
 			else
 			{
-				ScriptUtils.executeScriptAsync(command, null, messageComplete, messageFail, workingDir);
+				ScriptUtils.executeScriptAsync(command, null, messageComplete, messageFail, workingDir, envVars);
 			}
 		}
 		catch (IOException e)
@@ -242,6 +243,11 @@ public class ExecuteScript extends Action {
 		return executeScriptAsync(command);
 	}
 
+
+	protected Map<String, String> createEnvironmentVars(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
+	{
+		return null;
+	}
 
 	protected String getDefaultWorkingDir()
 	{

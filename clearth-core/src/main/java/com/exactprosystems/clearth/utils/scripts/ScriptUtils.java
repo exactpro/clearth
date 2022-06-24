@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Map;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -45,14 +46,20 @@ public class ScriptUtils extends Utils
 		return executeScript(commandLineString, args, exitValues, null);
 	}
 
-	public static ScriptResult executeScript(String commandLineString, String[] args, int[] exitValues, File workingDir)
-			throws IOException
+	public static ScriptResult executeScript(String commandLineString, String[] args, int[] exitValues, File workingDir,
+			Map<String, String> envVars) throws IOException
 	{
 		logger.debug("Command line to execute: {}. Parameters: {} ", commandLineString, args);
 
 		CommandLine commandLine = CommandLine.parse(commandLineString, EnvironmentUtils.getProcEnvironment());
 
-		return execute(commandLine, args, exitValues, workingDir);
+		return execute(commandLine, args, exitValues, workingDir, envVars);
+	}
+
+	public static ScriptResult executeScript(String commandLineString, String[] args, int[] exitValues, File workingDir)
+			throws IOException
+	{
+		return executeScript(commandLineString, args, exitValues, workingDir, null);
 	}
 
 	public static ScriptResult executeScript(String commandLineString, int[] exitValues) throws IOException
@@ -60,9 +67,20 @@ public class ScriptUtils extends Utils
 		return executeScript(commandLineString, null, exitValues);
 	}
 
+	public static ScriptResult executeScript(String commandLineString, int[] exitValues, File workingDir,
+			Map<String, String> envVars) throws IOException
+	{
+		return executeScript(commandLineString, null, exitValues, workingDir, envVars);
+	}
+
 	public static ScriptResult executeScript(String commandLineString, int[] exitValues, File workingDir) throws IOException
 	{
 		return executeScript(commandLineString, null, exitValues, workingDir);
+	}
+
+	public static ScriptResult executeScript(String commandLineString, File workingDir, Map<String, String> envVars) throws IOException
+	{
+		return executeScript(commandLineString, new int[]{0}, workingDir, envVars);
 	}
 
 	public static ScriptResult executeScript(String commandLineString, File workingDir) throws IOException
@@ -82,12 +100,18 @@ public class ScriptUtils extends Utils
 	}
 
 	public static ScriptResult executeScript(String command, String executableName, String shellOption, String[] args,
-	                                         int[] exitValues, File workingDir) throws IOException
+	                                         int[] exitValues, File workingDir, Map<String, String> envVars) throws IOException
 	{
 		CommandLine commandLine =
 				CommandLine.parse(executableName, EnvironmentUtils.getProcEnvironment())
 						.addArgument(shellOption).addArgument(command, false);
-		return execute(commandLine, args, exitValues, workingDir);
+		return execute(commandLine, args, exitValues, workingDir, envVars);
+	}
+
+	public static ScriptResult executeScript(String command, String executableName, String shellOption, String[] args,
+	                                         int[] exitValues, File workingDir) throws IOException
+	{
+		return executeScript(command, executableName, shellOption, args, exitValues, workingDir, null);
 	}
 
 
@@ -98,7 +122,7 @@ public class ScriptUtils extends Utils
 	}
 
 	public static void executeScriptAsync(String commandLineString, String[] args, int[] exitValues,
-	                                      String messageComplete, String messageFail, File workingDir) throws IOException
+			String messageComplete, String messageFail, File workingDir, Map<String, String> envVars) throws IOException
 	{
 		logger.debug("Command line to execute: {}. Parameters: {} ", commandLineString, args);
 
@@ -106,7 +130,13 @@ public class ScriptUtils extends Utils
 		if (args != null)
 			commandLine.addArguments(args, false);
 
-		executeAsync(commandLine, exitValues, messageComplete, messageFail, workingDir);
+		executeAsync(commandLine, exitValues, messageComplete, messageFail, workingDir, envVars);
+	}
+
+	public static void executeScriptAsync(String commandLineString, String[] args, int[] exitValues,
+			String messageComplete, String messageFail, File workingDir) throws IOException
+	{
+		executeScriptAsync(commandLineString, args, exitValues, messageComplete, messageFail, workingDir, null);
 	}
 
 	public static void executeScriptAsync(String commandLineString, int[] exitValues, String messageComplete,
@@ -116,9 +146,15 @@ public class ScriptUtils extends Utils
 	}
 
 	public static void executeScriptAsync(String commandLineString, int[] exitValues, String messageComplete,
-	                                      String messageFail, File workingDir) throws IOException
+			String messageFail, File workingDir, Map<String, String> envVars) throws IOException
 	{
-		executeScriptAsync(commandLineString, null, exitValues, messageComplete, messageFail, workingDir);
+		executeScriptAsync(commandLineString, null, exitValues, messageComplete, messageFail, workingDir, envVars);
+	}
+
+	public static void executeScriptAsync(String commandLineString, int[] exitValues, String messageComplete,
+			String messageFail, File workingDir) throws IOException
+	{
+		executeScriptAsync(commandLineString, null, exitValues, messageComplete, messageFail, workingDir, null);
 	}
 
 	public static void executeScriptAsync(String commandLineString, String messageComplete, String messageFail,
@@ -140,16 +176,22 @@ public class ScriptUtils extends Utils
 	}
 
 	public static void executeScriptAsync(String command, String executableName, String shellOption, int[] exitValues,
-	                                      String messageComplete, String messageFail, File workingDir) throws IOException
+			String messageComplete, String messageFail, File workingDir, Map<String, String> envVars) throws IOException
 	{
 		CommandLine commandLine =
 				CommandLine.parse(executableName, EnvironmentUtils.getProcEnvironment())
 						.addArgument(shellOption).addArgument(command, false);
-		executeAsync(commandLine, exitValues, messageComplete, messageFail, workingDir);
+		executeAsync(commandLine, exitValues, messageComplete, messageFail, workingDir, envVars);
 	}
 
-	protected static ScriptResult execute(CommandLine commandLine, String[] args, int[] exitValues, File workingDir)
-			throws IOException
+	public static void executeScriptAsync(String command, String executableName, String shellOption, int[] exitValues,
+			String messageComplete, String messageFail, File workingDir) throws IOException
+	{
+		executeScriptAsync(command, executableName, shellOption, exitValues, messageComplete, messageFail, workingDir, null);
+	}
+
+	protected static ScriptResult execute(CommandLine commandLine, String[] args, int[] exitValues, File workingDir,
+			Map<String, String> envVars) throws IOException
 	{
 		Executor executor = createExecutor(exitValues, workingDir);
 		if (args != null)
@@ -160,14 +202,14 @@ public class ScriptUtils extends Utils
 		{
 			executor.setStreamHandler(new PumpStreamHandler(new PrintStream(outWriter), new PrintStream(errWriter)));
 			long startTime = System.currentTimeMillis();
-			int result = executor.execute(commandLine);
+			int result = executor.execute(commandLine, envVars);
 			logger.debug("Script execution duration: {}", formatDurationHMS(System.currentTimeMillis() - startTime));
 			return new ScriptResult(result, outWriter.toString(), errWriter.toString());
 		}
 	}
 
 	protected static void executeAsync(CommandLine commandLine, int[] exitValues, String messageComplete,
-	                                 String messageFail, File workingDir) throws IOException
+			String messageFail, File workingDir, Map<String, String> envVars) throws IOException
 	{
 		Executor executor = createExecutor(exitValues, workingDir);
 
@@ -181,8 +223,14 @@ public class ScriptUtils extends Utils
 			scriptResultHandler.setMessageComplete(messageComplete);
 			scriptResultHandler.setMessageFail(messageFail);
 
-			executor.execute(commandLine, scriptResultHandler);
+			executor.execute(commandLine, envVars, scriptResultHandler);
 		}
+	}
+
+	protected static void executeAsync(CommandLine commandLine, int[] exitValues, String messageComplete,
+	                                   String messageFail, File workingDir) throws IOException
+	{
+		executeAsync(commandLine, exitValues, messageComplete, messageFail, workingDir, null);
 	}
 
 	protected static Executor createExecutor(int[] exitValues, File workingDir)
