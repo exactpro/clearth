@@ -23,12 +23,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class ValueGenerators
 {
+	protected final String defaultId;     // defaultId can be used in implementations, including createCommonGenerator()
 	protected final ValueGenerator commonGenerator;
 	protected final Map<String, ValueGenerator> generators = new ConcurrentHashMap<>();
 	
+	public ValueGenerators(String defaultId)
+	{
+		this.defaultId = defaultId;
+		this.commonGenerator = createCommonGenerator();
+	}
+	
 	public ValueGenerators()
 	{
-		this.commonGenerator = createCommonGenerator();
+		this(null);
 	}
 	
 	

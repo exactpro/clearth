@@ -164,7 +164,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	@Override
 	protected void mockOtherApplicationFields(ClearThCore application)
 	{
-		ValueGenerators valueGenerators = new LegacyValueGenerators();
+		ValueGenerators valueGenerators = new LegacyValueGenerators(DEFAULT_GENERATOR_FILE);
 		when(application.getValueGenerators()).thenReturn(valueGenerators);
 	}
 

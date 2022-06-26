@@ -23,21 +23,42 @@ import org.apache.commons.io.FilenameUtils;
 import com.exactprosystems.clearth.ValueGenerator;
 import com.exactprosystems.clearth.ValueGenerators;
 
+
 @Deprecated
 public class LegacyValueGenerators extends ValueGenerators
 {
+	
+	public LegacyValueGenerators(String defaultId)
+	{
+		super(defaultId);
+	}
+	
+	public LegacyValueGenerators()
+	{
+		super("lastgen.txt");
+	}
+	
 	@Override
 	protected ValueGenerator createGenerator(String id)
 	{
-		LegacyValueGenerator cg = (LegacyValueGenerator)getCommonGenerator();
-		String oldFileName = cg.getLastGenFileName();
-		String newId = String.format("%s_%s.%s", FilenameUtils.getBaseName(oldFileName), id, FilenameUtils.getExtension(oldFileName));
+		String newId = createNewId(id);
 		return new LegacyValueGenerator(newId, "");
 	}
 	
 	@Override
 	protected ValueGenerator createCommonGenerator()
 	{
-		return new LegacyValueGenerator("lastgen.txt", "");
+		return new LegacyValueGenerator(defaultId, "");
+	}
+	
+	private String createNewId(String id)
+	{
+		LegacyValueGenerator cg = (LegacyValueGenerator) getCommonGenerator();
+		String oldFilename = cg.getLastGenFileName();
+		
+		String baseName = FilenameUtils.getBaseName(oldFilename);
+		String extension = FilenameUtils.getExtension(oldFilename);
+		
+		return String.format("%s_%s.%s", baseName, id, extension);
 	}
 }
