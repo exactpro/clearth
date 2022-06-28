@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -37,17 +37,13 @@ public class DiverReceiverThread extends MessageReceiverThread
 	private static final Logger logger = LoggerFactory.getLogger(DiverReceiverThread.class);
 	
 	private final boolean autoReconnect;
-	private boolean silence = true;
-	private final long firstReadDelay, //time interval in millis before reading the first message in pack
-			readDelay;                     //time interval in millis before reading next message
-	private int firstPackageSize = -1;
+	private final long readDelay;    //time interval in millis before reading next message
 	
 	public DiverReceiverThread(String name, MQConnection owner, MQQueue receiveQueue, BlockingQueue<Pair<String, Date>> messageQueue, int charset, 
-			boolean autoReconnect, long firstReadDelay, long readDelay)
+			boolean autoReconnect, long readDelay)
 	{
 		super(name, owner, receiveQueue, messageQueue, charset);
 		this.autoReconnect = autoReconnect;
-		this.firstReadDelay = firstReadDelay;
 		this.readDelay = readDelay;
 	}
 	
@@ -62,8 +58,6 @@ public class DiverReceiverThread extends MessageReceiverThread
 			try
 			{
 				depth = receiveQueue.getCurrentDepth();
-				if (firstPackageSize < 0)
-					firstPackageSize = depth;
 				errorCount = 0;
 			}
 			catch (MQException e)
@@ -98,23 +92,6 @@ public class DiverReceiverThread extends MessageReceiverThread
 
 			if (depth>0)
 			{
-				if (silence)
-				{
-					silence = false;
-					try
-					{
-						if (firstReadDelay > 0)
-						{
-							logger.debug("New party detected. Waiting for {} before reading.", firstReadDelay);
-							Thread.sleep(firstReadDelay);
-						}
-					}
-					catch (InterruptedException e)
-					{
-						logger.warn("First read delay interrupted, stopping receiver");
-						break;
-					}
-				}
 				logger.trace("Queue depth: "+depth);
 				try
 				{
@@ -126,7 +103,7 @@ public class DiverReceiverThread extends MessageReceiverThread
 						{
 							logger.trace("Adding message to internal queue");
 							String m = message.readStringOfByteLength(message.getDataLength());
-							boolean inserted = messageQueue.offer(new Pair<String, Date>(m, new Date()));
+							boolean inserted = messageQueue.offer(new Pair<>(m, new Date()));
 							
 							if (!inserted)
 								logger.warn("It is not possible to add message to queue due to capacity restrictions");
@@ -179,8 +156,6 @@ public class DiverReceiverThread extends MessageReceiverThread
 			}
 			else
 			{
-				if (!silence)
-					silence = true;
 				try
 				{
 					Thread.sleep(2000);
@@ -197,11 +172,6 @@ public class DiverReceiverThread extends MessageReceiverThread
 		}
 	}
 	
-	public int getFirstPackageSize()
-	{
-		return firstPackageSize;
-	}
-
 	@Override
 	protected Logger getLogger()
 	{

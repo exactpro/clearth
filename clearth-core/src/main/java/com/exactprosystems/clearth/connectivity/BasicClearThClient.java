@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -297,14 +297,6 @@ public abstract class BasicClearThClient implements ClearThClient
 		closeConnections();
 			
 		running = false;
-	}
-	
-	
-	public int getFirstPackageSize()
-	{
-		if (receiverThread instanceof DiverReceiverThread)
-			return ((DiverReceiverThread) receiverThread).getFirstPackageSize();
-		return 0;
 	}
 	
 	protected void handleSendError(Throwable error, final Object message) throws ConnectivityException

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,12 +18,9 @@
 
 package com.exactprosystems.clearth.connectivity.listeners;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.ListenerDescription;
-import com.exactprosystems.clearth.connectivity.MQConnection;
 import com.exactprosystems.clearth.connectivity.ReceiveListener;
 import com.exactprosystems.clearth.connectivity.SettingsDetails;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedClearThMessage;
@@ -91,7 +88,6 @@ public class ClearThMessageCollector extends ReceiveListener
 
 	protected volatile ICodec codec;
 	protected ContentStorage<ReceivedClearThMessage, ReceivedStringMessage> contentStorage;
-	private volatile boolean firstMessagesReceived = false;
 	private final boolean storeFailedMessages;
 	private final boolean storeTimestamp;
 
@@ -230,9 +226,6 @@ public class ClearThMessageCollector extends ReceiveListener
 	 */
 	public Collection<ClearThMessage<?>> getMessages()
 	{
-		if (!firstMessagesReceived)
-			checkFirstMessagePack();
-		
 		getLogger().trace("Getting all messages from collector");
 		Collection<ClearThMessage<?>> result = getMessages(contentStorage.getContentPassed().values());
 		getLogger().trace("Messages count: {}", result.size());
@@ -245,10 +238,7 @@ public class ClearThMessageCollector extends ReceiveListener
 	 */
 	public Collection<ReceivedClearThMessage> getMessagesData()
 	{
-		if (!firstMessagesReceived)
-			checkFirstMessagePack();
-		
-		return new ArrayDeque<ReceivedClearThMessage>(contentStorage.getContentPassed().values());
+		return new ArrayDeque<>(contentStorage.getContentPassed().values());
 	}
 
 	/**
@@ -417,58 +407,6 @@ public class ClearThMessageCollector extends ReceiveListener
 		return active;
 	}
 	
-	
-	private void checkFirstMessagePack()
-	{		
-		try
-		{
-			int firstPackSize,
-					iteration = 0;
-			while (((firstPackSize = getFirstPackageSize()) < 0) && (iteration < 3))
-			{
-				iteration++;
-				Thread.sleep(500);  //Reader thread may not have been initialized at the moment, waiting for it a bit
-			}
-			if (firstPackSize <= 0)  //firstPackSize == 0 if no messages were in queue on connection start
-				return;
-			
-			long delay = 500, timeout = 4000;
-			do
-			{
-				// Not all messages may have parsed, thus taking messagesFailed into account. Both lists are changing in another thread
-				int collectorSize = contentStorage.getContentPassed().size() + contentStorage.getContentFailed().size();
-				if (collectorSize < firstPackSize)
-				{
-					Thread.sleep(delay);
-				}
-				else
-				{
-					firstMessagesReceived = true;
-					break;
-				}
-				timeout -= delay;
-			}
-			while (timeout > 0);
-			firstMessagesReceived = true;  //If messages are removed from collector while we're waiting for the whole first pack to arrive, we will never receive needed number of messages.
-			                               //That's why we have limited timeout - to pass code further, even if first pack seems not to be received yet. 
-			                               //And that's why we need to stop torturing actions with this "wait"
-		}
-		catch (InterruptedException e)
-		{
-			getLogger().warn("Waiting of processing messages from first package is interrupted");
-		}
-	}
-	
-	private Integer getFirstPackageSize()
-	{
-		ClearThConnection<?,?> connection = ClearThCore.connectionStorage().findConnection(connectionName);
-		if ((connection instanceof MQConnection) && connection.isRunning())
-			return ((MQConnection)connection).getClient().getFirstPackageSize();
-		else 
-			return 0;
-	}
-	
-
 	protected void logReceivedMessage(String message)
 	{
 		if (message.length() < getDebugLogMessageSizeLimit())
