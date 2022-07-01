@@ -5,17 +5,17 @@ ext{
 }
 
 dependencies {
-	compile project(":clearth-modules:clearth-style")
-	
-	implementation 'javax.el:el-api:2.2'
-	compile 'org.apache.myfaces.core:myfaces-api:2.3.9'
-	compile 'org.apache.myfaces.core:myfaces-impl:2.3.9'
-	compile 'org.primefaces:primefaces:12.0.0'
+	api project(":clearth-modules:clearth-style")
+
+	api 'javax.el:el-api:2.2'
+	api 'org.apache.myfaces.core:myfaces-api:2.3.9'
+	api 'org.apache.myfaces.core:myfaces-impl:2.3.9'
+	api 'org.primefaces:primefaces:12.0.0'
 }
 
 task compileJettyXmlUpdater(type: JavaExec){
 	classpath = sourceSets.main.runtimeClasspath
-	main = javaUpdateJettyClass
+	mainClass = javaUpdateJettyClass
 }
 
 task runJettyXmlUpdater(dependsOn: compileJettyXmlUpdater) {

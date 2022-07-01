@@ -1,6 +1,6 @@
 plugins {
 	id 'war'
-	id 'org.gretty' version '2.3.1'
+	id 'org.gretty' version '3.1.1'
 }
 
 ext {
@@ -41,7 +41,7 @@ static def getDate(String format) {
 war {
 	//Faster WAR creation
 	entryCompression = org.gradle.api.tasks.bundling.ZipEntryCompression.STORED
-	archiveName = war_name
+	archiveFileName = war_name
 	manifest {
 		attributes('Implementation-Title': 'Application based on ClearTH Core')
 		attributes('Implementation-Vendor': 'Exactpro Systems LLC')
@@ -68,7 +68,7 @@ task runClearTH(type: JavaExec,
 		dependsOn: copyWar) {
 	workingDir = file('jetty')
 	classpath = files('jetty/start.jar')
-	main = 'org.eclipse.jetty.start.Main'
+	mainClass = 'org.eclipse.jetty.start.Main'
 	//debug = true
 	jvmArgs '-Xdebug', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'
 }
@@ -90,5 +90,5 @@ task buildRelease(type: Zip, group: 'ClearTH',
 }
 
 wrapper {
-	gradleVersion = '5.5'
+	gradleVersion = '8.0.1'
 }

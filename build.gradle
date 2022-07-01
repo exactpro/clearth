@@ -50,7 +50,7 @@ subprojects {
 	}
 	
 	apply plugin: 'java'
-	apply plugin: 'maven'
+	apply plugin: 'java-library'
 	apply plugin: 'com.jfrog.artifactory'
 	apply plugin: 'maven-publish'
 	
@@ -102,16 +102,17 @@ subprojects {
 						'org.apache.commons:commons-compress:1.21',
 						'commons-logging:commons-logging:1.2',
 						'org.apache.logging.log4j:log4j-api:2.17.2',
-						'com.fasterxml.jackson.core:jackson-databind:2.13.4.1'
+						'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
 				
 				
 				// don't cache changing modules at all
 				cacheChangingModulesFor 0, 'seconds'
 			}
+			
+			exclude module: 'guava-jdk5'
+			exclude group: 'log4j', module: 'log4j'
+			exclude group: 'org.slf4j', module: 'slf4j-log4j12'
 		}
-		compile.exclude module: 'guava-jdk5'
-		compile.exclude group: 'log4j', module: 'log4j'
-		compile.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
 		
 		jaxb
 	}
@@ -136,18 +137,18 @@ subprojects {
 		jaxb 'javax.xml.bind:jaxb-api:2.2'
 		jaxb 'javax.xml:jsr173:1.0'
 
-		testCompile 'junit:junit:4.13.1'
-		testCompile 'org.mockito:mockito-all:2.0.2-beta'
-		testCompile 'org.testng:testng:6.14.3'
-		testCompile 'org.xerial:sqlite-jdbc:3.28.0'
-		testCompile group: 'com.h2database', name: 'h2', version: '1.4.200'
-		testCompile 'org.assertj:assertj-core:3.15.0'
+		testImplementation 'junit:junit:4.13.1'
+		testImplementation 'org.mockito:mockito-all:2.0.2-beta'
+		testImplementation 'org.testng:testng:6.14.3'
+		testImplementation 'org.xerial:sqlite-jdbc:3.28.0'
+		testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
+		testImplementation 'org.assertj:assertj-core:3.15.0'
 
 		if(JavaVersion.current() > JavaVersion.VERSION_1_8)
-			compile 'javax.annotation:javax.annotation-api:1.3.2'
+			implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
 		if (project.getParent().getName() == 'clearth-modules')
-			compile project(':clearth-core')
+			implementation project(':clearth-core')
 	}
 
 	task createDir {
@@ -171,7 +172,7 @@ subprojects {
 			attributes('Implementation-Title': "${project.name}")
 			attributes('Implementation-Vendor': 'Exactpro Systems LLC')
 			attributes('Implementation-Vendor-Id': 'com.exactprosystems')
-			attributes('Implementation-Version': "${version}")
+			attributes('Implementation-Version': "${archiveVersion}")
 			if (versionMark != '')
 				attributes('Implementation-Version-Mark': "${versionMark}")
 			attributes('Implementation-Version-Date': getDate())
@@ -366,5 +367,5 @@ dependencyCheck {
 }
 
 wrapper {
-	gradleVersion = '5.5'
+	gradleVersion = '8.0.1'
 }

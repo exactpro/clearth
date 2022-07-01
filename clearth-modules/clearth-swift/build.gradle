@@ -1,5 +1,5 @@
 dependencies {
-	compile "com.prowidesoftware:pw-swift-core:SRU2021-9.2.13"
+	api "com.prowidesoftware:pw-swift-core:SRU2021-9.2.13"
 }
 
 generateJavaFromXsd {
