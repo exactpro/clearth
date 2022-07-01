@@ -199,7 +199,7 @@
 									 rowStyleClass="#{step==automationConfigBean.steps.currentSchedulerStep ? (automationConfigBean.steps.currentStepIdle ? 'ui-state-hover' : 'ui-state-highlight') : ''}"
 									 scrollable="true" scrollHeight="7" resizableColumns="true" liveResize="true">
 							<p:ajax event="colResize" oncomplete="saveColumnsWidths('schedulerStepsTable')" />
-							<p:column headerText="Name" priority="1" style="width: 30%">
+							<p:column headerText="Name" responsivePriority="1" style="width: 30%">
 								<h:outputText value="#{step.name}" />&#160;&#160;
 								<h:graphicImage rendered="#{!step.comment.isEmpty()}" value="/images/help-icon.png" alt="Comment" style="vertical-align: middle; opacity: 1"
 												title="#{step.comment}"/>
@@ -210,38 +210,38 @@
 												   title="Asynchronous actions have been started in this step"/>
 								</div>
 							</p:column>
-							<p:column headerText="Kind" priority="1" style="width: 20%">
+							<p:column headerText="Kind" responsivePriority="1" style="width: 20%">
 								<h:outputText value="#{step.kind}" />
 								<br />
 								<h:outputText value="(#{step.parameter})" rendered="#{!empty step.parameter}" />
 							</p:column>
-							<p:column headerText="Start&#160;at" priority="2">
+							<p:column headerText="Start&#160;at" responsivePriority="2">
 								<h:outputText value="#{step.startAt}" />
 								<h:outputText value="&lt;br /&gt;(#{step.startAtTypeString})" rendered="#{!empty step.startAt &amp;&amp; fn:startsWith(step.startAt,'+')}" escape = "false"/>
 								<h:outputText value="&lt;br /&gt;(Wait next day if necessary)" rendered="#{!empty step.startAt &amp;&amp; step.waitNextDay}" escape = "false" />
 							</p:column>
-							<p:column headerText="Wait&#160;for&#160;start" priority="2">
+							<p:column headerText="Wait&#160;for&#160;start" responsivePriority="2">
 								<p:commandButton title="Click to skip waiting for step start" value="#{automationSchedulerBean.startTime}" ajax="false" actionListener="#{automationSchedulerBean.skipStepWaiting}" action="automation?faces-redirect=true" icon="ui-icon-clock" rendered="#{automationSchedulerBean.waitingForStep and automationSchedulerBean.isRunning(step)}"/>
 							</p:column>
-							<p:column headerText="Ask&#160;for&#160;continue" priority="2">
+							<p:column headerText="Ask&#160;for&#160;continue" responsivePriority="2">
 								<h:outputText value="#{step.askForContinue}" />
 							</p:column>
-							<p:column headerText="Ask&#160;if&#160;failed" priority="2">
+							<p:column headerText="Ask&#160;if&#160;failed" responsivePriority="2">
 								<h:outputText value="#{step.askIfFailed}" />
 							</p:column>
-							<p:column headerText="Execute" priority="2">
+							<p:column headerText="Execute" responsivePriority="2">
 								<h:outputText value="#{step.execute}" />
 							</p:column>
-							<p:column headerText="Started" priority="4">
+							<p:column headerText="Started" responsivePriority="4">
 								<h:outputText value="#{step.started}" rendered="#{step.execute}">
 									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 								</h:outputText>
 								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.started != null}" />
 							</p:column>
-							<p:column headerText="Actions&#160;successful" priority="3">
+							<p:column headerText="Actions&#160;successful" responsivePriority="3">
 								<h:outputText value="#{step.executionProgress}" />
 							</p:column>
-							<p:column headerText="Finished" priority="4">
+							<p:column headerText="Finished" responsivePriority="4">
 								<h:outputText value="#{step.finished}" rendered="#{step.execute}">
 									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 								</h:outputText>
@@ -269,21 +269,21 @@
 					<p:dataTable var="launchInfo" value="#{automationReportsBean.launches}" styleClass="responsiveTable toBottom"
 								 paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
 								 scrollable="true" scrollHeight="7">
-						<p:column headerText="Started" priority="2">
+						<p:column headerText="Started" responsivePriority="2">
 							<h:outputText value="#{launchInfo.started}">
 								<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 							</h:outputText>
 						</p:column>
-						<p:column headerText="Finished" priority="2">
+						<p:column headerText="Finished" responsivePriority="2">
 							<h:outputText value="#{launchInfo.finished}">
 								<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 							</h:outputText>
 						</p:column>
-						<p:column headerText="Interrupted" priority="3">
+						<p:column headerText="Interrupted" responsivePriority="3">
 							<h:outputText value="#{launchInfo.interrupted ? 'True' : 'False'}" />
 						</p:column>
 
-						<p:column headerText="Reports" style="text-align: left;" priority="1">
+						<p:column headerText="Reports" style="text-align: left;" responsivePriority="1">
 							<ui:fragment rendered="#{launchInfo.matricesInfo!=null and launchInfo.matricesInfo.size()==1}">
 								<a href="#{automationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.html" target="_blank"><h:outputText value="#{launchInfo.matricesInfo.get(0).name}" style="#{!launchInfo.matricesInfo.get(0).successful ? 'color: red;' : ''}" /></a>
 								&#160;
@@ -305,7 +305,7 @@
 				<div class="upperContainer">
 					<div class="upperRightContainer" style="margin-left; 0px;">
 						<h:form>
-							<p:fileUpload fileUploadListener="#{automationConfigBean.uploadSchedulerSettings}" allowTypes="/(\.|\/)(zip)$/" label="Upload configuration"
+							<p:fileUpload listener="#{automationConfigBean.uploadSchedulerSettings}" allowTypes="/(\.|\/)(zip)$/" label="Upload configuration"
 										  mode="advanced" auto="true" showButtons="false" multiple="false"
 										  update=":BusinessDay :WeekendIsHoliday :ConfigFile :ConnectionsToIgnoreFailures :Steps :Growl" styleClass="simple">
 							</p:fileUpload>
@@ -365,7 +365,7 @@
 						</p:selectBooleanCheckbox>
 						
 						<p:outputPanel rendered="#{!automationConfigBean.ignoreAllConnectionsFailures}" style="display: inline;">
-							<h:outputLabel value="#{automationConfigBean.connectionsToIgnoreFailuresString}" />
+							<h:outputText value="#{automationConfigBean.connectionsToIgnoreFailuresString}" />
 							&#160;
 							<p:commandButton value="Setup" oncomplete="PF('connectionsToIgnoreFailuresDialog').show();"
 											 update=":ConnectionsToIgnoreFailuresDialog" disabled="#{automationSchedulerBean.running}" />
@@ -384,7 +384,7 @@
 						<div class="upperLeftContainer">
 							<p:commandButton value="New step" actionListener="#{automationConfigBean.steps.newStep}" update=":StepDlg" oncomplete="PF('stepDialog').show();" icon="ui-icon-plusthick"/>
 							&#160;&#160;
-							<p:fileUpload fileUploadListener="#{automationConfigBean.steps.uploadSteps}" label="Upload steps"
+							<p:fileUpload listener="#{automationConfigBean.steps.uploadSteps}" label="Upload steps"
 										  mode="advanced" auto="true" showButtons="false" multiple="false" update=":SchedulerSteps :Steps :ConfigFile :Growl" styleClass="simple">
 							</p:fileUpload>
 							<p:selectBooleanCheckbox value="#{automationConfigBean.steps.appendSteps}" itemLabel="Append steps" style="top: -3px; position: relative;">
@@ -693,15 +693,15 @@
 							<p:ajax event="rowDblselect" update=":StepStateDialog" oncomplete="PF('stepStateDialog').show();" />
 							<p:ajax event="colResize" oncomplete="saveColumnsWidths('SavedStateInfo:stepsTable')" />
 
-							<p:column headerText="Name" priority="1" style="width: 30%">
+							<p:column headerText="Name" responsivePriority="1" style="width: 30%">
 								<h:outputText value="#{step.name}" />
 							</p:column>
-							<p:column headerText="Kind" priority="1" style="width: 20%">
+							<p:column headerText="Kind" responsivePriority="1" style="width: 20%">
 								<h:outputText value="#{step.kind}" />
 								<br />
 								<h:outputText value="(#{step.parameter})" rendered="#{!empty step.parameter}" />
 							</p:column>
-							<p:column headerText="Start&#160;at" priority="2">
+							<p:column headerText="Start&#160;at" responsivePriority="2">
 								<h:outputText value="#{step.startAt}" />
 								<br />
 								<h:outputText value="(#{step.startAtTypeString})" rendered="#{!empty step.startAt &amp;&amp; fn:startsWith(step.startAt,'+')}" />
@@ -776,16 +776,16 @@
 								</p:commandLink>
 							</p:column>
 
-							<p:column headerText="Started" priority="4">
+							<p:column headerText="Started" responsivePriority="4">
 								<h:outputText value="#{step.started}" rendered="#{step.execute}">
 									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 								</h:outputText>
 								<h:outputText value="-" rendered="#{!step.execute &amp;&amp; step.started != null}" />
 							</p:column>
-							<p:column headerText="Actions&#160;successful" priority="3">
+							<p:column headerText="Actions&#160;successful" responsivePriority="3">
 								<h:outputText value="#{step.executionProgress}" />
 							</p:column>
-							<p:column headerText="Finished" priority="4">
+							<p:column headerText="Finished" responsivePriority="4">
 								<h:outputText value="#{step.finished}" rendered="#{step.execute}">
 									<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 								</h:outputText>
@@ -880,7 +880,7 @@
 
 					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.kind}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
 					<h:outputText value="Step kind:" />
-					<p:selectOneMenu value="#{automationConfigBean.steps.oneSelectedStep.kind}" style="width: 200px;">
+					<p:selectOneMenu value="#{automationConfigBean.steps.oneSelectedStep.kind}" style="width: 176px;">
 						<p:ajax update="parameter" />
 						<f:selectItem itemLabel="Default" itemValue="Default" />
 						<f:selectItem itemLabel="Sleep" itemValue="Sleep" />
@@ -896,7 +896,7 @@
 
 					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.startAtType}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />
 					<h:outputText value="Start at after:" />
-					<p:selectOneMenu value="#{automationConfigBean.steps.oneSelectedStep.startAtTypeString}" style="width: 200px;">
+					<p:selectOneMenu value="#{automationConfigBean.steps.oneSelectedStep.startAtTypeString}" style="width: 176px;">
 						<f:selectItems value="#{automationBean.startAtTypes}" var="type"
 									   itemLabel="#{type}" itemValue="#{type}"/>
 					</p:selectOneMenu>
@@ -975,7 +975,7 @@
 		<!-- Upload matrices dialog -->
 		<p:dialog header="Upload matrix" id="uploadMatrixDialog" widgetVar="uploadMatrixDialog" resizable="false" width="600" closeOnEscape="true" modal="true">
 			<h:form enctype="multipart/form-data">
-				<p:fileUpload fileUploadListener="#{automationMatricesBean.uploadMatrix}" allowTypes="/(\.|\/)(csv|zip|xls|xlsx|CSV|ZIP|XLS|XLSX)$/" mode="advanced" multiple="true"
+				<p:fileUpload listener="#{automationMatricesBean.uploadMatrix}" allowTypes="/(\.|\/)(csv|zip|xls|xlsx|CSV|ZIP|XLS|XLSX)$/" mode="advanced" multiple="true"
 							  onstart="matricesToUpload = getNumberOfFilesToUpload('uploadMatrixDialog'); disableChoosing('uploadMatrixDialog');"
 							  oncomplete="matricesToUpload--; if (closeUploadDialogIfDone('uploadMatrixDialog', matricesToUpload)) { enableChoosing('uploadMatrixDialog'); }"
 							  update=":Matrices :Growl" />
@@ -987,7 +987,7 @@
 			<h:form id="LinkedMatrixDialog">
 				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin:0 auto;">
 					<h:outputText value="Type:" />
-					<p:selectOneMenu value="#{automationMatricesBean.selectedLinkedMatrix.type}" style="width: 440px;">
+					<p:selectOneMenu value="#{automationMatricesBean.selectedLinkedMatrix.type}" style="width: 427px;">
 						<p:ajax update="display"/>
 						<f:selectItem itemLabel="Local" itemValue="Local" />
 						<f:selectItem itemLabel="Remote" itemValue="Remote" />
@@ -1362,17 +1362,17 @@
 				  resizable="false" id="merrorsDlg" width="1000" closeOnEscape="true" modal="true">
 			<h:form id="MatricesErrorsDialog">
 				<div style="margin-bottom: 10px;">
-					<p:outputPanel id="ErrorPanel" style="width: 750px; max-height: 400px; overflow-x: hidden; overflow-y: auto; display: inline-block">
+					<p:outputPanel id="ErrorPanel" style="width: 700px; max-height: 400px; overflow-x: hidden; overflow-y: auto; display: inline-block">
 						<p:dataList var="issue"
 									value="#{automationBean.matrixChecker.checkedMatricesIssues}" type="none" style="display: inline">
-							<h:outputLabel value="#{issue.value}" style="#{issue.matrixName ? 'font-size: 120%; font-weight: bold' :
+							<h:outputText value="#{issue.value}" style="#{issue.matrixName ? 'font-size: 120%; font-weight: bold' :
 									issue.messageType ? 'font-weight: bold; padding-left: 2em' :
 									issue.messageKind ? 'font-weight: bold; padding-left: 4em' :
 									'padding-left: 6em'}" />
 							<br />
 						</p:dataList>
 					</p:outputPanel>
-					<div style="width: 200px; display: inline-block; vertical-align: top">
+					<div style="width: 250px; display: inline-block; vertical-align: top">
 						<h:outputText value="Error filter:" style="font-size: 130%" />
 						<br />
 						<p:selectManyCheckbox value="#{automationBean.matrixChecker.issuesFilter}" layout="pageDirection"
@@ -1425,7 +1425,7 @@
 		<p:dialog header="Select connections to ignore failures" widgetVar="connectionsToIgnoreFailuresDialog"
 				  width="420" resizable="false" closeOnEscape="true" modal="true">
 			<h:form id="ConnectionsToIgnoreFailuresDialog">
-				<h:outputLabel value="If failure occurs for any connection selected below, scheduler execution won't be suspended but relevant actions will be failed." />
+				<h:outputText value="If failure occurs for any connection selected below, scheduler execution won't be suspended but relevant actions will be failed." />
 				<p:scrollPanel style="max-height: 250px;">
 					<p:dataTable value="#{automationConfigBean.allConnections}" var="connection" rowKey="#{connection}"
 								 selection="#{automationConfigBean.selectedConnectionsToIgnoreFailures}">
@@ -1447,7 +1447,7 @@
 		<p:dialog header="Matrices" widgetVar="stateMatricesDialog"
 				  resizable="false" id="stateMatricesDlg" width="400" closeOnEscape="true" modal="true">
 			<h:form id="StateMatricesDialog">
-				<p:dataList var="matrix" value="#{automationStateBean.stateInfo.matrices}" itemType="none">
+				<p:dataList var="matrix" value="#{automationStateBean.stateInfo.matrices}" lazy="false" itemType="none">
 					<p:column>
 						<h:outputText value="#{matrix}" />
 					</p:column>
@@ -1479,7 +1479,7 @@
 					</p:inputText>
 
 					<h:outputText value="Start at after:" />
-					<p:selectOneMenu value="#{automationStateBean.selectedStepState.startAtTypeString}" style="width: 200px;">
+					<p:selectOneMenu value="#{automationStateBean.selectedStepState.startAtTypeString}" style="width: 176px;">
 						<f:selectItems value="#{automationBean.startAtTypes}" var="type"
 									   itemLabel="#{type}" itemValue="#{type}"/>
 					</p:selectOneMenu>

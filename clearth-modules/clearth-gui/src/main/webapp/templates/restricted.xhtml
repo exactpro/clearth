@@ -317,7 +317,9 @@
 				{
 					if ($(this).offset())
 					{
-						$(this).height($('#pageContainer').height() - $(this).offset().top - spaceDownToBtm);
+						newHeight = $('#pageContainer').height() - $(this).offset().top - spaceDownToBtm;
+						$(this).height(newHeight);
+						$(this).css('max-height', newHeight+'px');
 					}
 				});
 			}
@@ -326,7 +328,7 @@
 			{
 				stretchElementsToBottom(".toBottom.ui-datatable-scrollable .ui-datatable-scrollable-body", 1);
 				stretchElementsToBottom(".toBottom .ui-datagrid-data", 1);
-				stretchElementsToBottom(".toBottom", 0);
+				stretchElementsToBottom(".toBottom", 1);
 			}
 		</script>
 	</ui:define>

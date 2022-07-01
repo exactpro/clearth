@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,7 +26,7 @@ import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +78,7 @@ public class StepUploadHandler
 	
 	public static boolean isValidStepConfig(UploadedFile file, String mimeType)
 	{
-		if (file == null || file.getContents().length == 0)
+		if (file == null || file.getContent().length == 0)
 		{
 			String message = "Steps configuration file doesn't exist or empty";
 			logger.error(message);

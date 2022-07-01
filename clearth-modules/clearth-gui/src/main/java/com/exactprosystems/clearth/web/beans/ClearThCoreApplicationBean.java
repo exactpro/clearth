@@ -26,10 +26,7 @@ import com.exactprosystems.clearth.utils.MemoryAndSpaceMonitor;
 import com.exactprosystems.clearth.web.WebDeploymentConfig;
 import com.exactprosystems.clearth.web.jetty.JettyXmlUpdater;
 
-/**
- * Created by alexey.karpukhin on 8/25/16.
- */
-public abstract class ClearThCoreApplicationBean extends ClearThBean {
+public abstract class ClearThCoreApplicationBean {
 
 	public static ClearThCoreApplicationBean appInstance = null;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -34,17 +34,9 @@ import com.exactprosystems.clearth.web.misc.FacesExceptionHandler;
 
 public class FacesExceptionHandler extends ExceptionHandlerWrapper
 {
-	private ExceptionHandler wrapped;
-	
 	public FacesExceptionHandler(ExceptionHandler wrapped)
 	{
-		this.wrapped = wrapped;
-	}
-	
-	@Override
-	public ExceptionHandler getWrapped()
-	{
-		return this.wrapped;
+		super(wrapped);
 	}
 	
 	@Override

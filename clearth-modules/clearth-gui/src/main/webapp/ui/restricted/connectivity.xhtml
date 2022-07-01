@@ -23,7 +23,7 @@
 									 update=":ConnectionDlg :Connections" oncomplete="PF('conDialog').show()"/>
 				</div>
 				<div class="upperRightContainer">
-					<p:fileUpload fileUploadListener="#{connectivityBean.uploadMqConnections}"
+					<p:fileUpload listener="#{connectivityBean.uploadMqConnections}"
 								  allowTypes="/(\.|\/)(zip)$/" label="Upload connections"
 								  mode="advanced" auto="true" showButtons="false" multiple="false"
 								  update=":Connections :Growl" styleClass="simple">
@@ -113,7 +113,7 @@
 					<p:column styleClass="collapsedIconTable table-button" style="width: 16px; border-right: none;" resizable="false">
 						<p:rowToggler />
 					</p:column>
-					<p:column styleClass="table-button" style="width: 16px; border-right: none;" priority="1" resizable="false">
+					<p:column styleClass="table-button" style="width: 16px; border-right: none;" responsivePriority="1" resizable="false">
 						<p:commandLink title="Start" update=":Connections :Growl :Timer"
 								action="#{connectivityBean.startMqConnections}" rendered="#{!connection.running}"
 								onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos();">
@@ -125,7 +125,7 @@
 							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedMqConnection}" />
 						</p:commandLink>
 					</p:column>
-					<p:column styleClass="table-button" style="width: 21px; border-right: none;" priority="1" resizable="false">
+					<p:column styleClass="table-button" style="width: 21px; border-right: none;" responsivePriority="1" resizable="false">
 						<p:commandLink title="Favorite" update=":Connections :Growl"
 								action="#{connectivityBean.unfavorite}" rendered="#{connectivityBean.isFavorite(connection)}"
 								onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos();">
@@ -139,39 +139,39 @@
 							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedMqConnection}" />
 						</p:commandLink>
 					</p:column>
-					<p:column headerText="Name" priority="1">
+					<p:column headerText="Name" responsivePriority="1">
 						<h:outputText value="#{connection.name}" />
 					</p:column>
-					<p:column headerText="Host" priority="4">
+					<p:column headerText="Host" responsivePriority="4">
 						<h:outputText value="#{connection.hostname}" />
 					</p:column>
-					<p:column headerText="Port" priority="4">
+					<p:column headerText="Port" responsivePriority="4">
 						<h:outputText value="#{connection.port}" rendered="#{connection.port >= 0}" />
 					</p:column>
-					<p:column headerText="Manager" priority="3">
+					<p:column headerText="Manager" responsivePriority="3">
 						<h:outputText value="#{connection.queueManager}"  />
 					</p:column>
-					<p:column headerText="Channel" priority="3">
+					<p:column headerText="Channel" responsivePriority="3">
 						<h:outputText value="#{connection.channel}" />
 					</p:column>
-					<p:column headerText="Receive&#160;queue" priority="2">
+					<p:column headerText="Receive&#160;queue" responsivePriority="2">
 						<h:outputText value="#{connection.receiveQueue}" />
 					</p:column>
-					<p:column headerText="Send&#160;queue" priority="2">
+					<p:column headerText="Send&#160;queue" responsivePriority="2">
 						<h:outputText value="#{connection.sendQueue}" />
 					</p:column>
-					<p:column headerText="Received" priority="5">
+					<p:column headerText="Received" responsivePriority="5">
 						<h:outputText value="#{connection.received}" />
 					</p:column>
-					<p:column headerText="Sent" priority="5">
+					<p:column headerText="Sent" responsivePriority="5">
 						<h:outputText value="#{connection.sent}" />
 					</p:column>
-					<p:column headerText="Started" priority="6">
+					<p:column headerText="Started" responsivePriority="6">
 						<h:outputText value="#{connection.started}">
 							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 						</h:outputText>
 					</p:column>
-					<p:column headerText="Stopped" priority="6">
+					<p:column headerText="Stopped" responsivePriority="6">
 						<h:outputText value="#{connection.stopped}">
 							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 						</h:outputText>
@@ -239,7 +239,7 @@
 				<h:panelGroup layout="block" styleClass="big-info-block" rendered="#{connectivityBean.noListenersInfo}">
 					Connection '#{connectivityBean.oneSelectedMqConnection.name}' has no listeners
 					<br/>
-					<p:commandButton value="Add" icon="fa fa-fw fa-plus" update=":ListenersDialog"
+					<p:commandButton value="Add" icon="ui-icon-plusthick" update=":ListenersDialog"
 									 actionListener="#{connectivityBean.addListener}" styleClass="margin-top"/>
 				</h:panelGroup>
 				<h:panelGroup layout="block" rendered="#{!connectivityBean.noListenersInfo}">
@@ -254,9 +254,9 @@
 										<p:commandButton value="Add" icon="ui-icon-plusthick" update=":ListenersDialog" actionListener="#{connectivityBean.addListener}"/>
 									</div>
 								</div>
-								<p:dataTable id="listenersTable" var="listener" value="#{connectivityBean.oneSelectedMqConnection.listeners}"
+								<p:dataTable id="listenersTable" var="listener" value="#{connectivityBean.oneSelectedMqConnection.listeners}" lazy="false"
 											 styleClass="hide-table-header" emptyMessage="No listeners here"
-											 selectionMode="single" selection="#{connectivityBean.selectedListener}" rowKey="#{listener}"
+											 selectionMode="single" selection="#{connectivityBean.selectedListener}" rowKey="#{listener.hashCode()}"
 											 scrollable="true" scrollHeight="400">
 									<p:ajax event="rowSelect" update=":ListenersDialog :Growl"/>
 									<p:column>

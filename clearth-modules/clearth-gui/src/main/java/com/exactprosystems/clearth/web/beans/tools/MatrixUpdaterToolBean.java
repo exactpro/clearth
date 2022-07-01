@@ -34,7 +34,7 @@ import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
@@ -141,7 +141,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		File created = toStore.resolve(file.getFileName()).toFile();
 		created.createNewFile();
 
-		return FileOperationUtils.storeToFile(file.getInputstream(), created);
+		return FileOperationUtils.storeToFile(file.getInputStream(), created);
 	}
 
 	private Cell createCell(String column, String value)
@@ -207,7 +207,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		UploadedFile file = event.getFile();
 
-		if (file == null || file.getContents().length == 0)
+		if (file == null || file.getContent().length == 0)
 			return;
 
 		try
@@ -245,7 +245,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		UploadedFile file = event.getFile();
 
-		if (file == null || file.getContents().length == 0)
+		if (file == null || file.getContent().length == 0)
 			return;
 
 		if (!MatrixUpdaterUtils.isValidExtension(file.getFileName()))
@@ -289,7 +289,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		UploadedFile file = event.getFile();
 
-		if (file == null || file.getContents().length == 0)
+		if (file == null || file.getContent().length == 0)
 			return;
 
 		currentUpdate = null;

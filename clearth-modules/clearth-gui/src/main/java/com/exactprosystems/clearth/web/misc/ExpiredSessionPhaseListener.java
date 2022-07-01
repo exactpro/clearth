@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -34,15 +34,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.primefaces.PrimeFaces;
-import org.primefaces.context.RequestContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.web.beans.UserBean;
-
-
-public class ExpiredSessionPhaseListener extends UserBean implements PhaseListener
+public class ExpiredSessionPhaseListener implements PhaseListener
 {
+	private static final long serialVersionUID = 372656239782873673L;
+	
+	private static final Logger logger = LoggerFactory.getLogger(ExpiredSessionPhaseListener.class);
+	
 	String SESSION_EXPIRED_PAGE_CONTEXT_PARAM = "session_expired_page";
-
+	
 	public void afterPhase(PhaseEvent event)
 	{
 	}
@@ -52,7 +54,7 @@ public class ExpiredSessionPhaseListener extends UserBean implements PhaseListen
 		if (!UserInfoUtils.isLoggedIn())
 		{
 			FacesContext fc = FacesContext.getCurrentInstance();
-			RequestContext rc = RequestContext.getCurrentInstance();
+			PrimeFaces rc = PrimeFaces.current();
 			ExternalContext ec = fc.getExternalContext();
 			HttpServletResponse response = (HttpServletResponse) ec.getResponse();
 			HttpServletRequest request = (HttpServletRequest) ec.getRequest();
@@ -62,7 +64,7 @@ public class ExpiredSessionPhaseListener extends UserBean implements PhaseListen
 			
 			if (page == null)
 			{
-				getLogger().error("Redirect page for expired session is not described in web.xml. Please, add context parameter '"+SESSION_EXPIRED_PAGE_CONTEXT_PARAM+"'");
+				logger.error("Redirect page for expired session is not described in web.xml. Please, add context parameter '"+SESSION_EXPIRED_PAGE_CONTEXT_PARAM+"'");
 				return;
 			}
 			
@@ -102,7 +104,7 @@ public class ExpiredSessionPhaseListener extends UserBean implements PhaseListen
 
 			} catch (Exception e)
 			{
-				getLogger().error("Redirect to the specified page '" + url + "' failed");
+				logger.error("Redirect to the specified page '" + url + "' failed");
 				throw new FacesException(e);
 			}
 		}

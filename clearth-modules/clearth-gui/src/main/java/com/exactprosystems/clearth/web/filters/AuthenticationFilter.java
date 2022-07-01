@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,8 +36,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.web.beans.AuthBean;
@@ -45,8 +43,6 @@ import com.exactprosystems.clearth.web.beans.AuthBean;
 public class AuthenticationFilter implements Filter
 {
 	private static final String PARAMETER = "requestUrl";
-	
-	private static Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 	
 	protected String LOGIN_PAGE = "/ui/login.jsf", HOME_PAGE = "/ui/restricted/home.jsf", PAGEACCESS_CFG = "pageaccess.cfg";
 	private Map<String, String[]> pages = new HashMap<String, String[]>();
@@ -115,11 +111,11 @@ public class AuthenticationFilter implements Filter
 		}
 		catch (IOException e)
 		{
-			logger.warn("File with page-role restrictions not found, all pages are enabled for any role", e);
+			throw new ServletException("File with page-role restrictions not found, all pages are enabled for any role", e);
 		}
 		catch (Exception e)
 		{
-			logger.error("Error occurred while loading page-role restrictions from file", e);
+			throw new ServletException("Error occurred while loading page-role restrictions from file", e);
 		}
 	}
 

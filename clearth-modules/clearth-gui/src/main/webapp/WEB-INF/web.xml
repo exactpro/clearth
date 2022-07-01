@@ -45,7 +45,18 @@
 		<param-name>primefaces.FONT_AWESOME</param-name>
 		<param-value>true</param-value>
 	</context-param>
-
+	
+	<context-param>
+		<param-name>org.apache.myfaces.LOG_WEB_CONTEXT_PARAMS</param-name>
+		<param-value>false</param-value>
+	</context-param>
+	
+	<context-param>
+		<param-name>org.apache.myfaces.config.annotation.LifecycleProvider</param-name>
+		<param-value>org.apache.myfaces.config.annotation.NoInjectionAnnotationLifecycleProvider</param-value>
+	</context-param>
+	
+	
 	<filter>
 		<filter-name>PrimeFaces FileUpload Filter</filter-name>
 		<filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
@@ -74,7 +85,7 @@
 	</filter-mapping>
 
 	<listener>
-		<listener-class>com.sun.faces.config.ConfigureListener</listener-class>
+		<listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class> 
 	</listener>
 
 	<listener>

@@ -34,7 +34,7 @@ import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -135,7 +135,7 @@ public class MatricesAutomationBean extends ClearThBean {
 	{
 		UploadedFile uploadedFile = event.getFile();
 
-		if (uploadedFile.getContents().length == 0)
+		if (uploadedFile.getContent().length == 0)
 		{
 			MessageUtils.addErrorMessage("Invalid file content", "Uploaded file is empty");
 			return;
@@ -145,7 +145,7 @@ public class MatricesAutomationBean extends ClearThBean {
 
 		try
 		{
-			matrixUploadHandler.handleUploadedFile(uploadedFile.getInputstream(), uploadedFileName, selectedScheduler());
+			matrixUploadHandler.handleUploadedFile(uploadedFile.getInputStream(), uploadedFileName, selectedScheduler());
 			String details = format("File '%s' is uploaded", uploadedFileName);
 			MessageUtils.addInfoMessage("Success", details);
 		}

@@ -14,7 +14,7 @@ repositories {
 		name "SharedDir" // for local builds only
 		url file("@CORE_SHARED_DIR@")
 	}
-	jcenter()
+	mavenCentral()
 }
 
 dependencies {

@@ -217,6 +217,4 @@ public class ReportsArchiver {
 
 		return WebUtils.downloadFile(result, "reports_logs.zip");
 	}
-	
-	
 }

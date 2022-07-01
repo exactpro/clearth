@@ -26,10 +26,8 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.lang.StringUtils;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.annotation.PostConstruct;
 import javax.faces.event.AjaxBehaviorEvent;
 
@@ -42,9 +40,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by alexander.magomedov on 10/31/16.
- */
 public class CollectorScannerToolBean extends ClearThBean
 {
 	private static final String ELLIPSIS = "...";
@@ -182,9 +177,7 @@ public class CollectorScannerToolBean extends ClearThBean
 			
 			FileOperationUtils.zipFiles(result, new File[]{file});
 			
-			return new DefaultStreamedContent(new FileInputStream(result),
-											  new MimetypesFileTypeMap().getContentType(result),
-											  result.getName());
+			return WebUtils.downloadFile(result);
 		}
 		catch (IOException e)
 		{

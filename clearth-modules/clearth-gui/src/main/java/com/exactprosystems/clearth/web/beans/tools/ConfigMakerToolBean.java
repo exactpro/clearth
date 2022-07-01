@@ -31,7 +31,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -40,9 +40,6 @@ import java.util.List;
 import static java.lang.String.format;
 
 
-/**
- * Created by alexander.magomedov on 10/31/16.
- */
 public class ConfigMakerToolBean extends ClearThBean
 {
 	protected ConfigMakerTool configMakerTool;

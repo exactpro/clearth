@@ -84,14 +84,12 @@
 	<br/>
 	<br/>
 	<h:form id="matrixUpdaterTool" enctype="multipart/form-data">
-		<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
-
 		<p:outputPanel style="width:100%; min-width:1010px">
 		<p:panelGrid style="width:100%">
 			<p:row>
 				<p:column style="width:450px;min-width:450px">
 					<label class="pageTitle" style="margin-bottom:0px">Settings</label>
-					<p:fileUpload fileUploadListener="#{matrixUpdaterToolBean.uploadConfigFile}"
+					<p:fileUpload listener="#{matrixUpdaterToolBean.uploadConfigFile}"
 								  label="Upload"
 								  mode="advanced" auto="true" showButtons="false"
 								  multiple="false" styleClass="simple"
@@ -110,7 +108,7 @@
 				</p:column>
 				<p:column >
 					<label class="pageTitle" style="margin-bottom:0px">Matrices</label>
-					<p:fileUpload fileUploadListener="#{matrixUpdaterToolBean.uploadMatrixFile}"
+					<p:fileUpload listener="#{matrixUpdaterToolBean.uploadMatrixFile}"
 								  label="File | Archive" mode="advanced"
 								  auto="true" showButtons="false"
 								  accept=".csv,.xls,.xlsx,.zip"
@@ -319,7 +317,7 @@
 										<label style="display: inline-block; margin-bottom: 10px; font-weight:bold">Actions</label>
 									</div>
 									<div class="upperRightContainer">
-										<p:fileUpload fileUploadListener="#{matrixUpdaterToolBean.uploadAdditionFile}"
+										<p:fileUpload listener="#{matrixUpdaterToolBean.uploadAdditionFile}"
 												mode="advanced" auto="true" showButtons="false"
 												multiple="false"
 												styleClass="simple" update="Growl actionsFileName" style="margin-bottom: 5px;"/>
@@ -404,7 +402,6 @@
 	</h:form>
 
 	<h:form id="MUPolling">
-		<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
 		<p:poll interval="2" widgetVar="MUPoll" autoStart="false" stop="#{!matrixUpdaterToolBean.running}"
 				update=":progressDialogForm :Growl" />
 	</h:form>
@@ -416,7 +413,6 @@
 				  style="margin: 0 auto"
 				  closable="false">
 		<h:form id="progressDialogForm" >
-			<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
 			<p:panelGrid style="width:100%;" id="progressDialog">
 				<p:row style="border:0">
 					<p:column style="width:100%">
@@ -454,7 +450,6 @@
 			widgetVar="keyFieldDialog" closeOnEscape="true"
 			resizable="false" modal="true" style="margin: 0 auto">
 		<h:form id="KeyFieldDialog">
-			<h:inputHidden id="NoPRG" value="NoPRGForThisForm" />
 			<label class="pageSubTitle">New key field</label>
 			<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
 				<h:panelGrid columns="3">

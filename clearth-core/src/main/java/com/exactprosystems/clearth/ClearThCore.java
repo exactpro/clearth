@@ -44,6 +44,7 @@ import freemarker.template.TemplateModelException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.slf4j.Logger;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -303,6 +304,9 @@ public abstract class ClearThCore
 		File logConfig = new File(getRootRelative(configFiles.getLogCfgFileName()));
 		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
 		ctx.setConfigLocation(logConfig.toURI());
+		
+		SLF4JBridgeHandler.removeHandlersForRootLogger();
+		SLF4JBridgeHandler.install();
 	}
 	
 	protected void initSystemProperties()

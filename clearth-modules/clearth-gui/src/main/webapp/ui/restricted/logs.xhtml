@@ -81,7 +81,7 @@
 					<br />
 					<p:panelGrid columns="3">
 						<p:selectOneMenu id="currentLogger" value="#{logsBean.currentLogger}"
-										 style="width:300px;" appendTo="@this">
+										 style="width:300px;">
 							<f:selectItem itemLabel="&lt;Choose a logger to manipulate&gt;" itemValue="" />
 							<f:selectItems value="#{logsBean.getLoggers(userBean.admin)}" var="lg" itemLabel="#{lg}" itemValue="#{lg}" />
 							<p:ajax event="change" update=":LoggingLevel :Growl" process="@this" />

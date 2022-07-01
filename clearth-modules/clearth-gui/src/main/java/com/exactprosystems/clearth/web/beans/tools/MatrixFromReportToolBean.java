@@ -23,18 +23,17 @@ import com.exactprosystems.clearth.automation.report.html.ReportParser;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
-import org.primefaces.model.UploadedFile;
 
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+
+import org.primefaces.model.file.UploadedFile;
+
 import java.io.File;
 import java.io.IOException;
 
 import static com.exactprosystems.clearth.ClearThCore.configFiles;
 
-/**
- * Created by alexander.magomedov on 10/31/16.
- */
 public class MatrixFromReportToolBean extends ClearThBean
 {
 	protected final File uploadStorage = new File(ClearThCore.uploadStoragePath());
@@ -43,7 +42,7 @@ public class MatrixFromReportToolBean extends ClearThBean
 	
 	public void makeMatrix()
 	{
-		if ((file == null) || (file.getContents().length == 0))
+		if ((file == null) || (file.getContent().length == 0))
 		{
 			MessageUtils.addWarningMessage("No report selected", "Please select a report to create matrix from");
 			return;

@@ -31,7 +31,7 @@ import javax.faces.model.SelectItem;
 import com.exactprosystems.clearth.web.misc.*;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.UsersManager;
@@ -281,7 +281,7 @@ public class UserManagementBean extends ClearThBean
 			return;
 		
 		UploadedFile file = event.getFile();
-		if ((file == null) || (file.getContents().length == 0))
+		if ((file == null) || (file.getContent().length == 0))
 			return;
 
 		try

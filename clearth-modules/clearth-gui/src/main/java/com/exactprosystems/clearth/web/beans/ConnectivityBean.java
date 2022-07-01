@@ -31,7 +31,7 @@ import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.web.misc.*;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
@@ -300,7 +300,7 @@ public class ConnectivityBean extends ClearThBean
 	protected void uploadXConnections(String type, FileUploadEvent event)
 	{
 		UploadedFile file = event.getFile();
-		if ((file == null) || (file.getContents().length == 0))
+		if ((file == null) || (file.getContent().length == 0))
 			return;
 
 		try

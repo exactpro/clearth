@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import javax.faces.context.FacesContext;
-import javax.faces.context.Flash;
-import javax.faces.event.ComponentSystemEvent;
 import javax.servlet.http.HttpSession;
 
 import com.exactprosystems.clearth.ClearThCore;
@@ -89,20 +87,9 @@ public class AuthBean extends ClearThBean
 	{
 	}
 
-	public void pullValuesFromFlash(ComponentSystemEvent e) {
-		Flash flash = FacesContext.getCurrentInstance().getExternalContext().getFlash();
-		userName = (String)flash.get(USERNAME);
-		password = (String)flash.get(PASSWORD);
-	}
-
 	public void saveAndRedirect()
 	{
 		FacesContext facesContext = FacesContext.getCurrentInstance();
-		Flash flash = facesContext.getExternalContext().getFlash();
-		flash.setKeepMessages(true);
-		flash.put(USERNAME, userName);
-		flash.put(PASSWORD, password);
-
 		String url = facesContext.getApplication().getViewHandler().getActionURL(facesContext, facesContext.getViewRoot().getViewId());
 
 		try

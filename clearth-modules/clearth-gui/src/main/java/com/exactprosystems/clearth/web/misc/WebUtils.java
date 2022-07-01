@@ -26,10 +26,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.context.PrimeFacesContext;
-import org.primefaces.context.RequestContext;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 
 import com.exactprosystems.clearth.ClearThCore;
@@ -57,7 +56,7 @@ public class WebUtils
 		{
 			File result = File.createTempFile(prefix, suffix, storageDir);
 			
-			input = uploadedFile.getInputstream();
+			input = uploadedFile.getInputStream();
 			output = new FileOutputStream(result);
 			
 			IOUtils.copy(input, output);
@@ -72,7 +71,13 @@ public class WebUtils
 	
 	public static StreamedContent downloadFile(File file, String fileName) throws FileNotFoundException
 	{
-		return new DefaultStreamedContent(new FileInputStream(file), new MimetypesFileTypeMap().getContentType(file), fileName);
+		@SuppressWarnings("resource")
+		InputStream stream = new FileInputStream(file);
+		return DefaultStreamedContent.builder()
+				.stream(() -> stream)
+				.contentType(new MimetypesFileTypeMap().getContentType(file))
+				.name(fileName)
+				.build();
 	}
 	
 	public static StreamedContent downloadFile(File file) throws FileNotFoundException
@@ -82,10 +87,10 @@ public class WebUtils
 
 	public static boolean addCanCloseCallback(boolean canClose)
 	{
-		RequestContext context = RequestContext.getCurrentInstance();
+		PrimeFaces context = PrimeFaces.current();
 		if (context != null)
 		{
-			PrimeFaces.current().ajax().addCallbackParam("canClose", canClose);
+			context.ajax().addCallbackParam("canClose", canClose);
 			return true;
 		}
 		else

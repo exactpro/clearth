@@ -29,7 +29,7 @@ import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 import javax.faces.event.AjaxBehaviorEvent;
 import java.io.File;
@@ -113,7 +113,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	public void uploadSchedulerSettings(FileUploadEvent event)
 	{
 		UploadedFile file = event.getFile();
-		if ((file==null) || (file.getContents().length==0))
+		if ((file==null) || (file.getContent().length==0))
 			return;
 
 		try

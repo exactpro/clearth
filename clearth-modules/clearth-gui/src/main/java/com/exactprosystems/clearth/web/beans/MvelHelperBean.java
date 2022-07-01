@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -34,12 +34,10 @@ public class MvelHelperBean extends ClearThBean
 {
 	private int activeTab = 0;
 	private List<MethodData> methodsList;
-	private TreeNode methodsTree;
-	private TreeNode selectedMethod;
+	private TreeNode<Object> methodsTree;
+	private TreeNode<Object> selectedMethod;
 	private boolean initialized;
 	
-	private MethodData selectedMethodData;
-
 	public MvelHelperBean()
 	{
 		init();
@@ -74,9 +72,9 @@ public class MvelHelperBean extends ClearThBean
 		return helper.getMethodsList();
 	}
 
-	public TreeNode getTree()
+	public TreeNode<Object> getTree()
 	{
-		TreeNode root = new DefaultTreeNode("root", null);
+		TreeNode<Object> root = new DefaultTreeNode<>("root", null);
 
 		Set<String> groups = new HashSet<String>();
 
@@ -87,16 +85,16 @@ public class MvelHelperBean extends ClearThBean
 
 		for (String group : groups)
 		{
-			TreeNode g = new DefaultTreeNode("group", group, root);
+			TreeNode<Object> g = new DefaultTreeNode<>("group", group, root);
 			g.setSelectable(false);
 		}
 
 		for (MethodData method : methodsList)
 		{
-			for (TreeNode node : root.getChildren())
+			for (TreeNode<Object> node : root.getChildren())
 			{
 				if(node.getData().equals(method.group))
-					new DefaultTreeNode("method", method, node);
+					new DefaultTreeNode<>("method", method, node);
 			}
 		}
 
@@ -156,10 +154,5 @@ public class MvelHelperBean extends ClearThBean
 	public void setInitialized(boolean initialized)
 	{
 		this.initialized = initialized;
-	}
-
-	public void setSelectedMethodData(MethodData selectedMethodData)
-	{
-		this.selectedMethodData = selectedMethodData;
 	}
 }

@@ -18,11 +18,6 @@
 			}
 		</script>
 		
-		<!-- Add ?tool={number} to URL (tools.jsf?tool=0) for load page with suitable tool -->
-		<f:metadata>
-			<f:viewParam id="toolGet" name="tool" value="#{toolsBean.activeTab}" />
-		</f:metadata>
-		
 		
 		<label class="pageTitle">Tools</label>
 		<br />
@@ -430,7 +425,7 @@
 								<p:inputText id="inputExpr_textArea" value="#{ecToolBean.expression}" style="width: 98%; font-family: monospace;" />
 								<p:watermark for="inputExpr_textArea" value="Input your @{expression} here and click 'Calculate'" />
 								<p:focus context="ExpCalc" />
-								<p:commandButton type="button" style="margin-left:10px" icon="fa fa-fw fa-info" onclick="PF('dlgHelp').show();"/>
+								<p:commandButton type="button" style="margin-left:10px" icon="ui-icon-info" onclick="PF('dlgHelp').show();"/>
 								<p:dialog header="Expressions help" widgetVar="dlgHelp" 
 										height="360" minHeight="360" width="980" minWidth="980" resizable="true" style="border:none;">
 									<ui:include src="mvel_helper.xhtml"/>

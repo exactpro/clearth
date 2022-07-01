@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,9 +19,6 @@
 package com.exactprosystems.clearth.web.misc;
 
 import java.util.EventListener;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
@@ -32,10 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.web.misc.users.UserSessionCollector;
 
-/**
- * @author andrey.panarin
- *
- */
 public class SessionEventListener implements HttpSessionListener, EventListener
 {	
 	private static final Logger logger = LoggerFactory.getLogger(SessionEventListener.class);
@@ -55,6 +48,4 @@ public class SessionEventListener implements HttpSessionListener, EventListener
 		
 		UserSessionCollector.removeSession(destroyedSession);
 	}
-	
-	
 }
