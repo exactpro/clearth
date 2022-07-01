@@ -67,7 +67,7 @@ public class ApplicationManager
 			DEFAULT_REPORT_FILES_DIR = WEB_APP_DIR + "/WEB-INF/report_files/",
 			REALTIME_REPORT_DIR = APP_ROOT + "/ui/restricted/",
 			USER_SETTINGS_DIR = TEST_OUTPUT + "usersettings/",
-			USERS_FILENAME = TEST_OUTPUT + "users.xml";
+			USERS_LIST_FILE_PATH = USER_DIR + "/src/test/resources/users.xml";
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -211,7 +211,7 @@ public class ApplicationManager
 		when(spy.getLogsDir()).thenReturn(TEST_DATA_DIR + cfg.getLogsDir());
 		when(spy.getLogCfgFileName()).thenReturn(LOG_PROPERTIES_FILE_PATH);
 		when(spy.getUserSettingsDir()).thenReturn(USER_SETTINGS_DIR);
-		when(spy.getUsersFileName()).thenReturn(USERS_FILENAME);
+		when(spy.getUsersFileName()).thenReturn(USERS_LIST_FILE_PATH);
 
 		return spy;
 	}
