@@ -44,13 +44,13 @@ public class ToolsBean extends ClearThBean
 	}
 
 	@PostConstruct
-	private void init()
+	protected void init()
 	{
 		toolsManager = ClearThCore.getInstance().getToolsManager();
 		allTools = toolsManager.getToolsInfo();
 		username = UserInfoUtils.getUserName();
 		favoriteTools = toolsManager.getUserFavoriteTools(username);
-
+		
 		if (!favoriteTools.isEmpty())
 		{
 			activeTab = favoriteActiveTab = favoriteTools.iterator().next();

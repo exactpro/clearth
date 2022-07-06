@@ -48,7 +48,7 @@ public class ReportBean
 	private String reportHead, reportBody;
 	
 	@PostConstruct
-	private void init()
+	protected void init()
 	{
 		userName = UserInfoUtils.getUserName();
 	}

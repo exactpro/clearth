@@ -100,7 +100,7 @@ public class UserManagementBean extends ClearThBean
 	}
 
 	@PostConstruct
-	private void init()
+	protected void init()
 	{
 		newUser();
 	}

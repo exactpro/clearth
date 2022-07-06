@@ -66,7 +66,7 @@ public class ConnectivityBean extends ClearThBean
 	}
 
 	@PostConstruct
-	private void init()
+	protected void init()
 	{
 		this.favoriteConnection = ClearThCore.getInstance().getFavoriteConnections();
 		this.username = UserInfoUtils.getUserName();

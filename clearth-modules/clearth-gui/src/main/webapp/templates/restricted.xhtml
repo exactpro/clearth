@@ -170,12 +170,12 @@
 									<h:outputText styleClass="ui-growl-image ui-growl-image-info" rendered="#{msg.severity == 'INFO'}" />
 								</p:column>
 								<p:column style="word-break: break-all;">
-									<h:outputLabel style="font-weight: bold;" value="#{msg.summary}" />
+									<h:outputText style="font-weight: bold;" value="#{msg.summary}" />
 									<br/>
-									<h:outputLabel value="#{msg.detail}" />
+									<h:outputText value="#{msg.detail}" />
 								</p:column>
 								<p:column style="width: 55px; text-align: center;">
-									<h:outputLabel value="#{msg.creationTime}" />
+									<h:outputText value="#{msg.creationTime}" />
 									<br/>
 									<p:commandLink update=":PopupsDialog" action="#{popUpMsgsBean.removeSelectedMessage}">
 										<f:setPropertyActionListener value="#{msg}" target="#{popUpMsgsBean.selectedMessage}" />
