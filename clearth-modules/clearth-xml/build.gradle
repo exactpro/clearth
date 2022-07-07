@@ -43,3 +43,19 @@ publishing {
 artifactoryPublish {
 	publications(publishing.publications.xml)
 }
+
+ext {
+	moduleName = 'XML'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-xml'
+	moduleDict = "xml.xml"
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+}
+
+task installModule {
+	doLast {
+		def codec = file("${projectDir}/installation/codec.xml").text
+		def dictPath = "${projectDir}/installation/dicts/${moduleDict}"
+		installMsgModule(clearthDir, moduleName, moduleImpl, codec, moduleDict, dictPath)
+	}
+}

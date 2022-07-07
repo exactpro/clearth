@@ -1,0 +1,6 @@
+	<CodecConfig>
+		<Name>Xml</Name>
+		<DictionaryFile>xml.xml</DictionaryFile>
+		<Dictionary>com.exactprosystems.clearth.connectivity.xml.XmlDictionary</Dictionary>
+		<Codec>com.exactprosystems.clearth.connectivity.xml.XmlCodec</Codec>
+	</CodecConfig>

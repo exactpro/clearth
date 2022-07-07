@@ -1,0 +1,6 @@
+    <CodecConfig>
+        <Name>Swift</Name>
+        <DictionaryFile>swift.xml</DictionaryFile>
+        <Dictionary>com.exactprosystems.clearth.connectivity.swift.SwiftDictionary</Dictionary>
+        <Codec>com.exactprosystems.clearth.connectivity.swift.SwiftCodec</Codec>
+    </CodecConfig>

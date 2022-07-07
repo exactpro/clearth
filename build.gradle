@@ -14,6 +14,7 @@ buildscript {
 apply plugin: 'org.owasp.dependencycheck'
 
 ext {
+	undef = 'undef'
 	sharedDir = file('shared')
 	coreXsdDir = file('clearth-core/xsd')
 
@@ -26,12 +27,12 @@ ext {
 	}
 	
 	if (!project.hasProperty('newProjectDir')) {
-		newProjectDir = "undef"
+		newProjectDir = undef
 	}
 
 	oldProjectName = 'newproject'
 	if (!project.hasProperty('newProjectName')) {
-		newProjectName = "undef"
+		newProjectName = undef
 	}
 	jettyVersion = '9.4.19.v20190610'
 	jettyDistName = "jetty-distribution-${jettyVersion}"
@@ -295,10 +296,10 @@ task createProject(type: Copy,
 		dependsOn: 'updateJettyXml') {
 	
 	doFirst {
-		if (newProjectDir == 'undef') {
+		if (newProjectDir == undef) {
 			throw new GradleException('You must set "newProjectDir" property via "-PnewProjectDir=<path_to_new_project>" key')
 		}
-		if (newProjectName == 'undef') {
+		if (newProjectName == undef) {
 			throw new GradleException('You must set "newProjectName" property via "-PnewProjectName=<project_name>" key')
 		}
 		if (!newProjectName.find('^[_*\\w*\\d*]+$')) {

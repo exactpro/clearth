@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTf-8" standalone="yes"?>
+<SwiftDictionaryDesc>
+    <!--
+    Here you can add SWIFT message descriptions, for example:
+    
+    <messageDesc name="SwiftExample" type="SwiftExample">
+        <key name="ExampleKey" mandatory="true" />
+        <key name="ExampleOptionalKey" mandatory="false" />
+        
+        <fieldDesc name="ExampleField" tag="00" />
+        <fieldDesc name="ExampleFieldWithDefaultValue" tag="01" default="Value" />
+        <fieldDesc name="ExampleFieldWithValuePrefix" tag="02" valuePrefix="PREFIX/" />
+        <fieldDesc name="ExampleFieldWithSubValue" tag="03" subvalue="Value" />
+        <fieldDesc sequenceType="SMTH">
+            <fieldDesc name="ExampleSubField" tag="04" qualifier="SMTH" />
+        </fieldDesc>
+        <fieldDesc name="ExampleOptionalField" tag="05" mandatory="false" />
+    </messageDesc>
+    -->
+</SwiftDictionaryDesc>

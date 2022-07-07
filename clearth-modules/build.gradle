@@ -1,0 +1,70 @@
+ext {
+    cthImpl = 'implementation "com.exactprosystems.clearth:clearth-core'
+    installationFiles = "${projectDir}/installation"
+}
+
+def checkCthDir(clearthDir) {
+    if (clearthDir == undef)
+        throw new GradleException("You must set 'clearthDir' property via '-PclearthDir=<path_to_clearth_project>' key")
+    if (!file(clearthDir).exists())
+        throw new GradleException("ClearTH project directory '${clearthDir}' does not exist")
+    if (!file("${clearthDir}/build.gradle").text.contains(cthImpl))
+        throw new GradleException("Not a ClearTH project directory: no '${cthImpl}\"' in project's 'build.gradle'")
+}
+
+def checkCodecsFile(clearthDir) {
+    if (file("${clearthDir}/cfg/codecs.xml").exists()) {
+        println("- This project already contains a codec config file")
+    } else {
+        copy {
+            from("${installationFiles}/codecs.xml")
+            into "$clearthDir/cfg"
+        }
+        println("- Default codec config file added to project: ${clearthDir}/cfg/codecs.xml")
+    }
+}
+
+def putCodec(codecValue, codecName, clearthDir) {
+    checkCodecsFile(clearthDir)
+
+    ant.replaceregexp(match: '</CodecConfigs>', replace: "${codecValue}\n</CodecConfigs>") {
+        fileset(dir: "${clearthDir}/cfg/", includes: 'codecs.xml')
+    }
+    println("- ${codecName} codec config added to project's codec config file: ${clearthDir}/cfg/codecs.xml")
+}
+
+def putDictionary(dictName, dictPath, clearthDir) {
+    if (file("${clearthDir}/cfg/dicts/${dictName}").exists()) {
+        println("- Message dictionary already exists in project: ${clearthDir}/cfg/dicts/${dictName}")
+    } else {
+        copy {
+            from(dictPath)
+            into "${clearthDir}/cfg/dicts"
+        }
+        println("- Empty message dictionary added to project: ${clearthDir}/cfg/dicts/${dictName}")
+    }
+}
+
+def putImplementation(moduleImpl, clearthDir) {
+    ant.replaceregexp(match: "${cthImpl}", replace: "implementation \"${moduleImpl}:\${core_version}\"\n\t${cthImpl}") {
+        fileset(dir: "${clearthDir}", includes: 'build.gradle')
+    }
+    println("- Module dependency added to project's 'build.gradle' file: ${moduleImpl}")
+}
+
+
+def installMsgModule(clearthDir, moduleName, moduleImpl, moduleCodec, moduleDictName, moduleDictPath) {
+    checkCthDir(clearthDir)
+
+    if (file("${clearthDir}/build.gradle").text.contains(moduleImpl)) {
+        println("${moduleName} module is already installed in project: ${clearthDir}")
+        return
+    }
+    println("Installing ${moduleName} module in project: ${clearthDir}")
+
+    putCodec(moduleCodec, moduleName, clearthDir)
+    putDictionary(moduleDictName, moduleDictPath, clearthDir)
+    putImplementation(moduleImpl, clearthDir)
+
+    println("${moduleName} module has been installed")
+}

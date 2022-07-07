@@ -47,3 +47,19 @@ publishing {
 artifactoryPublish {
 	publications(publishing.publications.swift)
 }
+
+ext {
+	moduleName = 'SWIFT'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-swift'
+	moduleDict = "swift.xml"
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+}
+
+task installModule {
+	doLast {
+		def codec = file("${projectDir}/installation/codec.xml").text
+		def dictPath = "${projectDir}/installation/dicts/${moduleDict}"
+		installMsgModule(clearthDir, moduleName, moduleImpl, codec, moduleDict, dictPath)
+	}
+}
