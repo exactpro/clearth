@@ -554,8 +554,12 @@ public abstract class ClearThConnectionStorage
 	{
 		if (isBlank(connectionName))
 			throw new SettingsException("Connection name cannot be empty.");
-		else if (connectionsByName.containsKey(connectionName))
-			throw new SettingsException(format("Connection with name '%s' already exists.", connectionName));
+		ClearThConnection<?, ?> connection = findConnection(connectionName);
+		if (connection != null)
+		{
+			throw new SettingsException(format("Connection with name '%s' already exists and has type '%s'.",
+					connectionName, connection.getType()));
+		}
 		
 		NameValidator.validate(connectionName);
 	}
