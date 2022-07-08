@@ -41,16 +41,13 @@ import java.util.Set;
 
 import static com.exactprosystems.clearth.tools.MessageParserTool.AUTO_FORMAT;
 
-/**
- * Created by alexander.magomedov on 10/31/16.
- */
 public class MessageParserToolBean extends ClearThBean
 {
 	protected MessageParserTool messageParserTool;
 	protected CodecsStorage codecs;
 	
 	protected String textToParseFormat = "", textToParse = "", parsedText = "";
-	protected TreeNode parsedTree = new DefaultTreeNode();
+	protected TreeNode<MessageNode> parsedTree = new DefaultTreeNode<>();
 	
 	@PostConstruct
 	public void init()
@@ -80,7 +77,7 @@ public class MessageParserToolBean extends ClearThBean
 		messageParserTool.parseText(textToParse, textToParseFormat);
 		parsedText = messageParserTool.getParsedText();
 		
-		parsedTree = new DefaultTreeNode();
+		parsedTree = new DefaultTreeNode<>();
 		if (!parsedText.isEmpty())
 			messageToTree(messageParserTool.getParsedMsg(), parsedTree);
 
@@ -97,11 +94,11 @@ public class MessageParserToolBean extends ClearThBean
 		return StringUtils.equals(textToParseFormat, AUTO_FORMAT);
 	}
 	
-	protected void messageToTree(ClearThMessage<?> message, TreeNode parentNode)
+	protected void messageToTree(ClearThMessage<?> message, TreeNode<MessageNode> parentNode)
 	{		
 		for (String key : message.getFieldNames())
 		{
-			new DefaultTreeNode(new MessageNode(key, message.getField(key)), parentNode);
+			new DefaultTreeNode<>(new MessageNode(key, message.getField(key)), parentNode);
 		}
 		for (ClearThMessage<?> subMessage : message.getSubMessages())
 		{
@@ -109,14 +106,14 @@ public class MessageParserToolBean extends ClearThBean
 		}
 	}
 	
-	protected void subMessageToTree(ClearThMessage<?> message, TreeNode parentNode)
+	protected void subMessageToTree(ClearThMessage<?> message, TreeNode<MessageNode> parentNode)
 	{
-		DefaultTreeNode subParent = new DefaultTreeNode(new MessageNode(message.getField(ClearThMessage.SUBMSGTYPE), ""), parentNode);
+		TreeNode<MessageNode> subParent = new DefaultTreeNode<>(new MessageNode(message.getField(ClearThMessage.SUBMSGTYPE), ""), parentNode);
 		
 		for (String key : message.getFieldNames())
 		{
 			if (key != ClearThMessage.SUBMSGTYPE)
-				new DefaultTreeNode(new MessageNode(key, message.getField(key)), subParent);
+				new DefaultTreeNode<>(new MessageNode(key, message.getField(key)), subParent);
 		}
 		
 		for (ClearThMessage<?> subMessage : message.getSubMessages())
@@ -180,7 +177,7 @@ public class MessageParserToolBean extends ClearThBean
 		return this.parsedText;
 	}
 	
-	public TreeNode getParsedTree()
+	public TreeNode<MessageNode> getParsedTree()
 	{
 		return this.parsedTree;
 	}

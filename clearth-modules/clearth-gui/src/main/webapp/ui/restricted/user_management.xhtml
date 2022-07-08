@@ -12,23 +12,25 @@
 		<script type="text/javascript" src="#{request.contextPath}/js/cookieutils.js?version=1.0"></script>
 		
 		<label class="pageTitle">User Management</label>
-		<h:form id="Users">
-			<div class="upperContainer">
-				<div class="upperLeftContainer">
-					<c:if test="${userBean.admin}">
+		<div class="upperContainer">
+			<div class="upperLeftContainer">
+				<c:if test="${userBean.admin}">
+				<h:form id="UsersControl" enctype="multipart/form-data">
 					<p:commandButton value="New user" actionListener="#{userManagementBean.newUser}" icon="ui-icon-plusthick"
 							update=":UserDlg" oncomplete="PF('userDialog').show()" rendered="#{userBean.admin}" />
 					&#160;&#160;
-					<p:fileUpload fileUploadListener="#{userManagementBean.uploadConfiguration}" allowTypes="/(\.|\/)(xml)$/" label="Upload configuration"
-							mode="advanced" auto="true" showButtons="false" multiple="false" update=":Users :Growl" styleClass="simple" />
+					<p:fileUpload listener="#{userManagementBean.uploadConfiguration}" allowTypes="/(\.|\/)(xml)$/" label="Upload configuration"
+							mode="advanced" auto="true" showButtons="false" multiple="false" update="UserOperations :UsersList :Growl" styleClass="simple" />
 					
 					<p:commandButton value="Download configuration" ajax="false" icon="ui-icon-arrowthickstop-1-s">
 						<p:fileDownload value="#{userManagementBean.downloadConfig()}" />
 					</p:commandButton>
-					</c:if>
-				</div>
-				<div class="upperRightContainer">
-					<p:outputPanel id="UserOperations" layout="inline">
+				</h:form>
+				</c:if>
+			</div>
+			<div class="upperRightContainer">
+				<h:form id="UserOperations" enctype="multipart/form-data">
+					<p:outputPanel layout="inline">
 						<c:if test="${!userManagementBean.selectedUsers.isEmpty() and userBean.admin}">
 						<p:commandLink title="Edit selected user(s)" update=":UserDlg" oncomplete="PF('userDialog').show()">
 							<h:graphicImage value="/images/edit.png" alt="Edit selected user(s)" style="vertical-align: middle" />
@@ -44,16 +46,17 @@
 						</p:commandLink>
 						</c:if>
 					</p:outputPanel>
-				</div>
+				</h:form>
 			</div>
-				
-			<div class="tableContainer fullWidth" id="UsersList">
+		</div>
+		<h:form id="UsersList">
+			<div class="tableContainer fullWidth">
 				<script>ajax_handle_toBottom();</script>
 				<p:dataTable var="user" value="#{userManagementBean.users}" styleClass="toBottom"
 						selectionMode="multiple" selection="#{userManagementBean.selectedUsers}" rowKey="#{user.name}"
 						scrollable="true" scrollHeight="7">
-					<p:ajax event="rowSelect" update=":Users:UserOperations"/>
-					<p:ajax event="rowUnselect" update=":Users:UserOperations"/>
+					<p:ajax event="rowSelect" update=":UserOperations"/>
+					<p:ajax event="rowUnselect" update=":UserOperations"/>
 					<p:ajax event="rowDblselect" update=":UserDialog" oncomplete="PF('userDialog').show()" /> 
 					<p:column headerText="Login name">
 						<h:outputText value="#{user.name}" />
@@ -95,7 +98,7 @@
 					
 					<f:facet name="footer">
 						<p:outputPanel layout="block" style="text-align:right">
-							<p:commandButton value="Save" update=":Users :Growl"
+							<p:commandButton value="Save" update=":UsersList :Growl"
 									actionListener="#{userManagementBean.saveUsers}"
 									onstart="saveUsersScrollPos();"
 									oncomplete="restoreUsersScrollPos(); if (args.canClose) PF('userDialog').hide();"
@@ -113,11 +116,11 @@
 				message="Are you sure you want to remove #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
 				width="380" severity="alert" widgetVar="removeUserConfirmDialog" closeOnEscape="true" modal="true">
 			<h:form id="RemoveUserConfimDialog" >
-				<p:commandButton value="Yes" update=":Users :Growl"
+				<p:commandButton value="Yes" update=":UserOperations :UsersList :Growl"
 					actionListener="#{userManagementBean.removeUsers}"
 					onstart="saveUsersScrollPos();"
 					oncomplete="restoreUsersScrollPos(); PF('removeUserConfirmDialog').hide()" />
-				<p:commandButton value="No" update=":Users :Growl"
+				<p:commandButton value="No" update=":UserOperations :UsersList :Growl"
 					onclick="PF('removeUserConfirmDialog').hide()" type="button" />
 			</h:form>
 		</p:confirmDialog>
@@ -126,7 +129,7 @@
 				message="Are you sure use want to kill activities of #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
 				severity="alert" widgetVar="killConfirmationDlg" closeOnEscape="true" modal="true">
 			<h:form id="KillConfimationDialog" width="200">
-				<p:commandButton value="Yes" update=":Users :Growl"
+				<p:commandButton value="Yes" update=":UserOperations :UsersList :Growl"
 					actionListener="#{userManagementBean.killUsers}"
 					onstart="saveUsersScrollPos();"
 					oncomplete="restoreUsersScrollPos(); PF('killConfirmationDlg').hide()" />
@@ -136,7 +139,7 @@
 		</p:confirmDialog>
 		
 		<h:form>
-			<p:poll interval="3" update=":Users"
+			<p:poll interval="3" update=":UserOperations :UsersList"
 					autoStart="true" 
 					onstart="saveUsersScrollPos();"
 					oncomplete="restoreUsersScrollPos();" />

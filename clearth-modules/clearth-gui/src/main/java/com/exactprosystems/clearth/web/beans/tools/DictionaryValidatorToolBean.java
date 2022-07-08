@@ -48,7 +48,7 @@ public class DictionaryValidatorToolBean extends ClearThBean
 	protected String textToParse = "", textToParseFormat = "", currValidationConfig = "";
 	protected DictionaryValidationResult result;
 	
-	protected TreeNode comparisonTree = new DefaultTreeNode();
+	protected TreeNode<ComparationNode> comparisonTree = new DefaultTreeNode<>();
 	
 	@PostConstruct
 	public void init()
@@ -92,7 +92,7 @@ public class DictionaryValidatorToolBean extends ClearThBean
 	
 	protected void createComparisonTree(DictionaryValidationResult result)
 	{
-		comparisonTree = new DefaultTreeNode();
+		comparisonTree = new DefaultTreeNode<>();
 		String[] originalStrings, encodedStrings = result.getEncodedText().split(Utils.EOL);
 		
 		String config = result.getValidationConfigName();
@@ -114,17 +114,17 @@ public class DictionaryValidatorToolBean extends ClearThBean
 		{
 			original = originalStrings[i];
 			encoded = encodedStrings[i];
-			new DefaultTreeNode(new ComparationNode(original, encoded, original.equals(encoded)), comparisonTree);
+			new DefaultTreeNode<>(new ComparationNode(original, encoded, original.equals(encoded)), comparisonTree);
 		}
 		
 		// checking for extra strings in both arrays
 		for (int i = count; i < originalStrings.length; i++)
 		{
-			new DefaultTreeNode(new ComparationNode(originalStrings[i], "", false), comparisonTree);
+			new DefaultTreeNode<>(new ComparationNode(originalStrings[i], "", false), comparisonTree);
 		}
 		for (int i = count; i < encodedStrings.length; i++)
 		{
-			new DefaultTreeNode(new ComparationNode("", encodedStrings[i], false), comparisonTree);
+			new DefaultTreeNode<>(new ComparationNode("", encodedStrings[i], false), comparisonTree);
 		}
 	}
 	
@@ -249,7 +249,7 @@ public class DictionaryValidatorToolBean extends ClearThBean
 		return comparisonTree != null && !comparisonTree.getChildren().isEmpty();
 	}
 	
-	public TreeNode getComparisonTree()
+	public TreeNode<ComparationNode> getComparisonTree()
 	{
 		return comparisonTree;
 	}
