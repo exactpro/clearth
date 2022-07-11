@@ -32,6 +32,7 @@ import com.exactprosystems.clearth.web.misc.MatrixIssue;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
@@ -327,7 +328,7 @@ public class MatricesAutomationBean extends ClearThBean {
 		}
 		catch (Exception e)
 		{
-			String msg = "Error while updating '"+matrix.getLink()+"' linked matrix";
+			String msg = "Error while updating '"+matrix.getName()+"' linked matrix";
 			getLogger().error(msg, e);
 			MessageUtils.addErrorMessage(msg, e.getMessage());
 		}
@@ -366,7 +367,12 @@ public class MatricesAutomationBean extends ClearThBean {
 
 	public void saveLinkedMatrix()
 	{
-		String extension = FilenameUtils.getExtension(selectedLinkedMatrix.getLink());
+		String extension;
+		if(StringUtils.equals(selectedLinkedMatrix.getType(), LocalMatrixProvider.TYPE))
+			extension = FilenameUtils.getExtension(selectedLinkedMatrix.getLink());
+		else
+			extension = FilenameUtils.getExtension(selectedLinkedMatrix.getName());
+
 		if (isExtensionSupported(extension))
 		{
 			try
@@ -379,7 +385,7 @@ public class MatricesAutomationBean extends ClearThBean {
 			}
 			catch (Exception e)
 			{
-				String msg = "Error while uploading '" + selectedLinkedMatrix.getLink() + "' linked matrix";
+				String msg = "Error while uploading '" + selectedLinkedMatrix.getName() + "' linked matrix";
 				getLogger().error(msg, e);
 				MessageUtils.addErrorMessage(msg, e.getMessage());
 			}

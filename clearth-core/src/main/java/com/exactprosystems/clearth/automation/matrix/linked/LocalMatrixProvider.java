@@ -34,6 +34,8 @@ public class LocalMatrixProvider implements MatrixProvider
 
 	public LocalMatrixProvider(String link)
 	{
+		File file = new File(ClearThCore.rootRelative(link));
+		this.name = file.getName();
 		this.link = link;
 	}
 
@@ -45,7 +47,6 @@ public class LocalMatrixProvider implements MatrixProvider
 			File file = new File(ClearThCore.rootRelative(link));
 			if (!file.exists())
 				throw new FileNotFoundException(String.format("File '%s' isn't found on the local machine", file.getAbsolutePath()));
-			name = file.getName();
 			inputStream = new FileInputStream(file);
 		}
 		return inputStream;
@@ -54,10 +55,6 @@ public class LocalMatrixProvider implements MatrixProvider
 	@Override
 	public String getName() throws Exception
 	{
-		if (name == null)
-		{
-			getMatrix();
-		}
 		return name;
 	}
 }

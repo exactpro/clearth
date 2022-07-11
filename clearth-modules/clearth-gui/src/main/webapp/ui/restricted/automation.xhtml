@@ -996,11 +996,16 @@
 					<h:outputText value="Link:" />
 					<p:inputText value="#{automationMatricesBean.selectedLinkedMatrix.link}" label="Link" style="width: 440px" />
 
+					<c:if test="#{automationMatricesBean.selectedLinkedMatrix.type eq 'Remote'}">
+						<h:outputText value="Name:" />
+						<p:inputText value="#{automationMatricesBean.selectedLinkedMatrix.name}" label="Name" style="width: 440px" />
+					</c:if>
+
 					<h:outputText/>
 					<h:panelGroup id="help">
 						<p:outputPanel rendered="#{automationMatricesBean.selectedLinkedMatrix.type eq 'Remote'}">
 							<div>Link example:</div>
-							<div>http://<b>127.0.0.1</b>:<b>4443</b>/directory/<b>folder</b>/file?path=<b>matrix.csv</b></div>
+							<div>http://host:port/path/to/matrix/</div>
 						</p:outputPanel>
 					</h:panelGroup>
 

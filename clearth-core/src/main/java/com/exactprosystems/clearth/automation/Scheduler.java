@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
+import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProviderHolder;
 import com.exactprosystems.clearth.automation.persistence.ExecutorState;
@@ -617,32 +618,32 @@ public abstract class Scheduler
 		boolean isNewMatrix = matrixFile == null; //Add matrix or Update matrix
 		String link = matrix.getLink();
 		String type = matrix.getType();
-		String matrixFileExtension = "." + FilenameUtils.getExtension(link);
+		String name = matrix.getName();
+
+		String matrixFileExtension;
+		if(StringUtils.equals(type,LocalMatrixProvider.TYPE))
+			matrixFileExtension = "." +  FilenameUtils.getExtension(link);
+		else
+			matrixFileExtension = "." + FilenameUtils.getExtension(name);
+
 		File tempFile;
-		
-		for (MatrixData m : schedulerData.getMatrices())
-		{
-			if (StringUtils.equals(m.getLink(), link) && StringUtils.equals(m.getType(), type)
-					&& (isNewMatrix || !matrixFile.equals(m.getFile())))
-				throw new ClearThException("Linked matrix with same link and type already exists");
-		}
-		
+
 		InputStream input = null;
 		try
 		{
 			Map<String, Object> params = new HashMap<String, Object>();
-			MatrixProvider provider = getMatrixProviderHolder().getMatrixProvider(link, type, params);
-			matrix.setName(provider.getName());
-			for (MatrixData m : getMatricesData()) // check duplicated matrix names
+			MatrixProvider provider = getMatrixProviderHolder().getMatrixProvider(link, name, type, params);
+
+			name = provider.getName();
+			matrix.setName(name);
+
+			for (MatrixData m : schedulerData.getMatrices())
 			{
-				if (!StringUtils.equals(matrix.getLink(), m.getLink())
-						&& StringUtils.equals(matrix.getName(), m.getName())
-						&& isNewMatrix)
-					throw new ClearThException(
-							format("'%s' matrix already exists. Please use unique matrix names.", matrix.getName()));
+				if (StringUtils.equals(m.getName(), name) && (isNewMatrix || !matrixFile.equals(m.getFile())))
+					throw new ClearThException("Matrix with the same name already exists");
 			}
+
 			input = provider.getMatrix();
-			
 			FileOutputStream output = null;
 			try
 			{

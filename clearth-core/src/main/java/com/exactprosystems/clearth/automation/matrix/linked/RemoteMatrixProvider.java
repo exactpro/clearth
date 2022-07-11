@@ -42,13 +42,9 @@ public class RemoteMatrixProvider implements MatrixProvider
 	private String link;
 	private String name;
 
-	public RemoteMatrixProvider(String link) {
+	public RemoteMatrixProvider(String link, String name) {
 		this.link = link;
-		try {
-			name = KeyValueUtils.getUrlParameter(link, "path");
-		} catch (Exception e) {
-			logger.warn("Could not get matrix name from URL", e);
-		}
+		this.name = name;
 	}
 
 	@Override

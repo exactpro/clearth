@@ -40,12 +40,12 @@ public class MatrixProviderHolder
 		return SingletonHolder.HOLDER_INSTANCE;
 	}
 
-	public MatrixProvider getMatrixProvider(String link, String type, Map<String, Object> params) throws SettingsException
+	public MatrixProvider getMatrixProvider(String link, String name, String type, Map<String, Object> params) throws SettingsException
 	{
 		if (LocalMatrixProvider.TYPE.equals(type))
 			return new LocalMatrixProvider(link);
 		if (RemoteMatrixProvider.TYPE.equals(type))
-			return new RemoteMatrixProvider(link);
+			return new RemoteMatrixProvider(link, name);
 		// FIXME: to replace exception type
 		throw new SettingsException("Unknown type of matrix provider: " + type);
 	}
