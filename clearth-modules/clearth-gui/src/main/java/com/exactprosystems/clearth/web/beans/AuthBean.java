@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,12 +21,16 @@ package com.exactprosystems.clearth.web.beans;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.faces.context.Flash;
+import javax.faces.event.ComponentSystemEvent;
 import javax.servlet.http.HttpSession;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.SchedulersManager;
+import com.exactprosystems.clearth.web.filters.AuthenticationFilter;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.web.misc.users.UserSessionCollector;
@@ -39,10 +43,12 @@ public class AuthBean extends ClearThBean
 			ROLE_KEY = "clearth.user.role", 
 			
 			HOME_PAGE = "/ui/restricted/home.jsf", 
-			LOGIN_PAGE = "/ui/login.jsf";
-	
-	public static final String USERNAME = "userName", 
+			LOGIN_PAGE = "/ui/login.jsf",
+			
+			USERNAME = "userName", 
 			PASSWORD = "password";
+	
+	private static final String LOGIN_ERROR = "loginError";
 
 	private String userName, password;
 	private String requestUrl = null;
@@ -87,47 +93,54 @@ public class AuthBean extends ClearThBean
 	{
 	}
 
-	public void saveAndRedirect()
+	public void pullValuesFromFlash(ComponentSystemEvent e) {
+		Flash flash = FacesContext.getCurrentInstance().getExternalContext().getFlash();
+		userName = (String)flash.get(USERNAME);
+		password = (String)flash.get(PASSWORD);
+	}
+	
+	public void saveInput()
 	{
 		FacesContext facesContext = FacesContext.getCurrentInstance();
-		String url = facesContext.getApplication().getViewHandler().getActionURL(facesContext, facesContext.getViewRoot().getViewId());
-
-		try
-		{
-			facesContext.getExternalContext().redirect(url);
-		}
-		catch (IOException e)
-		{
-			getLogger().error("Error on attempt to redirect after wrong login", e);
-		}
+		Flash flash = facesContext.getExternalContext().getFlash();
+		flash.setKeepMessages(true);
+		flash.put(USERNAME, userName);
+		flash.put(PASSWORD, password);
+	}
+	
+	public String getErrorOutcome()
+	{
+		String result = "login?faces-redirect=true";
+		return requestUrl != null ? result+"&"+AuthenticationFilter.PARAMETER+"="+requestUrl : result;
 	}
 
-	public void login()
+	public String login()
 	{
 		ClearThCore app = ClearThCore.getInstance();
 		XmlUser allowed = app.getUsersManager().isUserAllowed(userName, password);
-
+		
 		if (allowed == null)
 		{
-			MessageUtils.addErrorMessage("Authentication failed", "Incorrect username or password");
-			saveAndRedirect();
-			return;
+			MessageUtils.addMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, "Authentication failed", "Incorrect username or password");
+			getLogger().error("Incorrect password or unknown user '{}'", userName);
+			saveInput();
+			return getErrorOutcome();
 		}
-
+		
 		if (allowed.getRole() == null) {
-			MessageUtils.addErrorMessage("Authentication failed", "User role undefined");
-			getLogger().error("User role for '" + allowed.getName() + "' undefined in users.xml");
-			saveAndRedirect();
-			return;
+			MessageUtils.addMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, "Authentication failed", "User role undefined");
+			getLogger().error("User role for '{}' undefined in users.xml", allowed.getName());
+			saveInput();
+			return getErrorOutcome();
 		}
 		
 		UserSessionCollector.registerCurrentSession(userName);
-
+		
 		Map<String, Object> sessionMap = FacesContext.getCurrentInstance().getExternalContext().getSessionMap();
 		sessionMap.remove(AUTH_KEY);
 		sessionMap.remove(ADMIN_KEY);
 		sessionMap.remove(ROLE_KEY);
-
+		
 		if (app.isUserSchedulersAllowed())
 		{
 			SchedulersManager schedulersManager = app.getSchedulersManager();
@@ -142,30 +155,30 @@ public class AuthBean extends ClearThBean
 				{
 					String msg = "Could not init user scheduler";
 					getLogger().error(msg, e);
-					MessageUtils.addErrorMessage("Initialization failed", msg);
-					return;
+					MessageUtils.addMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, "Initialization failed", msg);
+					return getErrorOutcome();
 				}
 			}
 		}
-
+		
 		if (!initUserSession())
-			return;
-
+			return getErrorOutcome();
+		
 		sessionMap.put(AUTH_KEY, allowed.getName());
 		sessionMap.put(ROLE_KEY, allowed.getRole());
-
-
+		
+		
 		if (allowed.getRole().equals("admin"))
 			sessionMap.put(ADMIN_KEY, true);
-
+		
 		initLogger();
 		getLogger().info("logged in");
-
+		
 		try
 		{
 			String context = WebUtils.getContext();
-			getLogger().trace("Context: " + context);
-
+			getLogger().trace("Context: {}", context);
+			
 			// If user tried to access resources when he wasn't authorized, 
 			// use requestUrl from AuthenticationFilter to redirect user to that resource
 			if (requestUrl != null)
@@ -174,13 +187,13 @@ public class AuthBean extends ClearThBean
 				requestUrl = null;
 			}
 			else
-			{
 				FacesContext.getCurrentInstance().getExternalContext().redirect(context + getHomePage());
-			}
+			return null;
 		}
 		catch (IOException e)
 		{
 			getLogger().error("Error on attempt to redirect after login", e);
+			return getErrorOutcome();
 		}
 	}
 
@@ -194,7 +207,7 @@ public class AuthBean extends ClearThBean
 		try
 		{
 			String context = WebUtils.getContext();
-			getLogger().trace("Context: " + context);
+			getLogger().trace("Context: {}", context);
 			FacesContext.getCurrentInstance().getExternalContext().redirect(context + getLoginPage());
 		}
 		catch (IOException e)
@@ -212,5 +225,4 @@ public class AuthBean extends ClearThBean
 	{
 		this.requestUrl = requestUrl;
 	}
-
 }

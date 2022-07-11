@@ -42,7 +42,7 @@ import com.exactprosystems.clearth.web.beans.AuthBean;
 
 public class AuthenticationFilter implements Filter
 {
-	private static final String PARAMETER = "requestUrl";
+	public static final String PARAMETER = "requestUrl";
 	
 	protected String LOGIN_PAGE = "/ui/login.jsf", HOME_PAGE = "/ui/restricted/home.jsf", PAGEACCESS_CFG = "pageaccess.cfg";
 	private Map<String, String[]> pages = new HashMap<String, String[]>();

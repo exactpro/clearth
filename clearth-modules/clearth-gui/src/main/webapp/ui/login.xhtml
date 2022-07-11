@@ -8,6 +8,11 @@
 	
 	<ui:define name="title">Login</ui:define>
 	
+	<f:metadata>
+		<f:viewParam name="requestUrl" value="#{authBean.requestUrl}" />
+		<f:event type="preRenderView" listener="#{authBean.pullValuesFromFlash}"/>
+	</f:metadata>
+	
 	<ui:define name="page">
 		<div id="loginContainer">
 			<h:form id="loginPanel">
@@ -19,7 +24,7 @@
 				<p:watermark for="password" value="Password" />
 				<p:commandButton styleClass="loginButton" value="Sign in" action="#{authBean.login}"
 						ajax="false" update="loginPanel" />
-				<p:messages id="msg" styleClass="loginError" showSummary="false" showDetail="true" />
+				<p:messages id="msg" for="loginError" styleClass="loginError" showSummary="false" showDetail="true" />
 				<p:effect type="drop" event="load" for="msg" delay="5000">
 					<f:param name="mode" value="'hide'" />
 					<f:param name="direction" value="'up'" />
@@ -27,7 +32,7 @@
 			</h:form>
 			<!-- <p class="version"></p> -->
 			<h:form>
-				<p style="margin-top: 0px" id="copyright">&copy; 2011-2019 Exactpro Systems, LLC<span style="margin-left: 10px;"><h:outputText value="#{ApplicationBean.svnRevisionInfo}" /></span></p>
+				<p style="margin-top: 0px" id="copyright">&copy; 2011-2022 Exactpro Systems, LLC<span style="margin-left: 10px;"><h:outputText value="#{ApplicationBean.svnRevisionInfo}" /></span></p>
 			</h:form>
 			<a href="http://www.exactprosystems.com">
 				<div id="companyLogo"></div>

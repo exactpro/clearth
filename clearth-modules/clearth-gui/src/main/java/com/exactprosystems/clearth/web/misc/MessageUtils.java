@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,47 +22,50 @@ import com.exactprosystems.clearth.web.beans.PopUpMessagesBean;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.application.FacesMessage.Severity;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.faces.context.Flash;
 
 public class MessageUtils
 {
-	public static void addMessage(Severity severity, final String summary, final String details)
+	public static final String GENERAL_MESSAGES = "generalMessages";
+	
+	public static void addMessage(Severity severity, final String id, final String summary, final String details)
 	{
+		FacesContext context = FacesContext.getCurrentInstance();
 		FacesMessage msg = new FacesMessage(severity, summary, details);
-		FacesContext.getCurrentInstance().addMessage(null, msg);
-
+		context.addMessage(id, msg);
+		
 		String severityString = null;
 		if (msg.getSeverity().compareTo(FacesMessage.SEVERITY_INFO) == 0) severityString = "INFO";
 		else if (msg.getSeverity().compareTo(FacesMessage.SEVERITY_WARN) == 0) severityString = "WARN";
 		else if (msg.getSeverity().compareTo(FacesMessage.SEVERITY_ERROR) == 0) severityString = "ERROR";
 		
-		PopUpMessagesBean bean = (PopUpMessagesBean) FacesContext.getCurrentInstance().getExternalContext()
-				.getSessionMap().get("popUpMsgsBean");
+		ExternalContext extContext = context.getExternalContext();
+		PopUpMessagesBean bean = (PopUpMessagesBean) extContext.getSessionMap().get("popUpMsgsBean");
 		if (bean != null)
 			bean.addMessage(new PopUpMessageDesc(msg.getDetail(), severityString, msg.getSummary()));
-
-		enableKeepMesages();
+		
+		if (!context.getPartialViewContext().isAjaxRequest())
+			extContext.getFlash().setKeepMessages(true);
 	}
-
+	
+	public static void addMessage(Severity severity, final String summary, final String details)
+	{
+		addMessage(severity, GENERAL_MESSAGES, summary, details);
+	}
+	
 	public static void addErrorMessage(final String summary, final String details)
 	{
 		addMessage(FacesMessage.SEVERITY_ERROR, summary, details);
 	}
-
+	
 	public static void addInfoMessage(final String summary, final String details)
 	{
 		addMessage(FacesMessage.SEVERITY_INFO, summary, details);
 	}
-
+	
 	public static void addWarningMessage(final String summary, final String details)
 	{
 		addMessage(FacesMessage.SEVERITY_WARN, summary, details);
-	}
-	
-	public static void enableKeepMesages() {
-		FacesContext facesContext = FacesContext.getCurrentInstance();
-		Flash flash = facesContext.getExternalContext().getFlash();
-		flash.setKeepMessages(true);
 	}
 }
