@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,10 +19,19 @@
 package com.exactprosystems.clearth.automation.actions;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
+import com.exactprosystems.clearth.automation.report.results.AttachedFilesResult;
+import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
+import com.exactprosystems.clearth.utils.scripts.ProcessedScriptResult;
 import org.apache.commons.exec.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.exactprosystems.clearth.ClearThCore;
@@ -41,7 +50,8 @@ import com.exactprosystems.clearth.utils.scripts.ScriptUtils;
 public class ExecuteScript extends Action {
 	
 	public static final String SCRIPT_FILE_NAME = "ScriptName",
-			PARAMETERS = "Parameters",
+			PARAMETERS = "Parameters", //this is used only to pass complete string with script parameters
+			PARAMS_FROM_ACTION = "ParamsFromAction", //this is used to pass action params as script params
 			SCRIPT_DIRECTORY = "ScriptDirectory",
 			ASYNC = "Async",
 			OUTPUT = "Output",
@@ -50,13 +60,22 @@ public class ExecuteScript extends Action {
 			SCRIPT_TEXT_PARAM = "ScriptText",
 			EXECUTABLE_NAME_PARAM = "ExecutableName",
 			SHELL_OPTION_PARAM = "ShellOption",
-			WORKING_DIRECTORY = "WorkingDirectory";
+			WORKING_DIRECTORY = "WorkingDirectory",
+			STDOUT_REDIRECT_PARAMETER = "OutRedirect",
+			STDERR_REDIRECT_PARAMETER = "ErrRedirect",
+			ERROR_OUT = "ErrOutput",
+			PARAMS_DELIMITER = "ParamsDelimiter",
+			COMPRESS_SCRIPT_OUTPUT = "CompressScriptOutput";
 
-	protected String executableName, shellOption;
+	protected String command, executableName, shellOption;
 
 	protected File workingDir;
 	protected Map<String, String> envVars;
 
+	protected String tempFileName;
+	protected boolean isOutRedirected, isErrRedirected, isCompressScriptResult;
+
+	protected String[] additionalCLineParams;
 
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException
@@ -64,21 +83,28 @@ public class ExecuteScript extends Action {
 		if (inputParams.isEmpty())
 			return noParametersResult();
 
+		initParams(stepContext, matrixContext, globalContext);
+
+		return executeScript(command);
+	}
+
+	protected void initParams(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
+	{
 		String workingDirPath = InputParamsUtils.getStringOrDefault(inputParams, WORKING_DIRECTORY, getDefaultWorkingDir());
 		workingDir = new File(ClearThCore.rootRelative(workingDirPath));
 		envVars = createEnvironmentVars(stepContext, matrixContext, globalContext);
 
-		String command = buildCommand(getInputParams());
-		String parameters = buildScriptParameters(getInputParams());
-		logger.debug("Script: {}. Parameters: {}. Working dir: {}.", command, parameters, workingDir);
-		
-		if (parameters != null && !StringUtils.isEmpty(parameters.trim()))
-			command += " " + parameters.trim();
-		
-		return executeScript(command);
+		command = buildCommand(getInputParams());
+		additionalCLineParams = getAdditionalParameters();
+
+		isOutRedirected = InputParamsUtils.getBooleanOrDefault(inputParams, STDOUT_REDIRECT_PARAMETER, false);
+		isErrRedirected = InputParamsUtils.getBooleanOrDefault(inputParams, STDERR_REDIRECT_PARAMETER, false);
+
+		isCompressScriptResult = InputParamsUtils.getBooleanOrDefault(inputParams, COMPRESS_SCRIPT_OUTPUT, false);
+
+		logger.debug("Script: {}. Parameters: {}. Working dir: {}.", command, convertToString(additionalCLineParams), workingDir);
 	}
-	
-	
+
 	protected Result noParametersResult()
 	{
 		return DefaultResult.failed(
@@ -97,7 +123,9 @@ public class ExecuteScript extends Action {
 		}
 		String scriptName = InputParamsUtils.getRequiredString(parameters, SCRIPT_FILE_NAME),
 				scriptDir = InputParamsUtils.getStringOrDefault(parameters, SCRIPT_DIRECTORY, null);
-		
+
+		tempFileName = FilenameUtils.removeExtension(FilenameUtils.getName(scriptName)) + "_";
+
 		File scriptFile;
 		if (scriptDir != null)
 		{
@@ -119,48 +147,113 @@ public class ExecuteScript extends Action {
 	{
 		return parameters.get(PARAMETERS);
 	}
-	
+
+	protected String[] getAdditionalParameters() throws ResultException
+	{
+		InputParamsHandler handler = new InputParamsHandler(inputParams);
+		String parametersString = buildScriptParameters(inputParams);
+		String delimiter = handler.getString(PARAMS_DELIMITER, ";");
+		Set<String> paramsFromAction = handler.getSet(PARAMS_FROM_ACTION, delimiter);
+
+		if (StringUtils.isNotEmpty(parametersString))
+		{
+			if (!paramsFromAction.isEmpty())
+				logger.info("The script parameters were obtained from the '{}' action parameter", PARAMETERS);
+			return new String[]{parametersString.trim()};
+		}
+
+		if (!paramsFromAction.isEmpty())
+		{
+			try
+			{
+				String[] params = paramsFromAction.toArray(new String[0]);
+
+				for (int i = 0; i < params.length; i++)
+				{
+					String paramName = StringUtils.trim(params[i]);
+
+					if (paramName.equals(PARAMETERS))
+						params[i] = "";
+					else
+						params[i] = handler.getRequiredString(paramName);
+				}
+
+				logger.info("The script parameters were obtained from the '{}' action parameter", PARAMS_FROM_ACTION);
+				return params;
+			}
+			finally
+			{
+				handler.check();
+			}
+		}
+
+		logger.info("The script will be executed without parameters");
+		return new String[]{};
+	}
 	
 	protected ScriptResult doExecuteScript(String command)
 	{
 		ScriptResult res;
 		try
 		{
-			res = ScriptUtils.executeScript(command, workingDir, envVars);
+			res = ScriptUtils.executeScript(command, additionalCLineParams, workingDir, envVars);
 		}
 		catch (ExecuteException e)
 		{
-			throw ResultException.failed(String.format("Error while executing script '%s'", command), e);
+			throw ResultException.failed(String.format("Error while executing script '%s' with parameters %s", command, convertToString(additionalCLineParams)), e);
 		}
 		catch (IOException e)
 		{
-			throw ResultException.failed(String.format("Script '%s' was not launched", command), e);
+			throw ResultException.failed(String.format("Script '%s' with parameters %s was not launched", command, convertToString(additionalCLineParams)), e);
 		}
 
-		logger.debug("Script {} executed. {}", command, res);
+		logger.debug("Script {} with parameters {} executed. {}", command, convertToString(additionalCLineParams), res);
 
 		return res;
 	}
 	
-	protected void processScriptResult(ScriptResult res)
+	protected ProcessedScriptResult processScriptResult(ScriptResult res)
 	{
-		String resultString, outStr = res.outStr;
-		
-		if (StringUtils.endsWith(outStr, Utils.EOL))
-			resultString = StringUtils.left(outStr, outStr.length() - Utils.EOL.length());
-		else if (StringUtils.endsWith(outStr,"\n"))
-			resultString = StringUtils.left(outStr, outStr.length() - 1);
-		else
-			resultString = outStr;
+		String resultString,
+				outStr = res.outStr,
+				errStr = res.errStr;
 
-		addOutputParam(OUTPUT, resultString);
+		ProcessedScriptResult processedScriptResult = new ProcessedScriptResult();
+		if (isOutRedirected)
+		{
+			Path outFilePath = saveScriptResult(outStr, "_out.txt");
+			processedScriptResult.setOutFilePath(outFilePath);
+			addOutputParam(OUTPUT, outFilePath.getFileName().toString());
+		}
+		else
+		{
+			if (StringUtils.endsWith(outStr, Utils.EOL))
+				resultString = StringUtils.left(outStr, outStr.length() - Utils.EOL.length());
+			else if (StringUtils.endsWith(outStr,"\n"))
+				resultString = StringUtils.left(outStr, outStr.length() - 1);
+			else
+				resultString = outStr;
+
+			addOutputParam(OUTPUT, resultString);
+		}
+
+		if (isErrRedirected)
+		{
+			Path errFilePath = saveScriptResult(errStr, "_err.txt");
+			processedScriptResult.setErrFilePath(errFilePath);
+			addOutputParam(ERROR_OUT, errFilePath.getFileName().toString());
+		}
+		else
+			addOutputParam(ERROR_OUT, errStr);
+
+		return processedScriptResult;
 	}
 	
 	protected boolean isFailOnErrorOutput() {
 		return InputParamsUtils.getBooleanOrDefault(getInputParams(), FAIL_ON_ERROR_OUTPUT, false);
 	}
-	
-	protected Result buildActionResult(ScriptResult res)
+
+	protected Result buildActionResult(ScriptResult res, ProcessedScriptResult processedScriptResult)
 	{
 		InputParamsHandler handler = new InputParamsHandler(getInputParams());
 		boolean failOnErrorOutput = isFailOnErrorOutput();
@@ -168,11 +261,25 @@ public class ExecuteScript extends Action {
 		if (handler.getString(SUCCESS_RESULT_CODES) == null)
 				resultCodes.add(0);
 
-		Result result = new DefaultResult();
+		Result result;
+		if (isOutRedirected || isErrRedirected)
+		{
+			AttachedFilesResult attachedFilesResult = new AttachedFilesResult();
+			if (isOutRedirected)
+				attachedFilesResult.attach(OUTPUT, processedScriptResult.getOutFilePath());
+			if (isErrRedirected)
+				attachedFilesResult.attach(ERROR_OUT, processedScriptResult.getErrFilePath());
+			result = attachedFilesResult;
+		}
+		else
+			result = new DefaultResult();
+
 		result.setComment(String.format("Script finished. Code: %d." + Utils.EOL
 				+ " Output: %s"+ Utils.EOL
-				+ " Error: %s", res.result, res.outStr, res.errStr));
-		boolean success = res.errStr.isEmpty() || !failOnErrorOutput;
+				+ " Error: %s", res.result, isOutRedirected ? processedScriptResult.getOutFilePath().getFileName().toFile() : res.outStr,
+				isErrRedirected ? processedScriptResult.getErrFilePath().getFileName().toString() : res.errStr));
+
+		boolean success = (res.errStr != null && res.errStr.isEmpty()) || !failOnErrorOutput;
 		result.setSuccess(success);
 		if (success && !resultCodes.isEmpty())
 			result.setSuccess(resultCodes.contains(res.result));
@@ -187,6 +294,40 @@ public class ExecuteScript extends Action {
 		return result;
 	}
 
+	private String convertToString(String[] additionalCLineParams)
+	{
+		return Arrays.toString(additionalCLineParams);
+	}
+
+	private Path saveScriptResult(String result, String fileSuffix)
+	{
+		try
+		{
+			Path tempDir = Paths.get(ClearThCore.getInstance().getTempDirPath());
+			if (!Files.exists(tempDir))
+				Files.createDirectories(tempDir);
+
+			Path tempFilePath = Files.createTempFile(tempDir, tempFileName, fileSuffix);
+			FileUtils.writeStringToFile(tempFilePath.toFile(), result, StandardCharsets.UTF_8);
+
+			return isCompressScriptResult ? compressScriptResult(tempFilePath.toFile()) : tempFilePath;
+		}
+		catch (IOException e)
+		{
+			String msg = "Error on save script out data to file";
+			logger.warn(msg, e);
+			throw new ResultException(msg, e);
+		}
+	}
+
+	private Path compressScriptResult(File tempFile) throws IOException
+	{
+		Path zipFile = Paths.get(tempFile + ".zip");
+		FileOperationUtils.zipFiles(zipFile.toFile(), new File[]{tempFile});
+		FileUtils.deleteQuietly(tempFile);
+		return zipFile;
+	}
+
 	protected Result executeScriptSync(String command) throws ResultException
 	{
 		ScriptResult res;
@@ -198,42 +339,41 @@ public class ExecuteScript extends Action {
 		{
 			try
 			{
-				res = ScriptUtils.executeScript(command, executableName, shellOption, null, null, workingDir, envVars);
+				res = ScriptUtils.executeScript(command, executableName, shellOption, additionalCLineParams, null, workingDir, envVars);
 			}
 			catch (IOException e)
 			{
-				throw ResultException.failed(String.format("Script '%s' was not launched", command), e);
+				throw ResultException.failed(String.format("Script '%s' with parameters '%s' was not launched", command, convertToString(additionalCLineParams)), e);
 			}
 		}
-		processScriptResult(res);
-		return buildActionResult(res);
+		return buildActionResult(res, processScriptResult(res));
 	}
 
 	protected Result executeScriptAsync(String command) throws ResultException
 	{
-		String messageComplete = String.format("Script '%s' executed asynchronously, triggered by action '%s' from matrix '%s'.",
-		                                       command, getIdInMatrix(), getMatrix().getName());
-		String messageFail = String.format("Error while executing script '%s' asynchronously, triggered by action '%s' from matrix '%s'.",
-		                                   command, getIdInMatrix(), getMatrix().getName());
+		String messageComplete = String.format("Script '%s' with params '%s' executed asynchronously, triggered by action '%s' from matrix '%s'.",
+		                                       command, convertToString(additionalCLineParams), getIdInMatrix(), getMatrix().getName());
+		String messageFail = String.format("Error while executing script '%s' with params '%s' asynchronously, triggered by action '%s' from matrix '%s'.",
+		                                   command, convertToString(additionalCLineParams), getIdInMatrix(), getMatrix().getName());
 		try
 		{
 			if (executableName != null)
 			{
-				ScriptUtils.executeScriptAsync(command, executableName, shellOption, null, messageComplete,
+				ScriptUtils.executeScriptAsync(command, additionalCLineParams, executableName, shellOption, null, messageComplete,
 						messageFail, workingDir, envVars);
 			}
 			else
 			{
-				ScriptUtils.executeScriptAsync(command, null, messageComplete, messageFail, workingDir, envVars);
+				ScriptUtils.executeScriptAsync(command, additionalCLineParams, null, messageComplete, messageFail, workingDir, envVars);
 			}
 		}
 		catch (IOException e)
 		{
-			throw ResultException.failed(String.format("Script '%s' was not launched, triggered by action '%s' from matrix '%s'.",
-					command, getIdInMatrix(), getMatrix().getName()), e);
+			throw ResultException.failed(String.format("Script '%s' with params '%s' was not launched, triggered by action '%s' from matrix '%s'.",
+					command, convertToString(additionalCLineParams), getIdInMatrix(), getMatrix().getName()), e);
 		}
 
-		return DefaultResult.passed(String.format("Execution of script '%s' started asynchronously", command));
+		return DefaultResult.passed(String.format("Execution of script '%s' with params '%s' started asynchronously", command, convertToString(additionalCLineParams)));
 	}
 
 	protected Result executeScript(String command) throws ResultException

@@ -27,6 +27,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Path;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.MINIMAL_CLASS)
 public abstract class Result implements Serializable
@@ -149,6 +150,11 @@ public abstract class Result implements Serializable
 	public void processDetails(File reportDir, Action linkedAction)
 	{
 
+	}
+
+	protected final Path getDetailsPath(File reportDir, Action linkedAction)
+	{
+		return reportDir.toPath().resolve(DETAILS_DIR);
 	}
 
 	public abstract void clearDetails();

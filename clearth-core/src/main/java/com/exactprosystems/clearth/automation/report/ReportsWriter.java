@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation.report;
 
-import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.Executor;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;

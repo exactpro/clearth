@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,7 +22,9 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.ActionReport;
 import com.exactprosystems.clearth.automation.report.ReportStatus;
+import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.html.template.*;
+import com.exactprosystems.clearth.automation.report.results.AttachedFilesResult;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +72,7 @@ public class HtmlActionReport extends ActionReport
 
 	public void write(Writer out, Action action, String containerId, File actionsReportsDir, boolean onlyFailed) throws IOException
 	{
+		processResult(action, actionsReportsDir, onlyFailed);
 		try
 		{
 			ClearThCore.getInstance().getReportTemplatesProcessor().processTemplate(out, getParameters(action, containerId), ReportTemplateFiles.ACTION);
@@ -79,7 +82,18 @@ public class HtmlActionReport extends ActionReport
 			handleTemplateError(e, out);
 		}
 	}
-	
+
+	protected void processResult(Action action, File actionsReportsDir, boolean onlyFailed)
+	{
+		if (!onlyFailed)
+		{
+			Result result = action.getResult();
+			if (result instanceof AttachedFilesResult)
+				result.processDetails(actionsReportsDir, action);
+		}
+
+	}
+
 	protected void handleTemplateError(TemplateException e, Writer out) throws IOException
 	{
 		getLogger().error("An error occurred while processing the template of the action: ", e);

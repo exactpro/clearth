@@ -156,6 +156,10 @@
 								result = action.result
 								resultId = containerId + "_comparison"
 							/>
+							<@resultTemplate.printAttachedFiles
+								result = action.result
+								resultId = containerId
+							/>
 						<#else>
 							<div>None</div>
 						</#if>

@@ -4,6 +4,7 @@
 <#import "richtextresult.ftl" as richTextResult>
 <#import "tableresult.ftl" as tableResult>
 <#import "containerresult.ftl" as containerResult>
+<#import "attachedfilesresult.ftl" as attachedFilesResult>
 
 <#macro printAdditionalInfo result, resultId>
 	<#if instanceOf(result, RichTextResult)>
@@ -39,6 +40,15 @@
 		<@containerResult.printComparisonTable
 			result = result
 			resultId = resultId
+		/>
+	</#if>
+</#macro>
+
+<#macro printAttachedFiles result resultId>
+	<#if instanceOf(result, AttachedFilesResult)>
+		<@attachedFilesResult.printFiles
+			filesHolder = result
+			containerId = resultId
 		/>
 	</#if>
 </#macro>

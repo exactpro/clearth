@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -48,6 +48,7 @@ public class ReportTemplatesProcessor extends TemplatesProcessor
 		put("TableResult", TableResult.class);
 		put("ContainerResult", ContainerResult.class);
 		put("MacroAction", MacroAction.class);
+		put("AttachedFilesResult", AttachedFilesResult.class);
 	}};
 
 	public ReportTemplatesProcessor() throws IOException, TemplateModelException
