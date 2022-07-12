@@ -497,7 +497,7 @@
 					<p:outputPanel id="TemplatesContainer">
 						<p:outputPanel id="Templates" rendered="#{sendMessagesBean.templatesNumber gt 0}">
 							<h:outputText value="Message templates:" /><br />
-							<p:selectOneMenu value="#{sendMessagesBean.selectedTemplateName}" style="width: 150px;" appendTo="@this">
+							<p:selectOneMenu value="#{sendMessagesBean.selectedTemplateName}" style="width: 150px;">
 								<f:selectItems value="#{sendMessagesBean.templates}" />
 								<p:ajax listener="#{sendMessagesBean.onTemplateSelect}" update=":SendMsgForm:Message" />
 							</p:selectOneMenu>

@@ -39,7 +39,7 @@
 				<div class="upperRightContainer">
 					All tools: 
 					<br />
-					<p:selectOneMenu id="currentTool" value="#{toolsBean.activeTab}" appendTo="@this">
+					<p:selectOneMenu id="currentTool" value="#{toolsBean.activeTab}">
 						<f:selectItems value="#{toolsBean.allTools.tools}" var="tool"
 							itemValue="#{tool.id}" itemLabel="#{tool.name}"/>
 						<p:ajax update=":Container :OperationsMenu" />
@@ -215,7 +215,7 @@
 					<b>Connection to browse:</b>
 					<br/>
 					<p:selectOneMenu id="currentConnection" value="#{collectorScannerToolBean.selectedConnection}"
-							style="width:300px;" appendTo="@this">
+							style="width:300px;">
 						<f:selectItem itemLabel="&lt;Choose connection&gt;" itemValue="#{null}" />
 						<f:selectItems value="#{collectorScannerToolBean.collectingConnections}" var="connection" />
 						<f:ajax update=":CollectorMessagesForm" render=":CollectorMessagesForm" />
