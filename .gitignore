@@ -25,5 +25,6 @@ clearth-modules/clearth-xml/build/
 /clearth-modules/clearth-xml/.classpath
 /clearth-modules/clearth-xml/.project
 /clearth-modules/clearth-xml/.settings/org.eclipse.buildship.core.prefs
+/clearth-core/value_generator_test.txt
 testOutput
 temp

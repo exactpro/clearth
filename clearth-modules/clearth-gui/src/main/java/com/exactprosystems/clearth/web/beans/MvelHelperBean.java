@@ -18,9 +18,11 @@
 
 package com.exactprosystems.clearth.web.beans;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.exactprosystems.clearth.automation.functions.SpecialData;
 
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
@@ -32,10 +34,19 @@ import com.exactprosystems.clearth.automation.functions.MvelExpressionHelper;
 
 public class MvelHelperBean extends ClearThBean
 {
+	private static final String VALUES = "Values",
+								FUNCTIONS = "Functions";
+	
 	private int activeTab = 0;
+	
 	private List<MethodData> methodsList;
-	private TreeNode<Object> methodsTree;
-	private TreeNode<Object> selectedMethod;
+	private List<SpecialData> specialDataList;
+	
+	private TreeNode<Object> methodsTreeRoot;
+	private TreeNode<Object> specialDataTreeRoot;
+	private TreeNode<Object> selectedMethodNode;
+	private TreeNode<Object> selectedSpecialDataNode;
+	
 	private boolean initialized;
 	
 	public MvelHelperBean()
@@ -43,69 +54,108 @@ public class MvelHelperBean extends ClearThBean
 		init();
 	}
 	
+	protected Object getSelectedNodeData(TreeNode<Object> selected, TreeNode<Object> root)
+	{
+		if (selected != null)
+			return selected.getData();
+		return initialized ? root.getChildren().get(0).getChildren().get(0).getData() : null;
+	}
+	
 	public MethodData getSelectedMethodData()
 	{
-		if(selectedMethod != null)
-		{
-			return (MethodData) selectedMethod.getData();
-		} 
-		else
-		{
-			if(initialized)
-			{
-				return (MethodData) methodsTree.getChildren().get(0).getChildren().get(0).getData();
-			}
-		}
-		return null;
+		return (MethodData) getSelectedNodeData(selectedMethodNode, methodsTreeRoot);
 	}
-
+	
+	public SpecialData getSelectedSpecialData()
+	{
+		return (SpecialData) getSelectedNodeData(selectedSpecialDataNode, specialDataTreeRoot);
+	}
+	
 	public void init()
 	{
 		methodsList = getMethods(ClearThCore.getInstance().getMatrixFunctionsClass());
-		methodsTree = getTree();
+		
+		initializeSpecialData();
+		
+		buildMethodsDataTree();
+		buildSpecialDataTree();
+		
 		initialized = true;
+	}
+	
+	private void initializeSpecialData()
+	{
+		Class c = ClearThCore.getInstance().getComparisonUtils().getClass();
+		MvelExpressionHelper helper = createMvelExpressionHelper(c);
+		specialDataList = helper.getSpecialDataList();
+	}
+	
+	private MvelExpressionHelper createMvelExpressionHelper(Class c)
+	{
+		return new MvelExpressionHelper(c);
 	}
 	
 	public List<MethodData> getMethods(Class c)
 	{
-		MvelExpressionHelper helper = new MvelExpressionHelper(c);
-		return helper.getMethodsList();
+		return createMvelExpressionHelper(c).getMethodsList();
 	}
-
-	public TreeNode<Object> getTree()
+	
+	public void buildMethodsDataTree()
 	{
-		TreeNode<Object> root = new DefaultTreeNode<>("root", null);
+		methodsTreeRoot = new DefaultTreeNode<>("root", null);
 
-		Set<String> groups = new HashSet<String>();
-
-		for (MethodData m : methodsList)
-		{
-			groups.add(m.group);
-		}
-
+		Set<String> groups = methodsList
+								.stream()
+								.map(met -> met.group)
+								.collect(Collectors.toSet());
+		
 		for (String group : groups)
-		{
-			TreeNode<Object> g = new DefaultTreeNode<>("group", group, root);
-			g.setSelectable(false);
-		}
-
+			createGroupTreeNode(group, methodsTreeRoot);
+		
 		for (MethodData method : methodsList)
 		{
-			for (TreeNode<Object> node : root.getChildren())
+			for (TreeNode<Object> node : methodsTreeRoot.getChildren())
 			{
 				if(node.getData().equals(method.group))
 					new DefaultTreeNode<>("method", method, node);
 			}
 		}
-
-		return root;
 	}
-
-	public void onNodeSelect(NodeSelectEvent event)
+	
+	public void buildSpecialDataTree()
 	{
-		selectedMethod = event.getTreeNode();
+		specialDataTreeRoot = new DefaultTreeNode<>("root", null);
+		
+		TreeNode<Object> valueGroupRoot = createGroupTreeNode(VALUES, specialDataTreeRoot);
+		TreeNode<Object> functionGroupRoot = createGroupTreeNode(FUNCTIONS, specialDataTreeRoot);
+		
+		for (SpecialData data : specialDataList)
+		{
+			switch (data.getType())
+			{
+				case VALUE: new DefaultTreeNode<>(VALUES, data, valueGroupRoot); break;
+				case FUNCTION: new DefaultTreeNode<>(FUNCTIONS, data, functionGroupRoot); break;
+			}
+		}
+	}
+	
+	private TreeNode<Object> createGroupTreeNode(String group, TreeNode<Object> root)
+	{
+		TreeNode<Object> node = new DefaultTreeNode<>("group", group, root);
+		node.setSelectable(false);
+		return node;
 	}
 
+	public void onMethodNodeSelect(NodeSelectEvent event)
+	{
+		selectedMethodNode = event.getTreeNode();
+	}
+	
+	public void onSpecialDataNodeSelect(NodeSelectEvent event)
+	{
+		selectedSpecialDataNode = event.getTreeNode();
+	}
+	
 	public int getActiveTab()
 	{
 		return activeTab;
@@ -120,39 +170,39 @@ public class MvelHelperBean extends ClearThBean
 	{
 		return methodsList;
 	}
-
-	public void setMethodsList(List<MethodData> methodsList)
+	
+	public List<SpecialData> getSpecialDataList()
 	{
-		this.methodsList = methodsList;
+		return specialDataList;
+	}
+	
+	public TreeNode<Object> getMethodsTreeRoot()
+	{
+		return methodsTreeRoot;
+	}
+	
+	public TreeNode<Object> getSpecialDataTreeRoot()
+	{
+		return specialDataTreeRoot;
+	}
+	
+	public TreeNode getSelectedMethodNode()
+	{
+		return selectedMethodNode;
 	}
 
-	public TreeNode getMethodsTree()
+	public void setSelectedMethodNode(TreeNode selectedMethodNode)
 	{
-		return methodsTree;
+		this.selectedMethodNode = selectedMethodNode;
 	}
-
-	public void setMethodsTree(TreeNode methodsTree)
+	
+	public TreeNode<Object> getSelectedSpecialDataNode()
 	{
-		this.methodsTree = methodsTree;
+		return selectedSpecialDataNode;
 	}
-
-	public TreeNode getSelectedMethod()
+	
+	public void setSelectedSpecialDataNode(TreeNode<Object> selectedSpecialDataNode)
 	{
-		return selectedMethod;
-	}
-
-	public void setSelectedMethod(TreeNode selectedMethod)
-	{
-		this.selectedMethod = selectedMethod;
-	}
-
-	public boolean isInitialized()
-	{
-		return initialized;
-	}
-
-	public void setInitialized(boolean initialized)
-	{
-		this.initialized = initialized;
+		this.selectedSpecialDataNode = selectedSpecialDataNode;
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,7 +39,7 @@ public class MethodData {
 	public String args;
 	public String returnType;
 	public String description;
-	public List<String> usage = new ArrayList<String>();
+	public List<String> usage = new ArrayList<>();
 
 	public String getGroup()
 	{
@@ -143,10 +143,10 @@ public class MethodData {
 
 		for(int i = 0; i < args.length; i++)
 		{
-			sb.append(parameterTypes[i].getSimpleName() + SPACE);
+			sb.append(parameterTypes[i].getSimpleName()).append(SPACE);
 			if(args[i].length == 0)
 			{
-				sb.append(VAR + (i + 1));
+				sb.append(VAR).append(i + 1);
 			}
 			else
 			{
@@ -175,13 +175,9 @@ public class MethodData {
 			if(args == null || args.length <= i || args[i].length == 0)
 			{
 				if(exampleValues.containsKey(parameterTypes[i].toString()))
-				{
 					sb.append(exampleValues.get(parameterTypes[i].toString()));
-				}
 				else
-				{
 					sb.append(exampleValues.get(DEFAULT_TYPE));
-				}
 			}
 			else
 			{
@@ -189,13 +185,9 @@ public class MethodData {
 				{
 					String example = ((MethodArgument)args[i][j]).example();
 					if(example.equals(DEFAULT_VALUE))
-					{
 						sb.append(exampleValues.get(parameterTypes[i].toString()));
-					}
 					else
-					{
 						sb.append(example);
-					}
 				}
 			}
 
@@ -207,9 +199,9 @@ public class MethodData {
 		return sb.toString();
 	}
 	
-	public HashMap<String,String> createExamplesMap()
+	public Map<String,String> createExamplesMap()
 	{
-		HashMap<String, String> examples = new HashMap<String, String>();
+		Map<String, String> examples = new HashMap<>();
 
 		examples.put("int","0");
 		examples.put("long","0");

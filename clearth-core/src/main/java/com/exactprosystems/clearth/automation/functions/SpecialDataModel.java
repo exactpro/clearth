@@ -23,12 +23,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.METHOD)
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MethodDataModel
+public @interface SpecialDataModel
 {
-	String group() default "Other";
-	String args() default "";
-	String description() default "";
+	String name() default "";
+	String value() default "";
 	String usage() default "";
+	String description() default "";
 }

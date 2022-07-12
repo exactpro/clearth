@@ -8,15 +8,16 @@
 		<p:ajax update="ExpCalc:outputHelperPanel"/>
 		<f:selectItem itemLabel="Functions" itemValue="0" />
 		<f:selectItem itemLabel="Patterns" itemValue="1" />
+		<f:selectItem itemLabel="Special" itemValue="2" />
 	</p:selectOneButton>
 	<p:outputPanel id="outputHelperPanel" style="height:80%;">
 		<p:outputPanel rendered="#{mvelHelperBean.activeTab == 0}" style="height:100%;">
 			<div class = "treeTable" style="display:flex; flex-direction: row; justify-content:space-between; align-items:stretch; height:100%;">
 				<div style="width:42%; display:flex; flex-direction: column;">
 					<div style="height:100%; overflow-y:auto; overflow-x:auto; border: 1px solid #ECEFF1; border-radius:3px">
-						<p:tree value="#{mvelHelperBean.methodsTree}" var="node" selectionMode="single" selection="#{mvelHelperBean.selectedMethod}"
+						<p:tree value="#{mvelHelperBean.methodsTreeRoot}" var="node" selectionMode="single" selection="#{mvelHelperBean.selectedMethodNode}"
 								style="border:none; height:90%">
-							<p:ajax event="select" update=":ExpCalc:methodInfo" listener="#{mvelHelperBean.onNodeSelect}" />
+							<p:ajax event="select" update=":ExpCalc:methodInfo" listener="#{mvelHelperBean.onMethodNodeSelect}" />
 							<p:treeNode type="group" style="width:100%">
 								 <span style="cursor: pointer; width:100%;" onclick="this.parentNode.parentNode.children[0].click();">
 									 <b><h:outputText value="#{node}"/></b>
@@ -30,7 +31,7 @@
 				</div>
 				<div style="width:56%">
 					<p:outputPanel id="methodInfo">
-						<p:panel rendered="#{mvelHelperBean.selectedMethod != null}" 
+						<p:panel rendered="#{mvelHelperBean.selectedMethodNode != null}"
 								style="width:100%; height: 100%; padding:0px; overflow-y:auto;" styleClass="greyHeader">
 							<f:facet name="header">
 								<b>
@@ -73,6 +74,9 @@
 					<ui:include src="help/escape_characters.xhtml"/>
 				</p:tab>
 			</p:accordionPanel>
+		</p:outputPanel>
+		<p:outputPanel rendered="#{mvelHelperBean.activeTab == 2}" style="height:100%;">
+			<ui:include src="help/special_data.xhtml"/>
 		</p:outputPanel>
 	</p:outputPanel>
 </ui:composition>

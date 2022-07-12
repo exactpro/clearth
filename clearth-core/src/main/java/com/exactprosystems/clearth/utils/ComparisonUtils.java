@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.utils;
 
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.automation.functions.SpecialDataModel;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.automation.report.results.complex.ComparisonRow;
@@ -52,8 +53,23 @@ public class ComparisonUtils
 		NULL_OR_EMPTY
 	}
 
+	@SpecialDataModel(
+			name = "isNull",
+			usage = "@{isNull}",
+			description = "Checks if the actual value doesn't exist"
+	)
 	public static final String IS_NULL = "@{isNull}";
+	@SpecialDataModel(
+			name = "isNotPresent",
+			usage = "@{isNotPresent}",
+			description = "Checks if the actual value doesn't exist"
+	)
 	public static final String IS_NOT_PRESENT = "@{isNotPresent}";
+	@SpecialDataModel(
+			name = "isNotSet",
+			usage = "@{isNotSet}",
+			description = "Checks if the actual value doesn't exist"
+	)
 	public static final String IS_NOT_SET = "@{isNotSet}";
 	public static final Set<String> NULL_VALUES = new HashSet<String>() {{
 		add(IS_NULL);
@@ -61,31 +77,93 @@ public class ComparisonUtils
 		add(IS_NOT_SET);
 	}};
 
+
+	@SpecialDataModel(
+			name = "isNotNull",
+			usage = "@{isNotNull}",
+			description = "Checks if the actual value exists"
+	)
 	public static final String IS_NOT_NULL = "@{isNotNull}";
+	@SpecialDataModel(
+			name = "isPresent",
+			usage = "@{isPresent}",
+			description = "Checks if the actual value exists"
+	)
 	public static final String IS_PRESENT = "@{isPresent}";
+	@SpecialDataModel(
+			name = "isSet",
+			usage = "@{isSet}",
+			description = "Checks if the actual value exists"
+	)
 	public static final String IS_SET = "@{isSet}";
 	public static final Set<String> NOT_NULL_VALUES = new HashSet<String>() {{
 		add(IS_NOT_NULL);
 		add(IS_PRESENT);
 		add(IS_SET);
 	}};
-
+	
+	@SpecialDataModel(
+			name = "isEmpty",
+			usage = "@{isEmpty}",
+			description = "Checks if the actual value is empty"
+	)
 	public static final String IS_EMPTY = "@{isEmpty}";
-
+	
+	
+	@SpecialDataModel(
+			name = "isNotEmpty",
+			usage = "@{isNotEmpty}",
+			description = "Checks if the actual value is not empty"
+	)
 	public static final String IS_NOT_EMPTY = "@{isNotEmpty}";
-
+	
+	@SpecialDataModel(
+			name = "isNullOrEmpty",
+			usage = "@{isNullOrEmpty}",
+			description = "Checks if the actual value doesn't exist or is empty"
+	)
 	public static final String IS_NULL_OR_EMPTY = "@{isNullOrEmpty}";
+	@SpecialDataModel(
+			name = "isNotPresentOrEmpty",
+			usage = "@{isNotPresentOrEmpty}",
+			description = "Checks if the actual value doesn't exist or is empty"
+	)
 	public static final String IS_NOT_PRESENT_OR_EMPTY = "@{isNotPresentOrEmpty}";
+	@SpecialDataModel(
+			name = "isNotSetOrEmpty",
+			usage = "@{isNotSetOrEmpty}",
+			description = "Checks if the actual value doesn't exist or is empty"
+	)
 	public static final String IS_NOT_SET_OR_EMPTY = "@{isNotSetOrEmpty}";
 	public static final Set<String> NULL_OR_EMPTY_VALUES = new HashSet<String>() {{
 		add(IS_NULL_OR_EMPTY);
 		add(IS_NOT_PRESENT_OR_EMPTY);
 		add(IS_NOT_SET_OR_EMPTY);
 	}};
-
+	
+	@SpecialDataModel(
+			name = "isAnyValue",
+			usage = "@{isAnyValue}",
+			description = "Checks if the actual value has any value"
+	)
 	public static final String IS_ANY_VALUE = "@{isAnyValue}";
+	@SpecialDataModel(
+			name = "isNumber",
+			usage = "@{isNumber}",
+			description = "Checks if the actual value is a number"
+	)
 	public static final String IS_NUMBER = "@{isNumber}";
+	@SpecialDataModel(
+			name = "isInteger",
+			usage = "@{isInteger}",
+			description = "Checks if the actual value is an integer"
+	)
 	public static final String IS_INTEGER = "@{isInteger}";
+	@SpecialDataModel(
+			name = "isFloat",
+			usage = "@{isFloat}",
+			description = "Checks if the actual value is a floating point number"
+	)
 	public static final String IS_FLOAT = "@{isFloat}";
 	public static final Set<String> SPECIAL_VALUES = new HashSet<String> () {{
 		add(IS_NULL);
@@ -104,25 +182,30 @@ public class ComparisonUtils
 		add(IS_INTEGER);
 		add(IS_FLOAT);
 	}};
-
-	public static final String IS_TIMESTAMP_START = "@{isTimestamp('";
-	public static final String IS_AFTER_DATE = "@{isAfterDate(";
-	public static final String IS_BEFORE_DATE = "@{isBeforeDate(";
+	
+	public static final String IS_TIMESTAMP_NAME = "isTimestamp";
+	public static final String IS_TIMESTAMP_START = "@{" + IS_TIMESTAMP_NAME + "('";
+	public static final String IS_AFTER_DATE_NAME = "isAfterDate";
+	public static final String IS_AFTER_DATE = "@{" + IS_AFTER_DATE_NAME + "(";
+	public static final String IS_BEFORE_DATE_NAME = "isBeforeDate";
+	public static final String IS_BEFORE_DATE = "@{" + IS_BEFORE_DATE_NAME + "(";
 	public static final String IS_BETWEEN_DATES_NAME = "isBetweenDates";
 	public static final String IS_BETWEEN_DATES = "@{" + IS_BETWEEN_DATES_NAME + "(";
-	public static final String PATTERN_START = "{pattern(";
+	public static final String PATTERN_NAME = "pattern";
+	public static final String PATTERN_START = "{" + PATTERN_NAME + "(";
 	public static final String AS_NUMBER_NAME = "asNumber";
 	public static final String AS_NUMBER_START = "{" + AS_NUMBER_NAME + "(";
 	public static final String AS_ABS_NUMBER_NAME = "asAbsNumber";
 	public static final String AS_ABS_NUMBER_START = "{" + AS_ABS_NUMBER_NAME + "(";
-	public static final String IS_NOT_EQUAL_TEXT = "@{isNotEqualText(";
+	public static final String IS_NOT_EQUAL_TEXT_NAME = "isNotEqualText";
+	public static final String IS_NOT_EQUAL_TEXT = "@{" + IS_NOT_EQUAL_TEXT_NAME + "(";
 	public static final String IS_NOT_EQUAL_NUMBER_NAME = "isNotEqualNumber";
 	public static final String IS_NOT_EQUAL_NUMBER = "@{" + IS_NOT_EQUAL_NUMBER_NAME + "(";
 
-	public static final String IS_GRATER_THAN_NAME = "isGreaterThan";
-	public static final String IS_GREATER_THAN = "@{" + IS_GRATER_THAN_NAME + "(";
-	public static final String IS_GRATER_OR_NULL_NAME = "isGreaterOrEqual";
-	public static final String IS_GREATER_OR_EQUAL = "@{" + IS_GRATER_OR_NULL_NAME + "(";
+	public static final String IS_GREATER_THAN_NAME = "isGreaterThan";
+	public static final String IS_GREATER_THAN = "@{" + IS_GREATER_THAN_NAME + "(";
+	public static final String IS_GREATER_OR_EQUAL_NAME = "isGreaterOrEqual";
+	public static final String IS_GREATER_OR_EQUAL = "@{" + IS_GREATER_OR_EQUAL_NAME + "(";
 	public static final String IS_LESS_THAN_NAME = "isLessThan";
 	public static final String IS_LESS_THAN = "@{" + IS_LESS_THAN_NAME + "(";
 	public static final String IS_LESS_THAN_OR_EQUAL_NAME = "isLessOrEqual";
@@ -152,8 +235,8 @@ public class ComparisonUtils
 		add(AS_NUMBER_NAME);
 		add(AS_ABS_NUMBER_NAME);
 		add(IS_NOT_EQUAL_NUMBER_NAME);
-		add(IS_GRATER_THAN_NAME);
-		add(IS_GRATER_OR_NULL_NAME);
+		add(IS_GREATER_THAN_NAME);
+		add(IS_GREATER_OR_EQUAL_NAME);
 		add(IS_LESS_THAN_NAME);
 		add(IS_LESS_THAN_OR_EQUAL_NAME);
 		add(IS_BETWEEN_NAME);
@@ -172,6 +255,12 @@ public class ComparisonUtils
 	public static final String IS_CASE_SENSITIVE = "IsCaseSensitive";
 	public static final String IS_IGNORE_SPACES = "IsIgnoreSpaces";
 
+	@SpecialDataModel(
+			name = "pattern",
+			value = "String pattern",
+			usage = "@{pattern('2022-01-20 14:..:..')}",
+			description = "Checks the actual value using the given regular expression"
+	)
 	public boolean compareByPattern(String expected, String actual)
 	{
 		if (actual == null)
@@ -266,6 +355,12 @@ public class ComparisonUtils
 		return isSpecialValue(value) || isSpecialFunction(value) || contains(trim(value), PATTERN_START);
 	}
 
+	@SpecialDataModel(
+			name = "isTimestamp",
+			value = "String format",
+			usage = "@{isTimestamp('dd.MM.yyyy')}",
+			description = "Checks if the actual value is a timestamp in the given format"
+	)
 	public boolean isTimeStamp(String value, String format)
 	{
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
@@ -301,16 +396,34 @@ public class ComparisonUtils
 		}
 	}
 
+	@SpecialDataModel(
+			name = "asNumber",
+			value = "BigDecimal number, (Optional) BigDecimal marginOfError, (Optional) int scale",
+			usage = "@{asNumber(500.1, 10, 1)}",
+			description = "Compares the actual value and the given value as numbers"
+	)
 	public boolean compareAsNumber(String expectedValue, String actualValue) throws ParametersException
 	{
 		return numbersEqual(expectedValue, actualValue, false, false, AS_NUMBER_NAME);
 	}
-
+	
+	@SpecialDataModel(
+			name = "asAbsNumber",
+			value = "BigDecimal number, (Optional) BigDecimal marginOfError, (Optional) int scale",
+			usage = "@{asAbsNumber(500.1, 10, 1)}",
+			description = "Compares the actual value and the given value as absolute numbers"
+	)
 	public boolean compareAsAbsNumber(String expectedValue, String actualValue) throws ParametersException
 	{
 		return numbersEqual(expectedValue, actualValue, true, false, AS_ABS_NUMBER_NAME);
 	}
 
+	@SpecialDataModel(
+			name = "isNotEqualNumber",
+			value = "BigDecimal number, (Optional) BigDecimal marginOfError, (Optional) int scale",
+			usage = "@{isNotEqualNumber(500.1, 10, 1)}",
+			description = "Checks if the actual number and the given number are not equal numbers"
+	)
 	protected boolean isNotEqualNumber(String expectedValue, String actualValue) throws ParametersException
 	{
 		return numbersEqual(expectedValue, actualValue, false, true, IS_NOT_EQUAL_NUMBER_NAME);
@@ -357,11 +470,11 @@ public class ComparisonUtils
 		}
 		else if (StringUtils.startsWith(expectedValue, IS_BEFORE_DATE))
 		{
-			return actualValue != null && compareDates(expectedValue, actualValue, true);
+			return actualValue != null && isBeforeDate(expectedValue, actualValue);
 		}
 		else if (StringUtils.startsWith(expectedValue, IS_AFTER_DATE))
 		{
-			return actualValue != null && compareDates(expectedValue, actualValue, false);
+			return actualValue != null && isAfterDate(expectedValue, actualValue);
 		}
 		else if (StringUtils.startsWith(expectedValue, IS_BETWEEN_DATES))
 		{
@@ -460,9 +573,15 @@ public class ComparisonUtils
 		return compareValues(expectedValue, actualValue, false);
 	}
 	
+	@SpecialDataModel(
+			name = "isGreaterOrEqual",
+			value = "BigDecimal number",
+			usage = "@{isGreaterOrEqual(500)}",
+			description = "Checks if the actual value is greater than or equal to the given number"
+	)
 	public boolean isGreaterOrEq(String expectedValue, String actualValue) throws ParametersException
 	{
-		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_GREATER_OR_EQUAL);
+		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_GREATER_OR_EQUAL_NAME);
 		
 		if (!isNumberWithoutQualifier(actualValue))
 			return false;
@@ -471,9 +590,15 @@ public class ComparisonUtils
 		return actual.compareTo(expected) >= 0;
 	}
 	
+	@SpecialDataModel(
+			name = "isGreaterThan",
+			value = "BigDecimal number",
+			usage = "@{isGreaterThan(500)}",
+			description = "Checks if the actual value is greater than the given number"
+	)
 	public boolean isGreaterThan(String expectedValue, String actualValue) throws ParametersException 
 	{
-		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_GREATER_THAN);
+		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_GREATER_THAN_NAME);
 
 		if (!isNumberWithoutQualifier(actualValue))
 			return false;
@@ -482,9 +607,15 @@ public class ComparisonUtils
 		return actual.compareTo(expected) > 0;
 	}
 	
+	@SpecialDataModel(
+			name = "isLessThan",
+			value = "BigDecimal number",
+			usage = "@{isLessThan(500)}",
+			description = "Checks if the actual value is less than the given number"
+	)
 	public boolean isLessThan(String expectedValue, String actualValue) throws ParametersException
 	{
-		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_LESS_THAN);
+		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_LESS_THAN_NAME);
 
 		if (!isNumberWithoutQualifier(actualValue))
 			return false;
@@ -493,9 +624,15 @@ public class ComparisonUtils
 		return actual.compareTo(expected) < 0;
 	}
 	
+	@SpecialDataModel(
+			name = "isLessOrEqual",
+			value = "BigDecimal number",
+			usage = "@{isLessOrEqual(500)}",
+			description = "Checks if the actual value is less than or equal to the given number"
+	)
 	public boolean isLessOrEq(String expectedValue, String actualValue) throws ParametersException
 	{
-		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_LESS_OR_EQUAL);
+		BigDecimal expected = getExpectedBigDecimal(expectedValue, IS_LESS_THAN_OR_EQUAL_NAME);
 
 		if (!isNumberWithoutQualifier(actualValue))
 			return false;
@@ -509,6 +646,12 @@ public class ComparisonUtils
 	* <br>@{isBetween(2,4,'includeLeft')} ~ [2,4); @{isBetween(2,4,'includeRight')} ~ (2,4];
 	* <br>@{isBetween(2,4)} ~ (2,4); @{isBetween(2,4,'includeBoth')} ~ [2,4];
 	 */
+	@SpecialDataModel(
+			name = "isBetween",
+			value = "BigDecimal left, BigDecimal right, (Optional) String inclusion",
+			usage = "@{isBetween(2,4,'includeLeft')}",
+			description = "Checks if the actual value is between two given numbers. Inclusion types: " + INCLUDE_BOTH + ", " + INCLUDE_LEFT  + ", " + INCLUDE_RIGHT
+	)
 	public boolean isBetween(String expectedExpression, String actualValue) throws ParametersException
 	{
 		String paramsLine = prepareExpectedValue(expectedExpression);
@@ -629,7 +772,7 @@ public class ComparisonUtils
 	{
 		compare(result, expectedValues, actualValues, "");
 	}
-
+	
 	public boolean compareDates(String expectedValue, String actualValue, boolean isBefore) {
 		int start = expectedValue.indexOf('(');
 		int end = expectedValue.lastIndexOf(')');
@@ -664,6 +807,28 @@ public class ComparisonUtils
 		
 		return isBefore ? act.before(exp) : act.after(exp);
 	}
+	
+	@SpecialDataModel(
+			name = "isBeforeDate",
+			value = "String date, String format",
+			usage = "@{isBeforeDate('01.01.2001', 'dd.MM.yyyy')}",
+			description = "Checks if the actual date is before the given date"
+	)
+	public boolean isBeforeDate(String expectedValue, String actualValue)
+	{
+		return compareDates(expectedValue, actualValue, true);
+	}
+	
+	@SpecialDataModel(
+			name = "isAfterDate",
+			value = "String date, String format",
+			usage = "@{isAfterDate('01.01.2001', 'dd.MM.yyyy')}",
+			description = "Checks if the actual date is after the given date"
+	)
+	public boolean isAfterDate(String expectedValue, String actualValue)
+	{
+		return compareDates(expectedValue, actualValue, false);
+	}
 
 	/**
 	 * Syntax example of matrix function @{isBetweenDates}: 
@@ -672,6 +837,12 @@ public class ComparisonUtils
 	 * <br>@{isBetweenDates('04.02.2003','06.02.2003','dd.MM.yyyy','includeBoth')} ~ [04.02.2003,06.02.2003];
 	 * <br>@{isBetweenDates('04.02.2003','06.02.2003','dd.MM.yyyy')} ~ (04.02.2003,06.02.2003);
 	 */
+	@SpecialDataModel(
+			name = "isBetweenDates",
+			value = "String leftDateBound, String rightDateBound, String format, (Optional) String inclusion",
+			usage = "@{isBetweenDates('04.02.2003', '06.02.2003', 'dd.MM.yyyy')}",
+			description = "Checks if the actual date is between two given dates"
+	)
 	public boolean isBetweenDates(String expectedExpression, String actualValue) throws ParametersException
 	{
 		String paramsLine = prepareExpectedValue(expectedExpression);
@@ -680,7 +851,7 @@ public class ComparisonUtils
 		ParametersUtils.removeQuotesAndSpaces(params);
 		
 		int i = 3;
-		SimpleDateFormat dtf = null;
+		SimpleDateFormat dtf;
 		Date leftBound, rightBound, actual;
 		try
 		{
@@ -752,27 +923,33 @@ public class ComparisonUtils
 		return preparedValue.equals(actualValue);
 	}
 
+	@SpecialDataModel(
+			name = "isNotEqualText",
+			value = "String text, (Optional) boolean isCaseSensitive, (Optional) boolean isIgnoreSpaces",
+			usage = "@{isNotEqualText('Your text', true, true)}",
+			description = "Checks if the actual text and the given text are not equal"
+	)
 	protected boolean isNotEqualText(String expectedValue, String actualValue) throws ParametersException
 	{
 		String expressionParameters = prepareExpectedValue(expectedValue);
 		if(isEmpty(expressionParameters))
 		{
-			throw new ParametersException(format("Parameters in function '%s' are missing.", IS_NOT_EQUAL_NUMBER_NAME));
+			throw new ParametersException(format("Parameters in function '%s' are missing.", IS_NOT_EQUAL_TEXT_NAME));
 		}
 
 		String[] entries = StringUtils.split(expressionParameters,',');
-		checkNumberOfParams(IS_NOT_EQUAL_NUMBER_NAME, entries, 1, 3);
+		checkNumberOfParams(IS_NOT_EQUAL_TEXT_NAME, entries, 1, 3);
 
 		String preparedValue = StringUtils.trim(entries[0]);
 		if(!(preparedValue.startsWith("'") && preparedValue.endsWith("'")))
 		{
-			throw new ParametersException(format("In function '%s' value '%s' not valid for parameter[0] - 'Expected value'.", IS_NOT_EQUAL_NUMBER_NAME, preparedValue));
+			throw new ParametersException(format("In function '%s' value '%s' not valid for parameter[0] - 'Expected value'.", IS_NOT_EQUAL_TEXT_NAME, preparedValue));
 		}
 		else
 			preparedValue = preparedValue.substring(1, preparedValue.length() - 1);
 
-		boolean isCaseSensitive = getBooleanValue( entries, 1, IS_NOT_EQUAL_NUMBER_NAME, IS_CASE_SENSITIVE);
-		boolean isIgnoreSpaces = getBooleanValue(entries, 2, IS_NOT_EQUAL_NUMBER_NAME, IS_IGNORE_SPACES);
+		boolean isCaseSensitive = getBooleanValue(entries, 1, IS_NOT_EQUAL_TEXT_NAME, IS_CASE_SENSITIVE);
+		boolean isIgnoreSpaces = getBooleanValue(entries, 2, IS_NOT_EQUAL_TEXT_NAME, IS_IGNORE_SPACES);
 
 		return !compareTexts(preparedValue, actualValue, isCaseSensitive, isIgnoreSpaces);
 	}
