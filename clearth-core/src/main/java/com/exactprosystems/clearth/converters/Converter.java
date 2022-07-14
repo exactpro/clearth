@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.exactprosystems.clearth.automation.ActionsMapping;
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +37,7 @@ public abstract class Converter
 {
 	private static final Logger logger = LoggerFactory.getLogger(MessageConverter.class);
 	
-	protected List<ActionData> loadActions()
-	{
+	protected List<ActionData> loadActions() throws SettingsException {
 		List<ActionData> actionsList = new LinkedList<ActionData>();
 		
 		for (Entry<String, ActionMetaData> action : getActions().entrySet())
@@ -73,8 +74,7 @@ public abstract class Converter
 		return actionsList;
 	}
 	
-	protected Map<String, ActionMetaData> getActions()
-	{
-		return DefaultActionGenerator.loadActionsMapping(false, logger);
+	protected Map<String, ActionMetaData> getActions() throws SettingsException {
+		return new ActionsMapping(false).getDescriptions();
 	}
 }

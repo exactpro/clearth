@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.TestActionUtils;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -53,8 +54,7 @@ public class CompareDataSetsTest {
     }
 
     @BeforeClass
-    public static void startTestApp() throws ClearThException
-    {
+    public static void startTestApp() throws ClearThException, SettingsException {
         clearThManager = new ApplicationManager();
         extraActions = TestActionUtils.addCustomActions(ACTIONS_MAPPING_PATH).keySet();
     }

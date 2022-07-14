@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 
 import com.exactprosystems.clearth.ApplicationManager;
@@ -36,9 +37,8 @@ public class TestActionUtils
 {
 	private static final Logger logger = new LoggerStub();
 	
-	public static Map<String, ActionMetaData> addCustomActions(Path customActionsMapping)
-	{
-		Map<String, ActionMetaData> customActions = ActionGenerator.loadActionsMapping(customActionsMapping.toString(), true, logger);
+	public static Map<String, ActionMetaData> addCustomActions(Path customActionsMapping) throws SettingsException {
+		Map<String, ActionMetaData> customActions = new ActionsMapping(customActionsMapping,true).getDescriptions();
 		ClearThCore.getInstance().getActionFactory().getActionsMapping().putAll(customActions);
 		return customActions;
 	}

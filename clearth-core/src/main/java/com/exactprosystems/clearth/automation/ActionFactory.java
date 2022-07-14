@@ -21,9 +21,11 @@ package com.exactprosystems.clearth.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.ConfigFiles;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,13 +45,16 @@ public class ActionFactory {
 	}
 
 
-	public void loadActionsMapping() {
-		this.actionsMapping =  ActionGenerator.loadActionsMapping(true, logger);  //Action names will be in lower case so search by containsKey() and get() should be performed by lower case value;
+	public void loadActionsMapping() throws SettingsException {
+		this.actionsMapping = new ActionsMapping(true).getDescriptions();
+		//Action names will be in lower case so search by containsKey() and get() should be performed by lower case value;
 	}
 
-	public void loadActionsMapping(ConfigFiles configData) {
-		this.actionsMapping =  ActionGenerator.loadActionsMapping(ClearThCore.rootRelative(configData.getActionsMappingFileName()),
-				true, logger);  //Action names will be in lower case so search by containsKey() and get() should be performed by lower case value;
+	public void loadActionsMapping(ConfigFiles configData) throws SettingsException {
+		this.actionsMapping = new ActionsMapping(
+				Paths.get(ClearThCore.rootRelative(
+						configData.getActionsMappingFileName())), true).getDescriptions();
+		//Action names will be in lower case so search by containsKey() and get() should be performed by lower case value;
 	}
 
 	public boolean isDefinedAction(String actionName) {

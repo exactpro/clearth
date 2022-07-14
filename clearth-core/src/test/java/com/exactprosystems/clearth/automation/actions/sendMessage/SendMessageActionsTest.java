@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
 
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -53,8 +54,7 @@ public class SendMessageActionsTest
 	private Set<String> customActions;
 	
 	@BeforeClass
-	public void init() throws ClearThException
-	{
+	public void init() throws ClearThException, SettingsException {
 		clearThManager = new ApplicationManager();
 		sender = new CollectingSender();
 		customActions = TestActionUtils.addCustomActions(ACTIONS_PATH).keySet();

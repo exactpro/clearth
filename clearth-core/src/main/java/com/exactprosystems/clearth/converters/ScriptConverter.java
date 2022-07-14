@@ -21,8 +21,10 @@ package com.exactprosystems.clearth.converters;
 import java.util.List;
 import java.util.Map;
 
+import com.exactprosystems.clearth.automation.ActionsMapping;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +50,7 @@ public abstract class ScriptConverter extends Converter
 		return null;
 	}
 	
-	protected Map<String, ActionMetaData> getActions()
-	{
-		return DefaultActionGenerator.loadActionsMapping(false, logger);
+	protected Map<String, ActionMetaData> getActions() throws SettingsException {
+		return new ActionsMapping(false).getDescriptions();
 	}
 }

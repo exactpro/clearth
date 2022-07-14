@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -37,10 +39,6 @@ import org.slf4j.Logger;
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.LoggerStub;
-import com.exactprosystems.clearth.automation.ActionGenerator;
-import com.exactprosystems.clearth.automation.ActionMetaData;
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
 
@@ -71,10 +69,9 @@ public class TestPreparableAction
 		Assert.assertFalse(PreparableAction2.isPrepared());
 	}
 
-	private static void addExtraActionsMapping()
-	{
+	private static void addExtraActionsMapping() throws SettingsException {
 		originActionsMapping = ClearThCore.getInstance().getActionFactory().getActionsMapping();
-		extraActionsMapping = ActionGenerator.loadActionsMapping(ACTIONS_MAPPING_PATH.toString(), true, logger);
+		extraActionsMapping = new ActionsMapping(ACTIONS_MAPPING_PATH,true).getDescriptions();
 		originActionsMapping.putAll(extraActionsMapping);
 	}
 
@@ -87,8 +84,7 @@ public class TestPreparableAction
 	}
 
 	@BeforeClass
-	public static void startTestApp() throws ClearThException
-	{
+	public static void startTestApp() throws ClearThException, SettingsException {
 		clearThManager = new ApplicationManager();
 		addExtraActionsMapping();
 	}

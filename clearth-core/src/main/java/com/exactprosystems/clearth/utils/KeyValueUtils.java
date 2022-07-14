@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -103,6 +104,11 @@ public class KeyValueUtils
 			closeResource(reader);
 		}
 		return result;
+	}
+
+	public static LinkedHashMap<String, String> loadKeyValueFile(Path filePath, boolean keyToLowerCase)
+	{
+		return loadKeyValueFile(filePath.toString(),keyToLowerCase);
 	}
 
 	public static LinkedHashMap<String, String> parseKeyValueString(String inputText, String pairDelimiter, boolean keyToLowerCase, String... ignoredStartChars)
