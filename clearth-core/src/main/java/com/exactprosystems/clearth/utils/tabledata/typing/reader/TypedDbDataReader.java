@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
-public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderItem,Object, TypedTableData>
+public class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderItem,Object, TypedTableData>
 {
 	private static final Logger logger = LoggerFactory.getLogger(TypedDbDataReader.class);
 
@@ -132,43 +132,43 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 				switch (type)
 				{
 					case INTEGER:
-						typedTableRow.setInteger(headerName, getInteger(headerName, resultSet));
+						typedTableRow.setInteger(headerName, getInteger(headerName));
 						break;
 					case BOOLEAN:
-						typedTableRow.setBoolean(headerName, getBoolean(headerName, resultSet));
+						typedTableRow.setBoolean(headerName, getBoolean(headerName));
 						break;
 					case FLOAT:
-						typedTableRow.setFloat(headerName, getFloat(headerName, resultSet));
+						typedTableRow.setFloat(headerName, getFloat(headerName));
 						break;
 					case DOUBLE:
-						typedTableRow.setDouble(headerName, getDouble(headerName, resultSet));
+						typedTableRow.setDouble(headerName, getDouble(headerName));
 						break;
 					case BYTE:
-						typedTableRow.setByte(headerName, getByte(headerName, resultSet));
+						typedTableRow.setByte(headerName, getByte(headerName));
 						break;
 					case SHORT:
-						typedTableRow.setShort(headerName, getShort(headerName, resultSet));
+						typedTableRow.setShort(headerName, getShort(headerName));
 						break;
 					case LONG:
-						typedTableRow.setLong(headerName, getLong(headerName, resultSet));
+						typedTableRow.setLong(headerName, getLong(headerName));
 						break;
 					case LOCALDATE:
-						typedTableRow.setLocalDate(headerName, getLocalDate(headerName, resultSet));
+						typedTableRow.setLocalDate(headerName, getLocalDate(headerName));
 						break;
 					case LOCALTIME:
-						typedTableRow.setLocalTime(headerName, getLocalTime(headerName, resultSet));
+						typedTableRow.setLocalTime(headerName, getLocalTime(headerName));
 						break;
 					case BIGDECIMAL:
-						typedTableRow.setBigDecimal(headerName, getBigDecimal(headerName, resultSet));
+						typedTableRow.setBigDecimal(headerName, getBigDecimal(headerName));
 						break;
 					case STRING:
-						typedTableRow.setString(headerName, getString(headerName, resultSet));
+						typedTableRow.setString(headerName, getString(headerName));
 						break;
 					case LOCALDATETIME:
-						typedTableRow.setDateTime(headerName, getLocalDateTime(headerName, resultSet));
+						typedTableRow.setDateTime(headerName, getLocalDateTime(headerName));
 						break;
 					default:
-						typedTableRow.setObject(headerName, getObject(headerName, resultSet));
+						typedTableRow.setObject(headerName, getObject(headerName));
 				}
 			}
 			catch (SQLException e)
@@ -178,69 +178,76 @@ public  class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderIte
 		}
 	}
 
-	protected Integer getInteger(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Integer getInteger(String tableHeader) throws SQLException
 	{
-		return resultSet.getInt(tableHeader);
+		int result = resultSet.getInt(tableHeader);
+		return resultSet.wasNull() ? null : result;
 	}
 
-	protected Boolean getBoolean(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Boolean getBoolean(String tableHeader) throws SQLException
 	{
-		return resultSet.getBoolean(tableHeader);
+		boolean result = resultSet.getBoolean(tableHeader);
+		return resultSet.wasNull() ? null : result;
 	}
 
-	protected Float getFloat(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Float getFloat(String tableHeader) throws SQLException
 	{
-		return resultSet.getFloat(tableHeader);
+		float result = resultSet.getFloat(tableHeader);
+		return resultSet.wasNull() ? null : result;
 	}
 
-	protected Double getDouble(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Double getDouble(String tableHeader) throws SQLException
 	{
-		return resultSet.getDouble(tableHeader);
+		double result = resultSet.getDouble(tableHeader);
+		return resultSet.wasNull() ? null : result;
 	}
 
-	protected Byte getByte(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Byte getByte(String tableHeader) throws SQLException
 	{
-		return resultSet.getByte(tableHeader);
+		byte result = resultSet.getByte(tableHeader);
+		return resultSet.wasNull() ? null : result;
 	}
 
-	protected Short getShort(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Short getShort(String tableHeader) throws SQLException
 	{
-		return resultSet.getShort(tableHeader);
+		short result = resultSet.getShort(tableHeader);
+		return resultSet.wasNull() ? null : result;
 	}
 
-	protected Long getLong(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Long getLong(String tableHeader) throws SQLException
 	{
-		return resultSet.getLong(tableHeader);
+		long result = resultSet.getLong(tableHeader);
+		return resultSet.wasNull() ? null : result;
 	}
 
-	protected Date getLocalDate(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Date getLocalDate(String tableHeader) throws SQLException
 	{
 		return resultSet.getDate(tableHeader);
 	}
 
-	protected LocalTime getLocalTime(String tableHeader, ResultSet resultSet) throws SQLException
+	protected LocalTime getLocalTime(String tableHeader) throws SQLException
 	{
 		Time time = resultSet.getTime(tableHeader);
 		return time == null ? null : time.toLocalTime();
 	}
 
-	protected BigDecimal getBigDecimal(String tableHeader, ResultSet resultSet) throws SQLException
+	protected BigDecimal getBigDecimal(String tableHeader) throws SQLException
 	{
 		return resultSet.getBigDecimal(tableHeader);
 	}
 
-	protected String getString(String tableHeader, ResultSet resultSet) throws SQLException
+	protected String getString(String tableHeader) throws SQLException
 	{
 		return resultSet.getString(tableHeader);
 	}
 
-	protected LocalDateTime getLocalDateTime(String tableHeader, ResultSet resultSet) throws SQLException
+	protected LocalDateTime getLocalDateTime(String tableHeader) throws SQLException
 	{
 		Timestamp timestamp = resultSet.getTimestamp(tableHeader);
 		return timestamp == null ? null : timestamp.toLocalDateTime();
 	}
 
-	protected Object getObject(String tableHeader, ResultSet resultSet) throws SQLException
+	protected Object getObject(String tableHeader) throws SQLException
 	{
 		return resultSet.getObject(tableHeader);
 	}
