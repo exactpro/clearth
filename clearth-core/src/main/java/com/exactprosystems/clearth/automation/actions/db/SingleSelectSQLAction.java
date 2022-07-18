@@ -25,15 +25,14 @@ import com.exactprosystems.clearth.automation.SchedulerStatus;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.IValueTransformer;
+import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMapping;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,21 +84,31 @@ public abstract class SingleSelectSQLAction extends SelectSQLAction implements P
 	{
 		try
 		{
-			List<DBFieldMapping> mapping = getVerificationMapping();
-			
-			List<Map<String, String>> data = resultSetToTable(rs, mapping, dbValueTransformer);
-			if (CollectionUtils.isEmpty(data))
-				return DefaultResult.failed("The query returned empty result");
-			
-			Map<String, String> record = data.get(0);
-			saveOutputParams(record);
-			
-			Result result = new DefaultResult();
-			checkRecord(result, record, mapping);
-			
-			if (data.size() > 1)
-				processExtraRecords(result, data);
-			
+			Result result;
+			if (!isNeedSaveToFile())
+			{
+				List<DBFieldMapping> mapping = getVerificationMapping();
+
+				List<Map<String, String>> data = resultSetToTable(rs, mapping, dbValueTransformer);
+				if (CollectionUtils.isEmpty(data))
+					return DefaultResult.failed("The query returned empty result");
+
+				Map<String, String> record = data.get(0);
+				saveOutputParams(record);
+
+				result = new DefaultResult();
+				recordChecker.checkRecord(result, record.keySet(), mapping);
+
+				if (data.size() > 1)
+					processExtraRecords(result, data);
+
+			}
+			else
+			{
+				result = writeQueryResult(rs, 1);
+				checkExtraRecords(result, rs);
+			}
+
 			return result;
 		}
 		catch (SQLException e)
@@ -115,31 +124,17 @@ public abstract class SingleSelectSQLAction extends SelectSQLAction implements P
 		else 
 			setOutputParams(new LinkedHashMap<String, String>(dbRecord));
 	}
-	
-	protected void checkRecord(Result result, Map<String, String> record, List<DBFieldMapping> mapping)
+
+	protected void checkExtraRecords(Result result, ResultSet resultSet) throws SQLException
 	{
-		List<DBFieldMapping> absentFields = null;
-		for (DBFieldMapping fm : mapping)
-		{
-			if (!record.containsKey(fm.getSrcField()))
-			{
-				if (absentFields == null)
-					absentFields = new ArrayList<DBFieldMapping>();
-				absentFields.add(fm);
-			}
-		}
-		if (absentFields != null)
-		{
-			result.setSuccess(false);
-			CommaBuilder cb = new CommaBuilder();
-			for (DBFieldMapping fm : absentFields)
-			{
-				cb.append(fm.getSrcField()).add(" (").add(fm.getDestField()).add(')');
-			}
-			result.appendComment(String.format("Query result doesn't contain the following fields: %s.", cb));
-		}
+		int count = 0;
+		while (resultSet.next())
+			count++;
+
+		if (count > 0)
+			result.appendComment(Utils.EOL + String.format("Action returned %d extra rows", count));
 	}
-	
+
 	protected void processExtraRecords(Result result, List<Map<String, String>> data)
 	{
 		result.appendComment(String.format("Query returned %d rows instead of one. " +
