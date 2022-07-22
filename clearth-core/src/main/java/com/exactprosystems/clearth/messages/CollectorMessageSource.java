@@ -41,6 +41,7 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 
 	protected final ClearThMessageCollector collector;
 	protected long currentId;
+	protected long lastMessageId;
 	protected Deque<ReceivedClearThMessage> messagesBuffer;
 	protected final boolean directOrder;
 	
@@ -53,6 +54,7 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 	{
 		this.collector = collector;
 		currentId = -1;
+		lastMessageId = -1;
 		messagesBuffer = getAllMessages();
 		this.directOrder = directOrder;
 	}
@@ -67,7 +69,8 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 	{
 		this.collector = collector;
 		currentId = findIdForTime(afterTime);
-		messagesBuffer = getMessages(currentId);
+		lastMessageId = currentId;
+		messagesBuffer = getMessages(lastMessageId);
 		this.directOrder = directOrder;
 	}
 	
@@ -76,7 +79,7 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 	public ClearThMessage<?> nextMessage() throws IOException
 	{
 		if (messagesBuffer.isEmpty())  //No messages left in buffer, need to get next ones
-			messagesBuffer = getMessages(currentId);
+			messagesBuffer = getMessages(lastMessageId);
 
 		ReceivedClearThMessage msg = directOrder ? messagesBuffer.pollFirst() : messagesBuffer.pollLast();
 
@@ -138,15 +141,23 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 			return new ArrayDeque<ReceivedClearThMessage>(messages);
 	}
 	
+	protected void updateLastId(Deque<ReceivedClearThMessage> messages) {
+		ReceivedClearThMessage lastMessage = messages.peekLast();
+		if (lastMessage != null)
+			lastMessageId = lastMessage.getId();
+	}
+	
 	protected Deque<ReceivedClearThMessage> getAllMessages()
 	{
-		Collection<ReceivedClearThMessage> result = collector.getMessagesData();
-		return prepareMessages(result);
+		Deque<ReceivedClearThMessage> result = prepareMessages(collector.getMessagesData());
+		updateLastId(result);
+		return result;
 	}
 	
 	protected Deque<ReceivedClearThMessage> getMessages(long afterId)
 	{
-		Collection<ReceivedClearThMessage> result = collector.getMessagesData(afterId);
-		return prepareMessages(result);
+		Deque<ReceivedClearThMessage> result = prepareMessages(collector.getMessagesData(afterId));
+		updateLastId(result);
+		return result;
 	}
 }
