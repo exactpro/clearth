@@ -51,19 +51,6 @@ public abstract class SQLCheckPointer extends SelectSQLAction
 		return (String)globalContext.getLoadedContext(this.getName() + QUERY_POSTFIX);
 	}
 
-
-	@Override
-	protected String getQueryName()
-	{
-		return this.getName() + QUERY_POSTFIX;
-	}
-
-	@Override
-	protected String getQueryFileName()
-	{
-		return getInputParam(QUERY_FILE);
-	}
-
 	@Override
 	protected Result processResultSet(ResultSet rs, String[] keys) throws SQLException, ResultException
 	{

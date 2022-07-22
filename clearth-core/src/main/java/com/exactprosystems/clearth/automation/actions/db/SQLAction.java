@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,12 +22,16 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.actions.db.checkers.DefaultRecordChecker;
 import com.exactprosystems.clearth.automation.actions.db.checkers.RecordChecker;
-import com.exactprosystems.clearth.automation.actions.db.resultWriters.SqlResultWriter;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.ResultSetProcessor;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.ResultSetProcessorSettings;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.SaveToFileResultSetProcessor;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.SaveToContextResultSetProcessor;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.SaveToContextRSProcessorSettings;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.SaveToFileRSProcessorSettings;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.automation.report.results.DefaultTableResultDetail;
 import com.exactprosystems.clearth.automation.report.results.TableResult;
 import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
@@ -36,19 +40,15 @@ import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.sql.conversion.ConversionSettings;
 import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMapping;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static com.exactprosystems.clearth.automation.actions.db.SelectSQLAction.MAPPING_FILE;
-
-public abstract class SQLAction extends Action
+public abstract class SQLAction extends Action implements Preparable
 {
 
 	private GlobalContext globalContext;
@@ -61,23 +61,29 @@ public abstract class SQLAction extends Action
 	protected RecordChecker recordChecker;
 
 	protected static final String SAVE_QUERY_RESULT = "SaveQueryResult",
-			OUT_QUERY_RESULT_PATH = "OutResultPath",
-			OUT_ROWS_COUNT = "RowsCount",
 			PARAM_FILE_DIR = "FileDir",
 			PARAM_FILE_NAME = "FileName",
 			PARAM_DELIMITER = "Delimiter",
 			PARAM_GENERATE_IF_EMPTY = "GenerateIfEmpty",
 			PARAM_USE_QUOTES = "UseQuotes",
 			PARAM_COMPRESS_RESULT = "CompressResult",
-			MAX_DISPLAYED_ROWS_COUNT = "MaxDisplayedRowsCount";
+			MAX_DISPLAYED_ROWS_COUNT = "MaxDisplayedRowsCount",
+			QUERY_FILE = "QueryFile",
+			QUERY = "Query",
+			MAPPING_FILE = "MappingFile";
 
-	private File fileDir;
-	private String fileName;
-	private String delimiterString;
-	private boolean generateIfEmpty;
-	private boolean useQuotes;
-	private boolean compressResult;
-	private int maxDisplayedRows;
+	public static final String OUT_QUERY_RESULT_PATH = "OutResultPath",
+				OUT_ROWS_COUNT = "RowsCount",
+				OUT_TABLE_DATA = "tabledata";
+
+	protected File fileDir;
+	protected String fileName;
+	protected String delimiterString;
+	protected boolean saveToFile;
+	protected boolean generateIfEmpty;
+	protected boolean useQuotes;
+	protected boolean compressResult;
+	protected int maxDisplayedRows;
 
 	@Override
 	public Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws FailoverException
@@ -109,6 +115,7 @@ public abstract class SQLAction extends Action
 	protected void init() throws IOException
 	{
 		InputParamsHandler handler = new InputParamsHandler(inputParams);
+		saveToFile = handler.getBoolean(SAVE_QUERY_RESULT, false);
 		fileDir = handler.getFile(PARAM_FILE_DIR, ClearThCore.tempPath());
 		fileName = handler.getString(PARAM_FILE_NAME);
 		delimiterString = handler.getString(PARAM_DELIMITER, ",");
@@ -118,6 +125,12 @@ public abstract class SQLAction extends Action
 		maxDisplayedRows = handler.getInteger(MAX_DISPLAYED_ROWS_COUNT, 50);
 		handler.check();
 
+		String queryString = getQueryString();
+		String queryFileName = getQueryFileName();
+
+		if (StringUtils.isEmpty(queryString) && StringUtils.isEmpty(queryFileName))
+			throw ResultException.failed(String.format("Unable to get query. #%s or #%s must be specified", QUERY, QUERY_FILE));
+
 		delimiterString = delimiterString.replace("\\\\t", "\t");
 		if (delimiterString.length() > 1)
 			throw ResultException.failed("Invalid format of CSV values delimiter specified in parameter '" + PARAM_DELIMITER
@@ -126,106 +139,62 @@ public abstract class SQLAction extends Action
 
 	protected String getQuery() throws Exception
 	{
-		String query = getGlobalContext().getLoadedContext(getQueryName());
+		String query = getQueryString();
 
-		if(query == null)
+		if(StringUtils.isEmpty(query))
 		{
-			prepare();
-			query = getGlobalContext().getLoadedContext(getQueryName());
-		}
+			String queryFileName = getQueryFileName();
+			query = globalContext.getLoadedContext(queryFileName);
 
+			if (StringUtils.isEmpty(query))
+			{
+				query = loadQueryFromFile(queryFileName);
+				globalContext.setLoadedContext(queryFileName, query);
+			}
+		}
 		return query;
 	}
 
-	protected Result writeQueryResult(ResultSet resultSet) throws SQLException
+	protected Result processQueryResult(ResultSet resultSet) throws SQLException
 	{
-		return writeQueryResult(resultSet, -1);
+		return processQueryResult(resultSet, -1);
 	}
 
-	protected Result writeQueryResult(ResultSet resultSet, int limit) throws SQLException
+	protected Result processQueryResult(ResultSet resultSet, int limit) throws SQLException
 	{
 		if (!resultSet.next() && !generateIfEmpty)
-			return DefaultResult.passed("Query returned empty table data result. Nothing to write.");
+			return DefaultResult.passed("Query returned empty table data result. Nothing to process");
 
-		try (SqlResultWriter sqlResultWriter = getSqlResultWriter())
+		TableResult result = new TableResult("Table rows from result of the query", null, false);
+
+		try(ResultSetProcessor processor = getResultSetProcessor(result))
 		{
-			ConversionSettings settings = getConversionSettings();
+			processor.processHeader(resultSet, getVerificationMapping());
+			int recordsCount = processor.processRecords(resultSet, limit);
 
-			TableResult result = new TableResult("Table rows from result of the query", null, false);
-			writeHeader(resultSet, result, sqlResultWriter, settings);
-
-			int recordsCount = 0;
-			if (resultSet.getRow() != 0)
-				recordsCount = writeRecords(result, resultSet, settings, sqlResultWriter, limit);
-
-			File savedOutputFile = sqlResultWriter.getOutputFile();
-			addOutputParams(savedOutputFile, recordsCount);
+			Map<String, String> outputParams = processor.getOutputParams();
+			addOutputParams(outputParams);
 
 			result.appendComment(String.format("Query has been successfully executed and returned %d columns and %d rows."
-							+ Utils.EOL + "Written file: '%s'", result.getColumns().size(), recordsCount, savedOutputFile));
+					+ Utils.EOL, result.getColumns().size(), recordsCount));
 
 			return result;
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			return DefaultResult.failed("Couldn't process writing query result to the output file.", e);
 		}
 	}
 
-	protected void addOutputParams(File outputFile, int rowsCount) throws IOException
+	protected void addOutputParams(Map<String, String> outputParams)
 	{
-		addOutputParam(OUT_ROWS_COUNT, String.valueOf(rowsCount));
-		addOutputParam(OUT_QUERY_RESULT_PATH, outputFile.toString());
-	}
-
-	protected void writeHeader(ResultSet resultSet, TableResult result, SqlResultWriter sqlResultWriter, ConversionSettings settings) throws SQLException, IOException
-	{
-		List<DBFieldMapping> mapping = getMapping();
-
-		List<String> columns = SQLUtils.getColumnNames(resultSet.getMetaData());
-		for (int i = 0; i < columns.size(); i++)
-			columns.set(i, settings.getTableHeader(columns.get(i)));
-
-		result.setColumns(columns);
-		sqlResultWriter.writeHeader(columns);
-
-		recordChecker.checkRecord(result, new HashSet<>(columns), mapping);
-	}
-
-	protected int writeRecords(TableResult result, ResultSet resultSet, ConversionSettings settings, SqlResultWriter sqlResultWriter, int limit) throws SQLException, IOException
-	{
-		int rowsCount = 0;
-		do
-		{
-			rowsCount++;
-			List<String> columns = result.getColumns();
-			List<String> values = new LinkedList<>();
-			for (String column : columns)
-			{
-				String value = getDbValue(resultSet, settings.getDBHeader(column));
-				values.add(value);
-			}
-			sqlResultWriter.writeRecord(values);
-
-			if (rowsCount <= maxDisplayedRows)
-				result.addDetail(new DefaultTableResultDetail(values));
-
-		}
-		while (rowsCount != limit && resultSet.next());
-
-		return rowsCount;
+		for (Map.Entry<String, String> entry : outputParams.entrySet())
+			addOutputParam(entry.getKey(), entry.getValue());
 	}
 
 	protected Map<String, String> getQueryParams()
 	{
 		return queryParams;
-	}
-
-	protected String getDbValue(ResultSet resultSet, String column) throws SQLException
-	{
-		String value = objectToStringTransformer != null ?
-				SQLUtils.getDbValue(resultSet, column, objectToStringTransformer) : SQLUtils.getDbValue(resultSet, column);
-		return valueTransformer != null ? valueTransformer.transform(value) : value;
 	}
 
 	protected abstract Result executeQuery() throws Exception;
@@ -243,32 +212,88 @@ public abstract class SQLAction extends Action
 		return false;
 	}
 
-	protected boolean isNeedSaveToFile()
+	protected String getMappingPath()
 	{
-		return InputParamsUtils.getBooleanOrDefault(inputParams, SAVE_QUERY_RESULT, false);
+		return InputParamsUtils.getStringOrDefault(inputParams, MAPPING_FILE, null);
 	}
 
-	protected List<DBFieldMapping> getMapping() throws IOException
+	protected String getQueryFileName()
 	{
-		return SQLUtils.loadVerificationMapping(ClearThCore.rootRelative(getInputParam(MAPPING_FILE)));
+		return getInputParam(QUERY_FILE);
 	}
 
-	protected ConversionSettings getConversionSettings() throws IOException
+	protected String getQueryString()
 	{
-		return ConversionSettings.loadFromCSVFile(new File(ClearThCore.rootRelative(getInputParam(MAPPING_FILE))));
+		return InputParamsUtils.getStringOrDefault(inputParams, QUERY, null);
 	}
 
-
-	protected SqlResultWriter getSqlResultWriter() throws IOException
+	protected List<DBFieldMapping> getVerificationMapping()
 	{
-		return new SqlResultWriter(fileDir, fileName, compressResult, false, delimiterString.charAt(0), useQuotes);
+		ConversionSettings conversionSettings = getConversionSettings();
+		return conversionSettings != null ? conversionSettings.getMappings() : null;
 	}
 
-	protected File createOutputFile() throws IOException
+	protected ConversionSettings getConversionSettings()
 	{
-		Files.createDirectories(fileDir.toPath());
-		return StringUtils.isEmpty(fileName) ?
-				File.createTempFile(getClass().getSimpleName() + "_export_", ".csv", fileDir) : new File(fileDir, fileName);
+		String mappingPath = getMappingPath();
+		ConversionSettings settings = globalContext.getLoadedContext(mappingPath);
+		if (settings == null && StringUtils.isNotEmpty(mappingPath))
+		{
+			try
+			{
+				settings = loadConversionSettingsFromFile(mappingPath);
+				globalContext.setLoadedContext(mappingPath, settings);
+			}
+			catch (IOException e)
+			{
+				throw ResultException.failed(String.format("Unable to load mapping '%s'", mappingPath), e);
+			}
+		}
+
+		return settings;
+	}
+
+	protected ResultSetProcessor getResultSetProcessor(TableResult result) throws IOException
+	{
+		if (saveToFile)
+			return createSaveToFileRSProcessor(result);
+
+		return createSaveToContextRSProcessor(result);
+	}
+
+	protected ResultSetProcessor createSaveToFileRSProcessor(TableResult result) throws IOException
+	{
+		SaveToFileRSProcessorSettings fileRSProcessorSettings = new SaveToFileRSProcessorSettings();
+		setProcessorCommonSettings(fileRSProcessorSettings, result);
+		fileRSProcessorSettings.setCompressResult(compressResult);
+		fileRSProcessorSettings.setFileDir(fileDir);
+		fileRSProcessorSettings.setFileName(fileName);
+		fileRSProcessorSettings.setDelimiter(delimiterString.charAt(0));
+		fileRSProcessorSettings.setUseQuotes(useQuotes);
+		fileRSProcessorSettings.setAppend(false);
+
+		return new SaveToFileResultSetProcessor(fileRSProcessorSettings);
+	}
+
+	protected ResultSetProcessor createSaveToContextRSProcessor(TableResult result)
+	{
+		//this is necessary in order to be able to store multiple records and access them by index
+		Map<String, Object> mvelVars = (Map<String, Object>) getMatrix().getMvelVars().get(idInMatrix);
+		SaveToContextRSProcessorSettings contextRSProcessorSettings = new SaveToContextRSProcessorSettings();
+		setProcessorCommonSettings(contextRSProcessorSettings, result);
+		contextRSProcessorSettings.setMvelVars(mvelVars);
+
+		return new SaveToContextResultSetProcessor(contextRSProcessorSettings);
+	}
+
+	protected void setProcessorCommonSettings(ResultSetProcessorSettings settings, TableResult result)
+	{
+		settings.setResult(result);
+		settings.setConversionSettings(getConversionSettings());
+		settings.setObjectToStringTransformer(objectToStringTransformer);
+		settings.setValueTransformer(valueTransformer);
+		settings.setMaxDisplayedRows(maxDisplayedRows);
+		settings.setRecordChecker(recordChecker);
 	}
 
 	@Override
@@ -302,12 +327,37 @@ public abstract class SQLAction extends Action
 		return new DefaultRecordChecker();
 	}
 
-	protected void prepare() throws Exception
+	protected String loadQueryFromFile(String queryFileName) throws IOException
 	{
-		getGlobalContext().setLoadedContext(getQueryName(), SQLUtils.loadQuery(ClearThCore.rootRelative(getQueryFileName())));
+		return SQLUtils.loadQuery(ClearThCore.rootRelative(queryFileName));
 	}
 
-	protected abstract String getQueryName();
-	protected abstract String getQueryFileName();
+	protected ConversionSettings loadConversionSettingsFromFile(String mappingPath) throws IOException
+	{
+		return ConversionSettings.loadFromCSVFile(new File(ClearThCore.rootRelative(mappingPath)));
+	}
+
+	@Override
+	public void prepare(GlobalContext globalContext, SchedulerStatus status) throws Exception
+	{
+		String queryString = getQueryString();
+
+		if (StringUtils.isEmpty(queryString))
+		{
+			String queryFileName = getQueryFileName();
+
+			if (StringUtils.isEmpty(queryFileName))
+			{
+				//None of the #Query and #QueryFile parameters were specified.
+				//Don't throw exception here to allow other actions to run. Instead of it will be thrown in init()
+			}
+			else
+				globalContext.setLoadedContext(queryFileName, loadQueryFromFile(queryFileName));
+		}
+
+		String mappingPath = getMappingPath();
+		if (StringUtils.isNotEmpty(mappingPath))
+			globalContext.setLoadedContext(mappingPath, loadConversionSettingsFromFile(mappingPath));
+	}
 }
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -41,11 +41,14 @@ public class ConversionSettings
 
 	private final BidiMap<String, String> headersDBtoTable;			// Key - DB column name, Value - table field name
 
+	private final List<DBFieldMapping> mappings;
+
 	public ConversionSettings(List<DBFieldMapping> mappings) {
 		if (CollectionUtils.isEmpty(mappings)) {
 			throw new IllegalArgumentException("Empty or null mapping list statement");
 		}
 
+		this.mappings = mappings;
 		this.mappingsByDBField = initMappingsByDBField(mappings);
 		this.mappingsByTableField = initMappingsByTableField(mappings);
 		this.headersDBtoTable = initHeadersDBtoTableMap(mappings);
@@ -142,6 +145,11 @@ public class ConversionSettings
 			}
 		}
 		return headersDBToTableMap;
+	}
+
+	public List<DBFieldMapping> getMappings()
+	{
+		return mappings;
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -435,21 +435,6 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 		}
 	}
 
-	
-	@SuppressWarnings("unchecked")
-	protected List<DBFieldMapping> getVerificationMapping()
-	{
-		return (List<DBFieldMapping>)getGlobalContext().getLoadedContext(getMappingName());
-	}
-
-	@Override
-	protected void prepare() throws Exception
-	{
-		super.prepare();
-		getGlobalContext().setLoadedContext(getMappingName(), loadVerificationMapping(ClearThCore.rootRelative(getMappingFileName())));
-		useCheckPointer();
-	}
-	
 	protected void useCheckPointer() throws Exception
 	{
 		Map<String, String> params = getQueryParams();
@@ -463,41 +448,18 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 				for (Object key : cp.keySet())
 					params.put((String)key, (String)cp.get(key));
 
-				getGlobalContext().setLoadedContext(getQueryName(), SQLUtils.loadQuery(ClearThCore.rootRelative(getQueryCPFileName())));
+				getGlobalContext().setLoadedContext(getQueryFileName(), SQLUtils.loadQuery(ClearThCore.rootRelative(getQueryCPFileName())));
 			}
 			else 
 				getLogger().debug("CheckPointer has not been set by action '" + cpActionId + "'. Using default query");
 		}
 	}
 
-	protected String getMappingFileName()
-	{
-		return getInputParam(MAPPING_FILE);
-	}
-
-	@Override
-	protected String getQueryFileName()
-	{
-		return getInputParam(QUERY_FILE);
-	}
-
 	protected String getQueryCPFileName()
 	{
 		return getInputParam(QUERY_WITH_CP_FILE);
 	}
-	
-	@Override
-	protected String getQueryName()
-	{
-		return getName() + QUERY;
-	}
-	
-	
-	protected String getMappingName()
-	{
-		return getName() + MAPPING;
-	}
-	
+
 	protected String getQueryCPName()
 	{
 		return getName() + QUERY_WITH_CP;
@@ -514,13 +476,13 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 			queryNameKey = getQueryCPName();
 		}
 		else
-			queryNameKey = getQueryName();
+			queryNameKey = getQueryFileName();
 		
 		String query = (String) getGlobalContext().getLoadedContext(queryNameKey);
 		
 		if (query == null)
 		{
-			prepare();
+			useCheckPointer();
 			query = (String) getGlobalContext().getLoadedContext(queryNameKey);
 		}
 		

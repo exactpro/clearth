@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,24 +19,14 @@
 package com.exactprosystems.clearth.automation.actions.db;
 
 import java.sql.*;
-import java.util.List;
 
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMapping;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 
-/**
- * Created by vitaly.barkhatov on 7/29/14.
- */
 public abstract class SelectSQLAction extends SQLAction
 {
-	protected static final String QUERY_FILE = "QueryFile",
-			QUERY = "Query",
-			MAPPING_FILE = "MappingFile",
-			MAPPING = "Mapping";
-
 	protected PreparedStatement prepareStatement(String query, String[] keys, Connection con) throws SQLException {
 		PreparedStatement parametrizedQuery = SQLUtils.prepareQuery(query, keys, getQueryParams(), con, valueTransformer, getVerificationMapping());
 
@@ -76,5 +66,4 @@ public abstract class SelectSQLAction extends SQLAction
 	}
 
 	protected abstract Result processResultSet(ResultSet rs, String[] keys) throws SQLException, ResultException;
-	protected abstract List<DBFieldMapping> getVerificationMapping();
 }

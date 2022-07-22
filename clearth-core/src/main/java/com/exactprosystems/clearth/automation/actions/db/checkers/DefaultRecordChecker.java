@@ -32,6 +32,9 @@ public class DefaultRecordChecker implements RecordChecker
 	@Override
 	public void checkRecord(Result result, Set<String> columnNames, List<DBFieldMapping> mapping)
 	{
+		if (mapping == null || mapping.size() == 0)
+			return;
+
 		List<DBFieldMapping> absentFields = null;
 		for (DBFieldMapping fm : mapping)
 		{

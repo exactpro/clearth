@@ -34,8 +34,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 
-import static com.exactprosystems.clearth.automation.actions.db.SelectSQLAction.QUERY_FILE;
-
 public abstract class SQLBatchAction extends SQLAction
 {
 	public static final String VALUES_ACTIONS = "ValuesActions";
@@ -165,13 +163,5 @@ public abstract class SQLBatchAction extends SQLAction
 			throw new ResultException(String.format("There are missed parameters in the following actions: %s",
 					missedParamsInSubActions));
 		}
-	}
-
-	@Override
-	protected String getQueryName()
-	{
-		if (pathToQuery != null)
-			return pathToQuery.toString();
-		return null;
 	}
 }

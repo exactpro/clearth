@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,29 +18,16 @@
 
 package com.exactprosystems.clearth.automation.actions.db;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.Preparable;
-import com.exactprosystems.clearth.automation.SchedulerStatus;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMapping;
-import com.exactprosystems.clearth.utils.sql.SQLUtils;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
-import static com.exactprosystems.clearth.utils.sql.SQLUtils.loadVerificationMapping;
-import static com.exactprosystems.clearth.utils.sql.SQLUtils.resultSetToTable;
-
-public abstract class SingleSelectSQLAction extends SelectSQLAction implements Preparable
+public abstract class SingleSelectSQLAction extends SelectSQLAction
 {
 	protected IValueTransformer dbValueTransformer = createDbValueTransformer();
 
@@ -48,66 +35,14 @@ public abstract class SingleSelectSQLAction extends SelectSQLAction implements P
 	{
 		return null;
 	}
-	
-	protected String getOutputMappingName()
-	{
-		return getName() + MAPPING;
-	}
-	
-	protected String getOutputMappingFileName()
-	{
-		return getInputParam(MAPPING_FILE);
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	protected List<DBFieldMapping> getVerificationMapping()
-	{
-		// Actually this action doesn't do any verification
-		return (List<DBFieldMapping>) getGlobalContext().getLoadedContext(getOutputMappingName());
-	}
-
-	@Override
-	protected String getQueryName()
-	{
-		return getName() + QUERY;
-	}
-
-	@Override
-	protected String getQueryFileName()
-	{
-		return getInputParam(QUERY_FILE);
-	}
 
 	@Override
 	protected Result processResultSet(ResultSet rs, String[] keys) throws ResultException
 	{
 		try
 		{
-			Result result;
-			if (!isNeedSaveToFile())
-			{
-				List<DBFieldMapping> mapping = getVerificationMapping();
-
-				List<Map<String, String>> data = resultSetToTable(rs, mapping, dbValueTransformer);
-				if (CollectionUtils.isEmpty(data))
-					return DefaultResult.failed("The query returned empty result");
-
-				Map<String, String> record = data.get(0);
-				saveOutputParams(record);
-
-				result = new DefaultResult();
-				recordChecker.checkRecord(result, record.keySet(), mapping);
-
-				if (data.size() > 1)
-					processExtraRecords(result, data);
-
-			}
-			else
-			{
-				result = writeQueryResult(rs, 1);
-				checkExtraRecords(result, rs);
-			}
+			Result result = processQueryResult(rs, 1);
+			checkExtraRecords(result, rs);
 
 			return result;
 		}
@@ -115,14 +50,6 @@ public abstract class SingleSelectSQLAction extends SelectSQLAction implements P
 		{
 			return DefaultResult.failed("An error occurred while processing the query's result", e);
 		}
-	}
-	
-	protected void saveOutputParams(Map<String, String> dbRecord)
-	{
-		if (dbRecord instanceof LinkedHashMap)
-			setOutputParams((LinkedHashMap<String, String>) dbRecord);
-		else 
-			setOutputParams(new LinkedHashMap<String, String>(dbRecord));
 	}
 
 	protected void checkExtraRecords(Result result, ResultSet resultSet) throws SQLException
@@ -135,25 +62,4 @@ public abstract class SingleSelectSQLAction extends SelectSQLAction implements P
 			result.appendComment(Utils.EOL + String.format("Action returned %d extra rows", count));
 	}
 
-	protected void processExtraRecords(Result result, List<Map<String, String>> data)
-	{
-		result.appendComment(String.format("Query returned %d rows instead of one. " +
-				"You can find extra rows in logs (level = info).", data.size()));
-		if (logger.isInfoEnabled())
-		{
-			logger.info("Action {} returned extra rows:", getName());
-			for (int i = 1; i < data.size(); i++)
-			{
-				logger.info("row {}: {}", i + 1, data.get(i));
-			}
-		}
-	}
-
-	@Override
-	public void prepare(GlobalContext globalContext, SchedulerStatus status) throws Exception
-	{
-		globalContext.setLoadedContext(getQueryName(), SQLUtils.loadQuery(ClearThCore.rootRelative(getQueryFileName())));
-		globalContext.setLoadedContext(getOutputMappingName(),
-				loadVerificationMapping(ClearThCore.rootRelative(getOutputMappingFileName())));
-	}
 }
