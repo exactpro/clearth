@@ -76,13 +76,11 @@ public class SchedulerReportsTest
 	@Test
 	public void shouldNotContainReportData() throws ClearThException, AutomationException, IOException
 	{
-		Scheduler scheduler = clearThManager.getScheduler(userName, schedulerName);
+		Scheduler scheduler = clearThManager.getScheduler(schedulerName, userName);
 		loadStepsForExecuteTest(scheduler);
 		loadMatricesForExecuteTest(scheduler);
-
 		scheduler.start(userName);
 		waitForSchedulerToStop(scheduler, 100, 10000);
-
 		List<XmlSchedulerLaunchInfo> launchesInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
 		if (launchesInfo == null || launchesInfo.isEmpty())
 		{
