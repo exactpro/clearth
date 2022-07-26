@@ -18,14 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -36,33 +35,42 @@ import org.slf4j.Logger;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.ValueGenerator;
-import com.exactprosystems.clearth.utils.Pair;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
+import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageDirection;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.messages.MessageFileReader;
+import com.exactprosystems.clearth.messages.MessageFileWriter;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.Utils;
 
-public abstract class BasicClearThClient implements ClearThClient
+public abstract class BasicClearThClient<C extends ClearThMessageConnection<C, S>, S extends ClearThConnectionSettings<S>> implements ClearThClient
 {
-	protected final MQConnection owner;
+	protected final C owner;
 	protected final String name;
-	protected final File unhandledMessagesFile;
-	protected final MQConnectionSettings storedSettings;
-	protected AtomicLong warnings, sent;
+	protected final Path unhandledMessagesFile;
+	protected final S storedSettings;
+	protected final AtomicLong warnings, sent;
 	protected final ValueGenerator msgIdGen;
 	protected final Object sendMonitor = new Object();
 	
-	protected final List<ReceiveListener> receiveListeners;
+	protected final List<MessageListener> allListeners,
+			receiveListeners,
+			sendListeners;
 	
-	protected MessageProcessorThread processorThread = null;
+	protected MessageProcessorThread receivedProcessorThread = null,
+			sentProcessorThread = null;
 	protected MessageReceiverThread receiverThread = null;
-	protected BlockingQueue<Pair<String, Date>> messageQueue = new LinkedBlockingQueue<Pair<String, Date>>();
+	protected BlockingQueue<EncodedClearThMessage> receivedMessageQueue = createMessageQueue(),
+			sentMessageQueue;
 	protected boolean running = false;
-	protected final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
-	public BasicClearThClient(MQConnection owner) throws ConnectionException, SettingsException
+	public BasicClearThClient(C owner) throws ConnectionException, SettingsException
 	{
 		this.owner = owner;
 		name = owner.getName();
-		unhandledMessagesFile = new File(ClearThCore.connectionsPath(), name+".dat");
+		unhandledMessagesFile = Paths.get(ClearThCore.connectionsPath()).resolve(name+".dat");
 		
 		//Copying settings so that owner can change its own settings, but the client will keep the initial ones
 		storedSettings = owner.getSettings().copy();
@@ -72,17 +80,20 @@ public abstract class BasicClearThClient implements ClearThClient
 		Logger logger = getLogger();
 		
 		if (logger.isInfoEnabled())
-			logger.info("Initializing client: "+getClass().getCanonicalName()+Utils.EOL+"Name=" + name + Utils.EOL + storedSettings.toString());
+			logger.info("Initializing client: {}{}Name={}{}{}", 
+					getClass().getCanonicalName(), Utils.EOL, name, Utils.EOL, storedSettings.toString());
 		
 		msgIdGen = getValueGenerator();
-		receiveListeners = new ArrayList<ReceiveListener>();
+		allListeners = new ArrayList<>();
+		receiveListeners = new ArrayList<>();
+		sendListeners = new ArrayList<>();
 		try
 		{
 			connect();
 		}
 		catch (ConnectionException e)
 		{
-			logger.error("Could not init client for connection '"+name+"', closing all opened related connections", e);
+			logger.error("Could not init client for connection '{}', closing all opened related connections", name, e);
 			try
 			{
 				closeConnections();
@@ -101,113 +112,108 @@ public abstract class BasicClearThClient implements ClearThClient
 	protected abstract ValueGenerator getValueGenerator();
 	
 	protected abstract boolean isNeedReceiverThread();
-	
-	protected abstract MessageProcessorThread createProcessorThread();
 	protected abstract MessageReceiverThread createReceiverThread();
 	
 	protected abstract boolean isConnectionBrokenError(Throwable error);
+	protected abstract Object doSendMessage(Object message) throws IOException, ConnectivityException;
+	protected abstract Object doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException;
 	
 	
-	protected void loadUnhandledMessages()
+	private void loadUnhandledMessages()
 	{
 		Logger logger = getLogger();
 		
-		logger.info(name+": reading unhandled messages from file '"+unhandledMessagesFile.getName()+"'");
-		boolean toDelete = false;
-		BufferedReader reader = null;
+		logger.info("{}: reading unhandled messages from file '{}'", name, unhandledMessagesFile);
 		try
 		{
-			reader = new BufferedReader(new FileReader(unhandledMessagesFile));
-			StringBuilder sb = new StringBuilder();
-			Date d = null;
-			while (reader.ready())
+			createUnhandledMessageFileReader().processMessagesFromFile(unhandledMessagesFile, m -> receivedMessageQueue.add(m));
+			
+			try
 			{
-				String s = reader.readLine();
-				boolean endMessage;
-				if (s != null && !s.isEmpty())
-				{
-					endMessage = false;
-					if (d==null)
-						try
-						{
-							d = format.parse(s);
-						}
-						catch (ParseException e)
-						{
-							d = new Date();
-						}
-					else
-					{
-						if (sb.length() > 0)
-							sb.append(Utils.EOL);
-						sb.append(s);
-					}
-				}
-				else
-					endMessage = true;
-				
-				if (endMessage)
-				{
-					if (sb.length()>0)
-					{
-						messageQueue.add(new Pair<String, Date>(sb.toString(), d));
-						sb = new StringBuilder();
-						d = null;
-					}
-				}
+				Files.delete(unhandledMessagesFile);
 			}
-			if (sb.length()>0)
-				messageQueue.add(new Pair<String, Date>(sb.toString(), d));
-			toDelete = true;
+			catch (IOException e)
+			{
+				logger.warn("{}: could not remove file with unhandled messages after reading it", name, e);
+			}
 		}
 		catch (IOException e)
 		{
-			logger.warn(name+": error while reading unhandled messages", e);
+			logger.warn("{}: error while reading unhandled messages", name, e);
 		}
 		finally
 		{
-			Utils.closeResource(reader);
-			if (toDelete)
-				if (!unhandledMessagesFile.delete())
-					logger.warn(name+": could not remove file with unhandled messages after reading it");
-			logger.info(name+": "+messageQueue.size()+" unhandled messages read");
+			logger.info("{}: "+receivedMessageQueue.size()+" unhandled message(s) read", name);
 		}
+	}
+	
+	
+	protected MessageFileReader createUnhandledMessageFileReader()
+	{
+		return new MessageFileReader();
+	}
+	
+	protected MessageFileWriter createUnhandledMessageFileWriter(Path file) throws IOException
+	{
+		return new MessageFileWriter(file, false);
 	}
 	
 	
 	protected void startListeners()
 	{
-		for (ReceiveListener listener : receiveListeners)
+		for (MessageListener listener : allListeners)
 			listener.start();
 	}
 	
-	protected boolean isNeedProcessorThread()
+	protected boolean isNeedReceivedProcessorThread()
 	{
 		return true;
+	}
+	
+	protected boolean isNeedSentProcessorThread()
+	{
+		return sendListeners != null && !sendListeners.isEmpty();
+	}
+	
+	protected MessageProcessorThread createReceivedProcessorThread()
+	{
+		return new MessageProcessorThread(name+" (Received processor thread)", receivedMessageQueue, receiveListeners);
+	}
+	
+	protected MessageProcessorThread createSentProcessorThread()
+	{
+		return new MessageProcessorThread(name+" (Sent processor thread)", sentMessageQueue, sendListeners); 
 	}
 	
 	@Override
 	public void start(boolean startListeners)
 	{
 		getLogger().info("Starting connection '"+name+"'");
-		if (getLogger().isTraceEnabled())
-			getLogger().trace(name+": startListeners = " + startListeners + "; receiveListeners size = " + (receiveListeners == null ? "Null" : receiveListeners.size()));
+		getLogger().trace("{} : startListeners = {}; listeners = {}", 
+				name, startListeners, 
+				allListeners == null ? "None" : allListeners.size());
 		
 		//Listeners should be started before processor thread, because it can immediately start passing messages to them
-		if (startListeners && (receiveListeners != null))
+		if (startListeners && (allListeners != null))
 			startListeners();
 		
 		//If there is a file with unhandled messages, let's read them, remove this file and pass messages to internal queue, so that they will be handled by listeners
-		if (getLogger().isTraceEnabled())
-			getLogger().trace(name+": loading unhandled messages");
-		if (unhandledMessagesFile.isFile())
+		if (Files.isRegularFile(unhandledMessagesFile))
 			loadUnhandledMessages();
 		
-		getLogger().trace(name+": creating processor thread");
-		if (isNeedProcessorThread())
+		if (isNeedReceivedProcessorThread())
 		{
-			processorThread = createProcessorThread();
-			processorThread.start();
+			getLogger().trace("{}: creating received processor thread", name);
+			receivedProcessorThread = createReceivedProcessorThread();
+			receivedProcessorThread.start();
+		}
+		
+		if (isNeedSentProcessorThread())
+		{
+			sentMessageQueue = createMessageQueue();
+			getLogger().trace("{}: creating sent processor thread", name);
+			sentProcessorThread = createSentProcessorThread();
+			sentProcessorThread.start();
 		}
 		
 		if (isNeedReceiverThread())
@@ -230,41 +236,38 @@ public abstract class BasicClearThClient implements ClearThClient
 		}
 	}
 	
-	protected void disposeProcessorThread()
+	protected void disposeReceivedProcessorThread()
 	{
-		if (processorThread != null)
-		{
-			getLogger().trace(name + ": disposing processor thread");
-			processorThread.terminate();
-			processorThread = null;
-		}
+		disposeProcessorThread(receivedProcessorThread);
 	}
 	
-	protected void saveUnhandledMessage(Pair<String, Date> msg, PrintWriter writer)
+	protected void disposeSentProcessorThread()
 	{
-		writer.println(format.format(msg.getSecond()));
-		writer.println(msg.getFirst() + Utils.EOL);
+		disposeProcessorThread(sentProcessorThread);
 	}
 	
 	protected void saveUnhandledMessages()
 	{
-		if (messageQueue.isEmpty())
+		if (receivedMessageQueue.isEmpty())
 			return;
 		
-		synchronized (messageQueue)
+		synchronized (receivedMessageQueue)
 		{
-			getLogger().info(name + ": " + messageQueue.size() + " messages remain unhandled, storing them to file '" + unhandledMessagesFile.getName() + "'");
-			PrintWriter writer = null;
+			getLogger().info("{}: {} message(s) remain unhandled, storing them to file '{}'",
+					name, receivedMessageQueue.size(), unhandledMessagesFile);
+			
+			MessageFileWriter writer = null;
 			try
 			{
-				writer = new PrintWriter(unhandledMessagesFile);
-				Pair<String, Date> msg;
-				while ((msg = messageQueue.poll()) != null)
-					saveUnhandledMessage(msg, writer);
+				writer = createUnhandledMessageFileWriter(unhandledMessagesFile);
+				EncodedClearThMessage msg;
+				while ((msg = receivedMessageQueue.poll()) != null)
+					writer.writeMessage(msg);
 			}
 			catch (IOException e)
 			{
-				getLogger().warn(name + ": could not store unhandled messages to file, " + messageQueue.size() + " messages lost", e);
+				getLogger().warn("{}: could not store unhandled messages to file, {} message(s) lost", 
+						name, receivedMessageQueue.size(), e);
 			}
 			finally
 			{
@@ -276,8 +279,8 @@ public abstract class BasicClearThClient implements ClearThClient
 	protected void disposeListeners()
 	{
 		//Processor thread terminated, no messages will be passed to listeners, thus it's safe to stop them
-		getLogger().info(name + ": disposing listeners");
-		for (ReceiveListener listener : receiveListeners)
+		getLogger().info("{}: disposing listeners", name);
+		for (MessageListener listener : allListeners)
 			listener.dispose();
 	}
 	
@@ -285,7 +288,8 @@ public abstract class BasicClearThClient implements ClearThClient
 	public void dispose(boolean disposeListeners) throws ConnectionException
 	{
 		disposeReceiverThread();
-		disposeProcessorThread();
+		disposeReceivedProcessorThread();
+		disposeSentProcessorThread();
 		
 		//If some messages are still in messageQueue (it means they are received, but not handled, i.e. not passed to listeners), 
 		//let's store them in file and restore on connection restart
@@ -295,7 +299,7 @@ public abstract class BasicClearThClient implements ClearThClient
 			disposeListeners();
 		
 		closeConnections();
-			
+		
 		running = false;
 	}
 	
@@ -303,7 +307,7 @@ public abstract class BasicClearThClient implements ClearThClient
 	{
 		if (isConnectionBrokenError(error))  //Broken connection indicates a need to make one reconnect attempt
 		{
-			if (owner.reconnect())
+			if (owner.restart())
 			{
 				try
 				{
@@ -358,49 +362,75 @@ public abstract class BasicClearThClient implements ClearThClient
 	}
 	
 	@Override
-	public void addReceiveListener(ReceiveListener listener)
+	public void addMessageListener(MessageListener listener)
 	{
-		if (!receiveListeners.contains(listener))
-		{
+		allListeners.add(listener);
+		if (listener instanceof ReceiveListener && ((ReceiveListener)listener).isActiveForReceived())
 			receiveListeners.add(listener);
-			getLogger().trace("{}: {} added", name, listener);
-		}
+		if (listener instanceof SendListener && ((SendListener)listener).isActiveForSent())
+			sendListeners.add(listener);
+		getLogger().trace("{}: listener '{}' ({}) added", name, listener.getName(), listener.getType());
 	}
 	
 	@Override
-	public void addReceiveListeners(List<ReceiveListener> listeners)
+	public void addMessageListeners(List<MessageListener> listeners)
 	{
-		for (ReceiveListener listener : listeners)
-		{
-			addReceiveListener(listener);
-		}
+		for (MessageListener listener : listeners)
+			addMessageListener(listener);
 	}
 	
-	public void removeReceiveListener(ReceiveListener listener)
+	
+	@Override
+	public final Object sendMessage(Object message) throws IOException, ConnectivityException
+	{
+		Object outcome = doSendMessage(message);
+		sent.incrementAndGet();
+		
+		if (isNeedSentProcessorThread())
+			notifySendListeners(message, null);
+		
+		return outcome;
+	}
+	
+	@Override
+	public final Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	{
+		Object outcome = doSendMessage(message);
+		sent.incrementAndGet();
+		
+		if (isNeedSentProcessorThread())
+			notifySendListeners(message.getPayload(), message.getMetadata());
+		
+		return outcome;
+	}
+	
+	
+	public void removeMessageListener(MessageListener listener)
 	{
 		listener.dispose();
+		allListeners.remove(listener);
 		receiveListeners.remove(listener);
-		getLogger().trace("{}: {} removed", name, listener);
+		sendListeners.remove(listener);
+		getLogger().trace("{}: listener '{}' ({}) removed", name, listener.getName(), listener.getType());
+	}
+	
+	
+	/**
+	 * Notify all message handlers for received messages
+	 * @param message received message to notify listeners about
+	 */
+	public void notifyReceiveListeners(EncodedClearThMessage message)
+	{
+		notifyListeners(message, ClearThMessageDirection.RECEIVED, receiveListeners);
 	}
 	
 	/**
-	 * Notify all message handlers
-	 * @param message message
+	 * Notify all message handlers for sent messages
+	 * @param message sent message to notify listeners about
 	 */
-	public void notifyReceiveListeners(String message)
+	public void notifySendListeners(EncodedClearThMessage message)
 	{
-		for (ReceiveListener listener : receiveListeners)
-		{
-			try
-			{
-				getLogger().trace(name+": notifying receive listener");
-				listener.onMessageReceived(message);
-			}
-			catch (Throwable e)
-			{
-				getLogger().error(e.getMessage(), e);
-			}
-		}
+		notifyListeners(message, ClearThMessageDirection.SENT, sendListeners);
 	}
 	
 	
@@ -428,42 +458,78 @@ public abstract class BasicClearThClient implements ClearThClient
 		return name;
 	}
 	
-	public long getReceived()
+	@Override
+	public long getSent()
 	{
-		if (processorThread != null)
-			return processorThread.getProcessed();
-		return 0;
+		if (sentProcessorThread != null)
+			return sentProcessorThread.getProcessed();  //Message is considered as sent if it is processed by all send listeners 
+		return sent.get();
 	}
 	
+	@Override
+	public long getReceived()
+	{
+		return receivedProcessorThread != null ? receivedProcessorThread.getProcessed() : 0;
+	}
 	
 	public long getWarnings()
 	{
 		return warnings.get();
 	}
 	
-	public void setWarnings(long warnings)
+	
+	protected BlockingQueue<EncodedClearThMessage> createMessageQueue()
 	{
-		this.warnings.set(warnings);
+		return new LinkedBlockingQueue<EncodedClearThMessage>();
 	}
 	
-	public void incWarnings()
+	protected final void notifyListeners(EncodedClearThMessage message, ClearThMessageDirection direction, Collection<MessageListener> listeners)
 	{
-		this.warnings.addAndGet(1);
+		String dir = direction == ClearThMessageDirection.RECEIVED ? "receive" : "send";
+		for (MessageListener listener : listeners)
+		{
+			String listenerName = listener.getName(), 
+					listenerType = listener.getType();
+			try
+			{
+				getLogger().trace("{}: notifying {} listener '{}' ({})", name, dir, listenerName, listenerType);
+				listener.onMessage(message);
+			}
+			catch (Throwable e)
+			{
+				getLogger().error("Error in '{}' while notifying {} listener '{}' ({})", name, dir, listenerName, listenerType, e);
+			}
+		}
 	}
 	
-	
-	public long getSent()
+	protected final void disposeProcessorThread(MessageProcessorThread thread)
 	{
-		return sent.get();
+		if (thread == null)
+			return;
+		
+		getLogger().trace("{}: disposing processor thread '{}'", name, thread.getName());
+		thread.terminate();
 	}
 	
-	public void setSent(long sent)
+	protected EncodedClearThMessage createUpdatedMessage(Object payload, ClearThMessageMetadata metadata)
 	{
-		this.sent.set(sent);
+		ClearThMessageMetadata newMetadata = new ClearThMessageMetadata(ClearThMessageDirection.SENT, 
+				Instant.now(), 
+				metadata != null ? metadata.fieldsAsMap() : null);
+		return new EncodedClearThMessage(payload, newMetadata);
 	}
 	
-	public void incSent()
+	protected final void notifySendListeners(Object payload, ClearThMessageMetadata metadata) throws IOException, ConnectivityException
 	{
-		this.sent.addAndGet(1);
+		EncodedClearThMessage updated = createUpdatedMessage(payload, metadata);
+		try
+		{
+			sentMessageQueue.put(updated);
+		}
+		catch (InterruptedException e)
+		{
+			Thread.currentThread().interrupt();
+			throw new ConnectionException("Wait for message put into send listeners queue interrupted", e);
+		}
 	}
 }

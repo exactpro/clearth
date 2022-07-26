@@ -18,31 +18,54 @@
 
 package com.exactprosystems.clearth.connectivity.iface;
 
-import java.util.HashMap;
+import java.time.Instant;
 
 public class EncodedClearThMessage
 {
-    private final Object payload;
-    private final ClearThMessageMetadata metadata;
-
-    public EncodedClearThMessage(Object payload, ClearThMessageMetadata metadata)
-    {
-        this.payload = payload;
-        this.metadata = metadata;
-    }
-
-    public EncodedClearThMessage(Object payload)
-    {
-        this(payload, null);
-    }
-
-    public Object getPayload()
-    {
-        return payload;
-    }
-
-    public ClearThMessageMetadata getMetadata()
-    {
-        return metadata;
-    }
+	private final Object payload;
+	private final ClearThMessageMetadata metadata;
+	
+	public EncodedClearThMessage(Object payload, ClearThMessageMetadata metadata)
+	{
+		this.payload = payload;
+		this.metadata = metadata;
+	}
+	
+	
+	public static EncodedClearThMessage newReceivedMessage(Object payload, Instant timestamp)
+	{
+		return new EncodedClearThMessage(payload, new ClearThMessageMetadata(ClearThMessageDirection.RECEIVED, timestamp, null));
+	}
+	
+	public static EncodedClearThMessage newReceivedMessage(Object payload)
+	{
+		return newReceivedMessage(payload, Instant.now());
+	}
+	
+	
+	public static EncodedClearThMessage newSentMessage(Object payload, Instant timestamp)
+	{
+		return new EncodedClearThMessage(payload, new ClearThMessageMetadata(ClearThMessageDirection.SENT, timestamp, null));
+	}
+	
+	public static EncodedClearThMessage newSentMessage(Object payload)
+	{
+		return newSentMessage(payload, Instant.now());
+	}
+	
+	
+	public EncodedClearThMessage(Object payload)
+	{
+		this(payload, null);
+	}
+	
+	public Object getPayload()
+	{
+		return payload;
+	}
+	
+	public ClearThMessageMetadata getMetadata()
+	{
+		return metadata;
+	}
 }

@@ -37,8 +37,10 @@ public class ListenerConfiguration
 	protected String settings;
 	@XmlElement(name = "Active")
 	protected boolean active;
+	@XmlElement(name = "ActiveForSent")
+	protected boolean activeForSent;
 	
-	protected ReceiveListener implementation;
+	protected MessageListener implementation;
 	
 	public ListenerConfiguration()
 	{
@@ -47,15 +49,17 @@ public class ListenerConfiguration
 		settings = null;
 		implementation = null;
 		active = true;
+		activeForSent = false;
 	}
 	
-	public ListenerConfiguration(String name, String type, String settings, boolean isActive)
+	public ListenerConfiguration(String name, String type, String settings, boolean isActive, boolean isActiveForSent)
 	{
 		this.name = name;
 		this.type = type;
 		this.settings = settings;
 		this.implementation = null;
 		this.active = isActive;
+		this.activeForSent = isActiveForSent;
 	}
 	
 	public ListenerConfiguration(ListenerConfiguration cfg)
@@ -65,6 +69,7 @@ public class ListenerConfiguration
 		this.settings = cfg.settings;
 		this.implementation = cfg.implementation;
 		this.active = cfg.active;
+		this.activeForSent = cfg.activeForSent;
 	}
 	
 	
@@ -101,12 +106,12 @@ public class ListenerConfiguration
 	}
 	
 	
-	public ReceiveListener getImplementation()
+	public MessageListener getImplementation()
 	{
 		return implementation;
 	}
 	
-	public void setImplementation(ReceiveListener implementation)
+	public void setImplementation(MessageListener implementation)
 	{
 		this.implementation = implementation;
 	}
@@ -121,11 +126,23 @@ public class ListenerConfiguration
 	{
 		this.active = active;
 	}
-
+	
+	
+	public boolean isActiveForSent()
+	{
+		return activeForSent;
+	}
+	
+	public void setActiveForSent(boolean activeForSent)
+	{
+		this.activeForSent = activeForSent;
+	}
+	
+	
 	@Override
 	public String toString()
 	{
-		return format("Listener name='%s', type='%s', settings='%s', implementation='%s', active='%s'",
-				name, type, settings, (implementation != null) ? implementation.getClass() : null, active);
+		return format("Listener name='%s', type='%s', settings='%s', implementation='%s', active for received=%s, active for sent=%s",
+				name, type, settings, (implementation != null) ? implementation.getClass() : null, active, activeForSent);
 	}
 }

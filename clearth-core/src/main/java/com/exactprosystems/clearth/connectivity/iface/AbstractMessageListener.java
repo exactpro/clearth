@@ -16,23 +16,34 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.connectivity;
+package com.exactprosystems.clearth.connectivity.iface;
 
-import java.util.List;
+import com.exactprosystems.clearth.connectivity.ListenerProperties;
+import com.exactprosystems.clearth.connectivity.MessageListener;
 
-import com.exactprosystems.clearth.messages.PlainMessageSender;
-
-public interface ClearThClient extends PlainMessageSender
+public abstract class AbstractMessageListener implements MessageListener
 {
-	void addMessageListener(MessageListener listener);
+	private final ListenerProperties properties;
 	
-	void addMessageListeners(List<MessageListener> listeners);
+	public AbstractMessageListener(ListenerProperties properties)
+	{
+		this.properties = properties;
+	}
 	
-	void start(boolean startListeners) throws ConnectivityException;
+	public ListenerProperties getProperties()
+	{
+		return properties;
+	}
 	
-	void dispose(boolean disposeListeners) throws ConnectivityException;
+	@Override
+	public String getName()
+	{
+		return properties.getName(); 
+	}
 	
-	long getSent();
-	long getReceived();
-	long getWarnings();
+	@Override
+	public String getType()
+	{
+		return properties.getType();
+	}
 }

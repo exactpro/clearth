@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.exactprosystems.clearth.ClearThCore;
 import org.slf4j.Logger;
 
-import com.exactprosystems.clearth.utils.Pair;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQGetMessageOptions;
 import com.ibm.mq.MQMessage;
@@ -34,17 +33,18 @@ import com.ibm.mq.MQQueue;
 import com.ibm.mq.constants.MQConstants;
 
 import com.exactprosystems.clearth.connectivity.connections.ConnectionErrorInfo;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 
 public abstract class MessageReceiverThread extends Thread
 {
 	protected final MQConnection owner;
 	protected final MQQueue receiveQueue;
-	protected final BlockingQueue<Pair<String, Date>> messageQueue;
+	protected final BlockingQueue<EncodedClearThMessage> messageQueue;
 	protected final int charset;
 	protected AtomicBoolean terminated = new AtomicBoolean(false);
 	protected Date started = null, stopped = null;
 
-	public MessageReceiverThread(String name, MQConnection owner, MQQueue receiveQueue, BlockingQueue<Pair<String, Date>> messageQueue, int charset)
+	public MessageReceiverThread(String name, MQConnection owner, MQQueue receiveQueue, BlockingQueue<EncodedClearThMessage> messageQueue, int charset)
 	{
 		super(name);
 		
@@ -136,7 +136,7 @@ public abstract class MessageReceiverThread extends Thread
 			getLogger().debug("Restart attempt #"+i);
 			try
 			{
-				if ((owner.reconnect()) || (!owner.isRunning()))  //Stop reconnect attempts if reconnect successfully done or if connection is closed by user 
+				if ((owner.restart()) || (!owner.isRunning()))  //Stop reconnect attempts if reconnect successfully done or if connection is closed by user 
 					return;
 				else
 					getLogger().debug("Restart attempt failed");
@@ -174,5 +174,10 @@ public abstract class MessageReceiverThread extends Thread
 	protected ConnectionErrorInfo createConnectionErrorInfo(String error, Throwable reason)
 	{
 		return new ConnectionErrorInfo(owner.getName(), error, Instant.now());
+	}
+	
+	protected EncodedClearThMessage createReceivedMessage(Object payload)
+	{
+		return EncodedClearThMessage.newReceivedMessage(payload, Instant.now());
 	}
 }

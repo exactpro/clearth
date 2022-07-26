@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -28,18 +27,18 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.utils.Pair;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 
 public class MessageProcessorThread extends Thread
 {
 	protected static final Logger logger = LoggerFactory.getLogger(MessageProcessorThread.class);
 	
 	protected AtomicBoolean terminated = new AtomicBoolean(false);
-	protected final BlockingQueue<Pair<String, Date>> messageQueue;
-	protected final List<ReceiveListener> listeners;
-	protected AtomicLong processed = new AtomicLong(0);
+	protected final BlockingQueue<EncodedClearThMessage> messageQueue;
+	protected final List<MessageListener> listeners;
+	protected final AtomicLong processed = new AtomicLong(0);
 	
-	public MessageProcessorThread(String name, final BlockingQueue<Pair<String, Date>> messageQueue, final List<ReceiveListener> listeners)
+	public MessageProcessorThread(String name, final BlockingQueue<EncodedClearThMessage> messageQueue, final List<MessageListener> listeners)
 	{
 		super(name);
 		this.messageQueue = messageQueue;
@@ -62,11 +61,10 @@ public class MessageProcessorThread extends Thread
 			{
 				if (logger.isTraceEnabled())
 					logger.trace("Getting message from internal queue, messages count = " + messageQueue.size());
-				Pair<String, Date> pair = messageQueue.poll(1000, TimeUnit.MILLISECONDS);
-				if (pair != null)
+				EncodedClearThMessage message = messageQueue.poll(1000, TimeUnit.MILLISECONDS);
+				if (message != null)
 				{ 
-					String message = pair.getFirst();
-					notifyReceivedListeners(message);
+					notifyListeners(message);
 					processed.incrementAndGet();
 				}
 			} 
@@ -86,18 +84,18 @@ public class MessageProcessorThread extends Thread
 		logger.info("MessageProcessor Thread finished");
 	}
 	
-	public void notifyReceivedListeners(String message)
+	private void notifyListeners(EncodedClearThMessage message)
 	{
-		for (ReceiveListener listener : listeners)
+		for (MessageListener listener : listeners)
 		{
 			try
 			{
-				logger.trace("Notifying receive listener");
-				listener.onMessageReceived(message);
+				logger.trace("Notifying listener '{}' ({})", listener.getName(), listener.getType());
+				listener.onMessage(message);
 			}
 			catch (Exception e)
 			{
-				logger.error("Listener thrown exception while handling the message", e);
+				logger.error("Listener '{}' ({}) thrown exception while handling message", listener.getName(), listener.getType(), e);
 			}
 		}
 	}

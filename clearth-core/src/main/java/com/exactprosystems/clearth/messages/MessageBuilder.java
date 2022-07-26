@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.messages;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +38,7 @@ import com.exactprosystems.clearth.automation.SubActionData;
 import com.exactprosystems.clearth.automation.actions.MessageAction;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageDirection;
 import com.exactprosystems.clearth.utils.Utils;
 
 /**
@@ -131,6 +133,21 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 		//TODO add fields directly to message with addAll, not one by one. Don't forget to filter them by serviceParameters and metaFields
 		for (Entry<String, String> f : fields.entrySet())
 			field(f.getKey(), f.getValue());
+		return this;
+	}
+	
+	
+	public MessageBuilder<M> direction(ClearThMessageDirection direction)
+	{
+		checkAndInit();
+		message.setDirection(direction);
+		return this;
+	}
+	
+	public MessageBuilder<M> timestamp(Instant timestamp)
+	{
+		checkAndInit();
+		message.setTimestamp(timestamp);
 		return this;
 	}
 	
@@ -325,7 +342,7 @@ public abstract class MessageBuilder<M extends ClearThMessage<M>>
 
 	private void checkAndInit()
 	{
-		if(message == null)
+		if (message == null)
 			message = createMessage();
 	}
 }

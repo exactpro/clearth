@@ -19,9 +19,14 @@
 package com.exactprosystems.clearth.connectivity.listeners;
 
 import com.exactprosystems.clearth.connectivity.ListenerDescription;
+import com.exactprosystems.clearth.connectivity.ListenerProperties;
 import com.exactprosystems.clearth.connectivity.ReceiveListener;
 import com.exactprosystems.clearth.connectivity.SettingsDetails;
+import com.exactprosystems.clearth.connectivity.iface.AbstractMessageListener;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageDirection;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedMessage;
@@ -32,6 +37,7 @@ import com.exactprosystems.clearth.connectivity.listeners.storage.DefaultFileCon
 import com.exactprosystems.clearth.connectivity.listeners.storage.FileContentStorage;
 import com.exactprosystems.clearth.connectivity.listeners.storage.MemoryContentStorage;
 import com.exactprosystems.clearth.connectivity.listeners.storage.WritingContentStorage;
+import com.exactprosystems.clearth.messages.MessageFileReader;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
@@ -39,6 +45,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,7 +67,7 @@ import java.util.concurrent.atomic.AtomicLong;
 		+ "<li><b>allowedTypes=&lt;type&gt;</b> &mdash; If it exists messages of other types are ignored. Separate allowed types with comma (,).</li>"
 		+ "<li><b>forbiddenTypes=&lt;type&gt;</b> &mdash; If it exists messages of specified types are ignored. Separate forbidden types with comma (,).</li>"
 		+ "</ul>" + "All settings are optional.")
-public class ClearThMessageCollector extends ReceiveListener
+public class ClearThMessageCollector extends AbstractMessageListener implements ReceiveListener
 {
 	private static final Logger logger = LoggerFactory.getLogger(ClearThMessageCollector.class);
 	
@@ -84,7 +92,7 @@ public class ClearThMessageCollector extends ReceiveListener
 
 	private final Object codecMonitor = new Object();
 
-	private volatile String collectorName, connectionName;
+	private volatile String connectionName;
 	protected volatile boolean active = true;
 
  	protected final AtomicLong messageId;
@@ -101,16 +109,17 @@ public class ClearThMessageCollector extends ReceiveListener
 	private final double maxAgeDouble;
 	private final double failedMaxAgeDouble;
 
-	public ClearThMessageCollector(String collectorName, String connectionName, Map<String,String> settings, String messageEndIndicator) throws SettingsException
+	public ClearThMessageCollector(ListenerProperties properties, String connectionName, Map<String,String> settings, String messageEndIndicator) throws SettingsException
 	{
-		this(collectorName, connectionName, null, settings, messageEndIndicator);
+		this(properties, connectionName, null, settings, messageEndIndicator);
 	}
 
-	public ClearThMessageCollector(String collectorName, String connectionName, ICodec codec, Map<String,String> settings, String messageEndIndicator) throws SettingsException
+	public ClearThMessageCollector(ListenerProperties properties, String connectionName, ICodec codec, Map<String,String> settings, String messageEndIndicator) throws SettingsException
 	{
+		super(properties);
+		
 		logger.debug("Initializing ClearThMessageCollector");
 
-		this.collectorName = collectorName;
 		this.connectionName = connectionName;
 		this.codec = codec;
 		this.collectorCleaner = Executors.newScheduledThreadPool(1, r -> new Thread(r,
@@ -157,18 +166,24 @@ public class ClearThMessageCollector extends ReceiveListener
 		}
 		catch (Exception e)
 		{
-			getLogger().error("Unable to create file content storage", e);
+			logger.error("Unable to create file content storage", e);
 		}
 		
 		if (this.contentStorage == null)
 		{
-			getLogger().trace("Content will be stored in memory");
+			logger.trace("Content will be stored in memory");
 			this.contentStorage = new MemoryContentStorage<ReceivedClearThMessage, ReceivedStringMessage>();
 		}
 
 		this.messageId = new AtomicLong(0);
 		
 		initFromFile(handler.getString(FILENAME_SETTING), messageEndIndicator);
+	}
+	
+	@Override
+	public boolean isActiveForReceived()
+	{
+		return getProperties().isActiveForReceived();
 	}
 
 	@Override
@@ -179,61 +194,57 @@ public class ClearThMessageCollector extends ReceiveListener
 	}
 	
 	@Override
-	public void onMessageReceived(String message, long time)
+	public void onMessage(EncodedClearThMessage message)
 	{
-		logReceivedMessage(message);
+		String payload = message.getPayload().toString();
+		logReceivedMessage(payload);
 		long id = messageId.getAndIncrement();
-
+		Instant timestamp = message.getMetadata().getTimestamp();
+		
 		try
 		{
 			ClearThMessage<?> cthMessage;
 			if (codec == null)
 			{
 				cthMessage = new SimpleClearThMessage();
-				cthMessage.addField(MESSAGE, message);
-				cthMessage.setEncodedMessage(message);
+				cthMessage.addField(MESSAGE, payload);
+				cthMessage.setEncodedMessage(payload);
 			}
 			else
 			{
 				synchronized (codecMonitor)
 				{
-					cthMessage = codec.decode(message);
+					cthMessage = codec.decode(payload);
 				}
 			}
 
 			if (!validateType(cthMessage.getField(ClearThMessage.MSGTYPE)))
 			{
-				getLogger().trace("Skipped message: " + cthMessage);
+				logger.trace("Skipped message: {}", cthMessage);
 				return;
 			}
-
-
-			getLogger().trace("Adding message: {}, \r\ntimestamp: {}", cthMessage, time);
-			ReceivedClearThMessage receivedMessage = new ReceivedClearThMessage(id, time, cthMessage);
+			
+			
+			logger.trace("Adding message: {}, \r\ntimestamp: {}", cthMessage, timestamp);
+			ReceivedClearThMessage receivedMessage = new ReceivedClearThMessage(id, timestamp.toEpochMilli(), cthMessage);
 			contentStorage.insertPassed(id, receivedMessage);
 		}
 		catch (Exception e)
 		{
 			if(storeFailedMessages)
-				contentStorage.insertFailed(id, new ReceivedStringMessage(id, time, message));
-			getLogger().warn("Error while decoding message: {}", message, e);
+				contentStorage.insertFailed(id, new ReceivedStringMessage(id, timestamp.toEpochMilli(), payload));
+			logger.warn("Error while decoding message: {}", message, e);
 		}
 	}
 
 	@Override
 	public void dispose()
 	{
-		getLogger().trace("Disposing ClearThMessageCollector");
+		logger.trace("Disposing ClearThMessageCollector");
 		active = false;
 		codec = null;
 		collectorCleaner.shutdown();
 		contentStorage.dispose();
-	}
-	
-	@Override
-	protected Logger getLogger()
-	{
-		return logger;
 	}
 
 	
@@ -242,9 +253,9 @@ public class ClearThMessageCollector extends ReceiveListener
 	 */
 	public Collection<ClearThMessage<?>> getMessages()
 	{
-		getLogger().trace("Getting all messages from collector");
+		logger.trace("Getting all messages from collector");
 		Collection<ClearThMessage<?>> result = getMessages(contentStorage.getContentPassed().values());
-		getLogger().trace("Messages count: {}", result.size());
+		logger.trace("Messages count: {}", result.size());
 
 		return result;
 	}
@@ -333,9 +344,9 @@ public class ClearThMessageCollector extends ReceiveListener
 	 */
 	public Collection<String> getMessagesFailed(long afterId)
 	{
-		getLogger().trace("Getting failed messages from collector with ID > {}", afterId);
+		logger.trace("Getting failed messages from collector with ID > {}", afterId);
 		Collection<String> result = getMessages(getFailedMessagesAfterId(afterId));
-		getLogger().trace("Failed messages count: {}", result.size());
+		logger.trace("Failed messages count: {}", result.size());
 
 		return result;
 	}
@@ -348,7 +359,7 @@ public class ClearThMessageCollector extends ReceiveListener
 	 */
 	public void removeMessage(ClearThMessage<?> message)
 	{
-		getLogger().trace("Removing message {} from collector", message);
+		logger.trace("Removing message {} from collector", message);
 
 		Collection<ReceivedClearThMessage> values = contentStorage.getContentPassed().values();
 		Iterator<ReceivedClearThMessage> it = values.iterator();
@@ -380,7 +391,7 @@ public class ClearThMessageCollector extends ReceiveListener
 	 */
 	public void clear()
 	{
-		getLogger().trace("Removing all messages from collector");
+		logger.trace("Removing all messages from collector");
 		contentStorage.clearPassed();
 	}
 	
@@ -396,17 +407,6 @@ public class ClearThMessageCollector extends ReceiveListener
 	}
 	
 	
-	public String getCollectorName()
-	{
-		return collectorName;
-	}
-
-	public void setCollectorName(String collectorName)
-	{
-		this.collectorName = collectorName;
-	}
-	
-
 	public String getConnectionName()
 	{
 		return connectionName;
@@ -426,11 +426,11 @@ public class ClearThMessageCollector extends ReceiveListener
 	protected void logReceivedMessage(String message)
 	{
 		if (message.length() < getDebugLogMessageSizeLimit())
-			getLogger().debug("Received message: {}", message);
-		else if (getLogger().isTraceEnabled())
-			getLogger().trace("Received message: {}", message);
+			logger.debug("Received message: {}", message);
+		else if (logger.isTraceEnabled())
+			logger.trace("Received message: {}", message);
 		else 
-			getLogger().debug("Received message is too long to show on current logging level");
+			logger.debug("Received message is too long to show on current logging level");
 	}
 	
 	protected Collection<ReceivedClearThMessage> getMessagesAfterId(long id)
@@ -451,15 +451,38 @@ public class ClearThMessageCollector extends ReceiveListener
 
 		return result;
 	}
+	
+	protected MessageFileReader createMessageFileReader(String messageEndIndicator)
+	{
+		return new MessageFileReader(MessageFileReader.DEFAULT_TIMESTAMP_FORMAT, messageEndIndicator, ClearThMessageMetadata.class);
+	}
 
 	private void initFromFile(String fileName, String messageEndIndicator)
 	{
 		if (fileName == null)
 			return;
-
+		
 		setWriteContent(false);  // Avoiding reader/writer conflict for case when fileName and contentFileName point to the same file
-		processMessagesFromFile(fileName, messageEndIndicator);
-		setWriteContent(true);
+		try
+		{
+			createMessageFileReader(messageEndIndicator)
+					.processMessagesFromFile(Paths.get(fileName), m -> collectMessage(m));
+		}
+		catch (IOException e)
+		{
+			logger.warn("Error while reading messages from file '{}'", fileName, e);
+		}
+		finally
+		{
+			setWriteContent(true);
+		}
+	}
+	
+	private void collectMessage(EncodedClearThMessage message)
+	{
+		ClearThMessageMetadata metadata = message.getMetadata();
+		if (metadata == null || metadata.getDirection() == null || metadata.getDirection() == ClearThMessageDirection.RECEIVED)
+			onMessage(message);
 	}
 	
 	

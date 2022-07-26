@@ -18,21 +18,12 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.util.List;
-
-import com.exactprosystems.clearth.messages.PlainMessageSender;
-
-public interface ClearThClient extends PlainMessageSender
+/**
+ * Interface for all sent message listeners.
+ * 
+ * Indicates that the listener can handle sent messages. However, this can be switched off. Call {@link #isActiveForSent()} to check this.
+ */
+public interface SendListener extends MessageListener
 {
-	void addMessageListener(MessageListener listener);
-	
-	void addMessageListeners(List<MessageListener> listeners);
-	
-	void start(boolean startListeners) throws ConnectivityException;
-	
-	void dispose(boolean disposeListeners) throws ConnectivityException;
-	
-	long getSent();
-	long getReceived();
-	long getWarnings();
+	boolean isActiveForSent();
 }

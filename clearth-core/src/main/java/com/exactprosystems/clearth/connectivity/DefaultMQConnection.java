@@ -28,10 +28,8 @@ import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
-import com.exactprosystems.clearth.utils.Utils;
 
 @XmlRootElement(name="defaultMQConnection")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -73,20 +71,20 @@ public class DefaultMQConnection extends MQConnection
 	}
 	
 	@Override
-	protected ReceiveListener createListenerEx(String name, String type, String settings) throws SettingsException, ConnectivityException
+	protected MessageListener createListenerEx(ListenerProperties props, String settings) throws SettingsException, ConnectivityException
 	{
 		return null;
 	}
 	
 	@Override
-	protected ReceiveListener createMessageCollector(String collectorName, Map<String, String> settings) 
+	protected MessageListener createMessageCollector(ListenerProperties props, Map<String, String> settings) 
 			throws SettingsException, ConnectivityException
 	{
 		String messageEndIndicator = getMessageEndIndicator();
 		String type = settings.get(ClearThMessageCollector.TYPE_SETTING);
 		if (type == null)
-			return new ClearThMessageCollector(collectorName, name, settings, messageEndIndicator);
-		return new ClearThMessageCollector(collectorName, name, createCodec(type), settings, messageEndIndicator);
+			return new ClearThMessageCollector(props, name, settings, messageEndIndicator);
+		return new ClearThMessageCollector(props, name, createCodec(type), settings, messageEndIndicator);
 	}
 	
 	@Override

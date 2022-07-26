@@ -18,13 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.utils.Pair;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQGetMessageOptions;
 import com.ibm.mq.MQMessage;
@@ -41,7 +41,7 @@ public class BrowserReceiverThread extends MessageReceiverThread
 	private int browseFrom;
 	private final long readDelay;
 
-	public BrowserReceiverThread(String name, MQConnection owner, MQQueue receiveQueue, BlockingQueue<Pair<String, Date>> messageQueue, int charset, 
+	public BrowserReceiverThread(String name, MQConnection owner, MQQueue receiveQueue, BlockingQueue<EncodedClearThMessage> messageQueue, int charset, 
 			boolean autoReconnect, int browseFrom, long readDelay)
 	{
 		super(name, owner, receiveQueue, messageQueue, charset);
@@ -82,9 +82,9 @@ public class BrowserReceiverThread extends MessageReceiverThread
 					{
 						logger.trace("Adding message to internal queue");
 						String m = message.readStringOfByteLength(message.getDataLength());
-						boolean inserted = messageQueue.offer(new Pair<String, Date>(m, new Date()));
+						boolean inserted = messageQueue.offer(createReceivedMessage(m));
 						
-						if ( !inserted ) 
+						if (!inserted) 
 							logger.warn("It is not possible to add message to queue due to capacity restrictions");
 					}
 					catch (Exception e)

@@ -33,7 +33,7 @@ import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import org.slf4j.Logger;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.listeners.FileReceiveListener;
+import com.exactprosystems.clearth.connectivity.listeners.FileListener;
 import com.exactprosystems.clearth.connectivity.listeners.ProxyListener;
 import com.exactprosystems.clearth.messages.PlainMessageSender;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
@@ -45,15 +45,10 @@ import static com.exactprosystems.clearth.connectivity.ListenerType.listenerType
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
-/**
- * @author daria.plotnikova
- *
- */
 public abstract class ClearThMessageConnection<C extends ClearThMessageConnection<C,S>, 
-								S extends ClearThConnectionSettings<S>>
-		extends ClearThConnection<C,S> implements PlainMessageSender
+		S extends ClearThConnectionSettings<S>>
+		extends ClearThConnection<C, S> implements PlainMessageSender
 {
-	
 	@XmlElementWrapper
 	protected List<ListenerConfiguration> listeners = new ArrayList<>();
 	
@@ -63,7 +58,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	{
 		super();
 	}
-
+	
 	@Override
 	public Object sendMessage(Object message) throws IOException, ConnectivityException
 	{
@@ -100,12 +95,12 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	public abstract Logger getLogger();
 	
 	
-	protected abstract ReceiveListener createListenerEx(String name, String type, String settings) throws SettingsException, ConnectivityException;
-	protected abstract ReceiveListener createMessageCollector(String collectorName, Map<String, String> settings) throws SettingsException, ConnectivityException;
+	protected abstract MessageListener createListenerEx(ListenerProperties props, String settings) throws SettingsException, ConnectivityException;
+	protected abstract MessageListener createMessageCollector(ListenerProperties props, Map<String, String> settings) throws SettingsException, ConnectivityException;
 	public abstract Class<?> getMessageCollectorClass();
 	protected abstract Class<?> getListenerClassEx(String type);
 	
-	public ReceiveListener findListener(String type)
+	public MessageListener findListener(String type)
 	{
 		if (getLogger().isDebugEnabled())
 		{
@@ -121,7 +116,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		return null;
 	}
 	
-	public ReceiveListener findListener(Class<?> listenerClass)
+	public MessageListener findListener(Class<?> listenerClass)
 	{
 		for (ListenerConfiguration cfg : listeners)
 			if (getListenerClass(cfg.getType()).equals(listenerClass))
@@ -151,33 +146,43 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		this.listeners.remove(listener);
 	}
 	
-	protected List<ReceiveListener> createListeners(List<ListenerConfiguration> configurations)
+	protected List<MessageListener> createListeners(List<ListenerConfiguration> configurations)
 		throws SettingsException, ConnectivityException
 	{
-		List<ReceiveListener> implementations = new ArrayList<>(configurations.size());
-
+		List<MessageListener> implementations = new ArrayList<>(configurations.size());
+		
 		try
 		{
 			for (ListenerConfiguration cfg : configurations)
 			{
-				if(!cfg.isActive())
+				if (!cfg.isActive() && !cfg.isActiveForSent())
 					continue;
-
+				
 				String listenerName = cfg.getName();
 				String listenerType = cfg.getType();
-				getLogger().debug("Adding listener {} ({}) to connection '{}'", listenerName, listenerType, name);
-
-				ReceiveListener listenerImpl = createListener(listenerName, listenerType, cfg.getSettings());
-
+				getLogger().debug("Adding listener '{}' ({}) to connection '{}'", listenerName, listenerType, name);
+				
+				ListenerProperties props = new ListenerProperties(listenerName, listenerType, cfg.isActive(), cfg.isActiveForSent());
+				MessageListener listenerImpl = createListener(props, cfg.getSettings());
+				
 				cfg.setImplementation(listenerImpl);
 				implementations.add(listenerImpl);
 			}
 		}
 		catch (Exception e)
 		{
-			for (ReceiveListener listener : implementations)
-				listener.dispose();
-
+			for (MessageListener listener : implementations)
+			{
+				try
+				{
+					listener.dispose();
+				}
+				catch (Exception e1)
+				{
+					getLogger().error("Error while disposing listener '{}' ({})", listener.getName(), listener.getType(), e1);
+				}
+			}
+			
 			if(e instanceof SettingsException)
 				throw (SettingsException) e;
 			else if(e instanceof ConnectivityException)
@@ -188,40 +193,44 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		return implementations;
 	}
 
-	protected ReceiveListener createListener(String name, String type, String settings) 
+	protected MessageListener createListener(ListenerProperties props, String settings) 
 			throws SettingsException, ConnectivityException
 	{
-		ReceiveListener listener;
+		MessageListener listener;
 		Map<String, String> settingsMap = KeyValueUtils.parseKeyValueString(settings, ";", true);
-		try {
-			switch (listenerTypeByLabel(type))
+		try
+		{
+			switch (listenerTypeByLabel(props.getType()))
 			{
 				case File :
 				{
-					listener = createFileListener(settings);
+					listener = createFileListener(props, settings);
 					break;
 				}
 				case Proxy :
 				{
-					listener = createProxyListener(name, settings);
+					listener = createProxyListener(props, settings);
 					break;
 				}
 				case Collector :
 				{
-					listener = createMessageCollector(name, settingsMap);
+					listener = createMessageCollector(props, settingsMap);
 					break;
 				}
 				default : 
 				{
-					listener = createListenerEx(name, type, settings);
+					listener = createListenerEx(props, settings);
 					break;
 				}
 			}
-		} catch (SettingsException e) {
-			String msg = format("Could not create listener with type '%s' and name '%s'.", type, name);
-			getLogger().error(msg, e);
-			throw new SettingsException(msg + " " + e.getMessage());
 		}
+		catch (SettingsException e)
+		{
+			String msg = format("Could not create listener with '%s' (%s)", props.getName(), props.getType());
+			getLogger().error(msg, e);
+			throw new SettingsException(msg + ". " + e.getMessage());
+		}
+		
 		if (listener == null)
 			throw new SettingsException(format("Listener '%s' has unknown type '%s'.", name, type));
 		
@@ -239,13 +248,13 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		return listener;
 	}
 	
-	protected FileReceiveListener createFileListener(String fileName) throws SettingsException, ConnectivityException
+	protected FileListener createFileListener(ListenerProperties props, String fileName) throws SettingsException, ConnectivityException
 	{
 		if (isBlank(fileName))
 			throw new SettingsException("Could not create listener for file. Please specify file's path in listener's settings.");		
 		try
 		{
-			return new FileReceiveListener(fileName);
+			return new FileListener(props, fileName);
 		}
 		catch (IOException e)
 		{
@@ -254,28 +263,28 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		}
 	}
 	
-	protected ProxyListener createProxyListener(String listenerName, String connectionName) throws SettingsException, ConnectivityException
+	protected ProxyListener createProxyListener(ListenerProperties props, String connectionName) throws SettingsException, ConnectivityException
 	{
 		ClearThConnection<?,?> con = ClearThCore.connectionStorage().findConnection(connectionName);
 		if (con == null)
 			throw new SettingsException(format("Target connection '%s' for listener '%s' (type '%s') not found",
-					connectionName, listenerName, Proxy));
+					connectionName, props.getName(), Proxy));
 		
 		ClearThMessageConnection<?,?> msgCon;
 		if (isMessageConnection(con))
 			msgCon = (ClearThMessageConnection<?,?>)con;
 		else 
 			throw new SettingsException(format("Target connection '%s' for listener '%s' doesn't support Proxies.", 
-					connectionName, listenerName));		
+					connectionName, props.getName()));
 			
 		try
 		{
-			return new ProxyListener(msgCon);
+			return new ProxyListener(props, msgCon);
 		}
 		catch (Exception e)
 		{
 			throw new ConnectivityException(format("Could not create '%s' listener '%s' for connection '%s'.", 
-					Proxy, listenerName, connectionName), e);
+					Proxy, props.getName(), connectionName), e);
 		}
 	}
 	
@@ -284,12 +293,29 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	{
 		switch (listenerTypeByLabel(type))
 		{
-		case File : return FileReceiveListener.class;
+		case File : return FileListener.class;
 		case Proxy : return ProxyListener.class;
 		case Collector : return getMessageCollectorClass();
 		default : return getListenerClassEx(type);
 		}
 	}
+	
+	
+	public long getSent()
+	{
+		return client != null ? client.getSent() : 0;
+	}
+	
+	public long getReceived()
+	{
+		return client != null ? client.getReceived() : 0;
+	}
+	
+	public long getWarnings()
+	{
+		return client != null ? client.getWarnings() : 0;
+	}
+	
 	
 	public static boolean isMessageConnection(ClearThConnection<?,?> connection)
 	{
@@ -300,7 +326,7 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 	{
 		for (ListenerConfiguration configuration : listeners)
 		{
-			ReceiveListener impl = configuration.getImplementation();
+			MessageListener impl = configuration.getImplementation();
 			if (impl != null)
 				impl.dispose();
 		}

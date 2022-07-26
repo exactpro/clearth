@@ -27,7 +27,7 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerType;
-import com.exactprosystems.clearth.connectivity.ReceiveListener;
+import com.exactprosystems.clearth.connectivity.MessageListener;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
 import com.exactprosystems.clearth.messages.CollectorMessageSource;
@@ -132,7 +132,7 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 		try
 		{
 			ClearThMessageConnection<?, ?> connection = finder.findConnection(conName);
-			ReceiveListener collector = connection.findListener(ListenerType.Collector.getLabel());
+			MessageListener collector = connection.findListener(ListenerType.Collector.getLabel());
 			if (collector == null)
 				throw ResultException.failed("No collector defined for connection '" + conName + "'");
 			

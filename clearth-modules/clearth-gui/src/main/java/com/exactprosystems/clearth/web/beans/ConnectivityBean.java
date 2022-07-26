@@ -48,7 +48,7 @@ public class ConnectivityBean extends ClearThBean
 	private List<ClearThConnection<?, ?>> originalSelectedCons = null;
 	private final MqConPropsToEdit mqConProps;
 	
-	private ListenerConfiguration newListener = new ListenerConfiguration("",defaultListenerType,"", true),
+	private ListenerConfiguration newListener = createEmptyListener(),
 			selectedListener = null;
 	private boolean copy = false;
 	private boolean copyListners = true;
@@ -484,7 +484,7 @@ public class ConnectivityBean extends ClearThBean
 	{
 		((ClearThMessageConnection<?, ?>)getOneSelectedConnection()).addListener(newListener);
 		setSelectedListener(newListener);
-		newListener = new ListenerConfiguration("", defaultListenerType, "", true);
+		newListener = createEmptyListener();
 		noListenersInfo = false;
 	}
 
@@ -531,19 +531,23 @@ public class ConnectivityBean extends ClearThBean
 
 	public String getListenerSettingsDetails()
 	{
-		ClearThConnection<?, ?> c = getOneSelectedConnection();
-		if (!ClearThMessageConnection.isMessageConnection(c))
-			return null;
-		if ((getSelectedListener() == null) || (c == null))
-			return null;
-
-		Class<?> detailsOwner = ((ClearThMessageConnection<?, ?>) c).getListenerClass(getSelectedListener().getType());
+		Class<?> detailsOwner = getSelectedListenerClass();
 		if (detailsOwner == null)
 			return "Error: no class found for this listener type";
 		SettingsDetails ann = detailsOwner.getAnnotation(SettingsDetails.class);
 		if (ann == null)
 			return "No description available";
 		return ann.details();
+	}
+	
+	public boolean isReceiveListener()
+	{
+		return checkSelectedListenerClass(ReceiveListener.class);
+	}
+	
+	public boolean isSendListener()
+	{
+		return checkSelectedListenerClass(SendListener.class);
 	}
 
 	public boolean isListenerInfoVisible()
@@ -607,6 +611,7 @@ public class ConnectivityBean extends ClearThBean
 	{
 		getSelectedListener().setType(selectedType);
 	}
+	
 	
 	public boolean isFavorite(ClearThConnection<?, ?> con)
 	{
@@ -717,5 +722,28 @@ public class ConnectivityBean extends ClearThBean
 		connectionToEdit.setAutoReconnect(propsToEdit.isAutoReconnect() ? changes.isAutoReconnect() : original.isAutoReconnect());
 		connectionToEdit.setRetryAttemptCount(propsToEdit.isRetryAttemptCount() ? changes.getRetryAttemptCount() : original.getRetryAttemptCount());
 		connectionToEdit.setRetryTimeout(propsToEdit.isRetryTimeout() ? changes.getRetryTimeout() : original.getRetryTimeout());
+	}
+	
+	protected ListenerConfiguration createEmptyListener()
+	{
+		return new ListenerConfiguration("", defaultListenerType, "", true, false);
+	}
+	
+	private Class<?> getSelectedListenerClass()
+	{
+		ClearThConnection<?, ?> c = getOneSelectedConnection();
+		if (c == null || !ClearThMessageConnection.isMessageConnection(c))
+			return null;
+		ListenerConfiguration listener = getSelectedListener();
+		if (listener == null)
+			return null;
+		
+		return ((ClearThMessageConnection<?, ?>) c).getListenerClass(listener.getType());
+	}
+	
+	private boolean checkSelectedListenerClass(Class<?> expectedClass)
+	{
+		Class<?> listenerClass = getSelectedListenerClass();
+		return listenerClass == null ? false : expectedClass.isAssignableFrom(listenerClass);
 	}
 }

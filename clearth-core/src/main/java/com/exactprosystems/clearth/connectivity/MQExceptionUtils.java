@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,7 +28,7 @@ public class MQExceptionUtils
 		return (e.completionCode == MQConstants.MQCC_FAILED) && (e.reasonCode == MQConstants.MQRC_CONNECTION_BROKEN);
 	}
 	
-	public static boolean isConnectionBroken(ConnectionException e)
+	public static boolean isConnectionBroken(ConnectivityException e)
 	{
 		if (e.getCause() instanceof MQException)
 			return isConnectionBroken((MQException) e.getCause());

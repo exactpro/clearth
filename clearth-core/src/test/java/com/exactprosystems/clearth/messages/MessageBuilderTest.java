@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.messages;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,13 +26,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
 
 import com.exactprosystems.clearth.automation.actions.MessageAction;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageDirection;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
 
 public class MessageBuilderTest
@@ -109,6 +110,21 @@ public class MessageBuilderTest
 		SoftAssert soft = new SoftAssert();
 		soft.assertNull(message.getMetaField(MessageAction.CONNECTIONNAME));
 		soft.assertNull(message.getMetaField(FIELD));
+		soft.assertAll();
+	}
+	
+	@Test(description = "Direction and timestamp are added to message metadata")
+	public void directionAndTimestamp()
+	{
+		Instant pastTime = Instant.now().minusSeconds(3000);
+		ClearThMessage<?> message = builder
+				.direction(ClearThMessageDirection.SENT)
+				.timestamp(pastTime)
+				.build();
+		
+		SoftAssert soft = new SoftAssert();
+		soft.assertEquals(message.getDirection(), ClearThMessageDirection.SENT);
+		soft.assertEquals(message.getTimestamp(), pastTime);
 		soft.assertAll();
 	}
 

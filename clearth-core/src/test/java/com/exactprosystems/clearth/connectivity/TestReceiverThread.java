@@ -18,39 +18,50 @@
 
 package com.exactprosystems.clearth.connectivity;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.ValueGenerator;
-import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 
-import static com.exactprosystems.clearth.ClearThCore.valueGenerators;
-
-public class DefaultMQClient extends MQClient
+public class TestReceiverThread extends MessageReceiverThread
 {
-	private static final Logger logger = LoggerFactory.getLogger(DefaultMQClient.class);
+	private static final Logger logger = LoggerFactory.getLogger(TestReceiverThread.class);
 	
-	public DefaultMQClient(MQConnection owner) throws ConnectionException, SettingsException
+	private final BlockingQueue<String> sourceQueue;
+	
+	public TestReceiverThread(String name, BlockingQueue<String> sourceQueue, BlockingQueue<EncodedClearThMessage> messageQueue)
 	{
-		super(owner);
+		super(name, null, null, messageQueue, 0);
+		
+		this.sourceQueue = sourceQueue;
 	}
 	
+	@Override
+	protected void doRun()
+	{
+		while (!terminated.get())
+		{
+			try
+			{
+				String msg = sourceQueue.poll(1, TimeUnit.SECONDS);
+				if (msg != null)
+					messageQueue.add(EncodedClearThMessage.newReceivedMessage(msg));
+			}
+			catch (InterruptedException e)
+			{
+				interrupt();
+				logger.error("Wait for next message interrupted", e);
+				return;
+			}
+		}
+	}
 	
 	@Override
 	protected Logger getLogger()
 	{
 		return logger;
-	}
-	
-	@Override
-	protected ValueGenerator getValueGenerator()
-	{
-		return valueGenerators().getGenerator("lastgenerated_"+this.name+".txt");
-	}
-	
-	@Override
-	protected MessageReceiverThread createReceiverThread()
-	{
-		return new SimpleReceiverThread(name+" (Receiver thread)", owner, receiveQueue, receivedMessageQueue, storedSettings.charset, storedSettings.autoReconnect, storedSettings.readDelay);
 	}
 }

@@ -18,6 +18,9 @@
 
 package com.exactprosystems.clearth.connectivity.listeners;
 
+import com.exactprosystems.clearth.connectivity.ListenerProperties;
+import com.exactprosystems.clearth.connectivity.ListenerType;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.SimpleKeyValueCodec;
@@ -82,7 +85,7 @@ public class ClearThMessageCollectorTest
 	@Test(dataProvider = "listeners-and-messages")
 	public void checkIfMessageFilteringByTypeWorks(ClearThMessageCollector listener, String[] messages, Set<String> expected)
 	{
-		Arrays.stream(messages).forEach(listener::onMessageReceived);
+		Arrays.stream(messages).forEach(m -> listener.onMessage(EncodedClearThMessage.newReceivedMessage(m)));
 		
 		Set<String> actual = listener
 								.getMessages()
@@ -100,13 +103,14 @@ public class ClearThMessageCollectorTest
 		settings.put(ALLOWED_TYPES, "AAA");
 		settings.put(FORBIDDEN_TYPES, "AAA");
 		
-		ClearThMessageCollector listener = createListener("Wrong", codec, settings);
+		createListener("Wrong", codec, settings);
 	}
 	
 	private ClearThMessageCollector createListener(String name, ICodec codec, Map<String, String> settings)
 			throws SettingsException
 	{
-		return new ClearThMessageCollector(name, "con", codec, settings, DEFAULT_MESSAGE_END_INDICATOR);
+		return new ClearThMessageCollector(new ListenerProperties(name, ListenerType.Collector.getLabel(), true, false), 
+				"con", codec, settings, DEFAULT_MESSAGE_END_INDICATOR);
 	}
 	
 	private String[] getMessagesFromFile(String fileName) throws IOException

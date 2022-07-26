@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.connectivity.connections;
 
+import com.exactprosystems.clearth.connectivity.ConnectionException;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 
 import java.io.File;
@@ -98,6 +99,7 @@ public abstract class ClearThConnection<C extends ClearThConnection<C,S>,
 
 	public abstract void start() throws Exception;
 	public abstract void stop() throws Exception;
+	public abstract boolean restart() throws ConnectionException;
 	public abstract C copy();
 	public abstract void copy(C copyFrom);
 	

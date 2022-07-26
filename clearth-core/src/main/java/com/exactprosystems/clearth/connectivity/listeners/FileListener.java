@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,55 +18,70 @@
 
 package com.exactprosystems.clearth.connectivity.listeners;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.ListenerDescription;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.exactprosystems.clearth.connectivity.ListenerDescription;
+import com.exactprosystems.clearth.connectivity.ListenerProperties;
 import com.exactprosystems.clearth.connectivity.ReceiveListener;
+import com.exactprosystems.clearth.connectivity.SendListener;
 import com.exactprosystems.clearth.connectivity.SettingsDetails;
+import com.exactprosystems.clearth.connectivity.iface.AbstractMessageListener;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.messages.MessageFileWriter;
 
 @ListenerDescription(description = "ClearTH file receive listener")
 @SettingsDetails(details = "Path to an output file where to store messages.")
-public class FileReceiveListener extends ReceiveListener
+public class FileListener extends AbstractMessageListener implements ReceiveListener, SendListener
 {
-	protected static Logger logger = LoggerFactory.getLogger(FileReceiveListener.class);
-	protected BufferedWriter writer;
-
+	private static Logger logger = LoggerFactory.getLogger(FileListener.class);
+	
+	private final MessageFileWriter writer;
+	
 	/**
 	 * Create FileReceiveListener
-	 * 
-	 * @param fileName
-	 *          file's name for storing messages to HDD
-	 * @throws IOException 
+	 * @param properties listener properties (name, active directions)
+	 * @param fileName name of file to store messages on disk
+	 * @throws IOException if file creation failed
 	 */
-	public FileReceiveListener(String fileName) throws IOException
+	public FileListener(ListenerProperties properties, String fileName) throws IOException
 	{
+		super(properties);
+		
 		String fn = ClearThCore.rootRelative(fileName);
-		writer = new BufferedWriter(new FileWriter(fn, true));
+		writer = createMessageFileWriter(fn);
 		logger.debug("File '{}' opened for writing", fn);
+	}
+	
+	
+	@Override
+	public boolean isActiveForReceived()
+	{
+		return getProperties().isActiveForReceived();
+	}
+	
+	@Override
+	public boolean isActiveForSent()
+	{
+		return getProperties().isActiveForSent();
 	}
 	
 	@Override
 	public void start()
 	{
 	}
-
+	
 	@Override
-	public void onMessageReceived(String message, long receivedTimestamp)
+	public void onMessage(EncodedClearThMessage message)
 	{
 		try
 		{
-			writer.write(format.get().format(receivedTimestamp));
-			writer.newLine();
-			writer.write(message);
-			writer.newLine();
-			writer.newLine();
+			writer.writeMessage(message);
 			writer.flush();
 			logger.trace("Received message: {}", message);
 		}
@@ -75,7 +90,7 @@ public class FileReceiveListener extends ReceiveListener
 			logger.error("Could not write message into file", e);
 		}
 	}
-
+	
 	@Override
 	public void dispose()
 	{
@@ -90,10 +105,10 @@ public class FileReceiveListener extends ReceiveListener
 			logger.error("Error while disposing file listener", e);
 		}
 	}
-
-	@Override
-	protected Logger getLogger()
+	
+	
+	protected MessageFileWriter createMessageFileWriter(String fileName) throws IOException
 	{
-		return logger;
+		return new MessageFileWriter(Paths.get(fileName), true);
 	}
 }

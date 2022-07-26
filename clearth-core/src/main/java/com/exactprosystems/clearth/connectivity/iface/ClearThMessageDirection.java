@@ -16,23 +16,10 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.connectivity;
+package com.exactprosystems.clearth.connectivity.iface;
 
-import java.util.List;
-
-import com.exactprosystems.clearth.messages.PlainMessageSender;
-
-public interface ClearThClient extends PlainMessageSender
+public enum ClearThMessageDirection
 {
-	void addMessageListener(MessageListener listener);
-	
-	void addMessageListeners(List<MessageListener> listeners);
-	
-	void start(boolean startListeners) throws ConnectivityException;
-	
-	void dispose(boolean disposeListeners) throws ConnectivityException;
-	
-	long getSent();
-	long getReceived();
-	long getWarnings();
+	SENT,
+	RECEIVED;
 }

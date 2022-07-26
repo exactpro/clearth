@@ -28,3 +28,7 @@ clearth-modules/clearth-xml/build/
 /clearth-core/value_generator_test.txt
 testOutput
 temp
+/clearth-modules/clearth-xml/bin
+/clearth-modules/clearth-swift/bin
+/clearth-modules/clearth-gui/bin
+/clearth-core/test-output

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.*;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -51,19 +52,19 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 								createConnection("MQConnToCheck",
 								                 new ListenerConfiguration("CollectorListener",
 								                                           "Collector",
-								                                           "contentsFileName=MyFile.txt", true),
+								                                           "contentsFileName=MyFile.txt", true, false),
 								                 new ListenerConfiguration("FileListener1",
 								                                           "File",
-								                                           "MyFile.txt", true),
+								                                           "MyFile.txt", true, false),
 								                 new ListenerConfiguration("FileListener2",
 								                                           "File",
-								                                           "MyFile2.txt", true),
+								                                           "MyFile2.txt", true, false),
 								                 new ListenerConfiguration("FileListener3",
 								                                           "File",
-								                                           "MyFile.txt", true),
+								                                           "MyFile.txt", true, false),
 								                 new ListenerConfiguration("FileListener4",
 								                                           "File",
-								                                           "MyFile2.txt", true)
+								                                           "MyFile2.txt", true, false)
 								),
 								"Can't start connection 'MQConnToCheck' - \n"
 										+ "Connections' listeners are writing the same files:\n"
@@ -75,11 +76,11 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 								createConnection("MQConnToCheck",
 								                 new ListenerConfiguration("CollectorListener",
 								                                           "Collector",
-								                                           "contentsFileName=MyFile1.txt", true),
+								                                           "contentsFileName=MyFile1.txt", true, false),
 								                 new ListenerConfiguration("FileListener",
 								                                           "File",
 								                                           CTH_ROOT_PATH.resolve("MyFile1.txt")
-								                                                        .toString(), true)
+								                                                        .toString(), true, false)
 								),
 								"Can't start connection 'MQConnToCheck' - \n"
 										+ "Connections' listeners are writing the same files:\n"
@@ -89,13 +90,13 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 								createConnection("MQConnToCheck",
 								                 new ListenerConfiguration("CollectorListener",
 								                                           "Collector",
-								                                           "contentsFileName=MyFile1.txt", true),
+								                                           "contentsFileName=MyFile1.txt", true, false),
 								                 new ListenerConfiguration("FileListener",
 								                                           "File",
 								                                           CTH_ROOT_PATH.resolve("..")
 								                                                        .resolve("CTH")
 								                                                        .resolve("MyFile.txt")
-								                                                        .toString(), true)
+								                                                        .toString(), true, false)
 								),
 								"Can't start connection 'MQConnToCheck' - \n"
 										+ "Connections' listeners are writing the same files:\n"
@@ -116,16 +117,16 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 								createConnection("MQConnToCheck",
 										new ListenerConfiguration("CollectorListener",
 												"Collector",
-												"contentsFileName=MyFile1.txt", true),
+												"contentsFileName=MyFile1.txt", true, false),
 										new ListenerConfiguration("FileListener",
 												"File",
-												"MyFile2.txt", true))
+												"MyFile2.txt", true, false))
 						},
 						{
 								createConnection("MQConnToCheck",
 										new ListenerConfiguration("CollectorListener",
 												"Collector",
-												"fileName=MyFile.txt", true))
+												"fileName=MyFile.txt", true, false))
 						}
 				};
 	}
@@ -157,7 +158,7 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 		MQConnection anotherConnection = createConnection("MQConn",
 		                                                  new ListenerConfiguration("CollectorListener",
 		                                                                            "Collector",
-		                                                                            "contentsFileName=MyFile.txt", true));
+		                                                                            "contentsFileName=MyFile.txt", true, false));
 		List<ClearThMessageConnection> anotherConnections = singletonList(anotherConnection);
 
 		ClearThConnectionStorage storage = mock(ClearThConnectionStorage.class);

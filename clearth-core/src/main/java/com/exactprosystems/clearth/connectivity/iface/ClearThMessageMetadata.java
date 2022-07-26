@@ -18,29 +18,43 @@
 
 package com.exactprosystems.clearth.connectivity.iface;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class ClearThMessageMetadata
 {
-	private final Map<String, Object> fields;
+	private ClearThMessageDirection direction;
+	private Instant timestamp;
+	private Map<String, Object> fields;
 	
 	public ClearThMessageMetadata()
 	{
-		this.fields = new HashMap<>();
 	}
 	
-	public ClearThMessageMetadata(Map<String, Object> fields)
+	public ClearThMessageMetadata(ClearThMessageDirection direction, Instant timestamp, Map<String, Object> fields)
 	{
+		this.direction = direction;
+		this.timestamp = timestamp;
 		this.fields = fields;
+	}
+	
+	public ClearThMessageMetadata(ClearThMessageMetadata copyFrom)
+	{
+		this.direction = copyFrom.getDirection();
+		this.timestamp = copyFrom.getTimestamp();
+		
+		Map<String, Object> copyFields = copyFrom.fieldsAsMap();
+		if (copyFields != null)
+			this.fields = new HashMap<>(copyFields);
 	}
 	
 	
 	@Override
 	public int hashCode()
 	{
-		return Objects.hash(fields);
+		return Objects.hash(direction, fields, timestamp);
 	}
 	
 	@Override
@@ -53,17 +67,40 @@ public class ClearThMessageMetadata
 		if (getClass() != obj.getClass())
 			return false;
 		ClearThMessageMetadata other = (ClearThMessageMetadata) obj;
-		return Objects.equals(fields, other.fields);
+		return direction == other.direction && Objects.equals(fields, other.fields) && timestamp == other.timestamp;
+	}
+	
+	
+	public ClearThMessageDirection getDirection()
+	{
+		return direction;
+	}
+	
+	public void setDirection(ClearThMessageDirection direction)
+	{
+		this.direction = direction;
+	}
+	
+	
+	public Instant getTimestamp()
+	{
+		return timestamp;
+	}
+	
+	public void setTimestamp(Instant timestamp)
+	{
+		this.timestamp = timestamp;
 	}
 	
 	
 	public Object getField(String name)
 	{
-		return fields.get(name);
+		return fields == null ? null : fields.get(name);
 	}
 	
 	public void addField(String name, Object value)
 	{
+		createFieldsIfNeeded();
 		fields.put(name, value);
 	}
 	
@@ -71,5 +108,12 @@ public class ClearThMessageMetadata
 	public Map<String, Object> fieldsAsMap()
 	{
 		return fields;
+	}
+	
+	
+	protected void createFieldsIfNeeded()
+	{
+		if (fields == null)
+			fields = new HashMap<>();
 	}
 }

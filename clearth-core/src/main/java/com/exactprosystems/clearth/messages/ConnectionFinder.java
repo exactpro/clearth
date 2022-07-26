@@ -23,7 +23,7 @@ import com.exactprosystems.clearth.automation.actions.MessageAction;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerType;
-import com.exactprosystems.clearth.connectivity.ReceiveListener;
+import com.exactprosystems.clearth.connectivity.MessageListener;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
@@ -61,7 +61,7 @@ public class ConnectionFinder
 	public ClearThMessageCollector findCollector(ClearThMessageConnection<?,?> connection) throws ResultException
 	{
 		String label = ListenerType.Collector.getLabel();
-		ReceiveListener listener = connection.findListener(label);
+		MessageListener listener = connection.findListener(label);
 		if (listener == null)
 			throw ResultException.failed("Listener with type '" + label + "' is not added to specified connection");
 		

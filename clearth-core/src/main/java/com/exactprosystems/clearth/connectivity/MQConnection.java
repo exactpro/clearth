@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -38,7 +38,7 @@ import static com.exactprosystems.clearth.connectivity.MQExceptionUtils.isConnec
 
 @XmlRootElement(name="AbstractMQConnection")
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class MQConnection extends ClearThMessageConnection<MQConnection,MQConnectionSettings>
+public abstract class MQConnection extends ClearThMessageConnection<MQConnection, MQConnectionSettings>
 {
 	protected final Object connectionMonitor = new Object();
 	
@@ -213,7 +213,7 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 			started = null;
 			stopped = null;
 
-			List<ReceiveListener> listenerImplementations;
+			List<MessageListener> listenerImplementations;
 			try
 			{
 				listenerImplementations = createListeners(listeners);
@@ -245,7 +245,7 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 				throw e;
 			}
 			
-			client.addReceiveListeners(listenerImplementations);
+			client.addMessageListeners(listenerImplementations);
 			
 			client.start(true);
 			started = new Date();
@@ -255,7 +255,8 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 		}
 	}
 	
-	public boolean reconnect() throws ConnectivityException, ConnectionException
+	@Override
+	public boolean restart() throws ConnectionException
 	{
 		synchronized (connectionMonitor)
 		{
@@ -263,7 +264,7 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 			
 			if (!isRunning())
 			{
-				logger.warn("Connection '"+name+"' is stopped, reconnect won't be performed");
+				logger.warn("Connection '{}' is stopped, reconnect won't be performed", name);
 				return false;
 			}
 			
@@ -273,10 +274,10 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 				{
 					client.dispose(false);  //Keeping listeners to reuse the same instances after reconnect
 				}
-				catch (ConnectionException e)
+				catch (ConnectivityException e)
 				{
 					if (!isConnectionBroken(e))
-						logger.warn(name+": errors occurred while closing client before reconnect. In spite of that reconnect will be performed", e);
+						logger.warn("{}: errors occurred while closing client before reconnect. In spite of that reconnect will be performed", name, e);
 				}
 				client = null;
 			}
@@ -285,7 +286,7 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 			{
 				client = createMqClient();
 				for (ListenerConfiguration listener : listeners)
-					client.addReceiveListener(listener.getImplementation());
+					client.addMessageListener(listener.getImplementation());
 				client.start(false);  //Listeners are already running, started by previous client instance
 				started = new Date();
 				stopped = null;
@@ -368,39 +369,6 @@ public abstract class MQConnection extends ClearThMessageConnection<MQConnection
 	}
 	
 	
-	public long getReceived()
-	{
-		if (client != null)
-			return ((MQClient)client).getReceived();
-		else
-			return 0;
-	}
-	
-	
-	public long getSent()
-	{
-		if (client != null)
-			return ((MQClient)client).getSent();
-		else
-			return 0;
-	}
-	
-	
-	public long getWarnings()
-	{
-		if (client != null)
-			return ((MQClient)client).getWarnings();
-		else
-			return 0;
-	}
-
-	public void setWarnings(long warnings)
-	{
-		if (client != null)
-			((MQClient)client).setWarnings(warnings);
-	}
-	
-
 	public MQClient getClient()
 	{
 		return ((MQClient)client);

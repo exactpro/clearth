@@ -18,13 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.utils.Pair;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQMessage;
 import com.ibm.mq.MQQueue;
@@ -39,7 +39,7 @@ public class SimpleReceiverThread extends MessageReceiverThread
 	private final boolean autoReconnect;
 	private final int readDelay;
 	
-	public SimpleReceiverThread(String name, MQConnection owner, MQQueue receiveQueue, BlockingQueue<Pair<String, Date>> messageQueue, int charset, 
+	public SimpleReceiverThread(String name, MQConnection owner, MQQueue receiveQueue, BlockingQueue<EncodedClearThMessage> messageQueue, int charset, 
 			boolean autoReconnect, int readDelay)
 	{
 		super(name, owner, receiveQueue, messageQueue, charset);
@@ -67,7 +67,7 @@ public class SimpleReceiverThread extends MessageReceiverThread
 						logger.trace("Adding message to internal queue");
 						String m = message.readStringOfByteLength(message.getDataLength());
 						
-						boolean inserted = messageQueue.offer(new Pair<String, Date>(m, new Date()));
+						boolean inserted = messageQueue.offer(createReceivedMessage(m));
 						
 						if (!inserted) 
 							logger.warn("It is not possible to add message to queue due to capacity restrictions");

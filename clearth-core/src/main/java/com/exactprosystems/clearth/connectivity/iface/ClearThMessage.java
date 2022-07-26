@@ -27,6 +27,8 @@ import java.util.*;
 
 import static java.util.Collections.emptySet;
 
+import java.time.Instant;
+
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
 public abstract class ClearThMessage<T extends ClearThMessage<T>>
 {
@@ -190,6 +192,30 @@ public abstract class ClearThMessage<T extends ClearThMessage<T>>
 	public boolean hasSubMessages()
 	{
 		return subMessages != null && !subMessages.isEmpty();
+	}
+	
+	
+	public ClearThMessageDirection getDirection()
+	{
+		return metadata != null ? metadata.getDirection() : null;
+	}
+	
+	public void setDirection(ClearThMessageDirection direction)
+	{
+		checkMetadataExists();
+		metadata.setDirection(direction);
+	}
+	
+	
+	public Instant getTimestamp()
+	{
+		return metadata != null ? metadata.getTimestamp() : null;
+	}
+	
+	public void setTimestamp(Instant timestamp)
+	{
+		checkMetadataExists();
+		metadata.setTimestamp(timestamp);
 	}
 	
 	

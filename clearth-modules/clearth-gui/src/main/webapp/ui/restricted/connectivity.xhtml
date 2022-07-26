@@ -289,8 +289,15 @@
 									</c:if>
 								</p:selectOneMenu>
 								<br/>
-								<p:selectBooleanCheckbox id="listenersDlgListenerActivity" value="#{connectivityBean.selectedListener.active}" />
-								<p:outputLabel style="font-weight: bold; margin-left: 5px;" for="listenersDlgListenerActivity" value="Active"/>
+								<p:outputPanel rendered="#{connectivityBean.isReceiveListener()}">
+									<p:selectBooleanCheckbox id="listenersDlgListenerActivity" value="#{connectivityBean.selectedListener.active}" />
+									<p:outputLabel style="font-weight: bold; margin-left: 5px;" for="listenersDlgListenerActivity" value="Active for received"/>
+								</p:outputPanel>
+								<br/>
+								<p:outputPanel rendered="#{connectivityBean.isSendListener()}">
+									<p:selectBooleanCheckbox id="listenersDlgSendListenerActivity" value="#{connectivityBean.selectedListener.activeForSent}" />
+									<p:outputLabel style="font-weight: bold; margin-left: 5px;" for="listenersDlgSendListenerActivity" value="Active for sent"/>
+								</p:outputPanel>
 								<br/>
 								<br/>
 								<p:outputLabel style="font-weight: bold" for="listenersDlgListenerName" value="Name:"/>

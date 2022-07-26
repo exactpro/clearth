@@ -18,29 +18,34 @@
 
 package com.exactprosystems.clearth.connectivity.listeners;
 
-import com.exactprosystems.clearth.connectivity.ListenerDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.exactprosystems.clearth.connectivity.ListenerDescription;
+import com.exactprosystems.clearth.connectivity.ListenerProperties;
 import com.exactprosystems.clearth.connectivity.ReceiveListener;
+import com.exactprosystems.clearth.connectivity.SendListener;
 import com.exactprosystems.clearth.connectivity.SettingsDetails;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.iface.AbstractMessageListener;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 
 @ListenerDescription(description = "ClearTH proxy listener")
 @SettingsDetails(details = "Name of a connection which will send messages.")
-public class ProxyListener extends ReceiveListener
+public class ProxyListener extends AbstractMessageListener implements ReceiveListener
 {
 	protected Logger logger = LoggerFactory.getLogger(ProxyListener.class);
 	protected ClearThMessageConnection<?,?> connector;
 
 	/**
 	 * Create ProxyListener
-	 * 
-	 * @param connector
-	 *          another connection to re-send messages with
+	 * @param properties listener properties (name, active directions)
+	 * @param connector another connection to re-send messages with
 	 */
-	public ProxyListener(ClearThMessageConnection<?,?> connector) throws Exception
+	public ProxyListener(ListenerProperties properties, ClearThMessageConnection<?,?> connector) throws Exception
 	{
+		super(properties);
+		
 		this.connector = connector;
 		if (!connector.isRunning())
 		{
@@ -58,14 +63,20 @@ public class ProxyListener extends ReceiveListener
 	}
 	
 	@Override
+	public boolean isActiveForReceived()
+	{
+		return getProperties().isActiveForReceived();
+	}
+	
+	@Override
 	public void start()
 	{
 	}
-
+	
 	@Override
-	public void onMessageReceived(String message, long receivedTimestamp)
+	public void onMessage(EncodedClearThMessage message)
 	{
-		logger.trace("Retransmitting message {}", message);
+		logger.trace("Retransmitting message {}", message.getPayload());
 		try
 		{
 			connector.sendMessage(message);
@@ -75,7 +86,7 @@ public class ProxyListener extends ReceiveListener
 			logger.warn("Error while resending message through connection '{}'", connector.getName(), e);
 		}
 	}
-
+	
 	@Override
 	public void dispose()
 	{
@@ -91,11 +102,5 @@ public class ProxyListener extends ReceiveListener
 				logger.error("Error while stopping connection '{}'", connector.getName(), e);
 			}
 		}
-	}
-
-	@Override
-	protected Logger getLogger()
-	{
-		return logger;
 	}
 }

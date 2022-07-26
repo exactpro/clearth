@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,16 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.exactprosystems.clearth.connectivity.CollectorMessage;
-import com.exactprosystems.clearth.connectivity.ReceiveListener;
+import com.exactprosystems.clearth.connectivity.MessageListener;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedStringMessage;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
 
-
-/**
- * Created by alexander.magomedov on 11/3/16.
- */
 public class CollectorScannerTool
 {
 	protected String collectorFilter;
@@ -49,7 +45,7 @@ public class CollectorScannerTool
 		return (this.collectorFilter == null || this.collectorFilter.isEmpty() || checkedValue.contains(collectorFilter));
 	}
 	
-	private ReceiveListener getCollector(ClearThMessageConnection<?, ?> connection)
+	private MessageListener getCollector(ClearThMessageConnection<?, ?> connection)
 	{
 		return connection.findListener(connection.getMessageCollectorClass());
 	}
@@ -63,7 +59,7 @@ public class CollectorScannerTool
 	 *          selected collector
 	 * @return list of correct messages from collector
 	 */
-	public List<CollectorMessage> getCollectorMessages(ReceiveListener collector)
+	public List<CollectorMessage> getCollectorMessages(MessageListener collector)
 	{
 		if (collector == null)
 			return null;
@@ -108,7 +104,7 @@ public class CollectorScannerTool
 	}
 
 
-	public List<CollectorMessage> getCollectorMessagesFailed(ReceiveListener collector)
+	public List<CollectorMessage> getCollectorMessagesFailed(MessageListener collector)
 	{
 		if (collector == null)
 			return null;
@@ -142,9 +138,9 @@ public class CollectorScannerTool
 		return (connection == null) ? null : getCollectorMessagesFailed(getCollector(connection));
 	}
 
-	public ClearThMessageConnection getConnectionByName(String name)
+	public ClearThMessageConnection<?, ?> getConnectionByName(String name)
 	{
-		return (ClearThMessageConnection) connectionStorage().findConnection(name);
+		return (ClearThMessageConnection<?, ?>) connectionStorage().findConnection(name);
 	}
 
 

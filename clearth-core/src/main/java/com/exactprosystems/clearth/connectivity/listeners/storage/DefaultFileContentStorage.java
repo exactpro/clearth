@@ -19,14 +19,17 @@
 package com.exactprosystems.clearth.connectivity.listeners.storage;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import com.exactprosystems.clearth.connectivity.iface.ReceivedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedStringMessage;
-
-import static com.exactprosystems.clearth.connectivity.ReceiveListener.format;
+import com.exactprosystems.clearth.messages.MessageFileReader;
 
 public class DefaultFileContentStorage extends FileContentStorage<ReceivedClearThMessage, ReceivedStringMessage>
 {
+	private final DateFormat formatter = new SimpleDateFormat(MessageFileReader.DEFAULT_TIMESTAMP_FORMAT);
+	
 	public DefaultFileContentStorage(String contentsFilePath, String threadName) throws IOException
 	{
 		super(contentsFilePath, threadName);
@@ -54,11 +57,11 @@ public class DefaultFileContentStorage extends FileContentStorage<ReceivedClearT
 		return item.getMessage();
 	}
 
-    @Override
-    protected String extractTimestampPassed(ReceivedClearThMessage item)
-    {
-        if (item == null)
-            return "";
-        return format.get().format(item.getReceived());
-    }
+	@Override
+	protected String extractTimestampPassed(ReceivedClearThMessage item)
+	{
+		if (item == null)
+			return "";
+		return formatter.format(item.getReceived());
+	}
 }

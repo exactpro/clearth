@@ -18,21 +18,18 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.util.List;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 
-import com.exactprosystems.clearth.messages.PlainMessageSender;
-
-public interface ClearThClient extends PlainMessageSender
+/*
+ * Interface for all message listeners
+ */
+public interface MessageListener
 {
-	void addMessageListener(MessageListener listener);
+	void onMessage(EncodedClearThMessage message);
 	
-	void addMessageListeners(List<MessageListener> listeners);
+	void start();
+	void dispose();
 	
-	void start(boolean startListeners) throws ConnectivityException;
-	
-	void dispose(boolean disposeListeners) throws ConnectivityException;
-	
-	long getSent();
-	long getReceived();
-	long getWarnings();
+	String getName();
+	String getType();
 }

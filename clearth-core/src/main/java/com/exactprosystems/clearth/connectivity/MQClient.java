@@ -39,7 +39,7 @@ import com.ibm.mq.constants.MQConstants;
 import static com.exactprosystems.clearth.connectivity.MQExceptionUtils.isConnectionBroken;
 import static org.apache.commons.lang.StringUtils.isWhitespace;
 
-public abstract class MQClient extends BasicClearThClient
+public abstract class MQClient extends BasicClearThClient<MQConnection, MQConnectionSettings>
 {
 	public static final int DEFAULT_PORT = 1414;
 	public static final String DEFAULT_HOST = "localhost";
@@ -210,18 +210,6 @@ public abstract class MQClient extends BasicClearThClient
 		return new MQPutMessageOptions();
 	}
 	
-	@Override
-	public Object sendMessage(Object message) throws IOException, ConnectivityException
-	{
-		return sendMessage(message, null);
-	}
-	
-	@Override
-	public Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
-	{
-		return sendMessage(message.getPayload(), message.getMetadata());
-	}
-	
 	public void sendByteMessage(byte[] raw, ClearThMessageMetadata metadata) throws IOException, MQException
 	{
 		Logger logger = getLogger();
@@ -234,14 +222,25 @@ public abstract class MQClient extends BasicClearThClient
 		sendQueue.put(msg, createPutMessageOptions(msg));
 		if (logger.isTraceEnabled())
 			logger.trace(name+" has sent byte message successfully");
-		incSent();
+		sent.incrementAndGet();
 	}
 	
 	
 	/* Methods to override */
 	
-	protected Object sendMessage(Object payload, ClearThMessageMetadata metadata)
-			throws IOException, ConnectivityException
+	@Override
+	protected Object doSendMessage(Object message) throws IOException, ConnectivityException
+	{
+		return doSendMessage(message, null);
+	}
+	
+	@Override
+	protected Object doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	{
+		return doSendMessage(message.getPayload(), message.getMetadata());
+	}
+	
+	protected Object doSendMessage(Object payload, ClearThMessageMetadata metadata) throws IOException, ConnectivityException
 	{
 		synchronized (sendMonitor)
 		{
@@ -253,16 +252,16 @@ public abstract class MQClient extends BasicClearThClient
 			MQMessage msg = prepareMQMessage(payload, metadata);
 			
 			if (logger.isTraceEnabled())
-				logger.trace(name+" sends message: "+Utils.EOL+payload+Utils.EOL+"header: "+Utils.EOL+messageHeaderToString(msg));
-			else if (logger.isDebugEnabled())
-				logger.debug(name+" sends message: "+Utils.EOL+payload);
+				logger.trace("{} sends message:{}{}{}header:{}{}", 
+						name, Utils.EOL, payload, Utils.EOL, Utils.EOL, messageHeaderToString(msg));
+			else
+				logger.debug("{} sends message:{}{}", 
+						name, Utils.EOL, payload);
 			
 			try
 			{
 				sendQueue.put(msg, createPutMessageOptions(msg));
-				if (logger.isTraceEnabled())
-					logger.trace(name+" has sent message successfully");
-				incSent();
+				logger.trace("{} has sent message successfully", name);
 			}
 			catch (MQException e)
 			{
