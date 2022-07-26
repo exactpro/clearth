@@ -26,6 +26,7 @@ import static com.exactprosystems.clearth.connectivity.flat.FlatMessageDictionar
 import static com.exactprosystems.clearth.connectivity.iface.ClearThMessage.MSGTYPE;
 
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.slf4j.Logger;
@@ -47,11 +48,28 @@ public class FlatMessageCodec implements ICodec {
 
 	FlatMessageDictionary dictionary;
 	private final MessageValidator messageValidator;
+	private final Map<String, String> codecParameters;
 
-	public FlatMessageCodec(FlatMessageDictionary dictionary)
+	public FlatMessageCodec(FlatMessageDictionary dictionary, Map<String, String> codecParameters)
+	{
+		this.messageValidator = new MessageValidator();
+		this.codecParameters = codecParameters;
+		setDictionary(dictionary);
+	}
+
+	public Map<String, String> getCodecParameters() 
+	{
+		return this.codecParameters;
+	}
+
+	public Map<String, String> getDictionaryParameters()
+	{
+		return getDictionary().getAdditionalParameters();
+	}
+
+	protected void setDictionary(FlatMessageDictionary dictionary)
 	{
 		this.dictionary = dictionary;
-		this.messageValidator = new MessageValidator();
 	}
 
 	public FlatMessageDictionary getDictionary()

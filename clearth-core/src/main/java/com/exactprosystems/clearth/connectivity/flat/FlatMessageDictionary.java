@@ -32,18 +32,20 @@ public class FlatMessageDictionary extends Dictionary<FlatMessageDesc, FlatMessa
 {
 	public static final String RIGHT_ALIGNMENT = "right";
 	public static final String LEFT_ALIGNMENT = "left";
-
-	public FlatMessageDictionary(String fileName) throws DictionaryLoadException {
-		super(fileName);
+	
+	public FlatMessageDictionary(String fileName, Map<String, String> parameters) throws DictionaryLoadException
+	{
+		super(fileName, parameters);
 	}
 	
-	public FlatMessageDictionary(Reader reader) throws DictionaryLoadException {
-		super(reader);
+	public FlatMessageDictionary(Reader reader, Map<String, String> parameters) throws DictionaryLoadException
+	{
+		super(reader, parameters);
 	}
-	
 	
 	@Override
-	protected Class[] getClassesToBeBound() {
+	protected Class[] getClassesToBeBound()
+	{
 		return new Class[]{FlatMessageDictionaryDesc.class};
 	}
 

@@ -52,22 +52,25 @@ public abstract class Dictionary<T extends MessageDesc, D extends DictionaryDesc
 	public static final String ERROR_WHILE_PARSING = "Error occurred while loading dictionary";
 
 	protected final D dictionaryDesc;
+	protected final Map<String, String> additionalParameters;
 
 	protected Map<String, List<MessageValidatorCondition>> typeConditionsMap = new LinkedHashMap<String, List<MessageValidatorCondition>>();
 	protected Map<String, List<MessageValidatorCondition>> conditionsMap = new LinkedHashMap<String, List<MessageValidatorCondition>>();
 	protected Map<String, T> messageDescMap;
 	protected List<T> messageDescList;
 
-	protected Dictionary(String fileName) throws DictionaryLoadException
+	protected Dictionary(String fileName, Map<String, String> parameters) throws DictionaryLoadException
 	{
 		dictionaryDesc = loadDictionary(fileName);
 		processDictionary(dictionaryDesc);
+		additionalParameters = parameters;
 	}
 
-	protected Dictionary(Reader reader) throws DictionaryLoadException
+	protected Dictionary(Reader reader, Map<String, String> parameters) throws DictionaryLoadException
 	{
 		dictionaryDesc = loadDictionary(reader);
 		processDictionary(dictionaryDesc);
+		additionalParameters = parameters;
 	}
 
 	public static String msgDescWithTypeNotFoundError(String msgType)
@@ -122,6 +125,12 @@ public abstract class Dictionary<T extends MessageDesc, D extends DictionaryDesc
 		}
 	}
 	
+	public String getAdditionalParameterValue(String key)
+	{
+		if (additionalParameters == null)
+			return null;
+		return additionalParameters.get(key);
+	}
 	
 	public Map<String, List<MessageValidatorCondition>> getTypeConditionsMap()
 	{
@@ -131,6 +140,11 @@ public abstract class Dictionary<T extends MessageDesc, D extends DictionaryDesc
 	public Map<String, List<MessageValidatorCondition>> getConditionsMap()
 	{
 		return conditionsMap;
+	}
+
+	public Map<String, String> getAdditionalParameters()
+	{
+		return additionalParameters;
 	}
 
 	public List<MessageValidatorCondition> getTypeConditions(String messageDescType)
@@ -219,11 +233,29 @@ public abstract class Dictionary<T extends MessageDesc, D extends DictionaryDesc
 	protected void solveReferencesToCommonFields(D dictionary) throws DictionaryLoadException
 	{
 	}
-	
+
 	protected void processDictionary(D dictionary) throws DictionaryLoadException
 	{
 		solveReferencesToCommonFields(dictionary);
 		initMessageDescList(dictionary);
 		initMessageDescMap(messageDescList);
+	}
+
+	/**
+	 * Constructor with additional parameters support is preferable
+	 */
+	@Deprecated
+	protected Dictionary(String fileName) throws DictionaryLoadException
+	{
+		this(fileName, null);
+	}
+
+	/**
+	 * Constructor with additional parameters support is preferable
+	 */
+	@Deprecated
+	protected Dictionary(Reader reader) throws DictionaryLoadException
+	{
+		this(reader, null);
 	}
 }

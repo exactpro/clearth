@@ -15,13 +15,27 @@
 		</xsd:complexType> 
 	</xsd:element>
 
+	<xsd:complexType name="AdditionalParameter" >
+		<xsd:attribute name="name" type="xsd:string" use="required"/>
+		<xsd:attribute name="value" type="xsd:string" use="required"/>
+	</xsd:complexType>
+
+
+	<xsd:complexType name="ParameterList">
+		<xsd:sequence>
+			<xsd:element name="Parameter" type="AdditionalParameter" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:complexType name="CodecConfig" >
 		<xsd:sequence>
 			<xsd:element name="Name" type="xsd:string" maxOccurs="1" minOccurs="1" />
 			<xsd:element name="AltName" type="xsd:string" maxOccurs="1" minOccurs="0" />
 			<xsd:element name="DictionaryFile" type="xsd:string" maxOccurs="1" />
 			<xsd:element name="Dictionary" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="DictionaryParameters" type="ParameterList" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="Codec" type="xsd:string" maxOccurs="1" minOccurs="1" />
+			<xsd:element name="CodecParameters" type="ParameterList" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 
