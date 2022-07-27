@@ -73,16 +73,23 @@ public class ClearThCollectorSourceTest {
 		CollectorMessageSource defaultCollector = createSource(defaultListener, -1, true);
 		CollectorMessageSource reversedCollector = createSource(defaultReversedListener, -1, false);
 
-		//constructor with time arguments requiers skipped messages to already exist to function correctly
 		ClearThMessageCollector defaultTimedListener = createListener("Default2", codec, new HashMap<>());
 		putMessages(defaultTimedListener, messages, 0, 2);
 		CollectorMessageSource defaultTimedCollector = createSource(defaultTimedListener, 0, true);
 		
+		ClearThMessageCollector emptyTimedListener = createListener("Default3", codec, new HashMap<>());
+		CollectorMessageSource emptyTimedCollector = createSource(emptyTimedListener, 0, true);
+
+		ClearThMessageCollector reversedTimedListener = createListener("Default4", codec, new HashMap<>());
+		CollectorMessageSource reversedTimedCollector = createSource(reversedTimedListener, 0, false);
+
 		return new Object[][]
 			{
 				{defaultCollector, defaultListener, messages, Arrays.asList("AAA", "BBB", "CCC", "DDD"), Arrays.asList("EEE", "FFF", "GGG"), 0, 4},
 				{reversedCollector, defaultReversedListener, messages, Arrays.asList("DDD", "CCC", "BBB", "AAA"), Arrays.asList("GGG", "FFF", "EEE"), 0, 4},
-				{defaultTimedCollector, defaultTimedListener, messages, Arrays.asList("BBB", "CCC", "DDD"), Arrays.asList("EEE", "FFF", "GGG"), 2, 4}
+				{defaultTimedCollector, defaultTimedListener, messages, Arrays.asList("BBB", "CCC", "DDD"), Arrays.asList("EEE", "FFF", "GGG"), 2, 4},
+				{emptyTimedCollector, emptyTimedListener, messages, Arrays.asList("BBB", "CCC", "DDD"), Arrays.asList("EEE", "FFF", "GGG"), 0, 4},
+				{reversedTimedCollector, reversedTimedListener, messages, Arrays.asList("DDD", "CCC", "BBB"), Arrays.asList("GGG", "FFF", "EEE"), 0, 4}
 			};
 	}
 

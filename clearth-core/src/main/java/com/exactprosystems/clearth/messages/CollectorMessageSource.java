@@ -42,7 +42,9 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 	protected final ClearThMessageCollector collector;
 	protected long currentId;
 	protected long lastMessageId;
+	protected long startingReadTime;
 	protected Deque<ReceivedClearThMessage> messagesBuffer;
+	protected boolean canReadEarlyMessages;
 	protected final boolean directOrder;
 	
 	/**
@@ -53,10 +55,11 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 	public CollectorMessageSource(ClearThMessageCollector collector, boolean directOrder)
 	{
 		this.collector = collector;
+		this.directOrder = directOrder;
+		canReadEarlyMessages = false;
 		currentId = -1;
 		lastMessageId = -1;
 		messagesBuffer = getAllMessages();
-		this.directOrder = directOrder;
 	}
 	
 	/**
@@ -68,18 +71,28 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 	public CollectorMessageSource(ClearThMessageCollector collector, long afterTime, boolean directOrder)
 	{
 		this.collector = collector;
-		currentId = findIdForTime(afterTime);
-		lastMessageId = currentId;
-		messagesBuffer = getMessages(lastMessageId);
 		this.directOrder = directOrder;
+		currentId = -1;
+		lastMessageId = -1;
+		messagesBuffer = getMessagesAfterTime(lastMessageId, afterTime);
+		canReadEarlyMessages = messagesBuffer.isEmpty();
+		updateCurrentId();
 	}
 	
 	
 	@Override
 	public ClearThMessage<?> nextMessage() throws IOException
 	{
-		if (messagesBuffer.isEmpty())  //No messages left in buffer, need to get next ones
-			messagesBuffer = getMessages(lastMessageId);
+		if (messagesBuffer.isEmpty()) { //No messages left in buffer, need to get next ones
+			if (canReadEarlyMessages) {
+				messagesBuffer = getMessagesAfterTime(lastMessageId, startingReadTime);
+				if (!messagesBuffer.isEmpty()) {
+					canReadEarlyMessages = false;
+				}
+			} else {
+				messagesBuffer = getMessages(lastMessageId);
+			}
+		}
 
 		ReceivedClearThMessage msg = directOrder ? messagesBuffer.pollFirst() : messagesBuffer.pollLast();
 
@@ -119,26 +132,18 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 		collector.removeMessage(message);
 	}
 	
-	
-	protected long findIdForTime(long time)
-	{
-		Collection<ReceivedClearThMessage> messages = collector.getMessagesData();
-		long result = -1;
-		for (ReceivedClearThMessage msg : messages)
-		{
-			if (time < msg.getReceived())
-				return result;
-			result = msg.getId();
-		}
-		return result;
-	}
-	
 	protected Deque<ReceivedClearThMessage> prepareMessages(Collection<ReceivedClearThMessage> messages)
 	{
 		if(messages instanceof Deque)
 			return (Deque<ReceivedClearThMessage>) messages;
 		else
 			return new ArrayDeque<ReceivedClearThMessage>(messages);
+	}
+
+	protected void updateCurrentId() {
+		ReceivedClearThMessage firstMessage = messagesBuffer.peekFirst();
+		if (firstMessage != null)
+			currentId = firstMessage.getId();
 	}
 	
 	protected void updateLastId(Deque<ReceivedClearThMessage> messages) {
@@ -158,6 +163,21 @@ public class CollectorMessageSource implements MessageSource, StringMessageSourc
 	{
 		Deque<ReceivedClearThMessage> result = prepareMessages(collector.getMessagesData(afterId));
 		updateLastId(result);
+		return result;
+	}
+
+	protected Deque<ReceivedClearThMessage> getMessagesAfterTime(long afterId, long afterTime)
+	{
+		Deque<ReceivedClearThMessage> result = prepareMessages(collector.getMessagesData(afterId));
+		updateLastId(result);
+		ReceivedClearThMessage firstMessage = result.peekFirst();
+		while (firstMessage != null) {
+			if (afterTime < firstMessage.getReceived()) {
+				return result;
+			}
+			result.removeFirst();
+			firstMessage = result.peekFirst();
+		}
 		return result;
 	}
 }
