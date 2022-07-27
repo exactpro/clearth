@@ -21,17 +21,24 @@ package com.exactprosystems.clearth.automation.persistence;
 import java.io.File;
 import java.io.IOException;
 
-import com.exactprosystems.clearth.automation.Executor;
-import com.exactprosystems.clearth.automation.Matrix;
-import com.exactprosystems.clearth.automation.ReportsInfo;
-import com.exactprosystems.clearth.automation.StepFactory;
+import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 
 public class DefaultExecutorState extends ExecutorState
 {
 	public static final Class[] ACTIONSTATE_ANNOTATIONS = new Class[]{DefaultActionState.class, DefaultResultState.class},
-			STATEINFO_ANNOTATIONS = new Class[]{ExecutorStateInfo.class, DefaultStepState.class},
-			STATEOBJECTS_ANNOTATIONS = new Class[]{ExecutorStateObjects.class, DefaultMatrixState.class, DefaultActionState.class, DefaultResultState.class};
-	
+			STATEINFO_ANNOTATIONS = new Class[]{ExecutorStateInfo.class, DefaultStepState.class, StepContext.class},
+			STATEOBJECTS_ANNOTATIONS = new Class[]{ExecutorStateObjects.class, DefaultMatrixState.class,
+					DefaultActionState.class, DefaultResultState.class},
+			STATEMATRIX_ANNOTATIONS = new Class[]{MvelVariables.class};
+	public static final Class[] ALLOWED_CLASSES = {ExecutorStateInfo.class,
+			DefaultStepState.class, StepContext.class, XmlMatrixInfo.class,
+			ExecutorStateObjects.class, DefaultResultState.class, MvelVariables.class, HashSetValuedHashMap.class,
+			ExecutorState.class, ActionState.class, MatrixData.class, MatrixState.class, DefaultMatrixState.class,
+			DefaultActionState.class};
+
+
 	public DefaultExecutorState(Executor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
 	{
 		super(executor, stepFactory, reportsInfo);
@@ -103,5 +110,16 @@ public class DefaultExecutorState extends ExecutorState
 	protected Class[] getStateObjectsAnnotations()
 	{
 		return STATEOBJECTS_ANNOTATIONS;
+	}
+
+	protected  Class[] getStateMatrixAnnotations()
+	{
+		return STATEMATRIX_ANNOTATIONS;
+	}
+
+	@Override
+	protected Class[] getAllowedClasses()
+	{
+		return ALLOWED_CLASSES;
 	}
 }

@@ -26,6 +26,7 @@ import java.util.Map;
 import com.exactprosystems.clearth.automation.persistence.DefaultExecutorState;
 import com.exactprosystems.clearth.automation.persistence.ExecutorState;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
+import com.exactprosystems.clearth.utils.XmlUtils;
 
 public class DefaultScheduler extends Scheduler
 {
@@ -63,13 +64,15 @@ public class DefaultScheduler extends Scheduler
 	@Override
 	protected ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException
 	{
-		return ExecutorState.loadStateInfo(sourceDir, DefaultExecutorState.STATEINFO_ANNOTATIONS);
+		return (ExecutorStateInfo)XmlUtils.xmlFileToObject(new File(sourceDir, ExecutorState.STATEINFO_FILENAME),
+				DefaultExecutorState.STATEINFO_ANNOTATIONS, DefaultExecutorState.ALLOWED_CLASSES);
 	}
 
 	@Override
 	protected void saveStateInfo(File destDir, ExecutorStateInfo stateInfo) throws IOException
 	{
-		ExecutorState.saveStateInfo(destDir, stateInfo, DefaultExecutorState.STATEINFO_ANNOTATIONS);
+		XmlUtils.objectToXmlFile(stateInfo, new File(destDir, ExecutorState.STATEINFO_FILENAME),
+				DefaultExecutorState.STATEINFO_ANNOTATIONS, DefaultExecutorState.ALLOWED_CLASSES);
 	}
 
 	@Override

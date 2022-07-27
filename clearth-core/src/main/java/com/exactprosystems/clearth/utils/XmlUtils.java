@@ -117,7 +117,7 @@ public class XmlUtils
 	
 	
 	@SuppressWarnings("rawtypes")
-	public static void objectToXmlFile(Object object, String outputFileName, Class[] annotatedClasses) throws IOException
+	public static void objectToXmlFile(Object object, String outputFileName, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
 		FileWriter writer = null;
 		try
@@ -128,7 +128,7 @@ public class XmlUtils
 			if (annotatedClasses != null)
 			{
 				xs.processAnnotations(annotatedClasses);
-				xs.allowTypes(annotatedClasses);
+				xs.allowTypes(allowedClasses);
 			}
 			xs.toXML(object, writer);
 		}
@@ -139,13 +139,13 @@ public class XmlUtils
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static void objectToXmlFile(Object object, File outputFile, Class[] annotatedClasses) throws IOException
+	public static void objectToXmlFile(Object object, File outputFile, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
-		objectToXmlFile(object, outputFile.getCanonicalPath(), annotatedClasses);
+		objectToXmlFile(object, outputFile.getCanonicalPath(), annotatedClasses, allowedClasses);
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static Object xmlFileToObject(String sourceFileName, Class[] annotatedClasses) throws IOException
+	public static Object xmlFileToObject(String sourceFileName, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
 		FileReader reader = null;
 		try
@@ -156,7 +156,7 @@ public class XmlUtils
 			if (annotatedClasses != null)
 			{
 				xs.processAnnotations(annotatedClasses);
-				xs.allowTypes(annotatedClasses);
+				xs.allowTypes(allowedClasses);
 			}
 			return xs.fromXML(reader);
 		}
@@ -167,9 +167,9 @@ public class XmlUtils
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static Object xmlFileToObject(File sourceFile, Class[] annotatedClasses) throws IOException
+	public static Object xmlFileToObject(File sourceFile, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
-		return xmlFileToObject(sourceFile.getCanonicalPath(), annotatedClasses);
+		return xmlFileToObject(sourceFile.getCanonicalPath(), annotatedClasses, allowedClasses);
 	}
 	
 	

@@ -21,41 +21,40 @@ package com.exactprosystems.clearth.automation.persistence;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.io.FileUtils;
 
 import com.exactprosystems.clearth.utils.XmlUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ExecutorState
 {
+	private static final Logger logger = LoggerFactory.getLogger(ExecutorState.class);
 	public static final String STATEOBJECTS_FILENAME = "stateobjects.xml", STATEINFO_FILENAME = "stateinfo.xml";
 	protected static final int MAXACTIONS = 100;
 	protected Map<String, Preparable> preparableActions;
-	
 	public List<StepState> steps = new ArrayList<StepState>();
 	public boolean weekendHoliday = true;
 	public Map<String, Boolean> holidays = null;
 	public Date businessDay = null;
 	public String startedByUser = null;
 	public Date started = null, ended = null;
-	public ReportsInfo reportsInfo = null;  //Need it to have access to reports from "Saved state" tab of "Automation" page
-	
+	public ReportsInfo reportsInfo = null; //Need it to have access to reports from "Saved state" tab of "Automation" page
+
 	public List<MatrixState> matrices = new ArrayList<MatrixState>();
 	public Map<String, String> fixedIDs = null;
-	
-	public ExecutorState() 
+
+	public ExecutorState()
 	{
 	}
-	
+
 	public ExecutorState(Executor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
 	{
 		for (Step step : executor.getSteps())
@@ -67,41 +66,55 @@ public abstract class ExecutorState
 		this.started = executor.getStarted();
 		this.ended = executor.getEnded();
 		this.reportsInfo = reportsInfo;
-		
+
 		for (Matrix matrix : executor.getMatrices())
 			this.matrices.add(createMatrixState(matrix));
 		this.fixedIDs = executor.getFixedIds();
 	}
-	
+
 	public ExecutorState(File sourceDir) throws IOException
 	{
 		load(sourceDir);
 	}
-	
-	
+
+
 	protected abstract MatrixState createMatrixState(Matrix matrix);
+
 	protected abstract void initExecutor(Executor executor);
-	
+
 	protected abstract ExecutorStateInfo createStateInfo();
+
 	protected abstract void initStateInfo(ExecutorStateInfo stateInfo);
+
 	protected abstract void initFromStateInfo(ExecutorStateInfo stateInfo);
-	
+
 	protected abstract ExecutorStateObjects createStateObjects();
+
 	protected abstract void initStateObjects(ExecutorStateObjects stateObjects);
-	
+
 	protected abstract Class[] getActionStateAnnotations();
+
 	protected abstract Class[] getStateInfoAnnotations();
+
 	protected abstract Class[] getStateObjectsAnnotations();
-	
-	
-	public Executor executorFromState(Scheduler scheduler, ExecutorFactory executorFactory, Date businessDay, Date baseTime, String startedByUser) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
+
+	protected abstract Class[] getStateMatrixAnnotations();
+
+	protected abstract Class[] getAllowedClasses();
+
+
+	public Executor executorFromState(Scheduler scheduler, ExecutorFactory executorFactory, Date businessDay,
+	                                  Date baseTime, String startedByUser)
+			throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException, AutomationException
+	{
 		preparableActions = new HashMap<String, Preparable>();
 		List<Step> steps = null;
 		Map<Step, Map<String, StepContext>> allStepContexts = null;
-		if (this.steps!=null)
+		if (this.steps != null)
 		{
 			steps = new ArrayList<Step>();
-			allStepContexts = new HashMap<Step, Map<String,StepContext>>();
+			allStepContexts = new HashMap<Step, Map<String, StepContext>>();
 			for (StepState stepState : this.steps)
 			{
 				Step restored = stepState.stepFromState(scheduler.getStepFactory());
@@ -109,9 +122,9 @@ public abstract class ExecutorState
 				allStepContexts.put(restored, stepState.getStepContexts());
 			}
 		}
-		
+
 		List<Matrix> matrices = null;
-		if (this.matrices!=null)
+		if (this.matrices != null)
 		{
 			matrices = new ArrayList<Matrix>();
 			for (MatrixState matrixState : this.matrices)
@@ -125,17 +138,18 @@ public abstract class ExecutorState
 							if (step.getName().equals(a.getStepName()))
 							{
 								step.addAction(a);
-								if (!preparableActions.containsKey(a.getName()) && a.isExecutable() && a instanceof Preparable)
-									preparableActions.put(a.getName(), (Preparable)a);
+								if (!preparableActions.containsKey(a.getName()) && a.isExecutable() &&
+										a instanceof Preparable)
+									preparableActions.put(a.getName(), (Preparable) a);
 								break;
 							}
-					
+
 					for (Step step : steps)
 					{
 						Map<String, StepContext> stepContexts = allStepContexts.get(step);
 						if (stepContexts == null)
 							continue;
-						
+
 						if (stepContexts.containsKey(m.getName()))
 						{
 							Map<Matrix, StepContext> sc = step.getStepContexts();
@@ -150,68 +164,71 @@ public abstract class ExecutorState
 				}
 			}
 		}
-		
-		GlobalContext globalContext = executorFactory.createGlobalContext(businessDay, baseTime, this.weekendHoliday, this.holidays, startedByUser);
-		
+
+		GlobalContext globalContext =
+				executorFactory.createGlobalContext(businessDay, baseTime, this.weekendHoliday, this.holidays,
+						startedByUser);
+
 		Executor result = executorFactory.createExecutor(scheduler, steps, matrices, globalContext, preparableActions);
 		result.setFixedIds(this.fixedIDs);
 		result.setStarted(this.started);
 		result.setEnded(this.ended);
 		initExecutor(result);
-		
+
 		return result;
 	}
-	
-	
+
+
 	protected static String actionsFileName(String matrixShortFileName, int fileIndex)
 	{
-		return matrixShortFileName+"_actions_"+fileIndex+".xml";
+		return matrixShortFileName + "_actions_" + fileIndex + ".xml";
 	}
-	
+
 	protected static String varsFileName(String matrixShortFileName)
 	{
 		return matrixShortFileName + "_vars.xml";
 	}
-	
+
 	public void save(File destDir) throws IOException
 	{
 		if (destDir.exists())
 			FileUtils.deleteDirectory(destDir);
 		destDir.mkdirs();
-		
+
 		List<String> matricesNames = new ArrayList<String>();
-		if (matrices!=null)
+		if (matrices != null)
 		{
 			for (MatrixState matrix : matrices)
 			{
 				String shortName = new File(matrix.getFileName()).getName();
 				matricesNames.add(shortName);
-				
+
 				//If there are too many actions, such XML cannot be unmarshalled due to lack of memory. Writing such large list as few portions in separate files
-				if (matrix.getActions()!=null)// && (matrix.getActions().size()>MAXACTIONS))
+				if (matrix.getActions() != null)// && (matrix.getActions().size()>MAXACTIONS))
 				{
 					int index = 1;
 					List<ActionState> states = new ArrayList<ActionState>();
 					for (ActionState action : matrix.getActions())
 					{
 						states.add(action);
-						if (states.size()>=MAXACTIONS)
+						if (states.size() >= MAXACTIONS)
 						{
-							XmlUtils.objectToXmlFile(states, new File(destDir, actionsFileName(shortName, index)), getActionStateAnnotations());
+							saveToXml(states, new File(destDir, actionsFileName(shortName, index)),
+									getActionStateAnnotations());
 							index++;
 							states.clear();
 						}
 					}
-					if (states.size()>0)
-						XmlUtils.objectToXmlFile(states, new File(destDir, actionsFileName(shortName, index)), getActionStateAnnotations());
+					if (states.size() > 0)
+						saveToXml(states, new File(destDir, actionsFileName(shortName, index)),
+								getActionStateAnnotations());
 //					matrix.getActions().clear();
 				}
-				
 				if (matrix.getMvelVars() != null)
-					XmlUtils.objectToXmlFile(matrix.getMvelVars(), new File(destDir, varsFileName(shortName)), null);
+					saveToXml(matrix.getMvelVars(), new File(destDir, varsFileName(shortName)), null);
 			}
 		}
-		
+
 		ExecutorStateInfo stateInfo = createStateInfo();
 		stateInfo.setSteps(steps);
 		stateInfo.setMatrices(matricesNames);
@@ -223,20 +240,22 @@ public abstract class ExecutorState
 		stateInfo.setEnded(ended);
 		stateInfo.setReportsInfo(reportsInfo);
 		initStateInfo(stateInfo);
-		saveStateInfo(destDir, stateInfo, getStateInfoAnnotations());
-		
+		saveToXml(stateInfo, new File(destDir, STATEINFO_FILENAME), getStateInfoAnnotations());
+
 		ExecutorStateObjects stateObjects = createStateObjects();
 		stateObjects.setMatrices(matrices);
 		stateObjects.setFixedIDs(fixedIDs);
 		initStateObjects(stateObjects);
-		XmlUtils.objectToXmlFile(stateObjects, new File(destDir, STATEOBJECTS_FILENAME), getStateObjectsAnnotations());
+		saveToXml(stateObjects, new File(destDir, STATEOBJECTS_FILENAME), getStateObjectsAnnotations());
 	}
-	
+
 	public void load(File sourceDir) throws IOException
 	{
-		ExecutorStateInfo stateInfo = loadStateInfo(sourceDir, getStateInfoAnnotations());
-		ExecutorStateObjects stateObjects = (ExecutorStateObjects)XmlUtils.xmlFileToObject(new File(sourceDir, STATEOBJECTS_FILENAME), getStateObjectsAnnotations());
-		
+		ExecutorStateInfo stateInfo =
+				(ExecutorStateInfo) loadFromXml(new File(sourceDir, STATEINFO_FILENAME), getStateInfoAnnotations());
+		ExecutorStateObjects stateObjects = (ExecutorStateObjects) loadFromXml(new File(sourceDir,
+				STATEOBJECTS_FILENAME), getStateObjectsAnnotations());
+
 		steps = stateInfo.getSteps();
 		weekendHoliday = stateInfo.isWeekendHoliday();
 		holidays = stateInfo.getHolidays();
@@ -246,11 +265,11 @@ public abstract class ExecutorState
 		ended = stateInfo.getEnded();
 		reportsInfo = stateInfo.getReportsInfo();
 		initFromStateInfo(stateInfo);
-		
+
 		matrices = stateObjects.getMatrices();
 		fixedIDs = stateObjects.getFixedIDs();
-		
-		if (matrices!=null)
+
+		if (matrices != null)
 		{
 			for (MatrixState matrix : matrices)
 			{
@@ -259,32 +278,36 @@ public abstract class ExecutorState
 				File actionFile = new File(sourceDir, actionsFileName(shortName, index));
 				while (actionFile.isFile())
 				{
-					List<ActionState> actions = (List<ActionState>)XmlUtils.xmlFileToObject(actionFile, getActionStateAnnotations());
-					if (matrix.getActions()==null)
+					List<ActionState> actions = (List<ActionState>) XmlUtils.xmlFileToObject(actionFile,
+							getActionStateAnnotations(), getAllowedClasses());
+					if (matrix.getActions() == null)
 						matrix.setActions(new ArrayList<ActionState>());
 					matrix.getActions().addAll(actions);
-					
+
 					index++;
 					actionFile = new File(sourceDir, actionsFileName(shortName, index));
 				}
 
 				File varsFile = new File(sourceDir, varsFileName(shortName));
 				MvelVariables vars = varsFile.isFile()
-						? (MvelVariables) XmlUtils.xmlFileToObject(varsFile, null)
+						? (MvelVariables) loadFromXml(varsFile, getStateMatrixAnnotations())
 						: ClearThCore.getInstance().getMvelVariablesFactory().create();
 				matrix.setMvelVars(vars);
 			}
 		}
 	}
-	
-	
-	public static void saveStateInfo(File destDir, ExecutorStateInfo stateInfo, Class[] stateInfoAnnotations) throws IOException
+
+	protected void saveToXml(Object info, File file, Class[] annotations) throws IOException
 	{
-		XmlUtils.objectToXmlFile(stateInfo, new File(destDir, STATEINFO_FILENAME), stateInfoAnnotations);
+		logger.debug("Save to xml object: {} to file: {},  annotations: {}", info, file, annotations);
+		XmlUtils.objectToXmlFile(info, file, annotations, getAllowedClasses());
 	}
-	
-	public static ExecutorStateInfo loadStateInfo(File sourceDir, Class[] stateInfoAnnotations) throws IOException
+
+	protected Object loadFromXml(File file, Class[] annotations) throws IOException
 	{
-		return (ExecutorStateInfo)XmlUtils.xmlFileToObject(new File(sourceDir, STATEINFO_FILENAME), stateInfoAnnotations);
+		if (logger.isDebugEnabled())
+			logger.debug("Load from xml file: {}, annotations: {}", file, Arrays.asList(annotations));
+		return XmlUtils.xmlFileToObject(file, annotations, getAllowedClasses());
 	}
+
 }
