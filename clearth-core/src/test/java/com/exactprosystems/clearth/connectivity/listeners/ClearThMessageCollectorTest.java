@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -104,6 +105,26 @@ public class ClearThMessageCollectorTest
 		settings.put(FORBIDDEN_TYPES, "AAA");
 		
 		createListener("Wrong", codec, settings);
+	}
+
+	@Test(expectedExceptions = IllegalArgumentException.class)
+	public void checkIfWrongTimestampFails() throws SettingsException
+	{
+		ClearThMessageCollector simpleListener = createListener("Simple", codec, new HashMap<>());
+		try {
+			simpleListener.onMessage(EncodedClearThMessage.newReceivedMessage("a", Instant.ofEpochMilli(1)));
+		} catch (Exception e) {
+			Assert.fail("Sending message with timestamp should pass, but failed with " + e.toString());
+		}
+		Assert.assertTrue(simpleListener.getMessages() != null);
+		simpleListener.onMessage(EncodedClearThMessage.newReceivedMessage("b", Instant.ofEpochMilli(0)));
+	}
+
+	@Test(expectedExceptions = IllegalArgumentException.class)
+	public void checkIfNullTimestampFails() throws SettingsException
+	{
+		ClearThMessageCollector simpleListener = createListener("Simple", codec, new HashMap<>());
+		simpleListener.onMessage(EncodedClearThMessage.newReceivedMessage("a", null));
 	}
 	
 	private ClearThMessageCollector createListener(String name, ICodec codec, Map<String, String> settings)

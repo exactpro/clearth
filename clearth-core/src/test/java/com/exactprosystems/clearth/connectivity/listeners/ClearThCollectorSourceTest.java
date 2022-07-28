@@ -64,13 +64,14 @@ public class ClearThCollectorSourceTest {
 
 	@DataProvider(name = "two-stage-collectors-and-messages")
 	public Object[][] createListenersAndMessagesData()
-			throws IOException, SettingsException
+			throws IOException, IllegalArgumentException, SettingsException
 	{
 		String[] messages = getMessagesFromFile(MESSAGES_FILE);
 
 		ClearThMessageCollector defaultListener = createListener("Default", codec, new HashMap<>());
+		ClearThMessageCollector defaultReversedListener = createListener("Default", codec, new HashMap<>());
 		CollectorMessageSource defaultCollector = createSource(defaultListener, -1, true);
-		CollectorMessageSource reversedCollector = createSource(defaultListener, -1, false);
+		CollectorMessageSource reversedCollector = createSource(defaultReversedListener, -1, false);
 
 		//constructor with time arguments requiers skipped messages to already exist to function correctly
 		ClearThMessageCollector defaultTimedListener = createListener("Default2", codec, new HashMap<>());
@@ -80,7 +81,7 @@ public class ClearThCollectorSourceTest {
 		return new Object[][]
 			{
 				{defaultCollector, defaultListener, messages, Arrays.asList("AAA", "BBB", "CCC", "DDD"), Arrays.asList("EEE", "FFF", "GGG"), 0, 4},
-				{reversedCollector, defaultListener, messages, Arrays.asList("DDD", "CCC", "BBB", "AAA"), Arrays.asList("GGG", "FFF", "EEE"), 0, 4},
+				{reversedCollector, defaultReversedListener, messages, Arrays.asList("DDD", "CCC", "BBB", "AAA"), Arrays.asList("GGG", "FFF", "EEE"), 0, 4},
 				{defaultTimedCollector, defaultTimedListener, messages, Arrays.asList("BBB", "CCC", "DDD"), Arrays.asList("EEE", "FFF", "GGG"), 2, 4}
 			};
 	}
@@ -88,7 +89,7 @@ public class ClearThCollectorSourceTest {
 	@Test(dataProvider = "two-stage-collectors-and-messages")
 	public void checkCollectorReadingOrder(CollectorMessageSource source, ClearThMessageCollector listener, 
 			String[] messages, List<String> expectedFirst, List<String> expectedSecond, int firstBegin, int firstEnd) 
-			throws IOException
+			throws IOException, IllegalArgumentException
 	{
 		putMessages(listener, messages, firstBegin, firstEnd);
 		
@@ -124,7 +125,7 @@ public class ClearThCollectorSourceTest {
 		return FileUtils.readFileToString(file, Charset.defaultCharset()).split(MESSAGES_DELIMITER);
 	}
 	
-	private void putMessages(ClearThMessageCollector listener, String[] messages, int first, int last) {
+	private void putMessages(ClearThMessageCollector listener, String[] messages, int first, int last) throws IllegalArgumentException {
 		for (int i = first; i < last; ++i) {
 			listener.onMessage(EncodedClearThMessage.newReceivedMessage(messages[i], Instant.ofEpochMilli(i)));
 		}

@@ -104,6 +104,7 @@ public class ClearThMessageCollector extends AbstractMessageListener implements 
 
 	private Set<String> filteredTypes;
 	private boolean filterForAllowedTypes = true;
+	private Instant lastMessageTime = Instant.MIN;
 
 	private final ScheduledExecutorService collectorCleaner;
 	private final double maxAgeDouble;
@@ -194,13 +195,21 @@ public class ClearThMessageCollector extends AbstractMessageListener implements 
 	}
 	
 	@Override
-	public void onMessage(EncodedClearThMessage message)
+	public void onMessage(EncodedClearThMessage message) throws IllegalArgumentException
 	{
 		String payload = message.getPayload().toString();
 		logReceivedMessage(payload);
 		long id = messageId.getAndIncrement();
 		Instant timestamp = message.getMetadata().getTimestamp();
 		
+		if (timestamp == null) {
+			throw new IllegalArgumentException("Timestamp cannot be null");
+		}
+		if (lastMessageTime.isAfter(timestamp)) {
+			throw new IllegalArgumentException("Timestamp cannot be lower than an already received message");
+		}
+		lastMessageTime = timestamp;
+
 		try
 		{
 			ClearThMessage<?> cthMessage;

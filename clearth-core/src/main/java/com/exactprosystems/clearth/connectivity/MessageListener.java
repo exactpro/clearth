@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.connectivity;
 
+import java.io.IOException;
+
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 
 /*
@@ -25,7 +27,7 @@ import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
  */
 public interface MessageListener
 {
-	void onMessage(EncodedClearThMessage message);
+	void onMessage(EncodedClearThMessage message) throws IOException, IllegalArgumentException;
 	
 	void start();
 	void dispose();
