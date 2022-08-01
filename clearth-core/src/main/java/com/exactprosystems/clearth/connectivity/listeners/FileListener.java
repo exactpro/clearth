@@ -42,6 +42,7 @@ public class FileListener extends AbstractMessageListener implements ReceiveList
 	private static Logger logger = LoggerFactory.getLogger(FileListener.class);
 	
 	private final MessageFileWriter writer;
+	private final Object monitor;
 	
 	/**
 	 * Create FileReceiveListener
@@ -55,6 +56,7 @@ public class FileListener extends AbstractMessageListener implements ReceiveList
 		
 		String fn = ClearThCore.rootRelative(fileName);
 		writer = createMessageFileWriter(fn);
+		monitor = new Object();
 		logger.debug("File '{}' opened for writing", fn);
 	}
 	
@@ -81,9 +83,12 @@ public class FileListener extends AbstractMessageListener implements ReceiveList
 	{
 		try
 		{
-			writer.writeMessage(message);
-			writer.flush();
-			logger.trace("Received message: {}", message);
+			synchronized (monitor)  //This avoids threads clash when listener is active for sent and received messages
+			{
+				writer.writeMessage(message);
+				writer.flush();
+				logger.trace("Received message: {}", message);
+			}
 		}
 		catch (IOException e)
 		{
