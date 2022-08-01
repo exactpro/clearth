@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,7 +36,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.exactprosystems.clearth.connectivity.ListenerProperties;
+import com.exactprosystems.clearth.connectivity.ListenerType;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.messages.CollectorMessageSource;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -110,7 +114,8 @@ public class ClearThCollectorSourceTest {
 	private ClearThMessageCollector createListener(String name, ICodec codec, Map<String, String> settings)
 			throws SettingsException
 	{
-		return new ClearThMessageCollector(name, "con", codec, settings, DEFAULT_MESSAGE_END_INDICATOR);
+		ListenerProperties props = new ListenerProperties(name, ListenerType.Collector.getLabel(), true, false);
+		return new ClearThMessageCollector(props, "con", codec, settings, DEFAULT_MESSAGE_END_INDICATOR);
 	}
 	
 	private String[] getMessagesFromFile(String fileName) throws IOException
@@ -121,7 +126,7 @@ public class ClearThCollectorSourceTest {
 	
 	private void putMessages(ClearThMessageCollector listener, String[] messages, int first, int last) {
 		for (int i = first; i < last; ++i) {
-			listener.onMessageReceived(messages[i], i);
+			listener.onMessage(EncodedClearThMessage.newReceivedMessage(messages[i], Instant.ofEpochMilli(i)));
 		}
 	}
 
