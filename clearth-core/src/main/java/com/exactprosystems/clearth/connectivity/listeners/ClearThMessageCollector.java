@@ -475,7 +475,7 @@ public class ClearThMessageCollector extends AbstractMessageListener implements 
 		try
 		{
 			createMessageFileReader(messageEndIndicator)
-					.processMessagesFromFile(Paths.get(fileName), m -> collectMessage(m));
+					.processMessages(Paths.get(fileName), m -> collectMessage(m));
 		}
 		catch (IOException e)
 		{

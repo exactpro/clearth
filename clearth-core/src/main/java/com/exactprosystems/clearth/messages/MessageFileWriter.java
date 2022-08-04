@@ -49,7 +49,7 @@ public class MessageFileWriter implements AutoCloseable, Flushable
 	}
 	
 	@Override
-	public void close() throws Exception
+	public void close() throws IOException
 	{
 		writer.close();
 	}
@@ -61,7 +61,7 @@ public class MessageFileWriter implements AutoCloseable, Flushable
 	}
 	
 	
-	public void writeMessage(EncodedClearThMessage message) throws IOException
+	public void write(EncodedClearThMessage message) throws IOException
 	{
 		ClearThMessageMetadata metadata = message.getMetadata();
 		if (metadata != null)

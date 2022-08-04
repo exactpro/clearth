@@ -67,7 +67,7 @@ public class MessageFileReader
 	}
 	
 	
-	public void processMessagesFromFile(Path file, Consumer<EncodedClearThMessage> messageConsumer) throws IOException
+	public void processMessages(Path file, Consumer<EncodedClearThMessage> messageConsumer) throws IOException
 	{
 		StringBuilder sb;
 		ClearThMessageMetadata metadata = null;

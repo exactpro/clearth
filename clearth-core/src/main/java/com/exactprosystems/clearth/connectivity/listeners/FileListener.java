@@ -85,7 +85,7 @@ public class FileListener extends AbstractMessageListener implements ReceiveList
 		{
 			synchronized (monitor)  //This avoids threads clash when listener is active for sent and received messages
 			{
-				writer.writeMessage(message);
+				writer.write(message);
 				writer.flush();
 				logger.trace("Received message: {}", message);
 			}

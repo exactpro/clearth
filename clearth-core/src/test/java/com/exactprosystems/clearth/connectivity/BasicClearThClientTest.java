@@ -255,7 +255,7 @@ public class BasicClearThClientTest
 	{
 		List<String> result = new ArrayList<>();
 		if (Files.isRegularFile(file))
-			reader.processMessagesFromFile(file, m -> result.add(m.getPayload().toString()));
+			reader.processMessages(file, m -> result.add(m.getPayload().toString()));
 		return result;
 	}
 }

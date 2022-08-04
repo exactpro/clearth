@@ -45,7 +45,7 @@ public class ClearThMessageMetadata
 		this.direction = copyFrom.getDirection();
 		this.timestamp = copyFrom.getTimestamp();
 		
-		Map<String, Object> copyFields = copyFrom.fieldsAsMap();
+		Map<String, Object> copyFields = copyFrom.getFields();
 		if (copyFields != null)
 			this.fields = new HashMap<>(copyFields);
 	}
@@ -105,7 +105,7 @@ public class ClearThMessageMetadata
 	}
 	
 	
-	public Map<String, Object> fieldsAsMap()
+	public Map<String, Object> getFields()
 	{
 		return fields;
 	}

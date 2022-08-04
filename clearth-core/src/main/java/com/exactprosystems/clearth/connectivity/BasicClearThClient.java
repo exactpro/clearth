@@ -126,7 +126,7 @@ public abstract class BasicClearThClient<C extends ClearThMessageConnection<C, S
 		logger.info("{}: reading unhandled messages from file '{}'", name, unhandledMessagesFile);
 		try
 		{
-			createUnhandledMessageFileReader().processMessagesFromFile(unhandledMessagesFile, m -> receivedMessageQueue.add(m));
+			createUnhandledMessageFileReader().processMessages(unhandledMessagesFile, m -> receivedMessageQueue.add(m));
 			
 			try
 			{
@@ -262,7 +262,7 @@ public abstract class BasicClearThClient<C extends ClearThMessageConnection<C, S
 				writer = createUnhandledMessageFileWriter(unhandledMessagesFile);
 				EncodedClearThMessage msg;
 				while ((msg = receivedMessageQueue.poll()) != null)
-					writer.writeMessage(msg);
+					writer.write(msg);
 			}
 			catch (IOException e)
 			{
@@ -515,7 +515,7 @@ public abstract class BasicClearThClient<C extends ClearThMessageConnection<C, S
 	{
 		ClearThMessageMetadata newMetadata = new ClearThMessageMetadata(ClearThMessageDirection.SENT, 
 				Instant.now(), 
-				metadata != null ? metadata.fieldsAsMap() : null);
+				metadata != null ? metadata.getFields() : null);
 		return new EncodedClearThMessage(payload, newMetadata);
 	}
 	
