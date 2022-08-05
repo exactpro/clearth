@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,6 +25,7 @@ import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
 import com.exactprosystems.clearth.utils.scripts.ScriptUtils;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
+import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
@@ -84,8 +85,8 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	{
 		boolean forExpectedData = settings.isForExpectedData();
 		String source = settings.getSourceData();
-		ParametrizedQuery query = settings.getSourceType().equalsIgnoreCase(DB_QUERY) ? SQLUtils.parseSQLTemplate(source)
-				: SQLUtils.parseSQLTemplate(new File(ClearThCore.rootRelative(source)));
+		ParametrizedQuery query = settings.getSourceType().equalsIgnoreCase(DB_QUERY) ? SQLUtils.parseSQLTemplate(source, getQueryPreprocessor())
+				: SQLUtils.parseSQLTemplate(new File(ClearThCore.rootRelative(source)), getQueryPreprocessor());
 		PreparedStatement statement = query.createPreparedStatement(dbConnectionSupplier.getConnection(forExpectedData),
 				settings.getSqlQueryParams());
 		
@@ -143,5 +144,10 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	protected List<String> getAvailableSourceTypes()
 	{
 		return availableSourceTypes;
+	}
+	
+	protected QueryTextProcessor getQueryPreprocessor()
+	{
+		return null;
 	}
 }

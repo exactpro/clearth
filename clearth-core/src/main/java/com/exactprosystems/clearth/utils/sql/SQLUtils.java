@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -63,23 +63,32 @@ public class SQLUtils
 	/**
 	 * Parses SQL template file to an instance of ParametrizedQuery which provides an ability to execute query with specified parameters
 	 */
-	public static ParametrizedQuery parseSQLTemplate(File templateFile) throws IOException
+	public static ParametrizedQuery parseSQLTemplate(File templateFile, QueryTextProcessor queryPreprocessor) throws IOException, SQLException
 	{
-		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateFile);
+		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateFile, queryPreprocessor);
+	}
+	
+	public static ParametrizedQuery parseSQLTemplate(File templateFile) throws IOException, SQLException
+	{
+		return parseSQLTemplate(templateFile, null);
 	}
 
 	/**
 	 * Parses SQL template text to an instance of ParametrizedQuery which provides an ability to execute query with specified parameters
 	 */
-	public static ParametrizedQuery parseSQLTemplate(String templateText, String multiParamsDelimiter)
+	public static ParametrizedQuery parseSQLTemplate(String templateText, String multiParamsDelimiter, QueryTextProcessor queryPreprocessor) throws SQLException
 	{
-		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateText, multiParamsDelimiter);
+		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateText, multiParamsDelimiter, queryPreprocessor);
 	}
-
 	
-	public static ParametrizedQuery parseSQLTemplate(String templateText)
+	public static ParametrizedQuery parseSQLTemplate(String templateText, QueryTextProcessor queryPreprocessor) throws SQLException
 	{
-		return new SQLTemplateParser().parseParametrizedQueryTemplate(templateText, ",");
+		return parseSQLTemplate(templateText, SQLTemplateParser.MULTI_PARAMS_DELIMITER, queryPreprocessor);
+	}
+	
+	public static ParametrizedQuery parseSQLTemplate(String templateText) throws SQLException
+	{
+		return parseSQLTemplate(templateText, null);
 	}
 
 	/**

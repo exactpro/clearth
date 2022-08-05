@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,6 +30,7 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
+import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.*;
 import com.exactprosystems.clearth.utils.tabledata.typing.*;
@@ -102,9 +103,9 @@ public abstract class ExportDataSet extends Action
 		/*Nothing to init by default*/
 	}
 
-	protected String prepareQuery(String query)
+	protected QueryTextProcessor getQueryPreprocessor()
 	{
-		return query;
+		return null;
 	}
 
 	protected BasicTableDataReader<TypedTableHeaderItem, Object, TypedTableData> createDbDataReader(PreparedStatement statement, 
@@ -355,13 +356,10 @@ public abstract class ExportDataSet extends Action
 			throw new ResultException(format("Error while loading query from file '%s'", source), e);
 		}
 
-		query = prepareQuery(query);
-
-		ParametrizedQuery paramQuery = SQLUtils.parseSQLTemplate(query, multiParamsDelimiter);
 		PreparedStatement statement;
 		try
 		{
-			//noinspection resource
+			ParametrizedQuery paramQuery = SQLUtils.parseSQLTemplate(query, multiParamsDelimiter, getQueryPreprocessor());
 			statement = paramQuery.createPreparedStatement(srcConnection, inputParams);
 		}
 		catch (SQLException e)

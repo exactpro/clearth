@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ import static org.apache.commons.lang.StringUtils.contains;
 
 public class SQLTemplateParser
 {
+	public static final String MULTI_PARAMS_DELIMITER = ",";
 	private static final String END_OF_LINE_REGEX = "(\r\n|\r|\n|\u0085|\u2028|\u2029)";
 	private static final Pattern TEMPLATE_PARAM_PATTERN = Pattern.compile("'?(?<![\\\\])[#$@][\\w]+'?");
 	private static final String MULTI_PARAM_BEGINNER = "@";
@@ -45,18 +47,21 @@ public class SQLTemplateParser
 	private static final String STRING_LITERAL_REGEX = "'[\\s\\S]*?[^\\\\]'|\"[\\s\\S]*?[^\\\\]\"";
 	private static final Pattern SQL_COMMENTS_AND_LITERALS_REGEX = Pattern.compile(String.format("(%s)|(%s)|(%s)",
 			MULTI_LINE_REGEX, SINGLE_LINE_REGEX, STRING_LITERAL_REGEX));
-
-	public ParametrizedQuery parseParametrizedQueryTemplate(File templateFile) throws IOException
+	
+	public ParametrizedQuery parseParametrizedQueryTemplate(File templateFile, QueryTextProcessor queryPreprocessor) throws IOException, SQLException
 	{
 		String templateText = FileUtils.readFileToString(templateFile, Charset.defaultCharset());
 		if (templateText.isEmpty())
 			throw new IOException(String.format("The file '%s' is empty", templateFile));
-		return parseParametrizedQueryTemplate(templateText);
+		return parseParametrizedQueryTemplate(templateText, MULTI_PARAMS_DELIMITER, queryPreprocessor);
 	}
 
-	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText, String multiParamsDelimiter)
+	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText, String multiParamsDelimiter, QueryTextProcessor queryPreprocessor) throws SQLException
 	{
 		templateText = removeComments(templateText);
+		if (queryPreprocessor != null)
+			templateText = queryPreprocessor.process(templateText);
+		
 		Matcher paramMatcher = TEMPLATE_PARAM_PATTERN.matcher(templateText);
 		List<String> queryParams = new ArrayList<>();
 		HashSet<String> multiParams = new HashSet<>();
@@ -80,9 +85,9 @@ public class SQLTemplateParser
 		return new ParametrizedQuery(queryBuilder.toString(), queryParams, multiParams, multiParamsDelimiter);
 	}
 
-	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText)
+	public ParametrizedQuery parseParametrizedQueryTemplate(String templateText) throws SQLException
 	{
-		return parseParametrizedQueryTemplate(templateText, ",");
+		return parseParametrizedQueryTemplate(templateText, MULTI_PARAMS_DELIMITER, null);
 	}
 
 	public static void replaceAll(StringBuffer builder, String from, String to)

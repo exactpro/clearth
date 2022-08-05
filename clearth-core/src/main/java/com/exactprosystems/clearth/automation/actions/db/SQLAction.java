@@ -37,6 +37,7 @@ import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
+import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.sql.conversion.ConversionSettings;
 import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMapping;
@@ -152,7 +153,17 @@ public abstract class SQLAction extends Action implements Preparable
 				globalContext.setLoadedContext(queryFileName, query);
 			}
 		}
+		
+		QueryTextProcessor queryPreprocessor = getQueryPreprocessor();
+		if (queryPreprocessor != null)
+			query = queryPreprocessor.process(query);
+		
 		return query;
+	}
+	
+	protected QueryTextProcessor getQueryPreprocessor()
+	{
+		return null;
 	}
 
 	protected Result processQueryResult(ResultSet resultSet) throws SQLException

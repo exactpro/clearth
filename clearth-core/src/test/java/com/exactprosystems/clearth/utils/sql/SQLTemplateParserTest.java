@@ -25,6 +25,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.testng.Assert.*;
 
+import java.sql.SQLException;
+
 public class SQLTemplateParserTest
 {
 	@DataProvider
@@ -268,7 +270,7 @@ public class SQLTemplateParserTest
 	}
 
 	@Test(dataProvider = "createParameters")
-	public void testParseParametrizedQueryTemplate(String queryTemplate, ParametrizedQuery expectedQuery)
+	public void testParseParametrizedQueryTemplate(String queryTemplate, ParametrizedQuery expectedQuery) throws SQLException
 	{
 		SQLTemplateParser parser = new SQLTemplateParser();
 		ParametrizedQuery actualQuery = parser.parseParametrizedQueryTemplate(queryTemplate);
