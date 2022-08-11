@@ -173,7 +173,8 @@ public abstract class SQLAction extends Action implements Preparable
 
 	protected Result processQueryResult(ResultSet resultSet, int limit) throws SQLException
 	{
-		if (!resultSet.next() && !generateIfEmpty)
+		boolean hasNext = resultSet.next();
+		if (!hasNext && !generateIfEmpty)
 			return DefaultResult.passed("Query returned empty table data result. Nothing to process");
 
 		TableResult result = new TableResult("Table rows from result of the query", null, false);
@@ -181,7 +182,7 @@ public abstract class SQLAction extends Action implements Preparable
 		try(ResultSetProcessor processor = getResultSetProcessor(result))
 		{
 			processor.processHeader(resultSet, getVerificationMapping());
-			int recordsCount = processor.processRecords(resultSet, limit);
+			int recordsCount = hasNext ? processor.processRecords(resultSet, limit) : 0;
 
 			Map<String, String> outputParams = processor.getOutputParams();
 			addOutputParams(outputParams);
