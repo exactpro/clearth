@@ -196,7 +196,7 @@ public class ExecuteScript extends Action {
 		ScriptResult res;
 		try
 		{
-			res = ScriptUtils.executeScript(command, additionalCLineParams, workingDir, envVars);
+			res = ScriptUtils.executeScript(command, additionalCLineParams, null, workingDir, envVars);
 		}
 		catch (ExecuteException e)
 		{

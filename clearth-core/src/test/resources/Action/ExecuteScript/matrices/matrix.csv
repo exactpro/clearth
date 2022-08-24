@@ -1,0 +1,7 @@
+#ID,#Globalstep,#Action,#ScriptText,#ExecutableName,#SuccessResultCodes
+id1,Step1,ExecuteScript,"exit 0",bash,"0,1"
+id2,Step1,ExecuteScript,"exit 1",bash,"0,1"
+
+#ID,#GlobalStep,#Action,#ScriptName,#SuccessResultCodes
+id3,Step1,ExecuteScript,clearth-core/src/test/resources/Action/ExecuteScript/testData/exit0.sh,"0,1"
+id4,Step1,ExecuteScript,clearth-core/src/test/resources/Action/ExecuteScript/testData/exit1.sh,"0,1"
