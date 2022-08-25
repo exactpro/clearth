@@ -74,6 +74,9 @@ public abstract class ResultSetProcessor implements AutoCloseable
 
 	public int processRecords(ResultSet resultSet, int limit) throws SQLException, IOException
 	{
+		if (resultSet.getRow() < 1)
+			return 0;
+
 		int rowsCount = 0;
 		do
 		{

@@ -182,7 +182,7 @@ public abstract class SQLAction extends Action implements Preparable
 		try(ResultSetProcessor processor = getResultSetProcessor(result))
 		{
 			processor.processHeader(resultSet, getVerificationMapping());
-			int recordsCount = hasNext ? processor.processRecords(resultSet, limit) : 0;
+			int recordsCount = processor.processRecords(resultSet, limit);
 
 			Map<String, String> outputParams = processor.getOutputParams();
 			addOutputParams(outputParams);
