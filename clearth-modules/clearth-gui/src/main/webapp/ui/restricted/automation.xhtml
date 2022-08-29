@@ -30,7 +30,7 @@
 			
 			function getNumberOfFilesToUpload(dialogName)
 			{
-				var filesLeft = $("#" + dialogName + ' .ui-fileupload-files>div').length;
+				var filesLeft = $("#" + dialogName + ' .ui-fileupload-files>div>.ui-fileupload-row').length;
 				return filesLeft;
 			}
 			
