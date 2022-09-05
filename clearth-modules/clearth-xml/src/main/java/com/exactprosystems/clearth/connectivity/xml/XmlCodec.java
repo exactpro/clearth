@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -67,7 +67,8 @@ public class XmlCodec implements ICodec
 	protected final XmlDictionary dictionary;
 	protected final boolean trimValues;
 	protected final MessageValidator messageValidator;
-
+	private final Map<String, String> codecParameters;
+	
 	protected static final ThreadLocal<DocumentBuilder> documentBuilderHolder = ThreadLocal.withInitial(() ->
 	{
 		try
@@ -81,26 +82,38 @@ public class XmlCodec implements ICodec
 			return null;
 		}
 	});
-
-
+	
+	
+	@Deprecated
 	public XmlCodec(XmlDictionary dictionary)
 	{
-		this(dictionary, true);
+		this(dictionary, true, null);
 	}
-
-	public XmlCodec(XmlDictionary dictionary, boolean trimValues)
+	
+	public XmlCodec(XmlDictionary dictionary, Map<String, String> codecParameters)
+	{
+		this(dictionary, true, codecParameters);
+	}
+	
+	public XmlCodec(XmlDictionary dictionary, boolean trimValues, Map<String, String> codecParameters)
 	{
 		this.dictionary = dictionary;
 		this.trimValues = trimValues;
 		this.messageValidator = createMessageValidator();
+		this.codecParameters = codecParameters;
 	}
-
+	
 	public boolean isEmptyValue(String value)
 	{
 		return ComparisonUtils.IS_EMPTY.equals(value) || ClearThXmlMessage.EMPTY_VALUE.equals(value);
 	}
-
-
+	
+	public Map<String, String> getCodecParameters()
+	{
+		return codecParameters;
+	}
+	
+	
 	protected MessageValidator createMessageValidator()
 	{
 		return new MessageValidator();

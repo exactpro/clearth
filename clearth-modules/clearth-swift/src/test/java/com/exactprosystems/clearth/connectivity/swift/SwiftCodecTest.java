@@ -61,8 +61,8 @@ public class SwiftCodecTest
 	public void init() throws Exception
 	{
 		LegacyValueGenerator valueGenerator = new LegacyValueGenerator(GENERATOR_FILE, "default");
-		codec = new SwiftCodec(new SwiftDictionary(resourceToAbsoluteFilePath(SWIFT_DICTIONARY_PATH)), 
-				valueGenerator, CLOCK);
+		codec = new SwiftCodec(new SwiftDictionary(resourceToAbsoluteFilePath(SWIFT_DICTIONARY_PATH), null), 
+				valueGenerator, CLOCK, null);
 	}
 
 	@DataProvider(name = "encodeMessageTest")

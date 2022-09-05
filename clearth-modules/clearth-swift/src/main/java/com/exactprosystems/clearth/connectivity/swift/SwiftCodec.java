@@ -73,26 +73,46 @@ public class SwiftCodec implements ICodec
 	protected ValueGenerator generator;
 	protected final MessageValidator messageValidator;
 	private final Clock clock;
+	private final Map<String, String> codecParameters;
 	
 	protected static final SwiftMetaData emptySwiftMetaData = new SwiftMetaData(Collections.emptyMap());
-
+	
+	@Deprecated
 	public SwiftCodec(SwiftDictionary swiftDictionary)
 	{
-		this(swiftDictionary, ClearThCore.getInstance().getCommonGenerator());
+		this(swiftDictionary, (Map<String, String>)null);
 	}
 	
+	public SwiftCodec(SwiftDictionary swiftDictionary, Map<String, String> codecParameters)
+	{
+		this(swiftDictionary, ClearThCore.getInstance().getCommonGenerator(), codecParameters);
+	}
+	
+	@Deprecated
 	public SwiftCodec(SwiftDictionary swiftDictionary, ValueGenerator generator)
 	{
-		this(swiftDictionary, generator, Clock.systemDefaultZone());
+		this(swiftDictionary, generator, Clock.systemDefaultZone(), null);
+	}
+	
+	public SwiftCodec(SwiftDictionary swiftDictionary, ValueGenerator generator, Map<String, String> codecParameters)
+	{
+		this(swiftDictionary, generator, Clock.systemDefaultZone(), codecParameters);
 	}
 
-	public SwiftCodec(SwiftDictionary swiftDictionary, ValueGenerator generator, Clock clock)
+	public SwiftCodec(SwiftDictionary swiftDictionary, ValueGenerator generator, Clock clock, Map<String, String> codecParameters)
 	{
 		this.dictionary = swiftDictionary;
 		this.generator = generator;
 		this.messageValidator = createMessageValidator();
 		this.clock = clock;
+		this.codecParameters = codecParameters;
 	}
+	
+	public Map<String, String> getCodecParameters()
+	{
+		return codecParameters;
+	}
+	
 	
 	protected boolean ignoreEmptyValues()
 	{

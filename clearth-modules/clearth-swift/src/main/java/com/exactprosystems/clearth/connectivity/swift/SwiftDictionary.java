@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,19 +20,33 @@ package com.exactprosystems.clearth.connectivity.swift;
 
 import java.io.Reader;
 import java.util.List;
+import java.util.Map;
 
 import com.exactprosystems.clearth.connectivity.Dictionary;
+import com.exactprosystems.clearth.utils.DictionaryLoadException;
 
 public class SwiftDictionary extends Dictionary<SwiftMessageDesc, SwiftDictionaryDesc>
 {
+	@Deprecated
 	public SwiftDictionary(String fileName) throws Exception
 	{
-		super(fileName);
+		this(fileName, null);
 	}
 	
+	@Deprecated
 	public SwiftDictionary(Reader reader) throws Exception
 	{
-		super(reader);
+		this(reader, null);
+	}
+	
+	public SwiftDictionary(String fileName, Map<String, String> parameters) throws DictionaryLoadException
+	{
+		super(fileName, parameters);
+	}
+	
+	public SwiftDictionary(Reader reader, Map<String, String> parameters) throws DictionaryLoadException
+	{
+		super(reader, parameters);
 	}
 	
 	@Override

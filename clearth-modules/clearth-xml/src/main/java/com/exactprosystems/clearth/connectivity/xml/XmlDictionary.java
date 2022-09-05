@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,14 +39,26 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 public class XmlDictionary extends Dictionary<XmlMessageDesc, XmlDictionaryDesc>
 {
+	@Deprecated
 	public XmlDictionary(String fileName) throws DictionaryLoadException
 	{
-		super(fileName);
+		this(fileName, null);
 	}
 	
+	@Deprecated
 	public XmlDictionary(Reader reader) throws DictionaryLoadException
 	{
-		super(reader);
+		this(reader, null);
+	}
+	
+	public XmlDictionary(String fileName, Map<String, String> parameters) throws DictionaryLoadException
+	{
+		super(fileName, parameters);
+	}
+	
+	public XmlDictionary(Reader reader, Map<String, String> parameters) throws DictionaryLoadException
+	{
+		super(reader, parameters);
 	}
 	
 	@Override
