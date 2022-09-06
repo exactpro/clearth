@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -1207,7 +1207,7 @@ public abstract class Scheduler
 		
 		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
 		String repDir = getReportsDir()+"current_"+df.format(new Date())+"/";
-		ReportsInfo repInfo = makeCurrentReports(repDir);
+		ReportsInfo repInfo = makeCurrentReports(repDir, true);
 		ExecutorState es = createExecutorState(executor, stepFactory, repInfo);
 		es.save(schedulerData.getStateDir());
 		copyActionReport(schedulerData.getRepDir());
@@ -1477,17 +1477,17 @@ public abstract class Scheduler
 		}
 	}
 	
-	synchronized public ReportsInfo makeCurrentReports(String pathToStoreReports)
+	synchronized public ReportsInfo makeCurrentReports(String pathToStoreReports, boolean reuseReports)
 	{
 		if (!sequentialRun)
 		{
-			if (executor.getLastReportsInfo()==null)
+			if (!reuseReports || executor.getLastReportsInfo() == null)
 				executor.makeCurrentReports(pathToStoreReports);
 			return executor.getLastReportsInfo();
 		}
 		else
 		{
-			if (seqExec.getLastReportInfo()==null)
+			if (!reuseReports || seqExec.getLastReportInfo() == null)
 				seqExec.makeCurrentReport(pathToStoreReports);
 			return seqExec.getLastReportInfo();
 		}

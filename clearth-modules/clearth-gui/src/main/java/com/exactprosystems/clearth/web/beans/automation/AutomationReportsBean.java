@@ -169,7 +169,7 @@ public class AutomationReportsBean extends ClearThBean
 	public void makeReports()
 	{
 		selectedReportsInfo = selectedScheduler().makeCurrentReports(selectedScheduler().getReportsDir()
-				+ "current_" + df.format(new Date()));
+				+ "current_" + df.format(new Date()), true);
 	}
 
 	public void clearHistory(boolean cleanToday)

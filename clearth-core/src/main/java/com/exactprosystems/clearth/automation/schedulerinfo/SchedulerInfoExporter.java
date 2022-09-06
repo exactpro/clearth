@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -74,27 +74,36 @@ public class SchedulerInfoExporter
 		storage = collectOtherFiles(storage, scheduler);
 		return MultiMapUtils.unmodifiableMultiValuedMap(storage);
 	}
-
+	
 	private ReportsInfo getReportsInfo(Scheduler scheduler)
 	{
 		if (scheduler.isRunning())
-		{
-			return scheduler.makeCurrentReports(scheduler.getReportsDir() +
-					"current_" + DATETIME_FORMAT.format(new Date()));
-		} else
-		{
-			List<XmlSchedulerLaunchInfo> launches = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
-			XmlSchedulerLaunchInfo lastLaunch = launches.isEmpty() ? null : launches.get(0);
-			ReportsInfo reportsInfo = new ReportsInfo();
-			if (lastLaunch != null)
-			{
-				reportsInfo.setMatrices(lastLaunch.getMatricesInfo());
-				reportsInfo.setPath(ClearThCore.reportsPath() + lastLaunch.getReportsPath());
-			}
-			return reportsInfo;
-		}
+			return getCurrentReportsInfo(scheduler);
+		else
+			return getLastReportsInfo(scheduler);
 	}
-
+	
+	
+	protected ReportsInfo getCurrentReportsInfo(Scheduler scheduler)
+	{
+		return scheduler.makeCurrentReports(scheduler.getReportsDir() +
+				"current_" + DATETIME_FORMAT.format(new Date()), false);
+	}
+	
+	protected ReportsInfo getLastReportsInfo(Scheduler scheduler)
+	{
+		List<XmlSchedulerLaunchInfo> launches = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
+		XmlSchedulerLaunchInfo lastLaunch = launches.isEmpty() ? null : launches.get(0);
+		ReportsInfo reportsInfo = new ReportsInfo();
+		if (lastLaunch != null)
+		{
+			reportsInfo.setMatrices(lastLaunch.getMatricesInfo());
+			reportsInfo.setPath(ClearThCore.reportsPath() + lastLaunch.getReportsPath());
+		}
+		return reportsInfo;
+	}
+	
+	
 	protected SchedulerInfoFile createSummaryFile(List<StepData> stepData, List<MatrixData> matricesData,
 	                                              ReportsInfo reportsInfo) throws IOException
 	{
