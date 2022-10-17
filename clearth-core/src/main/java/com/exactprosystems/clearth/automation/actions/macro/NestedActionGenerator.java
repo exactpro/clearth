@@ -187,7 +187,7 @@ public class NestedActionGenerator extends ActionGenerator
 		return NO_ERROR;
 	}
 	
-	@Override
+
 	protected boolean checkAction(Action action, int headerLineNumber, int lineNumber)
 	{
 		return true;

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 
 public abstract class ActionGenerator
 {
@@ -47,6 +48,13 @@ public abstract class ActionGenerator
 			COLUMN_INVERT = "invert", COLUMN_SUSPEND_FAILED = "suspendiffailed",
 			COLUMN_ASYNC = "async", COLUMN_ASYNCGROUP = "asyncgroup", COLUMN_WAITASYNCEND = "waitasyncend",
 			COLUMN_ID_IN_TEMPLATE = "idintemplate", COLUMN_WAITASYNCENDSTEP = "waitasyncendstep";
+
+	private static final String ACTION_ID_EMPTY_MESSAGE = "Action from line %d doesn't have '%s' " +
+			"field, it can't be referenced from other actions",
+	DUPLICATE_PARAMS_MESSAGE = "Action '%s' (line %d) contains duplicate parameters: %s.",
+	DUPLICATE_ACTION_ID_MESSAGE = "Id of action '%s' (line %d) duplicates the existing Id",
+	STEP_NOT_EXIST_MESSAGE = "Action '%s' (line %d) is included in nonexistent step '%s', it won't be executed",
+	UNKNOWN_ACTION_NAME = "Action '%s' (line %d) has unknown name '%s', it won't be executed";
 
 	// initAction results
 	public static final int NO_ERROR = 0, CHECKING_ERROR = 1, INIT_ERROR = 2;
@@ -75,7 +83,6 @@ public abstract class ActionGenerator
 
 	protected abstract boolean customSetting(String name, String value, ActionSettings settings, int headerLineNumber, int lineNumber);
 	protected abstract int initAction(Action action, ActionSettings settings, int headerLineNumber, int lineNumber);
-	protected abstract boolean checkAction(Action action, int headerLineNumber, int lineNumber);
 
 	/**
 	 * @param onlyCheck if true action won't be generated, only validation will be performed
@@ -327,60 +334,85 @@ public abstract class ActionGenerator
 		return allSuccessful;
 	}
 
-	private boolean checkActionSettings(ActionSettings actionSettings,
-										Matrix matrix,
-										int lineNumber,
-										Set<String> usedIDs)
+	protected boolean checkActionSettings(ActionSettings actionSettings, Matrix matrix, int lineNumber,
+	                                    Set<String> usedIDs)
 	{
-		boolean allSuccessful = true;
-		Logger logger = getLogger();
+		checkDuplicateParameters(actionSettings, matrix, lineNumber);
 
-		if (actionSettings.getDuplicateParams()!=null)
-		{
-			String message = String.format("Action '%s' (line %d) contains duplicate parameters: %s.",
-					actionSettings.getActionId(), lineNumber, StringUtils.join(actionSettings.getDuplicateParams(), ", "));
-			logger.warn(message);
-			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.DUPLICATE_PARAMS, message);
-		}
+		boolean idSuccessful = checkActionIdExists(actionSettings, matrix, lineNumber)
+						&& checkDuplicateActionId(actionSettings, matrix, lineNumber, usedIDs);
 
-		if (actionSettings.getActionId() == null)
-		{
-			allSuccessful = false;
-			String message = "Action from line "+lineNumber+" doesn't have '"+COLUMN_ID+"' field, it can't be referenced from other actions";
-			logger.warn(message);
-			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.MISSING_ID, message);
+		boolean stepExists = checkStepExists(actionSettings, matrix, lineNumber);
+		boolean actionNameExists = checkActionName(actionSettings, matrix, lineNumber);
+		boolean additionalSettingsTrue = checkAdditionalActionSettings(actionSettings, matrix, lineNumber);
 
-			actionSettings.setActionId("");
-		}
-		else
-		{
-			if (usedIDs.contains(actionSettings.getActionId()))
-			{
-				allSuccessful = false;
-				String message = "Id of action '" + actionSettings.getActionId() +"' (line "+lineNumber+") duplicates the existing Id";
-				logger.warn(message);
-				matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.DUPLICATE_ID, message);
-			}
-			else
-				usedIDs.add(actionSettings.getActionId());
-		}
+		return idSuccessful && stepExists && actionNameExists && additionalSettingsTrue;
+	}
 
-		if (actionSettings.getStep() == null) {
-			allSuccessful = false;
-			String message = "Action '" + actionSettings.getActionId() + "' (line " + lineNumber + ") is included in " + "nonexistent step '" + actionSettings.getStepName() + "', it won't be executed";
-			logger.warn(message);
-			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.NONEXISTENT_GLOBALSTEP, message);
-		}
+	protected void checkDuplicateParameters(ActionSettings actionSettings, Matrix matrix, int lineNumber)
+	{
+		checkActionCondition(actionSettings.getDuplicateParams() == null, matrix,
+				ActionGeneratorMessageKind.DUPLICATE_PARAMS,
+				createFailedMessage(DUPLICATE_PARAMS_MESSAGE, actionSettings.getActionId(), lineNumber,
+						StringUtils.join(actionSettings.getDuplicateParams(), ", ")));
+	}
 
+	protected boolean checkActionIdExists(ActionSettings actionSettings, Matrix matrix, int lineNumber)
+	{
+		return checkActionCondition(actionSettings.getActionId() != null, matrix,
+				ActionGeneratorMessageKind.MISSING_ID,
+				createFailedMessage(ACTION_ID_EMPTY_MESSAGE, lineNumber, COLUMN_ID));
+	}
+
+	protected boolean checkDuplicateActionId(ActionSettings actionSettings, Matrix matrix, int lineNumber,
+	                                         Set<String> usedIDs)
+	{
+		String actionId = actionSettings.getActionId();
+		boolean isUnique =  checkActionCondition(!usedIDs.contains(actionId), matrix,
+				ActionGeneratorMessageKind.DUPLICATE_ID,
+				createFailedMessage(DUPLICATE_ACTION_ID_MESSAGE, actionId, lineNumber));
+		if (isUnique)
+			usedIDs.add(actionSettings.getActionId());
+		return isUnique;
+	}
+
+	protected boolean checkStepExists(ActionSettings actionSettings, Matrix matrix, int lineNumber)
+	{
+		return checkActionCondition(actionSettings.getStep() != null, matrix,
+				ActionGeneratorMessageKind.NONEXISTENT_GLOBALSTEP,
+				createFailedMessage(STEP_NOT_EXIST_MESSAGE, actionSettings.getActionId(), lineNumber,
+					actionSettings.getStepName()));
+	}
+
+	protected boolean checkActionName(ActionSettings actionSettings, Matrix matrix, int lineNumber)
+	{
 		String actionName = actionSettings.getActionName();
-		if (!ClearThCore.getInstance().getActionFactory().isDefinedAction(actionName)) {
-			allSuccessful = false;
-			String message = "Action '"+actionSettings.getActionId()+"' (line "+lineNumber+") has unknown name '"+ actionName +"', it won't be executed";
-			logger.warn(message);
-			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, ActionGeneratorMessageKind.UNKNOWN_ACTION_TYPE, message);
-		}
+		return checkActionCondition(ClearThCore.getInstance().getActionFactory().isDefinedAction(actionName),
+				matrix, ActionGeneratorMessageKind.UNKNOWN_ACTION_TYPE,
+				createFailedMessage(UNKNOWN_ACTION_NAME, actionSettings.getActionId(), lineNumber, actionName));
+	}
 
-		return allSuccessful;
+	protected boolean checkAdditionalActionSettings(ActionSettings actionSettings, Matrix matrix, int lineNumber)
+	{
+		return true;
+	}
+
+	protected boolean checkActionCondition(boolean conditionTrue, Matrix matrix, ActionGeneratorMessageKind msgKind,
+	                                       Supplier<String> createFailedMessage)
+	{
+		if (!conditionTrue)
+		{
+			String message = createFailedMessage.get();
+			getLogger().warn(message);
+			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, msgKind, message);
+			return false;
+		}
+		return true;
+	}
+
+	protected Supplier<String> createFailedMessage(String msgPattern, Object ... args)
+	{
+		return () ->  String.format(msgPattern, args);
 	}
 
 	private boolean createActionInstance(ActionSettings actionSettings, Matrix matrix, int lineNumber, int headerLineNumber)
