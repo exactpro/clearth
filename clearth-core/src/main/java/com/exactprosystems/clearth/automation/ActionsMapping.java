@@ -51,7 +51,7 @@ public class ActionsMapping
 
 	public ActionsMapping(boolean actionNameToLowerCase) throws SettingsException
 	{
-		this(Paths.get(ClearThCore.configFiles().getActionsMappingFileName()), actionNameToLowerCase);
+		this(Paths.get(ClearThCore.rootRelative(ClearThCore.configFiles().getActionsMappingFileName())), actionNameToLowerCase);
 	}
 
 	public Path getConfigFilePath()

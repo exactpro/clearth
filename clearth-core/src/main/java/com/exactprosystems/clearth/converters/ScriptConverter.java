@@ -18,20 +18,15 @@
 
 package com.exactprosystems.clearth.converters;
 
-import java.util.List;
-import java.util.Map;
-
-import com.exactprosystems.clearth.automation.ActionsMapping;
+import com.exactprosystems.clearth.automation.ActionGenerator;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
-import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.xmldata.XmlScriptConverterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.automation.ActionGenerator;
-import com.exactprosystems.clearth.automation.ActionMetaData;
-import com.exactprosystems.clearth.automation.DefaultActionGenerator;
-import com.exactprosystems.clearth.xmldata.XmlScriptConverterConfig;
+import java.util.List;
+import java.util.Map;
 
 public abstract class ScriptConverter extends Converter
 {
@@ -48,9 +43,5 @@ public abstract class ScriptConverter extends Converter
 			if (header[i].equalsIgnoreCase(ActionGenerator.HEADER_DELIMITER + ActionGenerator.COLUMN_ACTION))
 				return values[i];
 		return null;
-	}
-	
-	protected Map<String, ActionMetaData> getActions() throws SettingsException {
-		return new ActionsMapping(false).getDescriptions();
 	}
 }

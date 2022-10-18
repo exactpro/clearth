@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.automation.ActionMetaData;
-import com.exactprosystems.clearth.automation.DefaultActionGenerator;
 import com.exactprosystems.clearth.automation.actions.MessageAction;
 
 public abstract class Converter
@@ -38,7 +37,7 @@ public abstract class Converter
 	private static final Logger logger = LoggerFactory.getLogger(MessageConverter.class);
 	
 	protected List<ActionData> loadActions() throws SettingsException {
-		List<ActionData> actionsList = new LinkedList<ActionData>();
+		List<ActionData> actionsList = new LinkedList<>();
 		
 		for (Entry<String, ActionMetaData> action : getActions().entrySet())
 		{
