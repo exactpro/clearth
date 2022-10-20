@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.exactprosystems.clearth.utils.ObjectToStringTransformer;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 
@@ -53,16 +54,35 @@ public class DbDataReader extends AbstractDbDataReader<StringTableData>
 	 */
 	public static StringTableData read(PreparedStatement preparedStatement) throws SQLException, IOException
 	{
-		DbDataReader reader = null;
+		DbDataReader reader = new DbDataReader(preparedStatement);
+		return readAll(reader);
+	}
+
+	/**
+	 * Executes SQL query and reads its result to the table data object.
+	 * @param preparedStatement compiled and ready to execute SQL statement object.
+	 * @param transformer object for custom 'object-to-string' parsing.
+	 * @return TableData object with header that corresponds to metadata of resultSet and rows that contain all data from query result.
+	 * @throws SQLException if any error occurred while executing statement.
+	 * @throws IOException if something went wrong while reading gotten data.
+	 */
+	public static StringTableData read(PreparedStatement preparedStatement, ObjectToStringTransformer transformer)
+			throws SQLException, IOException
+	{
+		DbDataReader reader = new DbDataReader(preparedStatement);
+		reader.setObjectToStringTransformer(transformer);
+		return readAll(reader);
+	}
+
+	private static StringTableData readAll(DbDataReader reader) throws IOException
+	{
 		try
 		{
-			reader = new DbDataReader(preparedStatement);
 			return reader.readAllData();
 		}
 		finally
 		{
-			if (reader != null)
-				reader.close();
+			reader.close();
 		}
 	}
 }

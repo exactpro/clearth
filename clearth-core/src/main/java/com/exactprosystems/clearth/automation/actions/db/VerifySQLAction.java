@@ -95,7 +95,7 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 
 			return dbValues;
 		}
-		catch (SQLException e)
+		catch (SQLException | IOException e)
 		{
 			throw ResultException.failed(e);
 		}
@@ -294,7 +294,7 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 			: comparisonUtils().compareValuesIgnoreCase(paramConverted, dbField);
 	}
 
-	protected void saveFieldToMatrix(ResultSet rs, List<Pair<String, String>> params) throws SQLException
+	protected void saveFieldToMatrix(ResultSet rs, List<Pair<String, String>> params) throws SQLException, IOException
 	{
 		if (params == null)
 			return;
@@ -394,7 +394,7 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 	}
 
 	@Override
-	protected Result processResultSet(ResultSet rs, String[] keys) throws SQLException,ResultException
+	protected Result processResultSet(ResultSet rs, String[] keys) throws SQLException, ResultException, IOException
 	{
 
 		if (!noData)

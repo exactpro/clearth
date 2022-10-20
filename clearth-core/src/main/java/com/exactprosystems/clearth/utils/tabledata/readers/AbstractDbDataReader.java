@@ -142,8 +142,9 @@ public abstract class AbstractDbDataReader<C extends BasicTableData<String, Stri
 	 * @param tableHeader header of created table data instance.
 	 * @return value from current ResultSet row by specified table header, specially transformed if needed.
 	 * @throws SQLException if some SQL error occurred.
+	 * @throws IOException if some IO error occurred.
 	 */
-	protected String getValueFromResultSet(String tableHeader, ResultSet resultSet) throws SQLException
+	protected String getValueFromResultSet(String tableHeader, ResultSet resultSet) throws SQLException, IOException
 	{
 		String value = objectTransformer != null ?
 				SQLUtils.getDbValue(resultSet, tableHeader, objectTransformer) : SQLUtils.getDbValue(resultSet, tableHeader);

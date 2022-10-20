@@ -100,7 +100,7 @@ public abstract class ResultSetProcessor implements AutoCloseable
 		return rowsCount;
 	}
 
-	protected String getDbValue(ResultSet resultSet, String column) throws SQLException
+	protected String getDbValue(ResultSet resultSet, String column) throws SQLException, IOException
 	{
 		String value = objectToStringTransformer != null ?
 				SQLUtils.getDbValue(resultSet, column, objectToStringTransformer) : SQLUtils.getDbValue(resultSet, column);

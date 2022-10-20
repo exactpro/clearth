@@ -20,19 +20,34 @@ package com.exactprosystems.clearth.utils.sql;
 
 import com.exactprosystems.clearth.utils.ObjectToStringTransformer;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.util.stream.Collectors;
+
 public class DefaultSqlObjectToStringTransformer implements ObjectToStringTransformer
 {
 	@Override
-	public String transform(Object value)
+	public String transform(Object value) throws SQLException, IOException
 	{
 		if (value == null)
 			return null;
+
+		if(value instanceof Clob)
+		{
+			try (BufferedReader reader = new BufferedReader(((Clob) value).getCharacterStream()))
+			{
+				return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+			}
+		}
+
 		if (value instanceof Number)
 			return SQLUtils.getStringFromNumber((Number)value);
 		return extendedTransform(value);
 	}
 
-	protected String extendedTransform(Object value)
+	protected String extendedTransform(Object value) throws SQLException, IOException
 	{
 		return value.toString();
 	}

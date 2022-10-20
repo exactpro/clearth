@@ -18,7 +18,10 @@
 
 package com.exactprosystems.clearth.utils;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 public interface ObjectToStringTransformer
 {
-	public String transform (Object value);
+	String transform (Object value) throws SQLException, IOException;
 }

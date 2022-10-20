@@ -345,13 +345,13 @@ public class SQLUtils
 	}
 	
 	public static String getDbValue(ResultSet rs, String rsColumnName, ObjectToStringTransformer objectTransformer)
-			throws SQLException
+			throws SQLException, IOException
 	{
 		Object value = rs.getObject(rsColumnName);
 		return objectTransformer.transform(value);
 	}
 	
-	public static String getDbValue(ResultSet rs, String rsColumnName) throws SQLException
+	public static String getDbValue(ResultSet rs, String rsColumnName) throws SQLException, IOException
 	{
 		return getDbValue(rs, rsColumnName, OBJECT_TRANSFORMER);
 	}
@@ -580,12 +580,13 @@ public class SQLUtils
 	 * @param mapping can be null
 	 * @param transformer can be null
 	 * @return
-	 * @throws SQLException
+	 * @throws SQLException if there is some error occurred while getting columns' names
+	 * @throws IOException if there is some error occurred while getting key-value map from the row
 	 * @deprecated
 	 * this method is too complex, there is more assumable implementation of table structure. Use DbDataReader, StringTableData, ConversionSettings and TransformerUtils instead
 	 */
 	public static List<Map<String, String>> resultSetToTable(ResultSet rs, List<DBFieldMapping> mapping,
-	                                                         IValueTransformer transformer) throws SQLException
+	                                                         IValueTransformer transformer) throws SQLException, IOException
 	{
 		List<Map<String, String>> table = new ArrayList<Map<String, String>>();
 		List<String> rsColumnNames = getColumnNames(rs.getMetaData());
@@ -602,7 +603,8 @@ public class SQLUtils
 	 * @deprecated
 	 * this is a part of deprecated method
 	 */
-	public static Map<String, String> getResultSetRow(ResultSet rs, List<DBFieldMapping> mapping, IValueTransformer transformer, List<String> rsColumnNames) throws SQLException
+	public static Map<String, String> getResultSetRow(ResultSet rs, List<DBFieldMapping> mapping, IValueTransformer transformer,
+													  List<String> rsColumnNames) throws SQLException, IOException
 	{
 		Map<String, String> row = new LinkedHashMap<String, String>(rsColumnNames.size());
 
@@ -628,7 +630,7 @@ public class SQLUtils
 	 * @deprecated use ConversionSettings instead
 	 */
 	private static String getValue(ResultSet rs, String rsColumnName, List<DBFieldMapping> mapping,
-	                               IValueTransformer transformer) throws SQLException
+	                               IValueTransformer transformer) throws SQLException, IOException
 	{
 		String value = getDbValue(rs, rsColumnName);
 		if (mapping != null)

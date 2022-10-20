@@ -57,7 +57,7 @@ public class DbConvertedDataReader extends AbstractDbDataReader<StringTableData>
 	}
 	
 	@Override
-	protected String getValueFromResultSet(String tableHeader, ResultSet resultSet) throws SQLException
+	protected String getValueFromResultSet(String tableHeader, ResultSet resultSet) throws SQLException, IOException
 	{
 		// result set header might not be equal to table header so converted value should be gotten by corresponding DB header
 		String dbHeader = conversionSettings.getDBHeader(tableHeader),

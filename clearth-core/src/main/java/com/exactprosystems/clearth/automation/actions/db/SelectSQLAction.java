@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.actions.db;
 
+import java.io.IOException;
 import java.sql.*;
 
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
@@ -65,5 +66,5 @@ public abstract class SelectSQLAction extends SQLAction
 		}
 	}
 
-	protected abstract Result processResultSet(ResultSet rs, String[] keys) throws SQLException, ResultException;
+	protected abstract Result processResultSet(ResultSet rs, String[] keys) throws SQLException, IOException, ResultException;
 }
