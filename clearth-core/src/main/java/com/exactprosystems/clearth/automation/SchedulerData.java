@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -140,7 +140,7 @@ public abstract class SchedulerData
 		ignoreAllConnectionsFailures = loadIgnoreAllConnectionsFailures();
 		connectionsToIgnoreFailures = loadConnectionsToIgnoreFailures();
 		matrices = loadMatrices();
-		configData = loadConfigData();
+		configData = initConfigData();
 		stateDir = new File(getStateDirName(cfgDir, name));
 		repDir = new File(getReportsDirName(cfgDir, name));
 
@@ -792,7 +792,7 @@ public abstract class SchedulerData
 	}
 	
 	
-	public static ConfigData loadConfigData(String fileName)
+	public static ConfigData loadConfigData(String fileName) throws IOException
 	{
 		Map<String, String> keyValue = KeyValueUtils.loadKeyValueFile(fileName, true);
 		ConfigData result = new ConfigData(keyValue.get("filename"), Boolean.parseBoolean(keyValue.get("changed")));
@@ -819,9 +819,17 @@ public abstract class SchedulerData
 		}
 	}
 	
-	public ConfigData loadConfigData()
+	public ConfigData loadConfigData() throws IOException
 	{
 		return loadConfigData(configDataName);
+	}
+
+	private ConfigData initConfigData() throws IOException
+	{
+		File f = new File(configDataName);
+		if (!f.isFile())
+			return new ConfigData();
+		return loadConfigData();
 	}
 	
 	public void saveConfigData() throws IOException

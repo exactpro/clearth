@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,23 +18,29 @@
 
 package com.exactprosystems.clearth.web.beans;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.KeyValueUtils;
+import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
+
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.faces.context.FacesContext;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.KeyValueUtils;
-import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * @author victor.klochkov
- *
- */
 public class GUIBean
 {
-	private Boolean menuExpanded;
+	private static final Logger logger = LoggerFactory.getLogger(GUIBean.class);
+	private static final String MENU_EXPANDED = "menuExpanded";
+	
+	private boolean menuExpanded;
 	private String configFileName;
 
 	public GUIBean()
@@ -46,20 +52,43 @@ public class GUIBean
 
 	public void loadState()
 	{
-		Map<String, String> config = KeyValueUtils.loadKeyValueFile(configFileName, false);
-		menuExpanded = config.get("menuExpanded") != null ? Boolean.valueOf(config.get("menuExpanded")) : true;
+		menuExpanded = true;
+		
+		if (!Files.exists(Paths.get(configFileName)))
+			return;
+		
+		Map<String, String> config = null;
+		try
+		{
+			config = KeyValueUtils.loadKeyValueFile(configFileName, false);
+		}
+		catch (IOException e)
+		{
+			WebUtils.logAndGrowlException("Could not load GUI config", e, logger);
+			return;
+		}
+		
+		String exp = config.get(MENU_EXPANDED);
+		if (exp != null)
+			menuExpanded = Boolean.valueOf(exp);
 	}
 
 	public void saveState()
 	{
 		Map<String, String> config = new HashMap<String, String>();
-		config.put("menuExpanded", menuExpanded.toString());
+		config.put(MENU_EXPANDED, Boolean.toString(menuExpanded));
 		
 		File configFile = new File(configFileName);
 		if (!configFile.isFile())
 			configFile.getParentFile().mkdirs();
-		
-		KeyValueUtils.saveKeyValueFile(config, configFileName);
+		try 
+		{
+			KeyValueUtils.saveKeyValueFile(config, configFileName);
+		} 
+		catch (IOException e)
+		{
+			WebUtils.logAndGrowlException("Could not save GUI config", e, logger);
+		}
 	}
 
 	public boolean isMenuExpanded()

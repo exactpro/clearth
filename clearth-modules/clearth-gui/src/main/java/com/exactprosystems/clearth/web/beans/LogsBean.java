@@ -59,7 +59,7 @@ public class LogsBean extends ClearThBean
 	private Set<String> keysForPowerUser;
 	private final Pattern logBackupPattern = Pattern.compile("\\D+\\.log\\.\\d");
 	
-	public LogsBean()
+	public LogsBean() throws IOException
 	{
 		File dir = WebUtils.getLogsDir();
 		if (!dir.exists())

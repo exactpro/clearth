@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -84,7 +84,7 @@ public class KeyValueUtils
 		map.put(keyValue.getFirst(), keyValue.getSecond());
 	}
 	
-	public static LinkedHashMap<String, String> loadKeyValueFile(String fileName, boolean keyToLowerCase)
+	public static LinkedHashMap<String, String> loadKeyValueFile(String fileName, boolean keyToLowerCase) throws IOException
 	{
 		LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
 		BufferedReader reader = null;
@@ -95,10 +95,6 @@ public class KeyValueUtils
 			while ((line = reader.readLine())!=null)
 				parseAndPutKVPair(result, line, keyToLowerCase, "#");
 		}
-		catch (IOException e)
-		{
-			return result;
-		}
 		finally
 		{
 			closeResource(reader);
@@ -106,7 +102,7 @@ public class KeyValueUtils
 		return result;
 	}
 
-	public static LinkedHashMap<String, String> loadKeyValueFile(Path filePath, boolean keyToLowerCase)
+	public static LinkedHashMap<String, String> loadKeyValueFile(Path filePath, boolean keyToLowerCase) throws IOException
 	{
 		return loadKeyValueFile(filePath.toString(),keyToLowerCase);
 	}
@@ -135,7 +131,7 @@ public class KeyValueUtils
 		return parseKVPair(inputText, keyToLowerCase);
 	}
 	
-	public static void saveKeyValueFile(Map<String, String> data, String fileName)
+	public static void saveKeyValueFile(Map<String, String> data, String fileName) throws IOException
 	{
 		PrintWriter writer = null;
 		try
@@ -144,10 +140,6 @@ public class KeyValueUtils
 			for (String key : data.keySet())
 				writer.println(key+KEY_VALUE_DELIM+data.get(key));
 			writer.flush();
-		}
-		catch (IOException e)
-		{
-			logger.warn("Error while saving key-value file", e);
 		}
 		finally
 		{

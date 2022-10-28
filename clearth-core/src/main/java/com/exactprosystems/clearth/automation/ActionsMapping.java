@@ -21,9 +21,8 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.SettingsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -40,13 +39,19 @@ public class ActionsMapping
 	private final Path configFilePath;
 	private final Map<String, ActionMetaData> descriptions;
 
-	private static final Logger logger = LoggerFactory.getLogger(ActionsMapping.class);
-
 	public ActionsMapping(Path configFilePath, boolean actionNameToLowerCase) throws SettingsException
 	{
 		this.configFilePath = configFilePath;
-		Map<String,String> actionsMap = KeyValueUtils.loadKeyValueFile(configFilePath, false);
-		descriptions = parseActions(actionsMap, actionNameToLowerCase);
+		try 
+		{
+			Map<String,String> actionsMap = KeyValueUtils.loadKeyValueFile(configFilePath, false);
+			descriptions = parseActions(actionsMap, actionNameToLowerCase);
+		}
+		catch (IOException e)
+		{
+			throw new SettingsException("Could not load actions mapping", e);
+		}
+		
 	}
 
 	public ActionsMapping(boolean actionNameToLowerCase) throws SettingsException

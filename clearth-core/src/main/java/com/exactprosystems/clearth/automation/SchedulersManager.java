@@ -153,7 +153,7 @@ public class SchedulersManager
 		}
 	}
 	
-	protected void updateConfig()
+	protected void updateConfig() throws IOException
 	{
 		Map<String, String> keysValues = new LinkedHashMap<String, String>();
 		
