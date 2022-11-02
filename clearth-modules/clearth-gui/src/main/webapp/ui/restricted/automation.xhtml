@@ -540,7 +540,9 @@
 							<p:outputPanel id="MatrixOperations" layout="inline">
 								<c:if test="#{!automationMatricesBean.selectedMatrices.isEmpty()}">
 									<c:if test="#{automationMatricesBean.oneMatrixSelected}">
-										<p:commandButton value="Make steps and apply" actionListener="#{automationMatricesBean.makeStepsAndApply}" update=":Growl" icon="ui-icon-gear"/>
+										<p:commandButton value="Make steps and add" actionListener="#{automationMatricesBean.makeStepsAndApply(true)}" update=":Growl" icon="ui-icon-gear"/>
+										&#160;
+										<p:commandButton value="Make steps and apply" actionListener="#{automationMatricesBean.makeStepsAndApply(false)}" update=":Growl" icon="ui-icon-gear"/>
 										&#160;
 										<p:commandButton title="Edit matrix" actionListener="#{automationMatricesBean.editLinkedMatrix(automationMatricesBean.oneSelectedMatrix)}"
 														 update=":LinkedMatrixDialog" oncomplete="PF('linkedMatrixDialog').show();"

@@ -293,8 +293,15 @@ public class MatricesAutomationBean extends ClearThBean {
 		return  result;
 	}
 	
+	@Deprecated
 	public void makeStepsAndApply()
 	{
+		makeStepsAndApply(false);
+	}
+
+	public void makeStepsAndApply(boolean append)
+	{
+		Logger logger = getLogger();
 		if (!isOneMatrixSelected())
 			return;
 
@@ -307,11 +314,13 @@ public class MatricesAutomationBean extends ClearThBean {
 		ConfigMakerTool configMakerTool = ClearThCore.getInstance().getToolsFactory().createConfigMakerTool();
 		try
 		{
-			List<String> warnings = configMakerTool.makeConfigAndApply(selectedScheduler(), selectedMatrixFile, destDir);
+			List<String> warnings = configMakerTool.makeConfigAndApply(selectedScheduler(), selectedMatrixFile, destDir, append);
 			ConfigMakerToolBean.handleWarnings(warnings);
+			logger.info((append ? "added" : "applied")+" steps from matrix '" + selectedMatrix.getName() + "'");
 		}
 		catch (ClearThException e)
 		{
+			logger.error("Error while updating '" + selectedMatrix.getName() + "' linked matrix", e);
 			ConfigMakerToolBean.handleException(e);
 		}
 	}

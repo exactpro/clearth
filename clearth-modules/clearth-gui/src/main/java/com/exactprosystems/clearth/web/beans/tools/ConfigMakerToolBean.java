@@ -32,6 +32,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
+import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -55,7 +56,13 @@ public class ConfigMakerToolBean extends ClearThBean
 		configMakerTool = ClearThCore.getInstance().getToolsFactory().createConfigMakerTool();
 	}
 
+	@Deprecated
 	public void makeConfigAndApply()
+	{
+		makeConfigAndApply(false);
+	}
+
+	public void makeConfigAndApply(boolean append)
 	{
 		if (file == null) {
 			MessageUtils.addWarningMessage("No file selected", "Please select a script file (matrix)!");
@@ -66,7 +73,8 @@ public class ConfigMakerToolBean extends ClearThBean
 		{
 			File storedUploadedFile = storeUploadedFile();
 			if (storedUploadedFile == null) return;
-			List<String> warnings = configMakerTool.makeConfigAndApply(selectedScheduler, storedUploadedFile, destDir);
+			List<String> warnings = configMakerTool.makeConfigAndApply(selectedScheduler, storedUploadedFile, destDir, append);
+			getLogger().info((append ? "added" : "applied")+" steps from file '" + storedUploadedFile.toString() + "'");
 			handleWarnings(warnings);
 		}
 		catch (ClearThException e)

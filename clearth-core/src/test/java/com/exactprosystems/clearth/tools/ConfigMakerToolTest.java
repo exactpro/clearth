@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -52,6 +52,7 @@ public class ConfigMakerToolTest
 	private static final String CONFIG_FILE_FROM_XLSX = "xlsx_config.cfg";
 
 	public static final String CSV_MATRIX_FILE = "csv_matrix.csv";
+	public static final String CSV_MATRIX_FILE_2 = "csv_matrix2.csv";
 	public static final String XLS_MATRIX_FILE = "xls_matrix.xls";
 	public static final String XLSX_MATRIX_FILE = "xlsx_matrix.xlsx";
 
@@ -129,7 +130,7 @@ public class ConfigMakerToolTest
 					"", false, false, true, ""));
 		}
 
-		configMakerTool.makeConfigAndApply(scheduler, matrix, destDir);
+		configMakerTool.makeConfigAndApply(scheduler, matrix, destDir, false);
 		List<Step> actualSteps = scheduler.getSteps();
 		assertEquals(actualSteps, expectedSteps);
 	}
@@ -143,7 +144,7 @@ public class ConfigMakerToolTest
 						.toFile();
 		File destDir = CONFIG_MAKER_TOOL_TEST_OUTPUT_DIR.toFile();
 		Scheduler scheduler = clearThManager.getScheduler("admin", "admin");
-		List<String> actualWarnings = configMakerTool.makeConfigAndApply(scheduler, matrix, destDir);
+		List<String> actualWarnings = configMakerTool.makeConfigAndApply(scheduler, matrix, destDir, false);
 		assertTrue(actualWarnings.isEmpty());
 	}
 
@@ -175,7 +176,60 @@ public class ConfigMakerToolTest
 						.toFile();
 		File destDir = CONFIG_MAKER_TOOL_TEST_OUTPUT_DIR.toFile();
 		Scheduler scheduler = clearThManager.getScheduler("admin", "admin");
-		configMakerTool.makeConfigAndApply(scheduler, matrix, destDir);
+		configMakerTool.makeConfigAndApply(scheduler, matrix, destDir, false);
+	}
+
+	@DataProvider(name = "config-add-test")
+	Object[][] createDataForConfigMakerAdd()
+	{
+		return new Object[][]{
+				{CSV_MATRIX_FILE, CSV_MATRIX_FILE, Arrays.array("Step1"), 1},
+				{CSV_MATRIX_FILE, CSV_MATRIX_FILE_2, Arrays.array("Step1", "Step2"), 0},
+				{CSV_MATRIX_FILE_2, CSV_MATRIX_FILE, Arrays.array("Step2", "Step1"), 0},
+				{null, CSV_MATRIX_FILE, Arrays.array("Step1"), 0}};
+	}
+
+	@Test(dataProvider = "config-add-test")
+	public void checkMakeAndAdd(String matrixFileName, String secondMatrixFileName, String[] stepNames, int expectedWarningsCount)
+		throws IOException, ClearThException
+	{
+		File destDir = CONFIG_MAKER_TOOL_TEST_OUTPUT_DIR.toFile();
+		Scheduler scheduler = clearThManager.getScheduler("admin", "admin");
+		StepFactory stepFactory = scheduler.getStepFactory();
+
+		List<Step> expectedSteps = new ArrayList<>();
+		for (String step : stepNames)
+		{
+			expectedSteps.add(stepFactory.createStep(step, CoreStepKind.Default.getLabel(), "", StartAtType.DEFAULT,
+					false,
+					"", false, false, true, ""));
+		}
+
+		int warningCount = 0;
+
+		if (matrixFileName != null) 
+		{
+			File matrix =
+				Paths.get(resourceToAbsoluteFilePath(CONFIG_MAKER_TOOL_TEST_RESOURCE_DIR))
+						.resolve(matrixFileName)
+						.toFile();
+			warningCount += configMakerTool.makeConfigAndApply(scheduler, matrix, destDir, false).size();
+		}
+		else
+			scheduler.clearSteps();
+
+		if (secondMatrixFileName != null) 
+		{
+			File matrix =
+				Paths.get(resourceToAbsoluteFilePath(CONFIG_MAKER_TOOL_TEST_RESOURCE_DIR))
+						.resolve(secondMatrixFileName)
+						.toFile();
+			warningCount += configMakerTool.makeConfigAndApply(scheduler, matrix, destDir, true).size();
+		}
+
+		List<Step> actualSteps = scheduler.getSteps();
+		assertEquals(warningCount, expectedWarningsCount);
+		assertEquals(actualSteps, expectedSteps);
 	}
 
 	@AfterMethod

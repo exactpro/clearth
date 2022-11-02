@@ -188,42 +188,50 @@ public abstract class Scheduler
 	synchronized public void uploadSteps(File uploadedConfig, String originalFileName,
 			List<String> warnings, boolean append) throws Exception
 	{
-		if (append) {
-			Set<String> stepNames = new HashSet<String>();
-			List<Step> stepContainer = new ArrayList<Step>();
-			List<Step> newStepContainer = new ArrayList<Step>();
-			List<String> warnings0 = new ArrayList<String>();
-			
-			SchedulerData.loadSteps(schedulerData.getConfigName(), stepContainer, stepFactory, warnings0);
-			
-			for (Step step : stepContainer) {
-				stepNames.add(step.getName());
-			}
-			
-			SchedulerData.loadSteps(uploadedConfig.getAbsolutePath(), newStepContainer, stepFactory, warnings);
-			
-			for (Step step : newStepContainer) {
-				if (!stepNames.contains(step.getName())) {
-					stepContainer.add(step);
-				}
-			}
-			
-			SchedulerData.saveSteps(new File(schedulerData.getConfigName()), schedulerData.getConfigHeader(), stepContainer);
-		} else {
+		if (!append)
+		{
 			FileOperationUtils.copyFile(uploadedConfig.getCanonicalPath(), schedulerData.getConfigName());
-		}
-		
-		
-		
-		schedulerData.reloadSteps(warnings);
-		if (append) {
-			schedulerData.setConfigChanged(true);
-		} else {
+			schedulerData.reloadSteps(warnings);
 			schedulerData.setConfigFileName(originalFileName);
 			schedulerData.setConfigChanged(false);
+			saveConfigData();
+			init();
+			logger.info("Steps in scheduler replaced with new from " + uploadedConfig.toString());
+			return;
 		}
+
+		Set<String> stepNames = new HashSet<String>();
+		List<Step> stepContainer = new ArrayList<Step>();
+		List<Step> newStepContainer = new ArrayList<Step>();
+		List<String> warnings0 = new ArrayList<String>();
+		
+		SchedulerData.loadSteps(schedulerData.getConfigName(), stepContainer, stepFactory, warnings0);
+		
+		for (Step step : stepContainer) 
+		{
+			stepNames.add(step.getName());
+		}
+		
+		SchedulerData.loadSteps(uploadedConfig.getAbsolutePath(), newStepContainer, stepFactory, warnings);
+		
+		for (Step step : newStepContainer) {
+			String currentName = step.getName();
+			if (!stepNames.contains(currentName)) 
+			{
+				stepContainer.add(step);
+			}
+			else
+			{
+				warnings.add("Skipped step with name " + currentName + " as it is already present in existing configuration.");
+			}
+		}
+		
+		SchedulerData.saveSteps(new File(schedulerData.getConfigName()), schedulerData.getConfigHeader(), stepContainer);
+		schedulerData.reloadSteps(warnings);
+		schedulerData.setConfigChanged(true);
 		saveConfigData();
 		init();
+		logger.info("New scheduler steps added from " + uploadedConfig.toString());
 	}
 	
 	synchronized public void setExecute(boolean execute) throws IOException

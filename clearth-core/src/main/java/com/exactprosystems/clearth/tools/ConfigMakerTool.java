@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -53,8 +53,14 @@ public class ConfigMakerTool
 		return EXTENSION_FILTER.matcher(matrixFilePath).matches();
 	}
 
-
+	@Deprecated
 	public List<String> makeConfigAndApply(Scheduler selectedScheduler, File matrixFile, File destDir)
+			throws ClearThException
+	{
+		return makeConfigAndApply(selectedScheduler, matrixFile, destDir, false);
+	}
+
+	public List<String> makeConfigAndApply(Scheduler selectedScheduler, File matrixFile, File destDir, boolean append)
 			throws ClearThException
 	{
 		if (selectedScheduler == null)
@@ -80,7 +86,7 @@ public class ConfigMakerTool
 		try
 		{
 			List<String> warnings = new ArrayList<String>();
-			selectedScheduler.uploadSteps(configFile, configFile.getName(), warnings, false);
+			selectedScheduler.uploadSteps(configFile, configFile.getName(), warnings, append);
 			if (warnings.isEmpty())
 				logger.debug("Scheduler configuration uploaded. Scheduler: {}; matrix file: {}",
 						selectedScheduler.getName(), matrixFile.getName());

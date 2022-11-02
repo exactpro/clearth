@@ -1,0 +1,2 @@
+#Id,#GlobalStep,#Action,#Execute,#ConnectionName,#MessageText
+id1,Step2,SendMessage,y,Connection,Test_message
