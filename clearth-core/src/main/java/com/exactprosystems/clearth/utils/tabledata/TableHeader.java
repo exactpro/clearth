@@ -18,10 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 
@@ -90,5 +87,9 @@ public class TableHeader<A> implements Iterable<A>
 	protected Map<A, Integer> createColumnsMap()
 	{
 		return new LinkedHashMap<A, Integer>();
+	}
+
+	public Collection toCollection() {
+		return Collections.unmodifiableCollection(columns.keySet());
 	}
 }
