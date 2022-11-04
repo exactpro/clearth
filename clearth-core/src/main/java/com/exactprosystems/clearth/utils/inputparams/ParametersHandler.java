@@ -875,7 +875,11 @@ public class ParametersHandler
 	
 	private File getFile(String name, String defaultValue, boolean required)
 	{
-		return new File(getFilePath(name, defaultValue, required));
+		String file = getFilePath(name, defaultValue, required);
+		if (file == null || file.isEmpty())
+			return null;
+
+		return new File(file);
 	}
 
 	public File getRequiredFile(String name) 
@@ -904,8 +908,9 @@ public class ParametersHandler
 	private String getFilePath(String name, String defaultValue, boolean required)
 	{
 		String fileName = getString(name, defaultValue, required);
-		if(fileName == null)
-			fileName = "";
+		if (fileName == null || fileName.isEmpty())
+			return null;
+
 		return ClearThCore.rootRelative(fileName);
 	}
 	

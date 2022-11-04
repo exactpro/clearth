@@ -23,6 +23,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.Arrays;
@@ -372,6 +373,34 @@ public class InputParamsHandlerTest {
 		{
 			Assert.assertEquals("The following required parameters are empty: 'C', 'D'", e.getMessage());
 		}
+	}
+
+	@Test
+	public void getFilePathIfIsEmpty() throws ResultException {
+		InputParamsHandler handler = new InputParamsHandler(map("FilePath",""));
+		String s = handler.getFilePath("FilePath");
+		Assert.assertNull(s);
+	}
+
+	@Test
+	public void getFilePathIfIsNull() throws ResultException {
+		InputParamsHandler handler = new InputParamsHandler(map("File","file.dat"));
+		String s = handler.getFilePath("FilePath");
+		Assert.assertNull(s);
+	}
+
+	@Test
+	public void getFileIfIsEmpty() throws ResultException {
+		InputParamsHandler handler = new InputParamsHandler(map("FileName",""));
+		File f = handler.getFile("FileName");
+		Assert.assertNull(f);
+	}
+
+	@Test
+	public void getFileIfIsNull() throws ResultException {
+		InputParamsHandler handler = new InputParamsHandler(map("File","file.dat"));
+		File f = handler.getFile("FileName");
+		Assert.assertNull(f);
 	}
 
 	private void checkSuccess(InputParamsHandler handler) throws ResultException
