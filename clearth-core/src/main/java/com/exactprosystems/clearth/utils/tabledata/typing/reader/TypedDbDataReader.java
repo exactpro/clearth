@@ -18,6 +18,7 @@
 package com.exactprosystems.clearth.utils.tabledata.typing.reader;
 
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.javaFunction.BiFunctionWithException;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
@@ -29,15 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.*;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 
 public class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderItem,Object, TypedTableData>
@@ -132,43 +131,43 @@ public class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderItem
 				switch (type)
 				{
 					case INTEGER:
-						typedTableRow.setInteger(headerName, getInteger(headerName));
+						typedTableRow.setInteger(headerName, getValue(headerName, ResultSet::getInt));
 						break;
 					case BOOLEAN:
-						typedTableRow.setBoolean(headerName, getBoolean(headerName));
+						typedTableRow.setBoolean(headerName, getValue(headerName, ResultSet::getBoolean));
 						break;
 					case FLOAT:
-						typedTableRow.setFloat(headerName, getFloat(headerName));
+						typedTableRow.setFloat(headerName, getValue(headerName, ResultSet::getFloat));
 						break;
 					case DOUBLE:
-						typedTableRow.setDouble(headerName, getDouble(headerName));
+						typedTableRow.setDouble(headerName, getValue(headerName, ResultSet::getDouble));
 						break;
 					case BYTE:
-						typedTableRow.setByte(headerName, getByte(headerName));
+						typedTableRow.setByte(headerName, getValue(headerName, ResultSet::getByte));
 						break;
 					case SHORT:
-						typedTableRow.setShort(headerName, getShort(headerName));
+						typedTableRow.setShort(headerName, getValue(headerName, ResultSet::getShort));
 						break;
 					case LONG:
-						typedTableRow.setLong(headerName, getLong(headerName));
+						typedTableRow.setLong(headerName, getValue(headerName, ResultSet::getLong));
 						break;
 					case LOCALDATE:
-						typedTableRow.setLocalDate(headerName, getLocalDate(headerName));
+						typedTableRow.setLocalDate(headerName, getValue(headerName, ResultSet::getDate));
 						break;
 					case LOCALTIME:
-						typedTableRow.setLocalTime(headerName, getLocalTime(headerName));
+						typedTableRow.setLocalTime(headerName, getValue(headerName, ResultSet::getTime, Time::toLocalTime));
 						break;
 					case BIGDECIMAL:
-						typedTableRow.setBigDecimal(headerName, getBigDecimal(headerName));
+						typedTableRow.setBigDecimal(headerName, getValue(headerName, ResultSet::getBigDecimal));
 						break;
 					case STRING:
-						typedTableRow.setString(headerName, getString(headerName));
+						typedTableRow.setString(headerName, getValue(headerName, ResultSet::getString));
 						break;
 					case LOCALDATETIME:
-						typedTableRow.setDateTime(headerName, getLocalDateTime(headerName));
+						typedTableRow.setDateTime(headerName, getValue(headerName, ResultSet::getTimestamp, Timestamp::toLocalDateTime));
 						break;
 					default:
-						typedTableRow.setObject(headerName, getObject(headerName));
+						typedTableRow.setObject(headerName, getValue(headerName, ResultSet::getObject));
 				}
 			}
 			catch (SQLException e)
@@ -178,78 +177,16 @@ public class TypedDbDataReader extends BasicTableDataReader<TypedTableHeaderItem
 		}
 	}
 
-	protected Integer getInteger(String tableHeader) throws SQLException
+	protected <R> R getValue(String tableHeader, BiFunctionWithException<ResultSet, String, R, SQLException> function) throws SQLException
 	{
-		int result = resultSet.getInt(tableHeader);
-		return resultSet.wasNull() ? null : result;
+		return getValue(tableHeader, function, Function.identity());
 	}
 
-	protected Boolean getBoolean(String tableHeader) throws SQLException
+	protected <T, R> R getValue(String tableHeader, BiFunctionWithException<ResultSet, String, T, SQLException> function,
+							 Function<T, R> transformFunction) throws SQLException
 	{
-		boolean result = resultSet.getBoolean(tableHeader);
-		return resultSet.wasNull() ? null : result;
-	}
-
-	protected Float getFloat(String tableHeader) throws SQLException
-	{
-		float result = resultSet.getFloat(tableHeader);
-		return resultSet.wasNull() ? null : result;
-	}
-
-	protected Double getDouble(String tableHeader) throws SQLException
-	{
-		double result = resultSet.getDouble(tableHeader);
-		return resultSet.wasNull() ? null : result;
-	}
-
-	protected Byte getByte(String tableHeader) throws SQLException
-	{
-		byte result = resultSet.getByte(tableHeader);
-		return resultSet.wasNull() ? null : result;
-	}
-
-	protected Short getShort(String tableHeader) throws SQLException
-	{
-		short result = resultSet.getShort(tableHeader);
-		return resultSet.wasNull() ? null : result;
-	}
-
-	protected Long getLong(String tableHeader) throws SQLException
-	{
-		long result = resultSet.getLong(tableHeader);
-		return resultSet.wasNull() ? null : result;
-	}
-
-	protected Date getLocalDate(String tableHeader) throws SQLException
-	{
-		return resultSet.getDate(tableHeader);
-	}
-
-	protected LocalTime getLocalTime(String tableHeader) throws SQLException
-	{
-		Time time = resultSet.getTime(tableHeader);
-		return time == null ? null : time.toLocalTime();
-	}
-
-	protected BigDecimal getBigDecimal(String tableHeader) throws SQLException
-	{
-		return resultSet.getBigDecimal(tableHeader);
-	}
-
-	protected String getString(String tableHeader) throws SQLException
-	{
-		return resultSet.getString(tableHeader);
-	}
-
-	protected LocalDateTime getLocalDateTime(String tableHeader) throws SQLException
-	{
-		Timestamp timestamp = resultSet.getTimestamp(tableHeader);
-		return timestamp == null ? null : timestamp.toLocalDateTime();
-	}
-
-	protected Object getObject(String tableHeader) throws SQLException
-	{
-		return resultSet.getObject(tableHeader);
+		T result = function.apply(resultSet, tableHeader);
+		return resultSet.wasNull() ? null : transformFunction.apply(result);
 	}
 
 	protected void executeStatement() throws IOException

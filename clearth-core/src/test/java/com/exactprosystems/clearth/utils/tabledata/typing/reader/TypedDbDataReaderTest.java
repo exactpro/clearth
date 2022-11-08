@@ -130,14 +130,14 @@ public class TypedDbDataReaderTest
 		
 		SoftAssert softAssert = new SoftAssert();
 		
-		softAssert.assertEquals(reader.getString(COLUMN_STRING), stringValue);
-		softAssert.assertEquals(reader.getBoolean(COLUMN_BOOLEAN), booleanValue);
-		softAssert.assertEquals(reader.getInteger(COLUMN_INT), integerValue);
-		softAssert.assertEquals(reader.getShort(COLUMN_SHORT), shortValue);
-		softAssert.assertEquals(reader.getLong(COLUMN_LONG), longValue);
-		softAssert.assertEquals(reader.getDouble(COLUMN_DOUBLE), doubleValue);
-		softAssert.assertEquals(reader.getFloat(COLUMN_FLOAT), floatValue);
-		softAssert.assertEquals(reader.getByte(COLUMN_BYTE), byteValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_STRING, ResultSet::getString), stringValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_BOOLEAN, ResultSet::getBoolean), booleanValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_INT, ResultSet::getInt), integerValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_SHORT, ResultSet::getShort), shortValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_LONG, ResultSet::getLong), longValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_DOUBLE, ResultSet::getDouble), doubleValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_FLOAT, ResultSet::getFloat), floatValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_BYTE, ResultSet::getByte), byteValue);
 		
 		softAssert.assertAll();
 	}
