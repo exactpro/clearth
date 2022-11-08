@@ -18,13 +18,10 @@
 
 package com.exactprosystems.clearth.utils.tabledata.writers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collection;
-
+import com.exactprosystems.clearth.utils.tabledata.TableDataWriter;
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
+import com.exactprosystems.clearth.utils.tabledata.TableHeaderWriter;
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -33,11 +30,10 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.utils.tabledata.TableDataWriter;
-import com.exactprosystems.clearth.utils.tabledata.TableHeader;
-import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import java.io.*;
+import java.util.Collection;
 
-public abstract class AbstractExcelDataWriter extends TableDataWriter<String, String>
+public abstract class AbstractExcelDataWriter extends TableDataWriter<String, String> implements TableHeaderWriter
 {
 	public static final Logger logger = LoggerFactory.getLogger(AbstractExcelDataWriter.class);
 	protected final Workbook wb;
@@ -94,7 +90,16 @@ public abstract class AbstractExcelDataWriter extends TableDataWriter<String, St
 		return rowIndex;
 	}
 
-	protected void writeHeader()
+	@Override
+	public final void writeHeader() throws IllegalStateException
+	{
+		if (needHeader)
+			writeNeededHeader();
+		else
+			throw TableHeaderWriter.cantWriteHeaderError();
+	}
+
+	protected void writeHeaderRow()
 	{
 		writeIterableToRow(header);
 	}
@@ -104,7 +109,7 @@ public abstract class AbstractExcelDataWriter extends TableDataWriter<String, St
 		if (!needHeader)
 			return;
 
-		writeHeader();
+		writeHeaderRow();
 		needHeader = false;
 	}
 

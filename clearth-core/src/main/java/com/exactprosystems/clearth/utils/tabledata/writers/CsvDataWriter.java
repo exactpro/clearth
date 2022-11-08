@@ -18,24 +18,22 @@
 
 package com.exactprosystems.clearth.utils.tabledata.writers;
 
+import com.csvreader.CsvWriter;
+import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.tabledata.*;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
 
-import com.csvreader.CsvWriter;
-import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.utils.tabledata.StringTableData;
-import com.exactprosystems.clearth.utils.tabledata.TableDataWriter;
-import com.exactprosystems.clearth.utils.tabledata.TableHeader;
-import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
 /**
  * Writer of table-like data to CSV format
  * @author vladimir.panarin
  */
-public class CsvDataWriter extends TableDataWriter<String, String>
+public class CsvDataWriter extends TableDataWriter<String, String> implements TableHeaderWriter
 {
 	protected final CsvWriter writer;
 	protected boolean needHeader;
@@ -98,14 +96,22 @@ public class CsvDataWriter extends TableDataWriter<String, String>
 			Utils.closeResource(csvWriter);
 		}
 	}
-	
-	
+
+	@Override
+	public final void writeHeader() throws IOException, IllegalStateException
+	{
+		if (needHeader)
+			writeNeededHeader();
+		else
+			throw TableHeaderWriter.cantWriteHeaderError();
+	}
+
 	@Override
 	public void close() throws IOException
 	{
 		writer.close();
 	}
-	
+
 	@Override
 	protected int writeRow(TableRow<String, String> row) throws IOException
 	{
@@ -126,8 +132,7 @@ public class CsvDataWriter extends TableDataWriter<String, String>
 		}
 		return rowIndex;
 	}
-	
-	
+
 	protected CsvWriter createWriter(File f, boolean append) throws IOException
 	{
 		return new CsvWriter(new FileWriter(f, append), ',');
@@ -137,9 +142,9 @@ public class CsvDataWriter extends TableDataWriter<String, String>
 	{
 		return new CsvWriter(writer, ',');
 	}
-	
-	
-	protected void writeHeader() throws IOException
+
+
+	protected void writeHeaderRow() throws IOException
 	{
 		for (String h : header)
 			writer.write(h);
@@ -151,7 +156,7 @@ public class CsvDataWriter extends TableDataWriter<String, String>
 		if (!needHeader)
 			return;
 		
-		writeHeader();
+		writeHeaderRow();
 		needHeader = false;
 	}
 	

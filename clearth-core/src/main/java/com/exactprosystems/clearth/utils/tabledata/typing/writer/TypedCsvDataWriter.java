@@ -21,17 +21,15 @@ package com.exactprosystems.clearth.utils.tabledata.typing.writer;
 import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableDataWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
+import com.exactprosystems.clearth.utils.tabledata.TableHeaderWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeaderItem;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableRow;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.util.Collection;
 
-public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Object>
+public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Object> implements TableHeaderWriter
 {
 	protected final CsvWriter writer;
 	protected boolean needHeader;
@@ -50,7 +48,16 @@ public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Ob
 		this.writer = createWriter(writer);
 		this.needHeader = needHeader;
 	}
-	
+
+	@Override
+	public final void writeHeader() throws IOException, IllegalStateException
+	{
+		if (needHeader)
+			writeNeededHeader();
+		else
+			throw TableHeaderWriter.cantWriteHeaderError();
+	}
+
 	@Override
 	protected int writeRow(TableRow<TypedTableHeaderItem, Object> row) throws IOException
 	{
@@ -78,6 +85,7 @@ public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Ob
 		writer.close();
 	}
 
+
 	protected CsvWriter createWriter(File f, boolean append) throws IOException
 	{
 		return new CsvWriter(new FileWriter(f, append), ',');
@@ -88,7 +96,7 @@ public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Ob
 		return new CsvWriter(writer, ',');
 	}
 
-	protected void writeHeader() throws IOException
+	protected void writeHeaderRow() throws IOException
 	{
 		for (TypedTableHeaderItem h : header)
 			writer.write(h.getName());
@@ -100,7 +108,7 @@ public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Ob
 		if (!needHeader)
 			return;
 
-		writeHeader();
+		writeHeaderRow();
 		needHeader = false;
 	}
 
