@@ -742,10 +742,35 @@ public class MatrixFunctions
 	)
 	public Number random(Object a, Object b)
 	{
-		int min = toNumber(a).intValue();
-		int max = toNumber(b).intValue();
+		Number aNum = toNumber(a);
+		Number bNum = toNumber(b);
 
-		return (new Random().nextInt(max-min+1)+min);
+		BigDecimal aDec = getBigDecimal(aNum);
+		BigDecimal bDec = getBigDecimal(bNum);
+
+		int aPow = aDec.scale();
+		int bPow = bDec.scale();
+
+		if (aPow > 0 || bPow > 0)
+		{
+			int maxPow = max(aPow, bPow).intValue();
+			BigDecimal multiplier = BigDecimal.TEN.pow(maxPow);
+			int min = aDec.multiply(multiplier).intValue();
+			int max = bDec.multiply(multiplier).intValue();
+
+			return new BigDecimal(new Random().nextInt(max - min + 1) + min).divide(multiplier);
+		}
+
+		int min = aNum.intValue();
+		int max = bNum.intValue();
+
+		return new Random().nextInt(max-min+1)+min;
+	}
+
+	private BigDecimal getBigDecimal(Number num)
+	{
+		BigDecimal numDec = num instanceof BigDecimal ? (BigDecimal) num : new BigDecimal(num.toString());
+		return numDec.stripTrailingZeros();
 	}
 
 	@MethodDataModel(

@@ -28,6 +28,8 @@ import com.exactprosystems.clearth.generators.LegacyValueGenerators;
 import com.exactprosystems.clearth.utils.ObjectWrapper;
 import com.exactprosystems.clearth.utils.javaFunction.FunctionWithException;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matcher;
+import org.junit.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -43,9 +45,13 @@ import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
+import static java.math.BigDecimal.*;
 import static java.util.Arrays.asList;
+import static org.hamcrest.core.AnyOf.anyOf;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -304,8 +310,8 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	{
 		double a = Math.random();
 		double b = Math.random();
-		BigDecimal expectedResult = (BigDecimal.valueOf(a).add(BigDecimal.valueOf(b)).
-				divide(BigDecimal.valueOf(2)));
+		BigDecimal expectedResult = (valueOf(a).add(valueOf(b)).
+				divide(valueOf(2)));
 		BigDecimal actualResult = funWithHolidaysWithWeekends.avg(a, b);
 		assertEquals(actualResult, expectedResult);
 	}
@@ -515,20 +521,20 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 						{
 								1.999,
 								2,
-								BigDecimal.valueOf(1.999),
+								valueOf(1.999),
 								new BigDecimal(2)
 						},
 						{
 								-10.12,
 								-5.13,
-								BigDecimal.valueOf(-10.12),
-								BigDecimal.valueOf(-5.13)
+								valueOf(-10.12),
+								valueOf(-5.13)
 						},
 						{
 								5.13,
 								10.12,
-								BigDecimal.valueOf(5.13),
-								BigDecimal.valueOf(10.12)
+								valueOf(5.13),
+								valueOf(10.12)
 						}
 				};
 	}
@@ -1679,6 +1685,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 					{"@{random(5, 5)}", null, mvelVars, fixedIDs, null, 5},
 					{"@{random(500.0, 500)}", null, mvelVars, fixedIDs, null, 500},
 					{"@{random(1.0, 1.0)}", null, mvelVars, fixedIDs, null, 1},
+					{"@{random(4.5, 4.5)}", null, mvelVars, fixedIDs, null, valueOf(4.5)},
 					{"@{123.param1}", null, mvelVars, fixedIDs, null, "1"},
 					{"@{234.param2}", null, mvelVars, fixedIDs, null, "2"},
 					{"@{345.param5}", null, mvelVars, fixedIDs, null, "5"},
@@ -1711,22 +1718,22 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 					{"@{date8(sysTime(days, months))}", null, mvelVars, fixedIDs, null, "20200505"},
 					{"@{date8(sysTime(days))}", null, mvelVars, fixedIDs, null, "20200406"},
 
-					{"@{toBigDecimal(234.param3)}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(3)},
-					{"@{toBigDecimal('10.0','.')}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(10.0)},
-					{"@{toBigDecimal('10.0','.', ' ')}", null, mvelVars, fixedIDs, null, BigDecimal.valueOf(10.0)},
+					{"@{toBigDecimal(234.param3)}", null, mvelVars, fixedIDs, null, valueOf(3)},
+					{"@{toBigDecimal('10.0','.')}", null, mvelVars, fixedIDs, null, valueOf(10.0)},
+					{"@{toBigDecimal('10.0','.', ' ')}", null, mvelVars, fixedIDs, null, valueOf(10.0)},
 
 					{"@{mul(100.00, 200.00)}", null, mvelVars, null, null, "20000"},
 					{"@{min(mul(round(5.1, 0), roundUp(10.3, 0)), max(avg(5.0, div(49.0, 7.0)), roundDown(3.7, " +
 							"1)" +
-							"))}", null, mvelVars, null, null, BigDecimal.valueOf(6.0)},
+							"))}", null, mvelVars, null, null, valueOf(6.0)},
 					{"@{min(mul(round(5.1, 0), roundUp(10.3, 0)), max(avg(5.0, div(49.0, asNumber(trimZeros('7" +
 							".00, 1')))), roundDown(3.7, 1)))}",
-							null, mvelVars, null, null, BigDecimal.valueOf(6.0)},
+							null, mvelVars, null, null, valueOf(6.0)},
 					{"@{mul(sub( asNumber(addZeros('10.0', 3)), 4), add(asNumber(addZeros('10.0',2,'.')), 10, 1)" +
 							")}",
 							null, mvelVars, null, null, "120"},
 					{"@{toBigDecimal(trimleft('100.00',2) + trimright('200.00',2))}",
-							null, mvelVars, null, null, BigDecimal.valueOf(1000)},
+							null, mvelVars, null, null, valueOf(1000)},
 					{"@{reformat(format(parseDate('20-12-2018','dd-MM-yyyy'),'yyyy/MM/dd hh:mm:ss'),'yyyy/MM/dd " +
 							"hh:mm:ss', 'dd/MM/yyyy" +
 							" hh:mm:ss')}", null, mvelVars, null, null, "20/12/2018 12:00:00"},
@@ -1772,6 +1779,29 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 					{"@{123.Object}", mvelVars, fixedIDs},
 					{"@{123.Random}", mvelVars, fixedIDs},
 				};
+	}
+
+	@DataProvider(name = "randomFunctionData")
+	public Object[][] createRandomFunctionData()
+	{
+		return new Object[][]
+				{
+					{1.1, 1.3, valueOf(1.1), valueOf(1.2), valueOf(1.3)},
+					{0.086, 0.09, valueOf(0.086), valueOf(0.087), valueOf(0.088), valueOf(0.089), valueOf(0.09)},
+					{25, 25.2, valueOf(25), valueOf(25.1), valueOf(25.2)}
+				};
+	}
+
+	@Test(dataProvider = "randomFunctionData")
+	public void checkRandomFunction(Object min, Object max, BigDecimal... values)
+	{
+		MatrixFunctions matrixFunctions = getMatrixFunctionsForCalcExp();
+		Number randomResult1 = matrixFunctions.random(min,max);
+
+		List<Matcher<? extends Number>> matchers = Arrays.stream(values).map(v -> (is(v))).collect(Collectors.toList());
+
+		Assert.assertThat(randomResult1, anyOf(matchers));
+
 	}
 
 	@Test(dataProvider = "absentReferencesData")
