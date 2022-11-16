@@ -1,5 +1,5 @@
 <#function getStatusWithInfo detail>
-	<#if detail.identical && (detail.expected!)?length == 0>
+	<#if detail.info>
 		<#return "info">
 	<#elseif detail.identical>
 		<#return "passed">
