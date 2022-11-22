@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
@@ -82,5 +83,36 @@ public class StringTableRowMatcherTest
 		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isEqualTo(matcherABCD.createPrimaryKey(secondIsNullABCDDuplicate));
 		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isNotEqualTo(matcherABCD.createPrimaryKey(thirdIsNullABCD));
 		assertThat(matcherABCD.createPrimaryKey(testRowWithString)).isEqualTo("\"val\",\"null\",null,\"\"");
+	}
+
+	@Test
+	public void testMatchTableRowAndCollection()
+	{
+		StringTableRowMatcher matcher = new StringTableRowMatcher(buildHeaderSet());
+		String keyCollection = matcher.createPrimaryKey(buildCollection());
+		String keyTableRow = matcher.createPrimaryKey(buildTableRow());
+
+		Assert.assertEquals(keyCollection, keyTableRow);
+	}
+
+	private Collection<String> buildCollection()
+	{
+		return Arrays.asList("A", "B", "C", "D");
+	}
+	private Set<String> buildHeaderSet()
+	{
+		Set<String> header = new LinkedHashSet<>();
+		header.add("Param1");
+		header.add("Param2");
+		header.add("Param3");
+		header.add("Param4");
+
+		return header;
+	}
+	private TableRow<String, String> buildTableRow()
+	{
+		Collection<String> collection = buildCollection();
+		TableHeader<String> th = new TableHeader<>(buildHeaderSet());
+		return new TableRow<>(th, collection);
 	}
 }

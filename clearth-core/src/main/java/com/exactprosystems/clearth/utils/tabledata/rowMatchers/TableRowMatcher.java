@@ -22,6 +22,8 @@ import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
+import java.util.Collection;
+
 /**
  * Interface to match table-like data rows. 
  * Rows can be quickly matched by comparing their primary keys. After that secondary key comparison finds if rows match exactly.
@@ -40,6 +42,15 @@ public interface TableRowMatcher<A, B, C>
 	 * @return primary key to compare with another one
 	 */
 	public C createPrimaryKey(TableRow<A, B> row);
+
+	/**
+	 * Creates a primary key from a collection of values, compares the number of values
+	 * with the header size, used to find a row without creating an artificial TableRow
+	 * @param rowValues to create primary key for
+	 * @return primary key to compare with another one
+	 */
+	public C createPrimaryKey(Collection<B> rowValues);
+
 	/**
 	 * Checks if rows match by secondary key.
 	 * This method must be called only for rows whose primary keys are equal to accurately find if rows match

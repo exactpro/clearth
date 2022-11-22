@@ -18,14 +18,16 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
+import org.apache.commons.collections4.list.UnmodifiableList;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collection;
 
-import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
-import org.apache.commons.collections4.list.UnmodifiableList;
 
 /**
  * Indexed storage of table-like data with predefined header.
@@ -41,28 +43,13 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 	protected final TableRowMatcher<A, B, C> matcher;
 	protected final RowsListFactory<A, B> rowsListFactory;
 	protected int rowsCount;
-	
+
 	public IndexedTableData(Set<A> header, TableRowMatcher<A, B, C> matcher)
 	{
 		this(header, matcher, RowsListFactories.<A, B>linkedListFactory());
 	}
-	
-	public IndexedTableData(Set<A> header, 
-	                        TableRowMatcher<A, B, C> matcher, 
-	                        RowsListFactory<A, B> rowsListFactory)
-	{
-		super(header);
-		this.rows = createRowsMap();
-		this.matcher = matcher;
-		this.rowsListFactory = rowsListFactory;
-	}
-	
-	public IndexedTableData(TableHeader<A> header, TableRowMatcher<A, B, C> matcher)
-	{
-		this(header, matcher, RowsListFactories.<A, B>linkedListFactory());
-	}
-	
-	public IndexedTableData(TableHeader<A> header, 
+
+	public IndexedTableData(Set<A> header,
 	                        TableRowMatcher<A, B, C> matcher,
 	                        RowsListFactory<A, B> rowsListFactory)
 	{
@@ -71,14 +58,29 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 		this.matcher = matcher;
 		this.rowsListFactory = rowsListFactory;
 	}
-	
-	
+
+	public IndexedTableData(TableHeader<A> header, TableRowMatcher<A, B, C> matcher)
+	{
+		this(header, matcher, RowsListFactories.<A, B>linkedListFactory());
+	}
+
+	public IndexedTableData(TableHeader<A> header,
+	                        TableRowMatcher<A, B, C> matcher,
+	                        RowsListFactory<A, B> rowsListFactory)
+	{
+		super(header);
+		this.rows = createRowsMap();
+		this.matcher = matcher;
+		this.rowsListFactory = rowsListFactory;
+	}
+
+
 	@Override
 	public Iterator<C> iterator()
 	{
 		return new IndexedTableDataIterator();
 	}
-	
+
 	/**
 	 * Adds given row to table. Row header must be the same as table header. Use createRow() to guarantee that row can be added to table.
 	 * Bucket to store row is selected by primary key created for given row by matcher.
@@ -89,7 +91,7 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 	public void add(TableRow<A, B> row) throws IllegalArgumentException
 	{
 		checkRowHeader(row, header);
-		
+
 		C primaryKey = matcher.createPrimaryKey(row);
 		List<TableRow<A, B>> bucket = rows.get(primaryKey);
 		if (bucket == null)
@@ -100,14 +102,14 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 		bucket.add(row);
 		rowsCount++;
 	}
-	
+
 	@Override
 	public void clear()
 	{
 		rows.clear();
 		rowsCount = 0;
 	}
-	
+
 	/**
 	 * Finds in table a row that matches given row. Optionally removes found row from table. Correspondence in found by table's matcher.
 	 * @param row to find corresponding row for
@@ -120,14 +122,14 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 		List<TableRow<A, B>> bucket = rows.get(primaryKey);
 		if (bucket == null)
 			return null;
-		
+
 		Iterator<TableRow<A, B>> it = bucket.iterator();
 		while (it.hasNext())
 		{
 			TableRow<A, B> r = it.next();
 			if (!matcher.matchBySecondaryKey(row, r))
 				continue;
-			
+
 			if (remove)
 			{
 				it.remove();
@@ -139,7 +141,7 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Finds in table a row that matches given row
 	 * @param row to find corresponding row for
@@ -149,7 +151,7 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 	{
 		return find(row, false);
 	}
-	
+
 	/**
 	 * Finds in table a row that matches given row and removes that row from table
 	 * @param row to find corresponding row for
@@ -159,7 +161,7 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 	{
 		return find(row, true);
 	}
-	
+
 	/**
 	 * Finds bucket of rows that correspond to given primary key
 	 * @param primaryKey to find bucket by
@@ -183,7 +185,18 @@ public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements I
 		C primaryKey = matcher.createPrimaryKey(row);
 		return findAll(primaryKey);
 	}
-	
+
+	/**
+	 * Finds bucket of rows that correspond to primary key built for given values collection
+	 * @param rowValues is used to create primary key to find bucket by
+	 * @return unmodifiable bucket of table rows
+	 */
+	public List<TableRow<A, B>> findAll(Collection<B> rowValues)
+	{
+		C primaryKey = matcher.createPrimaryKey(rowValues);
+		return findAll(primaryKey);
+	}
+
 	@Override
 	public boolean isEmpty()
 	{

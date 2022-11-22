@@ -22,7 +22,14 @@ import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
+
 
 public class StringTableRowMatcher implements TableRowMatcher<String, String, String>
 {
@@ -31,12 +38,13 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 	protected final Set<String> keyColumns;
 	
 	protected final Set<TableHeader<String>> checkedHeadersCache = new HashSet<>();
-	
+
 	public StringTableRowMatcher(Set<String> keyColumns)
 	{
 		this.keyColumns = new LinkedHashSet<>(keyColumns);
 	}
 
+	@Override
 	public String createPrimaryKey(TableRow<String, String> row)
 	{
 		if (row == null)
@@ -55,19 +63,42 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 		for (String keyColumn : keyColumns)
 			addColumnValue(keyValues, row, keyColumn);
 		
-		return String.join(KEY_VALUES_SEPARATOR, keyValues);
+		return buildKey(keyValues);
 	}
+	
+	@Override
+	public String createPrimaryKey(Collection<String> rowValues)
+	{
+		if (rowValues.size() != keyColumns.size())
+			throw new IllegalStateException("Number of values ("+rowValues.size()+") doesn't match number of key columns ("+keyColumns.size()+")");
+
+		List<String> keyValues = new ArrayList<>();
+		for (String keyValue: rowValues)
+			addKeyValue(keyValue, keyValues);
+
+		return buildKey(keyValues);
+	}
+
 
 	protected void addColumnValue(List<String> keyValues, TableRow<String, String> row, String keyColumn)
 	{
 		String value = getValue(row, keyColumn);
-		
-		keyValues.add(value == null ? NULL_VALUE : "\"" + value + "\"");
+		addKeyValue(value, keyValues);
 	}
 
 	protected String getValue(TableRow<String, String> row, String column)
 	{
 		return row.getValue(column);
+	}
+
+	protected void addKeyValue(String value, List<String> keyValues)
+	{
+		keyValues.add(value == null ? NULL_VALUE : "\"" + value + "\"");
+	}
+
+	protected String buildKey(List<String> keyValues)
+	{
+		return String.join(KEY_VALUES_SEPARATOR, keyValues);
 	}
 
 	@Override
