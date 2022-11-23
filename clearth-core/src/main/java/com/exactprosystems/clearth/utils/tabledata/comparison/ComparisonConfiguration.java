@@ -27,15 +27,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor.DEFAULT_MAX_STORED_ROWS_COUNT;
+
 public class ComparisonConfiguration
 {
-	public static final String KEY_COLUMNS = "KeyColumns", NUMERIC_COLUMNS = "NumericColumns", CHECK_DUPLICATES = "CheckDuplicates";
+	private static final String MAX_ROWS_TO_STORE_TEMPLATE = "Max%sRowsInReport";
+	public static final String KEY_COLUMNS = "KeyColumns",
+			NUMERIC_COLUMNS = "NumericColumns",
+			CHECK_DUPLICATES = "CheckDuplicates",
+			MAX_PASSED_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, "Passed"),
+			MAX_FAILED_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, "Failed"),
+			MAX_NOT_FOUND_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, "NotFound"),
+			MAX_EXTRA_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, "Extra");
 	
 	protected final IValueTransformer bdValueTransformer;
 	
 	protected Set<String> keyColumns;
 	protected Map<String, BigDecimal> numericColumns;
 	protected boolean checkDuplicates;
+	
+	protected int maxPassedRowsToStore;
+	protected int maxFailedRowsToStore;
+	protected int maxNotFoundRowsToStore;
+	protected int maxExtraRowsToStore;
 	
 	public ComparisonConfiguration(Map<String, String> parameters, IValueTransformer bdValueTransformer) throws ParametersException
 	{
@@ -51,6 +65,10 @@ public class ComparisonConfiguration
 		keyColumns = handler.getSet(KEY_COLUMNS, ",");
 		numericColumns = getNumericColumns(handler.getSet(NUMERIC_COLUMNS, ","));
 		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
+		maxPassedRowsToStore = handler.getInteger(MAX_PASSED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+		maxFailedRowsToStore = handler.getInteger(MAX_FAILED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+		maxNotFoundRowsToStore = handler.getInteger(MAX_NOT_FOUND_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+		maxExtraRowsToStore = handler.getInteger(MAX_EXTRA_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
 	}
 	
 	protected Map<String, BigDecimal> getNumericColumns(Set<String> columnsWithScales) throws ParametersException
@@ -93,5 +111,25 @@ public class ComparisonConfiguration
 	public boolean isCheckDuplicates()
 	{
 		return checkDuplicates;
+	}
+
+	public int getMaxPassedRowsToStore()
+	{
+		return maxPassedRowsToStore;
+	}
+
+	public int getMaxFailedRowsToStore()
+	{
+		return maxFailedRowsToStore;
+	}
+
+	public int getMaxNotFoundRowsToStore()
+	{
+		return maxNotFoundRowsToStore;
+	}
+
+	public int getMaxExtraRowsToStore()
+	{
+		return maxExtraRowsToStore;
 	}
 }

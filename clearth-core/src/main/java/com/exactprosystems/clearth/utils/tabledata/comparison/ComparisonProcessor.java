@@ -55,9 +55,24 @@ public class ComparisonProcessor<A, B, C>
 	// Names of results containers
 	public static final String CONTAINER_PASSED = "Passed rows", CONTAINER_FAILED = "Failed rows",
 			CONTAINER_NOT_FOUND = "Not found rows", CONTAINER_EXTRA = "Extra rows";
-	
+	public static final int DEFAULT_MAX_STORED_ROWS_COUNT = -1;
+
 	private long lastAwaitedTimeout = 0;
 	
+	private int maxPassedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
+	private int maxFailedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
+	private int maxNotFoundRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
+	private int maxExtraRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
+	
+	public ComparisonProcessor() {}
+	
+	public ComparisonProcessor(ComparisonConfiguration compConfig)
+	{
+		setMaxPassedRowsToStore(compConfig.getMaxPassedRowsToStore());
+		setMaxFailedRowsToStore(compConfig.getMaxFailedRowsToStore());
+		setMaxNotFoundRowsToStore(compConfig.getMaxNotFoundRowsToStore());
+		setMaxExtraRowsToStore(compConfig.getMaxExtraRowsToStore());
+	}
 	/**
 	 * Starts comparison process using {@link TableDataComparator} and timeout for execution.
 	 * Could collect rows by key columns and find duplicates of them.
@@ -184,16 +199,18 @@ public class ComparisonProcessor<A, B, C>
 	{
 		ContainerResult result = CloseableContainerResult.createPlainResult(null);
 		// Creating containers firstly to have them in expected order
-		result.addWrappedContainer(CONTAINER_PASSED, createComparisonNestedResult(CONTAINER_PASSED), true);
-		result.addWrappedContainer(CONTAINER_FAILED, createComparisonNestedResult(CONTAINER_FAILED), true);
-		result.addWrappedContainer(CONTAINER_NOT_FOUND, createComparisonNestedResult(CONTAINER_NOT_FOUND), true);
-		result.addWrappedContainer(CONTAINER_EXTRA, createComparisonNestedResult(CONTAINER_EXTRA), true);
+		result.addWrappedContainer(CONTAINER_PASSED, createComparisonNestedResult(CONTAINER_PASSED, getMaxPassedRowsToStore()), true);
+		result.addWrappedContainer(CONTAINER_FAILED, createComparisonNestedResult(CONTAINER_FAILED, getMaxFailedRowsToStore()), true);
+		result.addWrappedContainer(CONTAINER_NOT_FOUND, createComparisonNestedResult(CONTAINER_NOT_FOUND, getMaxNotFoundRowsToStore()), true);
+		result.addWrappedContainer(CONTAINER_EXTRA, createComparisonNestedResult(CONTAINER_EXTRA, getMaxExtraRowsToStore()), true);
 		return result;
 	}
 	
-	protected ContainerResult createComparisonNestedResult(String header)
+	protected ContainerResult createComparisonNestedResult(String header, int maxStoredRowsCount)
 	{
-		return CsvContainerResult.createPlainResult(header.toLowerCase().replace(" ", "_"));
+		CsvContainerResult result = CsvContainerResult.createPlainResult(header.toLowerCase().replace(" ", "_"));
+		result.setMaxStoredRowsCount(maxStoredRowsCount);
+		return result;
 	}
 	
 	
@@ -233,7 +250,7 @@ public class ComparisonProcessor<A, B, C>
 		ContainerResult nestedResult = result.getContainer(nestedName);
 		if (nestedResult == null)
 		{
-			nestedResult = createComparisonNestedResult(nestedName);
+			nestedResult = createComparisonNestedResult(nestedName, DEFAULT_MAX_STORED_ROWS_COUNT);
 			result.addWrappedContainer(nestedName, nestedResult, true);
 		}
 		nestedResult.addDetail(rowResult);
@@ -290,5 +307,45 @@ public class ComparisonProcessor<A, B, C>
 			default:
 				return null;
 		}
+	}
+
+	public int getMaxPassedRowsToStore()
+	{
+		return maxPassedRowsToStore;
+	}
+
+	public void setMaxPassedRowsToStore(int maxPassedRowsToStore)
+	{
+		this.maxPassedRowsToStore = maxPassedRowsToStore;
+	}
+
+	public int getMaxFailedRowsToStore()
+	{
+		return maxFailedRowsToStore;
+	}
+
+	public void setMaxFailedRowsToStore(int maxFailedRowsToStore)
+	{
+		this.maxFailedRowsToStore = maxFailedRowsToStore;
+	}
+
+	public int getMaxNotFoundRowsToStore()
+	{
+		return maxNotFoundRowsToStore;
+	}
+
+	public void setMaxNotFoundRowsToStore(int maxNotFoundRowsToStore)
+	{
+		this.maxNotFoundRowsToStore = maxNotFoundRowsToStore;
+	}
+
+	public int getMaxExtraRowsToStore()
+	{
+		return maxExtraRowsToStore;
+	}
+
+	public void setMaxExtraRowsToStore(int maxExtraRowsToStore)
+	{
+		this.maxExtraRowsToStore = maxExtraRowsToStore;
 	}
 }

@@ -158,7 +158,7 @@ public class CompareDataSets extends Action
 	
 	protected ComparisonProcessor<String, String, String> createComparisonProcessor()
 	{
-		return new ComparisonProcessor<>();
+		return new ComparisonProcessor<>(compConfig);
 	}
 	
 	protected KeyColumnsRowsCollector<String, String, String> createKeyColumnsRowsCollector() throws IOException

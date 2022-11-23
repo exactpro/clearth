@@ -1,0 +1,17 @@
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource
+id1,Step1,CompareDataSets,CsvFile,CsvFile,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/60_rows.csv,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/60_rows.csv
+
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MaxPassedRowsInReport
+id2,Step1,CompareDataSets,CsvFile,CsvFile,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/60_rows.csv,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/60_rows.csv,3
+
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MaxPassedRowsInReport
+id3,Step1,CompareDataSets,CsvFile,CsvFile,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/60_rows.csv,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/60_rows.csv,55
+
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MaxNotFoundRowsInReport,#Invert
+id4,Step1,CompareDataSets,CsvFile,CsvFile,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/2_rows.csv,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/0_rows.csv,1,true
+
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MaxExtraRowsInReport,#Invert
+id5,Step1,CompareDataSets,CsvFile,CsvFile,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/0_rows.csv,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/2_rows.csv,1,true
+
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MaxFailedRowsInReport,#Invert
+id6,Step1,CompareDataSets,CsvFile,CsvFile,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/0_rows.csv,clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData/2_rows_inverted.csv,1,true

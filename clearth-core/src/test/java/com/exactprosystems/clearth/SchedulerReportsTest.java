@@ -100,7 +100,7 @@ public class SchedulerReportsTest
 	public void clearSchedulerData()
 	{
 		SchedulersManager manager = ClearThCore.getInstance().getSchedulersManager();
-		List<Scheduler> userSchedulers = manager.getUserSchedulers(schedulerName);
+		List<Scheduler> userSchedulers = manager.getUserSchedulers(userName);
 		userSchedulers.clear();
 	}
 

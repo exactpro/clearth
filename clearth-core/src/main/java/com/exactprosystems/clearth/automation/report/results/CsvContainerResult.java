@@ -49,7 +49,11 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	protected final String COLUMN_COMPARISON_NAME = "Comparison name",
 			COLUMN_COMPARISON_RESULT = "Comparison result", COLUMN_ROW_KIND = "Row kind";
 	
-	protected int maxDisplayedRowsCount = 50, totalRowsCount = 0, passedRowsCount = 0;
+	protected int maxDisplayedRowsCount = 50,
+			maxStoredRowsCount = -1,
+			storedRowsCount = 0,
+			totalRowsCount = 0,
+			passedRowsCount = 0;
 	protected boolean writeCsvReportAnyway = false, onlyFailedInHtml = false, onlyFailedInCsv = false;
 	protected String name;
 	
@@ -116,8 +120,11 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		if ((!onlyFailedInHtml && totalRowsCount <= maxDisplayedRowsCount)
 				|| (onlyFailedInHtml && !detail.isSuccess() && totalRowsCount - passedRowsCount <= maxDisplayedRowsCount))
 			super.addDetail(detail);
-		if (!onlyFailedInCsv || !detail.isSuccess())
+		if ((maxStoredRowsCount < 0 || storedRowsCount < maxStoredRowsCount) && (!onlyFailedInCsv || !detail.isSuccess()))
+		{
 			writeDetailToReportFile(detail);
+			storedRowsCount++;
+		}
 	}
 
 	@Override
@@ -228,7 +235,10 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	
 	protected String buildHeader()
 	{
-		return "Total rows: " + totalRowsCount + " / Displayed: " + Math.min(totalRowsCount, maxDisplayedRowsCount);
+		return String.format("Total rows: %d / Displayed: %d / Stored: %d",
+				totalRowsCount,
+				Math.min(totalRowsCount, maxDisplayedRowsCount),
+				getStoredRowsCount());
 	}
 	
 	protected Path createTargetFilePath(File reportDir, Action linkedAction) throws IOException
@@ -310,8 +320,22 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		return passedRowsCount;
 	}
-	
-	
+
+	public int getStoredRowsCount()
+	{
+		return storedRowsCount;
+	}
+
+	public int getMaxStoredRowsCount()
+	{
+		return maxStoredRowsCount;
+	}
+
+	public void setMaxStoredRowsCount(int maxStoredRowsCount)
+	{
+		this.maxStoredRowsCount = maxStoredRowsCount;
+	}
+
 	protected Logger getLogger()
 	{
 		return logger;
