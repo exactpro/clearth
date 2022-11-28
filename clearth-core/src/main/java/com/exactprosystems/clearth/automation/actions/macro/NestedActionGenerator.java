@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -48,9 +48,13 @@ public class NestedActionGenerator extends ActionGenerator
 	protected Map<String, Preparable> preparableActions;
 	
 	private NestedActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step macroStep,
-			List<Matrix> matrices, Map<String, Preparable> preparableActions)
+			List<Matrix> matrices, Map<String, Preparable> preparableActions, SpecialActionParams specialActionParams)
 	{
-		super(new HashMap<>(), matrices, preparableActions);
+		super(new HashMap<>(), matrices, preparableActions, 
+				new ActionGeneratorResources(specialActionParams, 
+						ClearThCore.getInstance().getActionFactory(),
+						ClearThCore.getInstance().getMvelVariablesFactory(),
+						ClearThCore.getInstance().createMatrixFunctions(Collections.emptyMap(), null, null, true)));
 		this.macroMatrixFile = macroMatrixFile;
 		this.macroParams = macroParams;
 		this.macroStep = macroStep;
@@ -58,9 +62,9 @@ public class NestedActionGenerator extends ActionGenerator
 		this.preparableActions = preparableActions;
 	}
 	
-	public static NestedActionGenerator create(File macroMatrixFile, Map<String, String> macroParams, Step macroStep)
+	public static NestedActionGenerator create(File macroMatrixFile, Map<String, String> macroParams, Step macroStep, SpecialActionParams specialActionParams)
 	{
-		return new NestedActionGenerator(macroMatrixFile, macroParams, macroStep, new ArrayList<>(), new HashMap<>());
+		return new NestedActionGenerator(macroMatrixFile, macroParams, macroStep, new ArrayList<>(), new HashMap<>(), specialActionParams);
 	}
 	
 	

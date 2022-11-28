@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -53,7 +53,7 @@ public class ActionReport
 	protected ReportStatus status;
 	protected ExceptionWrapper error;
 	
-	protected Map<String, ReportParamValue> inputParams;
+	protected Map<String, ReportParamValue> inputParams, specialParams;
 	protected Map<String, String> outputParams;
 	
 	protected Result result;
@@ -79,6 +79,7 @@ public class ActionReport
 		this.setAsync(action.isAsync());
 		this.setComment(action.getComment());
 		this.setInputParams(action.extractMatrixInputParams());
+		this.setSpecialParams(action.extractSpecialParams());
 		this.setOutputParams(action.getOutputParams());
 		this.setStatus(createReportStatus(action));
 
@@ -147,6 +148,7 @@ public class ActionReport
 		subActionReport.setIdInTemplate(subActionData.getIdInTemplate());
 		subActionReport.setStatus(subActionData.getSuccess());
 		subActionReport.setInputParams(subActionData.extractMatrixInputParams());
+		subActionReport.setSpecialParams(subActionData.extractSpecialParams());
 		
 		setSubActionCustomFields(subActionData, subActionReport);
 		
@@ -253,7 +255,17 @@ public class ActionReport
 	{
 		this.inputParams = inputParams;
 	}
-	
+
+	public Map<String, ReportParamValue> getSpecialParams()
+	{
+		return specialParams;
+	}
+
+	public void setSpecialParams(Map<String, ReportParamValue> specialParams)
+	{
+		this.specialParams = specialParams;
+	}
+
 	public Map<String, String> getOutputParams()
 	{
 		return outputParams;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -17,8 +17,6 @@
  ******************************************************************************/
 
 package com.exactprosystems.clearth.automation;
-
-import com.exactprosystems.clearth.ClearThCore;
 
 import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
 
@@ -54,9 +52,8 @@ public class Matrix
 	private List<ActionGeneratorMessage> generatorMessages = null;
 	
 	
-	public Matrix()
+	public Matrix(MvelVariablesFactory mvelVariablesFactory)
 	{
-		MvelVariablesFactory mvelVariablesFactory = ClearThCore.getInstance().getMvelVariablesFactory();
 		mvelVars = mvelVariablesFactory.create();
 	}
 	

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,6 +25,7 @@ import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -54,6 +55,11 @@ public class ActionFactory {
 		this.actionsMapping = new ActionsMapping(
 				Paths.get(ClearThCore.rootRelative(
 						configData.getActionsMappingFileName())), true).getDescriptions();
+		//Action names will be in lower case so search by containsKey() and get() should be performed by lower case value;
+	}
+	
+	public void loadActionsMapping(Path actionsMappingFile) throws SettingsException {
+		this.actionsMapping = new ActionsMapping(actionsMappingFile, true).getDescriptions();
 		//Action names will be in lower case so search by containsKey() and get() should be performed by lower case value;
 	}
 

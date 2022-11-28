@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -80,6 +80,7 @@ public class ActionParamsCalculator
 		mvelVars.saveInputParams(action);
 
 		calculateMainParameters(action, new ArrayList<String>(), warnOnError);
+		calculateSpecialParameters();
 		
 		Map<String, String> params = action.getInputParams();
 		matrixFunctions.setCurrentTime(Calendar.getInstance());
@@ -92,6 +93,20 @@ public class ActionParamsCalculator
 		matrixFunctions.setCurrentTime(null);
 		
 		return errors;
+	}
+
+	private void calculateSpecialParameters()
+	{
+		Map<String, String> formulas = action.getSpecialParamsFormulas();
+		if (formulas == null)
+			return;
+		
+		for (String param : action.getSpecialParamsNames())
+		{
+			String value = calculateParameter(formulas.get(param), param);
+			if (value != null)
+				action.getSpecialParams().put(param, value);
+		}
 	}
 	
 	public void calculateMainParameters(Action action, List<String> errorsOutput, boolean warnOnError)

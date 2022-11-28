@@ -18,32 +18,39 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
-
-public class DefaultSchedulerFactory extends SchedulerFactory
+public class ActionGeneratorResources
 {
-	public DefaultSchedulerFactory(ExecutorFactory executorFactory, StepFactory stepFactory, ActionGeneratorResources generatorResources)
+	private final SpecialActionParams specialActionParams;
+	private final ActionFactory actionFactory;
+	private final MvelVariablesFactory mvelFactory;
+	private final MatrixFunctions matrixFunctions;
+	
+	public ActionGeneratorResources(SpecialActionParams specialActionParams, ActionFactory actionFactory, MvelVariablesFactory mvelFactory,
+			MatrixFunctions matrixFunctions)
 	{
-		super(executorFactory, stepFactory, generatorResources);
+		this.specialActionParams = specialActionParams;
+		this.actionFactory = actionFactory;
+		this.mvelFactory = mvelFactory;
+		this.matrixFunctions = matrixFunctions;
 	}
 	
+	public SpecialActionParams getSpecialActionParams()
+	{
+		return specialActionParams;
+	}
 	
-	@Override
-	public Scheduler createScheduler(String name, String configsRoot, String schedulerDirName) throws Exception
+	public ActionFactory getActionFactory()
 	{
-		return new DefaultScheduler(name, configsRoot, schedulerDirName, executorFactory, stepFactory, generatorResources);
+		return actionFactory;
 	}
-
-	@Override
-	public XmlSchedulerLaunchInfo createSchedulerLaunchInfo()
+	
+	public MvelVariablesFactory getMvelFactory()
 	{
-		return new XmlSchedulerLaunchInfo();
+		return mvelFactory;
 	}
-
-	@Override
-	public XmlSchedulerLaunches createSchedulerLaunches()
+	
+	public MatrixFunctions getMatrixFunctions()
 	{
-		return new XmlSchedulerLaunches();
+		return matrixFunctions;
 	}
 }

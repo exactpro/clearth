@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.async.WaitAsyncEnd;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.generator.ActionReader;
@@ -66,9 +65,13 @@ public abstract class ActionGenerator
 	protected Map<String, Preparable> preparableActions;
 	private String matrixStepName;
 	protected final StringCache stringCache = new StringCache(1_000_000, 500);
+	private final SpecialActionParams specialActionParams;
+	private final ActionFactory actionFactory;
+	private final MvelVariablesFactory mvelVariablesFactory;
+	private final MatrixFunctions matrixFunctions;
 	
 
-	public ActionGenerator(Map<String, Step> steps, List<Matrix> matrices, Map<String, Preparable> preparableActions)
+	public ActionGenerator(Map<String, Step> steps, List<Matrix> matrices, Map<String, Preparable> preparableActions, ActionGeneratorResources resources)
 	{
 		this.steps = steps;
 		for (String stepName : steps.keySet())
@@ -76,7 +79,10 @@ public abstract class ActionGenerator
 		this.matrices = matrices;
 		this.matrices.clear();
 		this.preparableActions = preparableActions;
-		
+		this.specialActionParams = resources.getSpecialActionParams();
+		this.actionFactory = resources.getActionFactory();
+		this.mvelVariablesFactory = resources.getMvelFactory();
+		this.matrixFunctions = resources.getMatrixFunctions();
 	}
 	
 	protected abstract Logger getLogger();
@@ -96,7 +102,7 @@ public abstract class ActionGenerator
 								   Set<String> usedIDs,
 								   boolean onlyCheck)
 	{
-		ActionSettings actionSettings = ClearThCore.getInstance().getActionFactory().createActionSettings();
+		ActionSettings actionSettings = actionFactory.createActionSettings();
 		actionSettings.setMatrix(matrix);
 
 		boolean missingValues = false, allSuccessful = true;
@@ -323,6 +329,10 @@ public abstract class ActionGenerator
 				else
 					actionSettings.setIdInTemplate(value);
 			}
+			else if (specialActionParams != null && specialActionParams.isSpecialParamLowCase(headLow))
+			{
+				actionSettings.addServiceParam(head, value);
+			}
 			else if (!customSetting(headLow, value, actionSettings, headerLineNumber, lineNumber))
 			{
 				if ((actionSettings.getParams()!=null) && (actionSettings.getParams().containsKey(head)))
@@ -387,7 +397,7 @@ public abstract class ActionGenerator
 	protected boolean checkActionName(ActionSettings actionSettings, Matrix matrix, int lineNumber)
 	{
 		String actionName = actionSettings.getActionName();
-		return checkActionCondition(ClearThCore.getInstance().getActionFactory().isDefinedAction(actionName),
+		return checkActionCondition(actionFactory.isDefinedAction(actionName),
 				matrix, ActionGeneratorMessageKind.UNKNOWN_ACTION_TYPE,
 				createFailedMessage(UNKNOWN_ACTION_NAME, actionSettings.getActionId(), lineNumber, actionName));
 	}
@@ -424,7 +434,7 @@ public abstract class ActionGenerator
 		try {
 			String actionName = actionSettings.getActionName();
 			if (actionName != null) {
-				action = ClearThCore.getInstance().getActionFactory().createAction(actionName);
+				action = actionFactory.createAction(actionName);
 			}
 		} catch (AutomationException e) {
 			allSuccessful = false;
@@ -496,7 +506,7 @@ public abstract class ActionGenerator
 		boolean allSuccessful = generateActions(matrix.getFileName(), matrixData.isTrim(), matrix, onlyCheck);
 		
 		MvelVariables vars = matrix.getMvelVars();
-		MvelVarsCleaningTableBuilder cleaningTableBuilder = new MvelVarsCleaningTableBuilder();
+		MvelVarsCleaningTableBuilder cleaningTableBuilder = new MvelVarsCleaningTableBuilder(matrixFunctions);
 		vars.setCleaningTable(cleaningTableBuilder.build(matrix, steps.keySet()));
 		
 		matrices.add(matrix);
@@ -505,7 +515,7 @@ public abstract class ActionGenerator
 	}
 
 	protected Matrix createMatrix(MatrixData matrixData) throws IOException {
-		Matrix matrix = new Matrix();
+		Matrix matrix = new Matrix(mvelVariablesFactory);
 		matrix.setName(matrixData.getName());
 		String fileName = matrixData.getFile().getCanonicalPath();
 		matrix.setFileName(fileName);

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -66,6 +66,7 @@ public abstract class Scheduler
 	protected final String scriptsDir, lastExecutionDataDir;
 	protected final ExecutorFactory executorFactory;
 	protected final StepFactory stepFactory;
+	protected final ActionGeneratorResources generatorResources;
 	protected final SchedulerData schedulerData;
 	protected List<Step> steps = new ArrayList<Step>();
 	protected List<Matrix> matrices = new ArrayList<Matrix>();
@@ -88,13 +89,15 @@ public abstract class Scheduler
 
 //	protected Map<String, ActionMetaData> actionsMapping;
 
-	public Scheduler(String name, String configsRoot, String schedulerDirName, ExecutorFactory executorFactory, StepFactory stepFactory) throws Exception
+	public Scheduler(String name, String configsRoot, String schedulerDirName, 
+			ExecutorFactory executorFactory, StepFactory stepFactory, ActionGeneratorResources generatorResources) throws Exception
 	{
 		scriptsDir = ClearThCore.scriptsPath() + schedulerDirName + File.separator + name + File.separator;
 		lastExecutionDataDir = ClearThCore.lastExecutionPath() + schedulerDirName + File.separator + name + File.separator;
 
 		this.executorFactory = executorFactory;
 		this.stepFactory = stepFactory;
+		this.generatorResources = generatorResources;
 		schedulerData = createSchedulerData(name, configsRoot, schedulerDirName, lastExecutionDataDir, scriptsDir);
 		
 		//If some matrices files were added before scheduler construction - let's add them to schedulerData

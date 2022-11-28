@@ -113,6 +113,17 @@
 						<#else>
 							<div>None</div>	
 						</#if>
+						<#assign keys = action.specialParamsNames![]>
+						<#if keys?size != 0>
+							<div class="node">Special parameters</div>
+							<@common.printInputParametersTable
+								containerId = containerId + "_special"
+								parameters = action.specialParams![]
+								keys = keys
+								formulas = action.specialParamsFormulas![]
+								margin = 0
+							/>
+						</#if>
 						<#if action.formulaExecutable?? || action.formulaComment?? || action.formulaTimeout?? || action.formulaInverted??>
 							<@common.printMainInputParametersTable 
 								containerId = containerId

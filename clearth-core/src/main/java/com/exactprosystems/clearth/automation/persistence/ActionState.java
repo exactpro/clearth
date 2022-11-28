@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,9 +36,10 @@ public abstract class ActionState
 	private Class<?> actionClass = null;
 
 	private Set<String> matrixInputParams = null;
-	private Map<String, String> inputParams = null;  //outputParams are cleaned after action end, no need to store them
+	private Map<String, String> inputParams = null, 
+			specialParams = null;
 	private LinkedHashMap<String, SubActionData> subActionsData = null;
-	//subOutputParams, duplicateParams, formulas are cleaned after action end, no need to store them
+	//outputParams, subOutputParams, duplicateParams, formulas are cleaned after action end, no need to store them
 
 	/**
 	 * {@link #idInTemplate} field can be used in some template or matrix generator tool if you have one.
@@ -66,6 +67,7 @@ public abstract class ActionState
 
 		this.matrixInputParams = action.getMatrixInputParams();
 		this.inputParams = action.getInputParams();
+		this.specialParams = action.getSpecialParams();
 		this.subActionsData = action.getSubActionData();
 		
 		this.idInMatrix = action.getIdInMatrix();
@@ -93,13 +95,16 @@ public abstract class ActionState
 		formulaIdInTemplate = action.getFormulaIdInTemplate();
 	}
 	
-	public Action actionFromState(List<Step> steps) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
+	public Action actionFromState(List<Step> steps) throws IllegalArgumentException, SecurityException, InstantiationException, 
+			IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException
+	{
 		ActionFactory factory = ClearThCore.getInstance().getActionFactory();
 		Action result = factory.createAction(name);
 		ActionSettings settings = factory.createActionSettings();
 		
 		settings.setParams(inputParams);
 		settings.setMatrixInputParams(matrixInputParams);
+		settings.setSpecialParams(specialParams);
 		settings.setActionId(idInMatrix);
 		settings.setComment(comment);
 		settings.setFormulaComment(formulaComment);
@@ -167,8 +172,17 @@ public abstract class ActionState
 	{
 		this.inputParams = inputParams;
 	}
-	
-	
+
+	public Map<String, String> getSpecialParams()
+	{
+		return specialParams;
+	}
+
+	public void setSpecialParams(Map<String, String> specialParams)
+	{
+		this.specialParams = specialParams;
+	}
+
 	public LinkedHashMap<String,SubActionData> getSubActionsData()
 	{
 		return subActionsData;

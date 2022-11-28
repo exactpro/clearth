@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,9 +29,11 @@ import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 public class MacroAction extends Action implements Preparable
 {
@@ -79,7 +81,8 @@ public class MacroAction extends Action implements Preparable
 		File macroMatrixFile = new File(InputParamsUtils.getRequiredFilePath(inputParams, PARAM_MACRO_FILENAME));
 		Step nestedStep = new DefaultStep(buildNestedStepName(macroMatrixFile), CoreStepKind.Default.getLabel(), null,
 				StartAtType.DEFAULT, false, null, false, false, true, null);
-		naGenerator = createActionGenerator(macroMatrixFile, copyInputParams(), nestedStep);
+		SpecialActionParams specialParams = createSpecialActionParams();
+		naGenerator = createActionGenerator(macroMatrixFile, copyInputParams(), nestedStep, specialParams);
 		nestedActionsReportFilePath = Paths.get(getStep().getActionsReportsDir(), getMatrix().getShortFileName(), nestedStep.getSafeName()).toString();
 		executionProgress = new NestedActionsExecutionProgress();
 	}
@@ -120,9 +123,15 @@ public class MacroAction extends Action implements Preparable
 		return String.format("%s_%s(%s)_%s_%d", getStep().getSafeName(), getIdInMatrix(), getName(), macroMatrixFile.getName(), System.currentTimeMillis());
 	}
 	
-	protected NestedActionGenerator createActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step nestedStep)
+	protected SpecialActionParams createSpecialActionParams()
 	{
-		return NestedActionGenerator.create(macroMatrixFile, macroParams, nestedStep);
+		Set<String> names = getSpecialParamsNames();
+		return CollectionUtils.isEmpty(names) ? null : new SpecialActionParams(names);
+	}
+	
+	protected NestedActionGenerator createActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step nestedStep, SpecialActionParams specialActionParams)
+	{
+		return NestedActionGenerator.create(macroMatrixFile, macroParams, nestedStep, specialActionParams);
 	}
 	
 	protected NestedActionExecutor createActionExecutor()

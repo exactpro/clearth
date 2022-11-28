@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -51,6 +51,8 @@ public class ActionSettings
 	private Matrix matrix = null;
 	private Step step = null;
 	private String stepName = null;
+
+	private Map<String, String> specialParams, specialParamsFormulas;
 
 	public String getActionId()
 	{
@@ -311,6 +313,20 @@ public class ActionSettings
 		this.matrix = matrix;
 	}
 
+	public void addServiceParam(String name, String value)
+	{
+		if (specialParams == null)
+			specialParams = new LinkedHashMap<>();
+		specialParams.put(name, value);
+
+		if (value.contains(MatrixFunctions.FORMULA_START) && !comparisonUtils().isSpecialValue(value))
+		{
+			if (specialParamsFormulas == null)
+				specialParamsFormulas = new HashMap<>();
+			specialParamsFormulas.put(name, value);
+		}
+	}
+
 	public boolean isSuspendIfFailed() {
 		return suspendIfFailed;
 	}
@@ -338,5 +354,20 @@ public class ActionSettings
 	public void setFormulaIdInTemplate(String formulaIdInTemplate)
 	{
 		this.formulaIdInTemplate = formulaIdInTemplate;
+	}
+
+	public Map<String, String> getSpecialParams()
+	{
+		return specialParams;
+	}
+
+	public void setSpecialParams(Map<String, String> specialParams)
+	{
+		this.specialParams = specialParams;
+	}
+
+	public Map<String, String> getSpecialParamsFormulas()
+	{
+		return specialParamsFormulas;
 	}
 }

@@ -18,32 +18,35 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
+import java.util.HashSet;
+import java.util.Set;
 
-public class DefaultSchedulerFactory extends SchedulerFactory
+public class SpecialActionParams
 {
-	public DefaultSchedulerFactory(ExecutorFactory executorFactory, StepFactory stepFactory, ActionGeneratorResources generatorResources)
+	protected final Set<String> lowCaseNames;
+
+	public SpecialActionParams(String... names)
 	{
-		super(executorFactory, stepFactory, generatorResources);
+		this.lowCaseNames = new HashSet<>(names.length);
+		for (String n : names)
+			this.lowCaseNames.add(n.toLowerCase());
+	}
+	
+	public SpecialActionParams(Set<String> names)
+	{
+		this.lowCaseNames = new HashSet<>(names.size());
+		for (String n : names)
+			this.lowCaseNames.add(n.toLowerCase());
 	}
 	
 	
-	@Override
-	public Scheduler createScheduler(String name, String configsRoot, String schedulerDirName) throws Exception
+	public boolean isSpecialParam(String name)
 	{
-		return new DefaultScheduler(name, configsRoot, schedulerDirName, executorFactory, stepFactory, generatorResources);
+		return isSpecialParamLowCase(name.toLowerCase());
 	}
-
-	@Override
-	public XmlSchedulerLaunchInfo createSchedulerLaunchInfo()
+	
+	public boolean isSpecialParamLowCase(String lowCaseName)
 	{
-		return new XmlSchedulerLaunchInfo();
-	}
-
-	@Override
-	public XmlSchedulerLaunches createSchedulerLaunches()
-	{
-		return new XmlSchedulerLaunches();
+		return lowCaseNames.contains(lowCaseName);
 	}
 }

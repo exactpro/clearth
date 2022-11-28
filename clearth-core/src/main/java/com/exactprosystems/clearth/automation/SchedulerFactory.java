@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,14 +25,16 @@ public abstract class SchedulerFactory
 {
 	protected final ExecutorFactory executorFactory;
 	protected final StepFactory stepFactory;
+	protected final ActionGeneratorResources generatorResources;
 	
-	public SchedulerFactory(ExecutorFactory executorFactory, StepFactory stepFactory)
+	public SchedulerFactory(ExecutorFactory executorFactory, StepFactory stepFactory, ActionGeneratorResources generatorResources)
 	{
 		this.executorFactory = executorFactory;
 		this.stepFactory = stepFactory;
+		this.generatorResources = generatorResources;
 	}
 	
-	public abstract Scheduler createScheduler(String name, String configsRoot, String schedulerDirName) throws Exception;
+	public abstract Scheduler createScheduler(String name, String configsRoot, String schedulerDir) throws Exception;
 	
 	public abstract XmlSchedulerLaunchInfo createSchedulerLaunchInfo();
 	

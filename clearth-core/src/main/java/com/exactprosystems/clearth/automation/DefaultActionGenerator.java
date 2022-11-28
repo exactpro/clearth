@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,9 +28,9 @@ public class DefaultActionGenerator extends ActionGenerator
 {
 	private static final Logger logger = LoggerFactory.getLogger(DefaultActionGenerator.class);
 	
-	public DefaultActionGenerator(Map<String, Step> steps, List<Matrix> matrices, Map<String, Preparable> preparableActions)
+	public DefaultActionGenerator(Map<String, Step> steps, List<Matrix> matrices, Map<String, Preparable> preparableActions, ActionGeneratorResources resources)
 	{
-		super(steps, matrices, preparableActions);
+		super(steps, matrices, preparableActions, resources);
 	}
 	
 	

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -416,9 +416,15 @@ public abstract class ClearThCore
 		return new DefaultStepFactory();
 	}
 	
+	protected ActionGeneratorResources createActionGeneratorResources(ValueGenerators valueGenerators)
+	{
+		return new ActionGeneratorResources(null, actionFactory, mvelVariablesFactory, 
+				createMatrixFunctions(Collections.emptyMap(), null, null, true, valueGenerators.getCommonGenerator()));
+	}
+	
 	protected SchedulerFactory createSchedulerFactory(ValueGenerators valueGenerators)
 	{
-		return new DefaultSchedulerFactory(createExecutorFactory(valueGenerators), createStepFactory());
+		return new DefaultSchedulerFactory(createExecutorFactory(valueGenerators), createStepFactory(), createActionGeneratorResources(valueGenerators));
 	}
 	
 	protected MemoryMonitor createMemoryMonitor()

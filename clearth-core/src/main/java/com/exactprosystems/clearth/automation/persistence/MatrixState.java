@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 
@@ -68,8 +69,10 @@ public abstract class MatrixState
 		this.matrixData = matrix.getMatrixData();
 	}
 	
-	public Matrix matrixFromState(List<Step> steps) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
-		Matrix result = new Matrix();
+	public Matrix matrixFromState(List<Step> steps) throws IllegalArgumentException, SecurityException, InstantiationException, 
+			IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException
+	{
+		Matrix result = new Matrix(ClearThCore.getInstance().getMvelVariablesFactory());
 		
 		result.setFileName(this.fileName);
 		result.setName(this.name);

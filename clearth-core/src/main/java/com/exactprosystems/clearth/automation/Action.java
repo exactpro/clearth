@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -47,7 +47,9 @@ public abstract class Action
 	protected LinkedHashMap<String, LinkedHashMap<String, String>> subOutputParams;
 	protected Set<String> matrixInputParams;
 	protected List<String> duplicateParams;
-	protected Map<String, String> formulas;
+	protected Map<String, String> formulas,
+			specialParams, 
+			specialParamsFormulas;
 
 	private List<String> cleanableContext;
 
@@ -106,6 +108,8 @@ public abstract class Action
 		duplicateParams = settings.getDuplicateParams();
 		matrixInputParams = settings.getMatrixInputParams();
 		formulas = settings.getFormulas();
+		specialParams = settings.getSpecialParams();
+		specialParamsFormulas = settings.getSpecialParamsFormulas();
 
 		idInMatrix = settings.getActionId();
 		comment = settings.getComment();
@@ -147,6 +151,7 @@ public abstract class Action
 		subOutputParams = null;
 		duplicateParams = null;
 		formulas = null;
+		specialParamsFormulas = null;
 	}
 	
 	
@@ -268,6 +273,11 @@ public abstract class Action
 	{
 		return ReportParamValue.collectParamValues(matrixInputParams, inputParams, formulas);
 	}
+
+	public Map<String, ReportParamValue> extractSpecialParams()
+	{
+		return ReportParamValue.collectParamValues(getSpecialParamsNames(), specialParams, specialParamsFormulas);
+	}
 	
 	public Map<String, String> copyInputParams()
 	{
@@ -321,7 +331,22 @@ public abstract class Action
 	{
 		return formulas;
 	}
-	
+
+	public Set<String> getSpecialParamsNames()
+	{
+		return specialParams == null ? Collections.emptySet() : specialParams.keySet();
+	}
+
+	public Map<String, String> getSpecialParams()
+	{
+		return specialParams;
+	}
+
+	public Map<String, String> getSpecialParamsFormulas()
+	{
+		return specialParamsFormulas;
+	}
+
 	public String getIdInMatrix()
 	{
 		return idInMatrix;
@@ -614,7 +639,10 @@ public abstract class Action
 		lb.append("Matrix: " + this.matrix.getName());
 		lb.append("Parameters: ");
 		for (String key : inputParams.keySet())
-			lb.append("  " + key + "=" + inputParams.get(key));
+			lb.add("  ").add(key).add("=").add(inputParams.get(key)).eol();
+		lb.append("Service parameters: ");
+		for (String key : getSpecialParamsNames())
+			lb.add("  ").add(key).add("=").add(specialParams.get(key)).eol();
 		lb.append("Result: ");
 		if (result == null)
 			lb.append("null");

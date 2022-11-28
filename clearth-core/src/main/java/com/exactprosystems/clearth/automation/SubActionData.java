@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.automation.report.ReportParamValue;
 import com.exactprosystems.clearth.automation.report.ReportStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +33,7 @@ public class SubActionData
 	private String name;
 	private Map<String, String> params;
 	private Set<String> matrixInputParams;
-	private Map<String, String> formulas;
+	private Map<String, String> formulas, specialParams, specialParamsFormulas;
 	private LinkedHashMap<String, SubActionData> subActionData;
 	//TODO add ExceptionWrapper after JSON reports migration to core
 	public Exception exception;
@@ -44,12 +45,16 @@ public class SubActionData
 			Map<String, String> params,
 			Set<String> matrixInputParams,
 			Map<String, String> formulas,
+			Map<String, String> specialParams,
+			Map<String, String> specialParamsFormulas,
 			LinkedHashMap<String, SubActionData> subActionData)
 	{
 		this.name = name;
 		this.params = params;
 		this.matrixInputParams = matrixInputParams;
 		this.formulas = formulas;
+		this.specialParams = specialParams;
+		this.specialParamsFormulas = specialParamsFormulas;
 		this.subActionData = subActionData;
 		success = new ReportStatus(true);
 	}
@@ -57,7 +62,7 @@ public class SubActionData
 	public SubActionData(Action action)
 	{
 		this(action.getName(), action.getInputParams(), action.getMatrixInputParams(), action.getFormulas(),
-				action.getSubActionData());
+				action.getSpecialParams(), action.getSpecialParamsFormulas(), action.getSubActionData());
 		idInTemplate = action.getIdInTemplate();
 	}
 
@@ -103,9 +108,29 @@ public class SubActionData
 		return ReportParamValue.collectParamValues(matrixInputParams, params, formulas);
 	}
 
+	public Map<String, ReportParamValue> extractSpecialParams()
+	{
+		return ReportParamValue.collectParamValues(getSpecialParamsNames(), specialParams, specialParamsFormulas);
+	}
+
 	public Map<String, String> getFormulas()
 	{
 		return formulas;
+	}
+
+	public Set<String> getSpecialParamsNames()
+	{
+		return specialParams == null ? Collections.emptySet() : specialParams.keySet();
+	}
+
+	public Map<String, String> getSpecialParams()
+	{
+		return specialParams;
+	}
+
+	public Map<String, String> getSpecialParamsFormulas()
+	{
+		return specialParamsFormulas;
 	}
 
 	public void setSubActionData(LinkedHashMap<String, SubActionData> subActionData)

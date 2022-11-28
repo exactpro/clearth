@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,9 +30,10 @@ import com.exactprosystems.clearth.utils.XmlUtils;
 
 public class DefaultScheduler extends Scheduler
 {
-	public DefaultScheduler(String name, String configsRoot, String schedulerDirName, ExecutorFactory executorFactory, StepFactory stepFactory) throws Exception
+	public DefaultScheduler(String name, String configsRoot, String schedulerDirName, 
+			ExecutorFactory executorFactory, StepFactory stepFactory, ActionGeneratorResources generatorResources) throws Exception
 	{
-		super(name, configsRoot, schedulerDirName, executorFactory, stepFactory);
+		super(name, configsRoot, schedulerDirName, executorFactory, stepFactory, generatorResources);
 	}
 
 	@Override
@@ -51,7 +52,7 @@ public class DefaultScheduler extends Scheduler
 	@Override
 	public ActionGenerator createActionGenerator(Map<String, Step> stepsMap, List<Matrix> matricesContainer, Map<String, Preparable> preparableActions)
 	{
-		return new DefaultActionGenerator(stepsMap, matricesContainer, preparableActions);
+		return new DefaultActionGenerator(stepsMap, matricesContainer, preparableActions, generatorResources);
 	}
 	
 	@Override

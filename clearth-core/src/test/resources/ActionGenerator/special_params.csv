@@ -1,0 +1,11 @@
+#ID,#GlobalStep,#Action,#Comment,#RegularParam,#Another
+id1,Step1,SetStatic,"Action without special parameters",123,Another dummy
+
+#ID,#GlobalStep,#Action,#Comment,#RegularParam,#TestCase
+id2,Step1,SetStatic,"Action with incomplete set of special parameters",123,Dummy check
+
+#ID,#GlobalStep,#Action,#Comment,#RegularParam,#Group
+id3,Step1,SetStatic,"Action with one special parameter",123,Group 1
+
+#ID,#GlobalStep,#Action,#Comment,#RegularParam,#Group,#TestCase,#Another
+id4,Step1,SetStatic,"Action with all special parameters",123,Group 1,Dummy check,Another dummy
