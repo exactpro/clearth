@@ -41,8 +41,7 @@
                             <p:commandButton value="Clear" onclick="PF('logsClearingDlg').show();" icon="ui-icon-trash" 
                             		disabled="#{isNoLogsSelected}" />
 
-                            <p:confirmDialog widgetVar="logsClearingDlg" closeOnEscape="true" modal="true"
-                                             width="400"
+                            <p:confirmDialog widgetVar="logsClearingDlg" closeOnEscape="true" modal="#{guiBean.modalDialog}" width="400"
                                              header="Logs clearing confirmation" message="Are you sure you want to clear contents of selected log files?">
                                 <p:commandButton value="Yes" actionListener="#{logsBean.clearLogs}" update="Logs :Growl"
                                                  onclick="PF('logsClearingDlg').hide();"/>

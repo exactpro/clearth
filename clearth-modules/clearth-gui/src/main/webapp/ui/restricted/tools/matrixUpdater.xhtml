@@ -408,7 +408,7 @@
 
 	<p:dialog id="progressDlg" header="Updating matrices"
 				  widgetVar="progressDialog"
-				  resizable="false" modal="true"
+				  resizable="false" modal="#{guiBean.modalDialog}"
 				  width="500px"
 				  style="margin: 0 auto"
 				  closable="false">
@@ -448,7 +448,7 @@
 
 	<p:dialog id="KeyFieldDlg" header="Condition key fields"
 			widgetVar="keyFieldDialog" closeOnEscape="true"
-			resizable="false" modal="true" style="margin: 0 auto">
+			resizable="false" modal="#{guiBean.modalDialog}" style="margin: 0 auto">
 		<h:form id="KeyFieldDialog">
 			<label class="pageSubTitle">New key field</label>
 			<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">

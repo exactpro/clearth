@@ -426,8 +426,8 @@
 								<p:watermark for="inputExpr_textArea" value="Input your @{expression} here and click 'Calculate'" />
 								<p:focus context="ExpCalc" />
 								<p:commandButton type="button" style="margin-left:10px" icon="ui-icon-info" onclick="PF('dlgHelp').show();"/>
-								<p:dialog header="Expressions help" widgetVar="dlgHelp" 
-										height="360" minHeight="360" width="980" minWidth="980" resizable="true" style="border:none;">
+								<p:dialog header="Expressions help" widgetVar="dlgHelp" height="360" minHeight="360" width="980"
+										  minWidth="980" resizable="true" style="border:none;" modal="#{guiBean.modalDialog}">
 									<ui:include src="mvel_helper.xhtml"/>
 								</p:dialog>
 							</div>

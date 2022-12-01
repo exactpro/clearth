@@ -139,7 +139,12 @@
 		<param-name>session_expired_page</param-name>
 		<param-value>/ui/session_expired.jsf</param-value>
 	</context-param>
-	
+
+	<context-param>
+		<param-name>use_modal_dialog</param-name>
+		<param-value>true</param-value>
+	</context-param>
+
 	<!-- shut down hook -->
 	<listener>
 		<listener-class>com.exactprosystems.clearth.web.misc.ShutDownHookListener</listener-class>

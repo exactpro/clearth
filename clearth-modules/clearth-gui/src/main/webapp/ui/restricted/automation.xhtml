@@ -805,7 +805,7 @@
 
 		<!-- New scheduler properties dialog -->
 		<p:dialog header="New #{automationBean.userSchedulersAllowed ? (userBean.powerUser ? 'personal ' : '') : 'common '}scheduler properties"
-				  widgetVar="newSchedulerDialog" resizable="false" id="newSchedulerDlg" closeOnEscape="true" modal="true">
+				  widgetVar="newSchedulerDialog" resizable="false" id="newSchedulerDlg" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="NewSchedulerDialog">
 				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin: 0 auto;">
 					<h:outputText value="Is common:" rendered="#{userBean.admin and automationBean.userSchedulersAllowed}" />
@@ -833,7 +833,7 @@
 		</p:dialog>
 
 		<!-- Export scheduler info dialog -->
-		<p:dialog header="Export scheduler information" widgetVar="exportSchedulerInfoDialog" resizable="false" closeOnEscape="true" modal="true">
+		<p:dialog header="Export scheduler information" widgetVar="exportSchedulerInfoDialog" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ExportSchedulerInfoDlg">
 				<h:outputText value="Specify regular expression pattern to exclude files:" />
 				<br/>
@@ -873,7 +873,7 @@
 
 		<!-- Step properties dialog -->
 		<p:dialog header="Step properties" widgetVar="stepDialog" id="StepDlg"
-				  width="#{automationConfigBean.steps.oneStepSelected ? 350 : 375}" resizable="false" closeOnEscape="true" modal="true">
+				  width="#{automationConfigBean.steps.oneStepSelected ? 350 : 375}" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="StepDialog">
 				<h:panelGrid id="display" columns="#{automationConfigBean.steps.oneStepSelected ? 2 : 3}" cellpadding="4" style="margin: 0 auto;">
 					<h:outputText value="You'll never catch me!" rendered="false" /><ui:remove><!-- This is added for correct three-column view and shouldn't be ever seen in GUI. --></ui:remove>
@@ -950,7 +950,7 @@
 		<!-- Remove steps confirm dialog -->
 		<p:confirmDialog id="RemoveStepsConfirmDlg" header="#{automationConfigBean.steps.oneStepSelected ? 'Step removal' : 'Steps removal'}"
 						 message="Are you sure you want to remove #{automationConfigBean.steps.oneStepSelected ? 'this step' : 'selected steps'}?"
-						 width="350"	severity="alert" widgetVar="removeStepsConfirmDialog" closeOnEscape="true" modal="true">
+						 width="350" severity="alert" widgetVar="removeStepsConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="RemoveStepsConfirmDialog">
 				<p:commandButton value="Yes" update=":SchedulerSteps :Steps :ConfigFile :Growl"
 								 actionListener="#{automationConfigBean.steps.removeSteps}"
@@ -963,7 +963,7 @@
 		</p:confirmDialog>
 		<!-- Remove all steps dialog -->
 		<p:confirmDialog header="Steps removal" message="Are you sure you want to remove ALL steps from this scheduler?"
-						 width="450"	severity="alert" widgetVar="clearConfirmDialog" closeOnEscape="true" modal="true">
+						 width="450" severity="alert" widgetVar="clearConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ClearConfirmDialog">
 				<p:commandButton value="Yes" update=":SchedulerSteps :Steps :ConfigFile :Growl"
 								 actionListener="#{automationConfigBean.steps.clearSteps}"
@@ -975,7 +975,7 @@
 		</p:confirmDialog>
 
 		<!-- Upload matrices dialog -->
-		<p:dialog header="Upload matrix" id="uploadMatrixDialog" widgetVar="uploadMatrixDialog" resizable="false" width="600" closeOnEscape="true" modal="true">
+		<p:dialog header="Upload matrix" id="uploadMatrixDialog" widgetVar="uploadMatrixDialog" resizable="false" width="600" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form enctype="multipart/form-data">
 				<p:fileUpload listener="#{automationMatricesBean.uploadMatrix}" allowTypes="/(\.|\/)(csv|zip|xls|xlsx|CSV|ZIP|XLS|XLSX)$/" mode="advanced" multiple="true"
 							  onstart="matricesToUpload = getNumberOfFilesToUpload('uploadMatrixDialog'); disableChoosing('uploadMatrixDialog');"
@@ -985,7 +985,7 @@
 		</p:dialog>
 		<!-- Linked matrix properties dialog -->
 		<p:dialog header="Linked Matrix Properties" widgetVar="linkedMatrixDialog"
-				  resizable="false" id="linkedMatrixDlg" closeOnEscape="true" modal="true">
+				  resizable="false" id="linkedMatrixDlg" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="LinkedMatrixDialog">
 				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin:0 auto;">
 					<h:outputText value="Type:" />
@@ -1033,7 +1033,7 @@
 		<!-- Remove matrices confirm dialog -->
 		<p:confirmDialog id="RemoveMatricesConfirmDlg" header="#{automationMatricesBean.oneMatrixSelected ? 'Matrix removal' : 'Matrices removal'}"
 						 message="Are you sure you want to remove #{automationMatricesBean.oneMatrixSelected ? 'this matrix' : 'selected matrices'}?"
-						 width="350" severity="alert" widgetVar="removeMatricesConfirmDialog" closeOnEscape="true" modal="true">
+						 width="350" severity="alert" widgetVar="removeMatricesConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="RemoveMatricesConfirmDialog">
 				<p:commandButton value="Yes" update=":Matrices"
 								 actionListener="#{automationMatricesBean.removeMatrices}"
@@ -1047,7 +1047,7 @@
 
 		<!-- Remove all matrices dialog -->
 		<p:confirmDialog header="Matrices removal" message="Are you sure you want to remove ALL matrices from this scheduler?"
-						 width="450"	severity="alert" widgetVar="clearMatricesConfirmDialog" closeOnEscape="true" modal="true">
+						 width="450" severity="alert" widgetVar="clearMatricesConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ClearMatricesConfirmDialog">
 				<p:commandButton value="Yes" update=":Matrices :Growl"
 								 actionListener="#{automationMatricesBean.removeAllMatrices}"
@@ -1059,7 +1059,7 @@
 		</p:confirmDialog>
 		<!-- Remove saved state dialog -->
 		<p:confirmDialog header="Saved state removal" message="Are you sure you want to remove saved state?"
-						 width="320" severity="alert" widgetVar="removeSavedStateDialog" closeOnEscape="true" modal="true">
+						 width="320" severity="alert" widgetVar="removeSavedStateDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="RemoveSavedStateDialog">
 				<p:commandButton value="Yes" update=":AutomationMenu :Container"
 								 actionListener="#{automationStateBean.removeSavedState}"
@@ -1073,7 +1073,7 @@
 		</p:confirmDialog>
 		<!-- Clear history of launches dialog -->
 		<p:confirmDialog header="History clearing" message="Are you sure you want to clear history of launches?"
-						 width="400"	severity="alert" widgetVar="clearHistoryConfirmDialog" closeOnEscape="true" modal="true">
+						 width="400" severity="alert" widgetVar="clearHistoryConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ClearHistoryConfirmDialog">
 				<p:commandButton value="Yes" update=":History"
 								 actionListener="#{automationReportsBean.clearHistory(true)}"
@@ -1088,7 +1088,7 @@
 		</p:confirmDialog>
 		<!-- Reports by matrix dialog -->
 		<p:dialog header="Reports by matrix" widgetVar="reportsDialog"
-				  resizable="false" id="reportsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="true">
+				  resizable="false" id="reportsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ReportsDialog">
 				<p:remoteCommand name="resetReportsTable" update="ReportsDialog:reps" >
 					<p:resetInput target="ReportsDialog:reps" />
@@ -1160,7 +1160,7 @@
 				  id="rtReportsDlg"
 				  width="840" minWidth="840"
 				  height="560" minHeight="560"
-				  modal="true" onHide="hideDialog()"
+				  modal="#{guiBean.modalDialog}" onHide="hideDialog()"
 				  appendTo="@(body)">
 			<h:form id="rtReportsDlgForm" style="height:100%; width:100%;">
 				<p:remoteCommand name="updateDialog" update="rtReportsDlgForm:dataTable" />
@@ -1274,7 +1274,7 @@
 		</p:dialog>
 		<!-- Execution suspended dialog -->
 		<p:dialog header="Execution suspended" widgetVar="suspendedDialog"
-				  resizable="false" id="suspendedDlg" width="380" modal="false" visible="#{automationSchedulerBean.suspended}" closable="false">
+				  resizable="false" id="suspendedDlg" width="380" modal="#{guiBean.modalDialog}" visible="#{automationSchedulerBean.suspended}" closable="false">
 			<h:outputText value="Scripts execution suspended in this scheduler." />
 			<br />
 			<p:outputPanel rendered="#{!automationConfigBean.steps.currentSchedulerStep.actionPause}">
@@ -1332,7 +1332,7 @@
 		</p:dialog>
 		<!-- Connection failure dialog -->
 		<p:dialog header="Connection '#{automationSchedulerBean.failoverConnectionName}' failed"
-		          visible="#{automationSchedulerBean.failover}" closable="false" resizable="false" modal="false"
+		          visible="#{automationSchedulerBean.failover}" closable="false" resizable="false" modal="#{guiBean.modalDialog}"
 		          id="connectionFailureDlg" widgetVar="connectionFailureDialog" width="610">
 			<h:outputText value="Scripts execution suspended in this scheduler due to failure with connection '#{automationSchedulerBean.failoverConnectionName}'." />
             <br/>
@@ -1366,7 +1366,7 @@
 		</p:dialog>
 		<!-- Matrices errors dialog -->
 		<p:dialog header="Matrices errors" widgetVar="merrorsDialog"
-				  resizable="false" id="merrorsDlg" width="1000" closeOnEscape="true" modal="true">
+				  resizable="false" id="merrorsDlg" width="1000" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="MatricesErrorsDialog">
 				<div style="margin-bottom: 10px;">
 					<p:outputPanel id="ErrorPanel" style="width: 700px; max-height: 400px; overflow-x: hidden; overflow-y: auto; display: inline-block">
@@ -1400,7 +1400,7 @@
 		</p:dialog>
 		<!-- Holidays dialog -->
 		<p:dialog header="Holidays" widgetVar="holidaysDialog"
-				  resizable="false" id="holidaysDlg" width="256" closeOnEscape="true" modal="true">
+				  resizable="false" id="holidaysDlg" width="256" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="HolidaysDialog">
 				<script type="text/javascript">
 					function checkSchedulerHoliday(date)
@@ -1430,7 +1430,7 @@
 		</p:dialog>
 		<!-- Setup connections to ignore failures dialog -->
 		<p:dialog header="Select connections to ignore failures" widgetVar="connectionsToIgnoreFailuresDialog"
-				  width="420" resizable="false" closeOnEscape="true" modal="true">
+				  width="420" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ConnectionsToIgnoreFailuresDialog">
 				<h:outputText value="If failure occurs for any connection selected below, scheduler execution won't be suspended but relevant actions will be failed." />
 				<p:scrollPanel style="max-height: 250px;">
@@ -1452,7 +1452,7 @@
 		</p:dialog>
 		<!-- Matrices dialog for Saved State -->
 		<p:dialog header="Matrices" widgetVar="stateMatricesDialog"
-				  resizable="false" id="stateMatricesDlg" width="400" closeOnEscape="true" modal="true">
+				  resizable="false" id="stateMatricesDlg" width="400" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="StateMatricesDialog">
 				<p:dataList var="matrix" value="#{automationStateBean.stateInfo.matrices}" lazy="false" itemType="none">
 					<p:column>
@@ -1470,7 +1470,7 @@
 		</p:dialog>
 		<!-- Step properties dialog of Step State -->
 		<p:dialog header="Step properties" widgetVar="stepStateDialog"
-				  resizable="false" id="stepStateDlg" width="350" closeOnEscape="true" modal="true">
+				  resizable="false" id="stepStateDlg" width="350" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="StepStateDialog">
 				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin:0 auto;">
 					<h:outputText value="Name:" />
@@ -1520,7 +1520,7 @@
 			</h:form>
 		</p:dialog>
 
-		<p:dialog widgetVar="lostLogsDlg" resizable="false" closeOnEscape="true" modal="true" >
+		<p:dialog widgetVar="lostLogsDlg" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
 			<h:form id="LostExecLogsDialog">
 				<h:outputText value="Sorry, but logs by selected execution were lost." />
 				<br/>
@@ -1542,7 +1542,7 @@
 		</p:dialog>
 		<!-- Stop scheduler dialog -->
 		<p:confirmDialog header="Stop execution" message="Are sure you wish to stop scheduler execution?"
-						 width="340" severity="alert" widgetVar="stopSchedulerDialog" closeOnEscape="true" modal="true" >
+						 width="340" severity="alert" widgetVar="stopSchedulerDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
 			<h:form id="StopSchedulerDialog">
 				<p:commandButton value="Yes"
 								 update=":SchedulerSteps :Growl"

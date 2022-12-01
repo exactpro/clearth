@@ -148,7 +148,7 @@
 		</h:form>
 		
 		<p:confirmDialog message="Are you sure you want to end your session?" width="450" header="Logout"
-				severity="alert" widgetVar="logoutConfirmDialog" closeOnEscape="true" modal="true">
+				severity="alert" widgetVar="logoutConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="LogoutConfirmDialog">
 				<p:commandButton value="Yes" ajax="false"
 						actionListener="#{authBean.logout}" />
@@ -158,7 +158,7 @@
 			</h:form>
 		</p:confirmDialog>
 		
-		<p:dialog header="Recent pop-up messages" widgetVar="popupsDialog" modal="true" resizable="false" closeOnEscape="true" style=" max-width: 95%;">
+		<p:dialog header="Recent pop-up messages" widgetVar="popupsDialog" modal="#{guiBean.modalDialog}" resizable="false" closeOnEscape="true" style=" max-width: 95%;">
 			<h:form id="PopupsDialog">
 				<p:scrollPanel mode="native" id="messagesPanel" style="min-height: 200px; min-width: 300px; max-height: 500px;">
 					<ui:repeat id="messageList" value="#{popUpMsgsBean.messages}" var="msg">

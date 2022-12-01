@@ -76,7 +76,7 @@
 		</h:form>
 		
 		<p:dialog header="User settings" widgetVar="userDialog"
-				id="UserDlg" resizable="false" closeOnEscape="true" modal="true">
+				id="UserDlg" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="UserDialog" width="400">
 				<h:panelGrid id="display" columns="#{userManagementBean.oneUserSelected ? 2 : 3}" cellpadding="4" style="margin: 0 auto;">
 					<h:outputText value="You'll never catch me!" rendered="false" /><ui:remove><!-- This is added for correct three-column view and shouldn't be ever seen in GUI. --></ui:remove>
@@ -114,7 +114,7 @@
 		
 		<p:confirmDialog id="RemoveUserConfirmDlg" header="#{userManagementBean.oneUserSelected ? 'User removal' : 'Users removal'}" 
 				message="Are you sure you want to remove #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
-				width="380" severity="alert" widgetVar="removeUserConfirmDialog" closeOnEscape="true" modal="true">
+				width="380" severity="alert" widgetVar="removeUserConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="RemoveUserConfimDialog" >
 				<p:commandButton value="Yes" update=":UserOperations :UsersList :Growl"
 					actionListener="#{userManagementBean.removeUsers}"
@@ -127,7 +127,7 @@
 		
 		<p:confirmDialog id="KillUserConfirmDlg" header="#{userManagementBean.oneUserSelected ? 'Killing user' : 'Killing users'}" 
 				message="Are you sure use want to kill activities of #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
-				severity="alert" widgetVar="killConfirmationDlg" closeOnEscape="true" modal="true">
+				severity="alert" widgetVar="killConfirmationDlg" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="KillConfimationDialog" width="200">
 				<p:commandButton value="Yes" update=":UserOperations :UsersList :Growl"
 					actionListener="#{userManagementBean.killUsers}"

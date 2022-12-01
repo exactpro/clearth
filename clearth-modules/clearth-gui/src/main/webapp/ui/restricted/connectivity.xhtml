@@ -233,7 +233,7 @@
 			</div>
 		</h:form>
 <!-- Listeners dialog -->
-		<p:dialog header="Connection listeners" widgetVar="listenersDialog" id="ListenersDlg" resizable="false" width="1000" closeOnEscape="true" modal="true"
+		<p:dialog header="Connection listeners" widgetVar="listenersDialog" id="ListenersDlg" resizable="false" width="1000" closeOnEscape="true" modal="#{guiBean.modalDialog}"
 				  styleClass="dialog-nopadding-top-bottom">
 			<h:form id="ListenersDialog">
 				<h:panelGroup layout="block" styleClass="big-info-block" rendered="#{connectivityBean.noListenersInfo}">
@@ -342,7 +342,7 @@
 		</p:dialog>
 <!-- Connection dialog -->
 		<p:dialog header="Connection settings" widgetVar="conDialog" id="ConnectionDlg"
-				width="#{connectivityBean.oneConnectionSelected ? 360 : 390}" resizable="false" closeOnEscape="true" modal="true">
+				width="#{connectivityBean.oneConnectionSelected ? 360 : 390}" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ConnectionDialog">
 				<h:panelGrid id="display" columns="#{connectivityBean.oneConnectionSelected ? 2 : 3}" cellpadding="4" style="margin: 0 auto;">
 					<h:outputText value="You'll never catch me!" rendered="false" /><ui:remove><!-- This is added for correct three-column view and shouldn't be ever seen in GUI. --></ui:remove>
@@ -426,7 +426,7 @@
 <!-- Remove connection dialog -->
 		<p:confirmDialog id="RemoveConnectionConfirmDlg" header="#{connectivityBean.oneConnectionSelected ? 'Connection removal' : 'Connections removal'}"
 				message="Are you sure you want to remove #{connectivityBean.oneConnectionSelected ? 'this connection' : 'selected connections'}?"
-				width="380" severity="alert" widgetVar="removeConnectionConfirmDialog" closeOnEscape="true" modal="true">
+				width="380" severity="alert" widgetVar="removeConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="RemoveConnectionConfimDialog" >
 				<p:commandButton value="Yes" update=":Connections :Growl"
 					actionListener="#{connectivityBean.removeConnections}"
@@ -438,7 +438,7 @@
 		</p:confirmDialog>
 <!-- Stop connection confirm dialog -->
      <p:confirmDialog header="Stop connection(s)" message="Are you sure you wish to stop the connection(s)? This may affect running schedulers."
-						 width="380" severity="alert" widgetVar="stopConnectionConfirmDialog" closeOnEscape="true" modal="true" >
+						 width="380" severity="alert" widgetVar="stopConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
 			<h:form id="StopConnectionConfirmDialog">
 				<p:commandButton value="Yes" update=":Connections :Growl"
 								 actionListener="#{connectivityBean.stopMqConnections}"
@@ -452,7 +452,7 @@
 	 </p:confirmDialog>
 <!-- Stopped connections errors dialog -->
 	<p:dialog header="Connections stopped due to errors" widgetVar="errorsDialog"
-			resizable="false" id="errorsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="true">
+			resizable="false" id="errorsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 		<p:dataTable id="errors" widgetVar="errorsTable"
 				value="#{connectivityBean.stoppedErrors}" var="errorInfo"
 				paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
@@ -472,7 +472,7 @@
 	</p:dialog>
 <!-- Restart connection confirm dialog -->
      <p:confirmDialog header="Restart connection(s)" message="Are you sure you wish to change running connection(s)? Saving changes requires connection(s) restart."
-					   width="380" severity="alert" widgetVar="restartConnectionConfirmDialog" closeOnEscape="true" modal="true" >
+					   width="380" severity="alert" widgetVar="restartConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
 			<h:form id="RestartConnectionConfirmDialog">
 				<p:commandButton value="Yes" update=":Connections :Growl"
 								 actionListener="#{connectivityBean.saveConnections}"
@@ -487,7 +487,7 @@
 
 		<!-- Send message dialog -->
 		<p:dialog header="Send message" widgetVar="sendMsgDlg" id="SendMsgDlg" resizable="false"
-				onShow="setConnection()" showEffect="drop" hideEffect="drop" closeOnEscape="true" modal="true">
+				onShow="setConnection()" showEffect="drop" hideEffect="drop" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="SendMsgForm">
 				<p:remoteCommand name="setConnection" update="ConnectionName"
 						actionListener="#{sendMessagesBean.setConnectionName(connectivityBean.oneSelectedConnection.name)}" />
