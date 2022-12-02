@@ -25,7 +25,7 @@ import com.exactprosystems.clearth.newproject.Application;
 
 public class ApplicationBean extends ClearThCoreApplicationBean
 {
-	private String svnRevisionInfo;
+	private String versionInfo;
 
 	public ApplicationBean() throws ClearThException
 	{
@@ -37,7 +37,7 @@ public class ApplicationBean extends ClearThCoreApplicationBean
 	{
 		System.out.println("Starting ClearTH");
 		new Application().init(configFiles, deploymentConfig);
-		svnRevisionInfo = Application.getInstance().getVersion().toString();
+		versionInfo = Application.getInstance().getVersion().toString();
 	}
 
 	@Override
@@ -46,8 +46,8 @@ public class ApplicationBean extends ClearThCoreApplicationBean
 		return new ConfigFiles("clearth.cfg");
 	}
 
-	public String getSvnRevisionInfo()
+	public String getVersionInfo()
 	{
-		return svnRevisionInfo;
+		return versionInfo;
 	}
 }
