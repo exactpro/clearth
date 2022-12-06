@@ -43,10 +43,13 @@ public class KeyValueUtilsTest
 						"someKey=somevalue", true, new Pair<String, String>("somekey", "somevalue")
 				},
 				{
-						"somekeysomeValue", false, new Pair<String, String>()
+						"somekeysomeValue", false, new Pair<String, String>("somekeysomeValue", null)
 				},
 				{
-						"", false, new Pair<String, String>()
+						"", false, new Pair<String, String>("", null)
+				},
+				{
+						" ", false, new Pair<String, String>("", null)
 				}
 			};
 	}

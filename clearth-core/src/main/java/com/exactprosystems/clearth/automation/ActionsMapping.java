@@ -193,7 +193,11 @@ public class ActionsMapping
 					validateParamName(patternForParamName, pairKey);
 
 					// Parse parameter value
-					String pairValue = pair.getSecond().trim();
+					String pairValue = pair.getSecond();
+					if (pairValue == null)
+						throwExcIfNoEqualsChar(line, actionName);
+
+					pairValue = pairValue.trim();
 					String value;
 
 					//If value is quoted

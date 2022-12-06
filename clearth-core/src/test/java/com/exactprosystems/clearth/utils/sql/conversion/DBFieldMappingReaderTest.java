@@ -18,13 +18,16 @@
 
 package com.exactprosystems.clearth.utils.sql.conversion;
 
+import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 public class DBFieldMappingReaderTest {
@@ -42,5 +45,38 @@ public class DBFieldMappingReaderTest {
 		for (DBFieldMapping mapping : mappings) {
 			System.out.println(mapping);
 		}
+	}
+
+	@Test
+	public void testVisualisationValues() throws IOException
+	{
+		List<DBFieldMapping> mapping = createMappingFile();
+		Map<String, String> visualisations0 = mapping.get(0).getVisualizations();
+		Map<String, String> visualisations1 = mapping.get(1).getVisualizations();
+		Map<String, String> visualisations2 = mapping.get(2).getVisualizations();
+
+		Assert.assertEquals(0, visualisations0.size());
+		Assert.assertEquals(0, visualisations1.size());
+		Assert.assertEquals("{b=newB, bb=newBB, bbb=null}", visualisations2.toString());
+	}
+
+	@Test
+	public void testConversionValues() throws IOException
+	{
+		List<DBFieldMapping> mapping = createMappingFile();
+		BidiMap<String, String> conversions = mapping.get(0).getConversions();
+		Assert.assertEquals("{a=newA, aa=newAA, aaa=null}", conversions.toString());
+	}
+
+	private List<DBFieldMapping> createMappingFile() throws IOException
+	{
+		DBFieldMappingReader mappingReader = new DBFieldMappingReader();
+		String fileName = "DBFieldMapping/testMappingFilePairs.csv";
+		File file = FileUtils.toFile(ClassLoader.getSystemClassLoader().getResource(fileName));
+
+		if (file == null)
+			throw new FileNotFoundException(fileName + " file not found");
+
+		return mappingReader.readEntities(file);
 	}
 }

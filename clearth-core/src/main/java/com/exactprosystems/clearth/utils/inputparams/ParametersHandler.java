@@ -230,17 +230,21 @@ public class ParametersHandler
 	{
 		Map<String, String> resultMap = new LinkedHashMap<String, String>();
 		String value = getString(name, required);
-		if (isNotEmpty(value)) {
+		if (StringUtils.isNotBlank(value)) {
 			Set<String> pairs = getSet(name, pairDelimiter, required);
 			for (String pairStr : pairs) {
 				Pair<String, String> pair = KeyValueUtils.parseKeyValueString(pairStr);
-				resultMap.put(pair.getFirst(), pair.getSecond());
+				String first = pair.getFirst(), second = pair.getSecond();
+
+				if(first == null)
+					continue;
+
+				resultMap.put(first, second);
 			}
 		}
 
 		return resultMap;
 	}
-
 
 	// List ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

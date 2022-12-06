@@ -18,7 +18,9 @@
 
 package com.exactprosystems.clearth.utils;
 
-import static com.exactprosystems.clearth.utils.Utils.closeResource;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -28,8 +30,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.exactprosystems.clearth.utils.Utils.closeResource;
 
 public class KeyValueUtils
 {
@@ -56,10 +57,13 @@ public class KeyValueUtils
 	private static Pair<String, String> parseKVPair(String pair, boolean keyToLowerCase)
 	{
 		Pair<String, String> keyValue = new Pair<String, String>();
-		
 		int index = pair.indexOf(KEY_VALUE_DELIM);
-		if ((pair.length() == 0) || (index < 0))
+
+		if (index < 0) {
+			keyValue.setFirst(getSplittedKey(pair, pair.length(), keyToLowerCase));
+			keyValue.setSecond(null);
 			return keyValue;
+		}
 		
 		keyValue.setFirst(getSplittedKey(pair, index, keyToLowerCase));
 		keyValue.setSecond(getSplittedValue(pair, index));
@@ -76,6 +80,9 @@ public class KeyValueUtils
 					return;
 			}
 		}
+
+		if (StringUtils.isBlank(pair))
+			return;
 
 		Pair<String, String> keyValue = parseKVPair(pair, keyToLowerCase);
 		if (keyValue.getFirst() == null)
