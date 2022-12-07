@@ -36,7 +36,7 @@ import com.exactprosystems.clearth.automation.report.results.TableResult;
 import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
-import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
+import com.exactprosystems.clearth.utils.sql.StubValueTransformer;
 import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.sql.conversion.ConversionSettings;
@@ -331,7 +331,7 @@ public abstract class SQLAction extends Action implements Preparable
 
 	protected IValueTransformer createValueTransformer ()
 	{
-		return new DefaultSQLValueTransformer();
+		return StubValueTransformer.getInstance();
 	}
 
 	protected RecordChecker createRecordChecker()

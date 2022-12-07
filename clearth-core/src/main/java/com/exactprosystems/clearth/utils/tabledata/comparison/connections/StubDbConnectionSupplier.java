@@ -20,7 +20,7 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.connections;
 
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.SettingsException;
-import com.exactprosystems.clearth.utils.sql.DefaultSQLValueTransformer;
+import com.exactprosystems.clearth.utils.sql.StubValueTransformer;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -31,7 +31,7 @@ public class StubDbConnectionSupplier implements DbConnectionSupplier
 	
 	public StubDbConnectionSupplier()
 	{
-		valueTransformer = new DefaultSQLValueTransformer();
+		valueTransformer = StubValueTransformer.getInstance();
 	}
 	
 	public StubDbConnectionSupplier(IValueTransformer valueTransformer)

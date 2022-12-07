@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,10 +20,8 @@ package com.exactprosystems.clearth.utils.sql;
 
 import com.exactprosystems.clearth.utils.IValueTransformer;
 
-/**
- * Created by alexey.karpukhin on 8/3/15.
- */
-public class DefaultSQLValueTransformer implements IValueTransformer{
+public class LegacyValueTransformer implements IValueTransformer
+{
 
 	@Override
 	public String transform(String old)
