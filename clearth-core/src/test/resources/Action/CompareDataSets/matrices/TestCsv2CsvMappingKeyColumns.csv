@@ -1,0 +1,7 @@
+
+#Id,#GlobalStep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#KeyColumns,#Invert
+id2,Step2,CompareDataSets,CsvFile,CsvFile,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step2/expected.csv,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step2/actual.csv,"Key1,Key2,Key3",True
+id3,Step3,CompareDataSets,CsvFile,CsvFile,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step3/expected.csv,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step3/actual.csv,"Key1,Key2",True
+id4,Step4,CompareDataSets,CsvFile,CsvFile,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step4/expected.csv,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step4/actual.csv,"Key1,Key2",False
+id5,Step4,CompareDataSets,CsvFile,CsvFile,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step4/expected.csv,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step4/actual.csv,"",False
+id6,Step4,CompareDataSets,CsvFile,CsvFile,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step4/secondColIsEmpty.csv,clearth-core/build/resources/test/Action/CompareDataSets/testData/Step4/thirdColIsEmpty.csv,"Key1,Key2,Key3,Key4",True

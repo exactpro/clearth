@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators;
 
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
@@ -41,17 +42,39 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	protected TableRowMatcher<A, B, C> rowMatcher;
 	
 	public IndexedTableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
-			TableRowMatcher<A, B, C> rowMatcher, TableRowsComparator<A, B> rowsComparator) throws IOException
+			TableRowMatcher<A, B, C> rowMatcher, TableRowsComparator<A, B> rowsComparator)
+			throws IOException, ParametersException
 	{
 		super(expectedReader, actualReader, rowsComparator);
 		this.rowMatcher = rowMatcher;
+		checkHeaders();
 		
 		expectedStorage = createExpectedStorage(expectedHeader, rowMatcher);
 		actualStorage = createActualStorage(actualHeader, rowMatcher);
 	}
 	
+	protected void checkHeaders() throws ParametersException
+	{
+		checkHeader(expectedHeader, true);
+		checkHeader(actualHeader, false);
+	}
+	
+	protected void checkHeader(TableHeader<A> header, boolean forExpected) throws ParametersException
+	{
+		try
+		{
+			rowMatcher.checkHeader(header);
+		}
+		catch (ParametersException e)
+		{
+			throw new ParametersException("Problem occurred while validating " +
+					(forExpected ? "expected" : "actual") +
+					" header " + header + ": " + e.getMessage(), e);
+		}
+	}
+	
 	public IndexedTableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
-			TableRowMatcher<A, B, C> rowMatcher) throws IOException
+			TableRowMatcher<A, B, C> rowMatcher) throws IOException, ParametersException
 	{
 		this(expectedReader, actualReader, rowMatcher, new TableRowsComparator<>());
 	}

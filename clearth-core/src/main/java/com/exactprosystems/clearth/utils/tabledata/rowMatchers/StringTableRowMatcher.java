@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,30 +18,56 @@
 
 package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
 import java.util.*;
 
 public class StringTableRowMatcher implements TableRowMatcher<String, String, String>
 {
+	public static final String NULL_VALUE = "null";
+	public static final String KEY_VALUES_SEPARATOR = ",";
 	protected final Set<String> keyColumns;
+	
+	protected final Set<TableHeader<String>> checkedHeadersCache = new HashSet<>();
 	
 	public StringTableRowMatcher(Set<String> keyColumns)
 	{
-		this.keyColumns = new LinkedHashSet<>(keyColumns);
+		this.keyColumns = Collections.unmodifiableSet(new LinkedHashSet<>(keyColumns));
 	}
-	
-	@Override
+
 	public String createPrimaryKey(TableRow<String, String> row)
 	{
+		if (row == null)
+			throw new IllegalArgumentException("Row must be not null");
+
+		try
+		{
+			checkHeader(row.getHeader());
+		}
+		catch (ParametersException e)
+		{
+			throw new IllegalArgumentException("Invalid row to create primary key", e);
+		}
+
 		List<String> keyValues = new ArrayList<>();
 		for (String keyColumn : keyColumns)
-		{
-			String value = row.getValue(keyColumn);
-			if (value != null)
-				keyValues.add(value);
-		}
-		return String.join(",", keyValues);
+			addColumnValue(keyValues, row, keyColumn);
+		
+		return String.join(KEY_VALUES_SEPARATOR, keyValues);
+	}
+
+	protected void addColumnValue(List<String> keyValues, TableRow<String, String> row, String keyColumn)
+	{
+		String value = getValue(row, keyColumn);
+		
+		keyValues.add(value == null ? NULL_VALUE : "\"" + value + "\"");
+	}
+
+	protected String getValue(TableRow<String, String> row, String column)
+	{
+		return row.getValue(column);
 	}
 
 	@Override
@@ -49,5 +75,29 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 	{
 		// Return true as we should compare non-key values by another way
 		return true;
+	}
+
+	@Override
+	public void checkHeader(TableHeader<String> header)
+			throws ParametersException
+	{
+		if (checkedHeadersCache.contains(header))
+			return;
+		
+		List<String> errorColumns = null;
+		for (String keyColumn : keyColumns)
+		{
+			if (!header.containsColumn(keyColumn))
+			{
+				if (errorColumns == null)
+					errorColumns = new ArrayList<>();
+				errorColumns.add(keyColumn);
+			}
+		}
+
+		if (errorColumns != null)
+			throw new ParametersException("Primary key columns are missing in header: " + errorColumns);
+		
+		checkedHeadersCache.add(header);
 	}
 }

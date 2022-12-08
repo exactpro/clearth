@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -149,7 +149,7 @@ public class CompareDataSets extends Action
 	
 	
 	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader) throws IOException
+			BasicTableDataReader<String, String, ?> actualReader) throws IOException, ParametersException
 	{
 		StringTableRowsComparator rowsComparator = createTableRowsComparator();
 		return compConfig.getKeyColumns().isEmpty() ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
@@ -167,7 +167,7 @@ public class CompareDataSets extends Action
 	}
 	
 	protected Result makeComparison(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader) throws ComparisonException, IOException
+			BasicTableDataReader<String, String, ?> actualReader) throws ComparisonException, IOException, ParametersException
 	{
 		return createComparisonProcessor().compareTables(createTableDataComparator(expectedReader, actualReader),
 				compConfig.isCheckDuplicates() ? createKeyColumnsRowsCollector() : null);

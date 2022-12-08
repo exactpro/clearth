@@ -170,7 +170,7 @@ public class CsvDataReaderTest
 		Path pathToFile = Paths.get(resourceToAbsoluteFilePath(TEST_ORDER_FILE));
 		StringTableData tableData = CsvDataReader.read(new FileReader(pathToFile.toFile()));
 		TableRow<String, String> row = tableData.getRow(0);
-		assertThat(matcher.createPrimaryKey(row)).isEqualTo("A,B,Impostor,C,D");
+		assertThat(matcher.createPrimaryKey(row)).isEqualTo("\"A\",\"B\",\"Impostor\",\"C\",\"D\"");
 	}
 
 	private Set<String> buildLinkedHashSet()

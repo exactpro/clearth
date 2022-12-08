@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
 /**
@@ -45,5 +47,12 @@ public interface TableRowMatcher<A, B, C>
 	 * @param row2
 	 * @return true only if rows completely match by secondary key
 	 */
-	public boolean matchBySecondaryKey(TableRow<A, B> row1, TableRow<A, B> row2);
+	boolean matchBySecondaryKey(TableRow<A, B> row1, TableRow<A, B> row2);
+	
+	/**
+	 * Checks if header is suitable for making primary key via {@link #createPrimaryKey(TableRow)} method.
+	 * @param header
+	 * @throws ParametersException if header is not suitable for some reason
+	 */
+	void checkHeader(TableHeader<A> header) throws ParametersException;
 }

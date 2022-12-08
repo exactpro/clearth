@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,13 +18,15 @@
 
 package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 
-import org.testng.annotations.Test;
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import org.junit.Test;
 
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.*;
 
 public class StringTableRowMatcherTest
 {
@@ -54,5 +56,31 @@ public class StringTableRowMatcherTest
 			assertThat(expected.next()).isEqualTo(actual.next());
 		
 		assertThat(actual.hasNext()).isFalse();
+	}
+	
+	@Test
+	public void testNull()
+	{
+		StringTableRowMatcher matcherABCD = new StringTableRowMatcher(new HashSet<>(Arrays.asList("A", "B", "C", "D")));
+		
+		TableHeader<String> headerAB = new TableHeader<>(new HashSet<>(Arrays.asList("A", "B")));
+		TableHeader<String> headerABCD = new TableHeader<>(new HashSet<>(Arrays.asList("A", "B", "C", "D")));
+
+		TableRow<String, String> firstIsNullAB = new TableRow<>(headerAB, asList(null, ""));
+		
+		TableRow<String, String> secondIsNullABCD = new TableRow<>(headerABCD, asList("", null, "", ""));
+		TableRow<String, String> secondIsPseudoNullABCD = new TableRow<>(headerABCD, asList("", "null", "", ""));
+		TableRow<String, String> secondIsNullABCDDuplicate = new TableRow<>(headerABCD, asList("", null, "", ""));
+		TableRow<String, String> thirdIsNullABCD = new TableRow<>(headerABCD, asList("", "", null, ""));
+		TableRow<String, String> testRowWithString = new TableRow<>(headerABCD, asList("val", "null", null, ""));
+
+		assertThatExceptionOfType(ParametersException.class).isThrownBy(() -> matcherABCD.checkHeader(headerAB));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> matcherABCD.createPrimaryKey(firstIsNullAB));
+		assertThatCode(() -> matcherABCD.checkHeader(headerABCD)).doesNotThrowAnyException();
+		
+		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isNotEqualTo(matcherABCD.createPrimaryKey(secondIsPseudoNullABCD));
+		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isEqualTo(matcherABCD.createPrimaryKey(secondIsNullABCDDuplicate));
+		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isNotEqualTo(matcherABCD.createPrimaryKey(thirdIsNullABCD));
+		assertThat(matcherABCD.createPrimaryKey(testRowWithString)).isEqualTo("\"val\",\"null\",null,\"\"");
 	}
 }

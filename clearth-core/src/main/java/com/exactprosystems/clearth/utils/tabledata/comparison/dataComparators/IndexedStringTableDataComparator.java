@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators;
 
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.IndexedStringTableData;
@@ -36,14 +37,14 @@ public class IndexedStringTableDataComparator extends IndexedTableDataComparator
 {
 	public IndexedStringTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
 			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher,
-			TableRowsComparator<String, String> rowsComparator) throws IOException
+			TableRowsComparator<String, String> rowsComparator) throws IOException, ParametersException
 	{
 		super(expectedReader, actualReader, rowMatcher, rowsComparator);
 	}
 	
 	public IndexedStringTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
 			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher,
-			ComparisonUtils comparisonUtils) throws IOException
+			ComparisonUtils comparisonUtils) throws IOException, ParametersException
 	{
 		super(expectedReader, actualReader, rowMatcher, new StringTableRowsComparator(comparisonUtils));
 	}

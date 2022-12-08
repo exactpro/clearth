@@ -47,7 +47,7 @@ public class CompareDataSetsTest {
     private static Set<String> extraActions;
 
     @Test
-    public void testSourceParamAsOptional() throws ClearThException, IOException, AutomationException {
+    public void testSuccessfulExecute() throws ClearThException, IOException, AutomationException {
 
         Scheduler scheduler = TestActionUtils.runScheduler(clearThManager, ADMIN, ADMIN, CONFIG, MATRICES_DIR, 5000);
         Assert.assertTrue(scheduler.isSuccessful());
