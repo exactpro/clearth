@@ -26,6 +26,7 @@ import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.PropertyAccessException;
@@ -37,8 +38,8 @@ import java.math.RoundingMode;
 import java.text.*;
 import java.util.*;
 
-import static com.exactprosystems.clearth.ClearThCore.valueGenerators;
 import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
+import static com.exactprosystems.clearth.ClearThCore.valueGenerators;
 import static org.apache.commons.lang.StringUtils.*;
 
 public class MatrixFunctions
@@ -1184,6 +1185,26 @@ public class MatrixFunctions
 		value = stripFunctions(value);
 		return new BigDecimal(value);
 	}
+
+	protected String getAbsValue(String a) throws NumberFormatException
+	{
+		if (NumberUtils.isNumber(a))
+			return StringUtils.removeStart(a, "-");
+		
+		throw new NumberFormatException("Value '"+a+"' is not a number");
+	}
+	
+	@MethodDataModel(
+			group = "Math",
+			args = "String a",
+			description = "Returns absolute value of given number",
+			usage = "abs('-1')"
+	)
+	public String abs(String a) throws NumberFormatException
+	{
+		return getAbsValue(a);
+	}
+	
 	
 	@MethodDataModel(
 			group = "Math",
@@ -1207,7 +1228,7 @@ public class MatrixFunctions
 	{
 		return add(d, summand, 5);
 	}
-	
+
 	@MethodDataModel(
 			group = "Math",
 			args = "String d, String deduction, int scale",
@@ -1317,7 +1338,7 @@ public class MatrixFunctions
 			group = "Math",
 			args = "String number, int scale",
 			description = "Rounds given number down to number of decimals from scale parameter.",
-			usage = "roundUp('1.555', 2)"
+			usage = "roundDown('1.555', 2)"
 	)
 	public String roundDown(String number, int scale)
 	{
