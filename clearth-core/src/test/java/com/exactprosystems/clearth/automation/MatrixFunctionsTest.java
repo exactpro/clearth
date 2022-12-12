@@ -48,7 +48,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
-import static java.math.BigDecimal.*;
+import static java.math.BigDecimal.valueOf;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
@@ -1817,6 +1817,61 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		{
 			assertEquals(MatrixFunctions.errorToText(e), "Incorrect formula");
 		}
+	}
+
+	@DataProvider(name = "abs")
+	public Object[][] checkAbsMethod()
+	{
+		return new Object[][]
+				{
+						// a, result
+						{
+								"-10",
+								"10"
+						},
+						{
+								"-12.2",
+								"12.2"
+						},
+						{
+								"-0.560",
+								"0.560"
+						},
+				};
+	}
+
+	@Test(dataProvider = "abs")
+	public void checkAbs(String a, String expectedResult)
+	{
+		String actualResult = funWithHolidaysWithWeekends.abs(a);
+		assertEquals(actualResult, expectedResult);
+	}
+
+	@DataProvider(name = "abs_exception")
+	public Object[][] checkAbsMethodException()
+	{
+		return new Object[][]
+				{
+						// a
+						{
+								"-10 "
+						},
+						{
+								"12,2"
+						},
+						{
+								"--0"
+						},
+						{
+								"a"
+						},
+				};
+	}
+	
+	@Test(expectedExceptions = NumberFormatException.class, dataProvider = "abs_exception")
+	public void checkAbsException(String a)
+	{
+		String actualResult = funWithHolidaysWithWeekends.abs(a);
 	}
 
 	@AfterMethod
