@@ -34,7 +34,7 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 	
 	public StringTableRowMatcher(Set<String> keyColumns)
 	{
-		this.keyColumns = Collections.unmodifiableSet(new LinkedHashSet<>(keyColumns));
+		this.keyColumns = new LinkedHashSet<>(keyColumns);
 	}
 
 	public String createPrimaryKey(TableRow<String, String> row)
