@@ -73,7 +73,10 @@ public class DefaultCodecFactory implements ICodecFactory
 						" use outdated constructor. Please consider supporting constructor with additional arguments", e);
 				dictionary = Class.forName(config.getDictionary()).getDeclaredConstructor(String.class).newInstance(xmlFile);
 			}
-			throw new IllegalArgumentException("Additional arguments are not supported for dictionaries of class " + config.getDictionary(), e);
+			else
+			{
+				throw new IllegalArgumentException("Additional arguments are not supported for dictionaries of class " + config.getDictionary(), e);
+			}
 		}
 
 		try 

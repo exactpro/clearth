@@ -21,10 +21,10 @@ package com.exactprosystems.clearth.connectivity.validation;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.flat.FlatMessageCodec;
-import com.exactprosystems.clearth.connectivity.flat.FlatMessageDictionary;
 import com.exactprosystems.clearth.connectivity.iface.DefaultCodecFactory;
 import com.exactprosystems.clearth.utils.DictionaryLoadException;
 import com.exactprosystems.clearth.xmldata.XmlAdditionalParameter;
@@ -48,12 +48,17 @@ public class FlatCodecTest
 	private static final Path FLAT_DICTIONARY_TEST_OUTPUT_DIR = Paths.get("src/test/resources/CodecTests/dicts");
 	private static final String SETTINGS_FILE = "flatDict.xml";
 	private int argNumber = 0;
-
+	
+	@BeforeClass
+	public static void copySettingsDict() throws IOException 
+	{
+		Files.copy(getFilename(), Paths.get(ClearThCore.getInstance().getDictsPath()).resolve(SETTINGS_FILE), REPLACE_EXISTING);
+	}
+	
 	@DataProvider(name = "flat-codecs-configs")
 	public Object[][] createTestCodecs()
 			throws IOException, DictionaryLoadException
 	{
-		copySettingsDict();
 		Map<String, String> dictionaryParameters = getTestParameters();
 		Map<String, String> codecParameters = getTestParameters();
 		return new Object[][] 
@@ -75,14 +80,31 @@ public class FlatCodecTest
 		Assert.assertEquals(codec.getDictionaryParameters(), expectedDictionaryParameters);
 	} 
 
-	private Path getFilename() 
+	@Test 
+	public void checkCodecFactoryForOldDictionaryConstructor() throws Exception
 	{
-		return FLAT_DICTIONARY_TEST_OUTPUT_DIR.resolve(SETTINGS_FILE);
+		Map<String, String> expectedCodecParameters = getTestParameters();
+		XmlCodecConfig config = generateConfigWithOldDictionary(null, expectedCodecParameters);
+		DefaultCodecFactory factory = new DefaultCodecFactory();
+		FlatMessageCodec codec = (FlatMessageCodec) factory.createCodec(config);
+		Assert.assertEquals(codec.getCodecParameters(), expectedCodecParameters);
+		Assert.assertEquals(codec.getDictionaryParameters(), null);
 	}
 
-	private void copySettingsDict() throws IOException 
+	@Test(expectedExceptions=IllegalArgumentException.class)
+	public void checkCodecFactoryForOldDictionaryConstructorWithDictionaryArguments() throws Exception
 	{
-		Files.copy(getFilename(), Paths.get(ClearThCore.getInstance().getDictsPath()).resolve(SETTINGS_FILE), REPLACE_EXISTING);
+		Map<String, String> expectedCodecParameters = getTestParameters();
+		Map<String, String> expectedDictionaryParameters = getTestParameters();
+		XmlCodecConfig config = generateConfigWithOldDictionary(expectedDictionaryParameters, expectedCodecParameters);
+		DefaultCodecFactory factory = new DefaultCodecFactory();
+		FlatMessageCodec codec = (FlatMessageCodec) factory.createCodec(config);
+		Assert.assertNotNull(codec);
+	}
+
+	private static Path getFilename() 
+	{
+		return FLAT_DICTIONARY_TEST_OUTPUT_DIR.resolve(SETTINGS_FILE);
 	}
 
 	private Map<String, String> getTestParameters() 
@@ -98,6 +120,14 @@ public class FlatCodecTest
 		XmlAdditionalParameter result = new XmlAdditionalParameter();
 		result.setName(key);
 		result.setValue(value);
+		return result;
+	}
+
+	private XmlCodecConfig generateConfigWithOldDictionary(Map<String, String> dictionaryParameters, Map<String, String> codecParameters) 
+	{
+		XmlCodecConfig result = generateConfig(dictionaryParameters, codecParameters);
+		result.setDictionary("com.exactprosystems.clearth.connectivity.validation.FlatDictionaryWithOldConstructor");
+		result.setCodec("com.exactprosystems.clearth.connectivity.validation.TestFlatCodec");
 		return result;
 	}
 
