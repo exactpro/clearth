@@ -18,9 +18,9 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
-import java.util.*;
-
 import org.apache.commons.collections4.iterators.UnmodifiableIterator;
+
+import java.util.*;
 
 /**
  * Header for table-like data. Maps header members with column indexes to quickly access row values by column.
@@ -89,7 +89,7 @@ public class TableHeader<A> implements Iterable<A>
 		return new LinkedHashMap<A, Integer>();
 	}
 
-	public Collection toCollection() {
+	public Collection<A> toCollection() {
 		return Collections.unmodifiableCollection(columns.keySet());
 	}
 }
