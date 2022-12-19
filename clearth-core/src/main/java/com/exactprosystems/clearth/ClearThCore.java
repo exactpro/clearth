@@ -406,7 +406,7 @@ public abstract class ClearThCore
 
 	protected ConnectionsTransmitter createConnectionsTransmitter()
 	{
-		return new ConnectionsTransmitter();
+		return new ConnectionsTransmitter(new File(tempPath()), connectionStorage);
 	}
 
 	protected MatrixFunctionsFactory createMatrixFunctionsHolder()

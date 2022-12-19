@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,9 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.connections.storage.ConnectionFileOperator;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -27,25 +29,70 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class ConnectionsTransmitter
 {
+	private final File tempDir;
+	private final ClearThConnectionStorage connectionStorage;
+
+	public ConnectionsTransmitter(File tempDir, ClearThConnectionStorage connectionStorage){
+		this.tempDir = tempDir;
+		this.connectionStorage = connectionStorage;
+	}
+
 	protected final static Logger logger = LoggerFactory.getLogger(ConnectionsTransmitter.class);
 	
 	public File exportConnections(String type) throws IOException, ConnectivityException
 	{
-		File destDir = new File(ClearThCore.tempPath()),
-				resultFile = File.createTempFile(type + "_connections_", ".zip", destDir),
-				connectionsDir = getConnectionsPath(type).toFile();
-		
-		FileOperationUtils.zipFiles(resultFile, connectionsDir.listFiles());
-		logger.debug("Created zip file with {} connections from {} to be exported", type, connectionsDir);
+		String tempName = type + "_connections_";
+		File tempTypePath = FileOperationUtils.createTempDirectory(tempName, tempDir);
+		List<File> fileList = createConnectionFiles(type, tempTypePath);
+		File resultFile = null;
+
+		if(!fileList.isEmpty())
+		{
+			resultFile = File.createTempFile(tempName, ".zip", tempDir);
+			FileOperationUtils.zipFiles(resultFile, fileList);
+
+			logger.debug("Created ZIP file '{}' with {} connections to be exported", resultFile.getAbsolutePath(), type);
+		}
+
+		FileUtils.deleteDirectory(tempTypePath);
 		return resultFile;
 	}
-	
+
+	private List<File> createConnectionFiles(String type, File tempPath) throws ConnectivityException
+	{
+		List<ClearThConnection> connectionList = connectionStorage.getConnections(type);
+
+		if(connectionList.isEmpty())
+			return Collections.emptyList();
+
+		List<File> fileList = new ArrayList<>();
+		ConnectionFileOperator operator = new ConnectionFileOperator();
+		for (ClearThConnection cthConn : connectionList)
+		{
+			String connName = cthConn.getName();
+			File connectionFile = new File(tempPath, connName + ".xml");
+			try
+			{
+				operator.save(cthConn, connectionFile);
+				fileList.add(connectionFile);
+			}
+			catch (ConnectivityException e)
+			{
+				throw new ConnectivityException("Could not export connection '" + connName +"'", e);
+			}
+		}
+		return fileList;
+	}
+
 	public synchronized void deployConnections(String type, File zipFile) throws IOException, ConnectivityException
 	{
-		File destDir = FileOperationUtils.createTempDirectory("imported_" + type + "_connections_", new File(ClearThCore.uploadStoragePath()));
+		File destDir = FileOperationUtils.createTempDirectory("imported_" + type + "_connections_", tempDir);
 		try
 		{
 			FileOperationUtils.unzipFile(zipFile, destDir);
@@ -62,7 +109,7 @@ public class ConnectionsTransmitter
 					FileOperationUtils.copyFile(conFile.getCanonicalPath(), connectionsDirPath + "/" + conFile.getName());
 			}
 			logger.debug("Imported {} connections are unzipped and copied to '{}'", type, connectionsDirPath);
-			ClearThCore.connectionStorage().reloadConnections();
+			connectionStorage.reloadConnections();
 		}
 		finally
 		{
@@ -72,6 +119,6 @@ public class ConnectionsTransmitter
 	
 	private Path getConnectionsPath(String type) throws ConnectivityException
 	{
-		return ClearThCore.connectionStorage().getConnectionTypeInfo(type).getDirectory();
+		return connectionStorage.getConnectionTypeInfo(type).getDirectory();
 	}
 }

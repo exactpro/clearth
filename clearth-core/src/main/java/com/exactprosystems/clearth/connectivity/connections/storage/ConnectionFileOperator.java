@@ -106,10 +106,9 @@ public class ConnectionFileOperator
 		return connections;
 	}
 
-	public void save(ClearThConnection connection) throws ConnectivityException
+	public void save(ClearThConnection connection, File file) throws ConnectivityException
 	{
 		ConnectionTypeInfo info = connection.getTypeInfo();
-		File file = getConnectionFile(getConnectionFileName(connection.getName()), info);
 		createParentDirForSettings(file);
 		try
 		{
@@ -121,6 +120,12 @@ public class ConnectionFileOperator
 			throw new ConnectivityException(e, "Could not save settings of connection '%s' to file '%s'.",
 					connection.getName(), file.getAbsolutePath());
 		}
+	}
+
+	public void save(ClearThConnection connection) throws ConnectivityException
+	{
+		File file = getConnectionFile(getConnectionFileName(connection.getName()), connection.getTypeInfo());
+		save(connection, file);
 	}
 
 	public void delete(String connectionName, ConnectionTypeInfo info)
