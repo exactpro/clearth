@@ -10,7 +10,7 @@ dependencies {
 	implementation 'javax.el:el-api:2.2'
 	compile 'org.apache.myfaces.core:myfaces-api:2.3.9'
 	compile 'org.apache.myfaces.core:myfaces-impl:2.3.9'
-	compile 'org.primefaces:primefaces:11.0.0'
+	compile 'org.primefaces:primefaces:12.0.0'
 }
 
 task compileJettyXmlUpdater(type: JavaExec){
