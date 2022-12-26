@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,9 +16,30 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation;
+package com.exactprosystems.clearth.config;
 
-public enum ActionGeneratorMessageType
+import javax.xml.bind.annotation.XmlType;
+
+@XmlType(name = "matrixFatalErrors")
+public class MatrixFatalErrors
 {
-	FATAL_ERROR, ERROR, WARNING, INFO;
+	private volatile boolean duplicateActionId = true;
+
+	public MatrixFatalErrors(){}
+
+	public void setDuplicateActionId(boolean duplicateActionId)
+	{
+		this.duplicateActionId = duplicateActionId;
+	}
+
+	public boolean isDuplicateActionId()
+	{
+		return duplicateActionId;
+	}
+
+	@Override
+	public String toString()
+	{
+		return "duplicateActionId = " + this.duplicateActionId;
+	}
 }

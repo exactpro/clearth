@@ -18,6 +18,16 @@
 
 package com.exactprosystems.clearth.automation;
 
+import com.exactprosystems.clearth.config.MatrixFatalErrors;
+import com.exactprosystems.clearth.utils.SettingsException;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import org.testng.asserts.SoftAssert;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,14 +36,69 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-import org.testng.asserts.SoftAssert;
-
-import com.exactprosystems.clearth.utils.SettingsException;
+import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 
 public class ActionGeneratorTest
 {
+	public static final String matrixDir = "ActionGeneratorMatrixIDTest";
+	public static Path matrixPath;
+
+	@DataProvider(name = "testParams")
+	Object[][] getParams()
+	{
+		return new Object[][]
+			{
+				{
+					new MatrixData(), "Matrix", matrixPath.resolve("matrixDuplicatedID.csv").toFile(),
+					new ArrayList<Matrix>(), true, false
+				},
+				{
+					new MatrixData(), "Matrix", matrixPath.resolve("matrixDuplicatedID.csv").toFile(),
+					new ArrayList<Matrix>(), false, false
+				}
+			};
+	}
+
+	@BeforeClass
+	public static void init() throws FileNotFoundException
+	{
+		matrixPath = Paths.get(resourceToAbsoluteFilePath(matrixDir));
+	}
+
+	@Test(dataProvider = "testParams")
+	public void checkMatrixFatalErrors(MatrixData matrixData, String matrixName, File file, List<Matrix> matrices,
+	                                   boolean idError, boolean onlyCheck)
+			throws IOException, SettingsException
+	{
+		matrixData.setName(matrixName);
+		matrixData.setFile(file);
+		ActionGenerator generator = createGenerator(matrices, idError);
+		generator.build(matrixData, onlyCheck);
+		Assert.assertEquals(matrices.get(0).isHasFatalErrors(), idError);
+	}
+
+	protected ActionGenerator createGenerator(List<Matrix> matrices, boolean idError) throws SettingsException
+	{
+		Map<String, Step> steps = new HashMap<>();
+		steps.put("One", new DefaultStep("One", null, null, StartAtType.DEFAULT, false,
+						null, false, false, true, null));
+		steps.put("Two", new DefaultStep("Two", null, null, StartAtType.DEFAULT, false,
+						null, false, false, true, null));
+
+		ActionFactory actionFactory = new ActionFactory();
+		actionFactory.loadActionsMapping(matrixPath.resolve("actionsmapping.cfg"));
+
+		MatrixFunctions matrixFunctions = new MatrixFunctions(null, null, null, false, null);
+
+		MatrixFatalErrors matrixFatalErrors = new MatrixFatalErrors();
+		matrixFatalErrors.setDuplicateActionId(idError);
+
+		ActionGeneratorResources resources = new ActionGeneratorResources(new SpecialActionParams("Params"), actionFactory,
+				new MvelVariablesFactory(), matrixFunctions, matrixFatalErrors);
+
+		return new DefaultActionGenerator(steps, matrices, new HashMap<String, Preparable>(), resources);
+	}
+
 	@Test
 	public void specialParameters() throws SettingsException, IOException
 	{
@@ -43,32 +108,33 @@ public class ActionGeneratorTest
 				testCaseValue = "Dummy check",
 				groupValue = "Group 1",
 				stepName = "Step1";
-		
+
 		Map<String, Step> steps = new HashMap<>();
 		steps.put(stepName, new DefaultStep(stepName, null, null, StartAtType.DEFAULT, false, null, false, false, true, null));
-		
+
 		List<Matrix> matrices = new ArrayList<>();
 		Map<String, Preparable> preparable = new HashMap<>();
-		
+
 		SpecialActionParams specialParams = new SpecialActionParams(testCaseParam, groupParam);
 		ActionFactory actionFactory = new ActionFactory();
 		actionFactory.loadActionsMapping(parentDir.resolve("actionsmapping.cfg"));
 		MvelVariablesFactory mvelFactory = new MvelVariablesFactory();
 		MatrixFunctions mf = new MatrixFunctions(null, null, null, false, null);
-		ActionGeneratorResources resources = new ActionGeneratorResources(specialParams, actionFactory, mvelFactory, mf);
-		
+		ActionGeneratorResources resources = new ActionGeneratorResources(specialParams, actionFactory, mvelFactory,
+				mf, new MatrixFatalErrors());
+
 		MatrixData matrixData = new MatrixData();
 		matrixData.setName("Matrix1");
 		matrixData.setFile(parentDir.resolve("special_params.csv").toFile());
-		
+
 		ActionGenerator generator = new DefaultActionGenerator(steps, matrices, preparable, resources);
 		Assert.assertTrue(generator.build(matrixData, false), "Action generation result");
-		
+
 		List<Action> actions = matrices.get(0).getActions();
-		
+
 		Map<String, String> noSpecial = actions.get(0).getSpecialParams();
 		Assert.assertNull(noSpecial, "Special parameters in action when they are absent in matrix");
-		
+
 		Action actionWithIncompleteSpecial = actions.get(1);
 		Map<String, String> incompleteSpecial = actionWithIncompleteSpecial.getSpecialParams();
 		SoftAssert incompleteSoft = new SoftAssert();
@@ -76,7 +142,7 @@ public class ActionGeneratorTest
 		incompleteSoft.assertEquals(incompleteSpecial.get(testCaseParam), testCaseValue, "Value of special parameter");
 		incompleteSoft.assertNull(actionWithIncompleteSpecial.getInputParam(testCaseParam), "Special parameter among regular parameters");
 		incompleteSoft.assertAll();
-		
+
 		Action actionWithLastSpecial = actions.get(2);
 		Map<String, String> lastSpecial = actionWithLastSpecial.getSpecialParams();
 		SoftAssert lastSoft = new SoftAssert();
@@ -84,7 +150,7 @@ public class ActionGeneratorTest
 		lastSoft.assertEquals(lastSpecial.get(groupParam), groupValue, "Value of special parameter");
 		lastSoft.assertNull(actionWithLastSpecial.getInputParam(groupParam), "Special parameter among regular parameters");
 		lastSoft.assertAll();
-		
+
 		Action actionWithAllSpecial = actions.get(3);
 		Map<String, String> allSpecial = actionWithAllSpecial.getSpecialParams();
 		SoftAssert allSoft = new SoftAssert();

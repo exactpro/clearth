@@ -73,7 +73,7 @@ public class ClearThConfiguration
 		{
 			reader = new FileInputStream(configFile);
 			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class,
-															Memory.class, MemoryMonitorCfg.class);
+						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class);
 			Unmarshaller unmarshal = context.createUnmarshaller();
 
 			return (ClearThConfiguration) unmarshal.unmarshal(reader);

@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.exceptions.FatalAutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
 import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider;
@@ -99,7 +100,7 @@ public abstract class Scheduler
 		this.stepFactory = stepFactory;
 		this.generatorResources = generatorResources;
 		schedulerData = createSchedulerData(name, configsRoot, schedulerDirName, lastExecutionDataDir, scriptsDir);
-		
+
 		//If some matrices files were added before scheduler construction - let's add them to schedulerData
 		File mdFile = new File(scriptsDir);
 		File[] files =
@@ -491,7 +492,7 @@ public abstract class Scheduler
 		if (!onlyCheck) {
 			generator.createContextCleanData();
 		}
-		
+
 		generator.dispose();
 
 		if (!allSuccessful) return collectIssues(matricesContainer);
@@ -890,7 +891,9 @@ public abstract class Scheduler
 
 			Map<String, Preparable> preparableActions = new HashMap<String, Preparable>();
 			matricesErrors = prepare(steps, matrices, getMatricesData(), preparableActions);
-			
+
+			checkMatrixFatalErrors();
+
 			checkIfNothingToExecute();
 			
 			doBeforeStartExecution();
@@ -928,7 +931,19 @@ public abstract class Scheduler
 			throw new AutomationException(msg, e);
 		}
 	}
-	
+
+	private void checkMatrixFatalErrors() throws FatalAutomationException
+	{
+		for(Matrix matrix: getMatrices())
+		{
+			if(!matrix.isHasFatalErrors())
+				continue;
+
+			throw new FatalAutomationException("Scheduler will not start, because matrix '" + matrix.getName() +
+					"' has fatal errors");
+		}
+	}
+
 	private void checkIfNothingToExecute() throws NothingToStartException
 	{
 		for (Step step : steps)

@@ -25,6 +25,8 @@ public class Automation
 {
 	private volatile boolean userSchedulersAllowed = true;
 
+	private MatrixFatalErrors matrixFatalErrors;
+
 	public Automation(){}
 
 	public boolean isUserSchedulersAllowed()
@@ -37,9 +39,22 @@ public class Automation
 		this.userSchedulersAllowed = userSchedulersAllowed;
 	}
 
+	public void setMatrixFatalErrors(MatrixFatalErrors matrixFatalErrors)
+	{
+		this.matrixFatalErrors = matrixFatalErrors;
+	}
+
+	public MatrixFatalErrors getMatrixFatalErrors()
+	{
+		if (matrixFatalErrors == null)
+			matrixFatalErrors = new MatrixFatalErrors();
+		return matrixFatalErrors;
+	}
+
 	@Override
 	public String toString()
 	{
-		return " [userSchedulersAllowed = " + this.isUserSchedulersAllowed() + "]";
+		return " [userSchedulersAllowed = " + this.isUserSchedulersAllowed() +
+				"; matrixFatalErrors: " + this.getMatrixFatalErrors().toString() + "]";
 	}
 }

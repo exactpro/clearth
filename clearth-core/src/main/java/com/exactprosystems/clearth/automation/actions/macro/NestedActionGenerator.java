@@ -54,7 +54,8 @@ public class NestedActionGenerator extends ActionGenerator
 				new ActionGeneratorResources(specialActionParams, 
 						ClearThCore.getInstance().getActionFactory(),
 						ClearThCore.getInstance().getMvelVariablesFactory(),
-						ClearThCore.getInstance().createMatrixFunctions(Collections.emptyMap(), null, null, true)));
+						ClearThCore.getInstance().createMatrixFunctions(Collections.emptyMap(), null, null, true),
+						ClearThCore.getInstance().getConfig().getAutomation().getMatrixFatalErrors()));
 		this.macroMatrixFile = macroMatrixFile;
 		this.macroParams = macroParams;
 		this.macroStep = macroStep;

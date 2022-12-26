@@ -18,10 +18,10 @@
 
 package com.exactprosystems.clearth.automation;
 
-import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
-
 import java.io.File;
 import java.util.*;
+
+import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
 
 public class Matrix
 {
@@ -50,11 +50,13 @@ public class Matrix
 	private MatrixData matrixData;
 
 	private List<ActionGeneratorMessage> generatorMessages = null;
-	
+	private boolean hasFatalErrors;
+
 	
 	public Matrix(MvelVariablesFactory mvelVariablesFactory)
 	{
 		mvelVars = mvelVariablesFactory.create();
+		setHasFatalErrors(false);
 	}
 	
 
@@ -283,6 +285,8 @@ public class Matrix
 		if (generatorMessages==null)
 			generatorMessages = new ArrayList<ActionGeneratorMessage>();
 		generatorMessages.add(new ActionGeneratorMessage(type, kind, message));
+		if (type == ActionGeneratorMessageType.FATAL_ERROR)
+			setHasFatalErrors(true);
 	}
 	
 	public List<ActionGeneratorMessage> getGeneratorMessages()
@@ -303,5 +307,15 @@ public class Matrix
 	public void setActionsSuccess(int actionsSuccess)
 	{
 		this.actionsSuccess = actionsSuccess;
+	}
+
+	public boolean isHasFatalErrors()
+	{
+		return hasFatalErrors;
+	}
+
+	protected void setHasFatalErrors(boolean hasFatalErrors)
+	{
+		this.hasFatalErrors = hasFatalErrors;
 	}
 }

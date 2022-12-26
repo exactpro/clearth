@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2022 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -60,11 +60,12 @@ public class AutomationMatrixChecker {
 		if ((mes==null) || (mes.size()==0))
 			return result;
 
-		LinkedHashMap<ActionGeneratorMessageKind, List<String>> errors = new LinkedHashMap<>(),
-				warnings = new LinkedHashMap<>();
+		LinkedHashMap<ActionGeneratorMessageKind, List<String>> fatalErrors = new LinkedHashMap<>(),
+				errors = new LinkedHashMap<>(), warnings = new LinkedHashMap<>();
 
 		for (Map.Entry<String, List<ActionGeneratorMessage>> entry : mes.entrySet())
 		{
+			fatalErrors.clear();
 			errors.clear();
 			warnings.clear();
 
@@ -76,6 +77,7 @@ public class AutomationMatrixChecker {
 				LinkedHashMap<ActionGeneratorMessageKind, List<String>> map = null;
 				switch (m.type)
 				{
+					case FATAL_ERROR : map = fatalErrors; break;
 					case ERROR : map = errors; break;
 					case WARNING : map = warnings; break;
 					default:
@@ -89,14 +91,15 @@ public class AutomationMatrixChecker {
 				}
 			}
 
-			if (!errors.isEmpty() || !warnings.isEmpty())
+			if (!fatalErrors.isEmpty() || !errors.isEmpty() || !warnings.isEmpty())
 			{
 				result.add(MatrixIssue.matrixName(entry.getKey()));
-				result.addAll(matrixIssuesToList("ERRORS",errors));
-				result.addAll(matrixIssuesToList("WARNINGS",warnings));
+				result.addAll(matrixIssuesToList("FATAL ERRORS, scheduler will not be started until they are fixed", fatalErrors));
+				result.addAll(matrixIssuesToList("ERRORS", errors));
+				result.addAll(matrixIssuesToList("WARNINGS", warnings));
 			}
 		}
-		return  result;
+		return result;
 	}
 
 	private List<MatrixIssue> matrixIssuesToList(String header, Map<ActionGeneratorMessageKind, List<String>> issuesMap)

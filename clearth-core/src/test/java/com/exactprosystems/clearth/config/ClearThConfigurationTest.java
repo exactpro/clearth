@@ -54,20 +54,23 @@ public class ClearThConfigurationTest
 		return new Object[][]
 		{
 			{
-				configFile, true
+				configFile, true, true
 			},
 			{
-				incompleteCfgFile, true
+				incompleteCfgFile, true, true
 			}
 		};
 	}
 
 	@Test(dataProvider = "automationConfig")
-	public void testAutomationDefaultValues(File file, boolean expectedIsUserSchedulersAllowed) throws ConfigurationException
+	public void testAutomationConfig(File file, boolean expectedIsUserSchedulersAllowed, boolean duplicateActionId) throws ConfigurationException
 	{
 		ClearThConfiguration configuration = ClearThConfiguration.create(file);
 		Automation automation = configuration.getAutomation();
 		Assert.assertEquals(automation.isUserSchedulersAllowed(), expectedIsUserSchedulersAllowed);
+
+		MatrixFatalErrors matrixFatalErrors = automation.getMatrixFatalErrors();
+		Assert.assertEquals(matrixFatalErrors.isDuplicateActionId(), duplicateActionId);
 	}
 
 	@DataProvider(name = "memoryMonitorConfig")

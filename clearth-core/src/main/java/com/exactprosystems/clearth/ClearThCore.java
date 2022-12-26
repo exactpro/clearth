@@ -27,28 +27,28 @@ import com.exactprosystems.clearth.config.MemoryMonitorCfg;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.ConnectionsTransmitter;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
-import com.exactprosystems.clearth.connectivity.connections.*;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.connections.DefaultConnectionStorage;
 import com.exactprosystems.clearth.connectivity.iface.DefaultCodecFactory;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
 import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
-import com.exactprosystems.clearth.tools.ToolsManager;
-import com.exactprosystems.clearth.utils.sql.ClearThDbConnection;
 import com.exactprosystems.clearth.tools.ToolsFactory;
+import com.exactprosystems.clearth.tools.ToolsManager;
 import com.exactprosystems.clearth.utils.*;
+import com.exactprosystems.clearth.utils.sql.ClearThDbConnection;
 import com.exactprosystems.clearth.xmldata.*;
 import com.exactprosystems.memorymonitor.MemoryMonitor;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
-
 import freemarker.template.TemplateModelException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.slf4j.Logger;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -91,6 +91,7 @@ public abstract class ClearThCore
 	protected ClearThVersion cthVersion;
 
 	protected ComparisonUtils comparisonUtils;
+
 	protected ClearThConfiguration config;
 
 	public static <T extends ClearThCore> T getInstance()
@@ -236,7 +237,7 @@ public abstract class ClearThCore
 		
 		ClearThCore.instance = this;
 	}
-	
+
 	public void init(ConfigFiles configFiles, DeploymentConfig depConfig, Object... otherEntities) throws ClearThException
 	{
 		if (root != null)
@@ -255,7 +256,7 @@ public abstract class ClearThCore
 			createDefaultDirs();
 			createDirs();
 			config = loadConfig(depConfig.getConfigFileName());
-			
+
 			valueGenerators = createValueGenerators();
 			connectionStorage = createConnectionStorage();
 			actionFactory = createActionFactory();
@@ -353,7 +354,7 @@ public abstract class ClearThCore
 		connectionStorage.loadConnections();
 		connectionStorage.autoStartConnections();
 	}
-	
+
 	protected ActionFactory createActionFactory()
 	{
 		return new ActionFactory();
@@ -426,7 +427,8 @@ public abstract class ClearThCore
 	protected ActionGeneratorResources createActionGeneratorResources(ValueGenerators valueGenerators)
 	{
 		return new ActionGeneratorResources(null, actionFactory, mvelVariablesFactory, 
-				createMatrixFunctions(Collections.emptyMap(), null, null, true, valueGenerators.getCommonGenerator()));
+				createMatrixFunctions(Collections.emptyMap(), null, null, true, valueGenerators.getCommonGenerator()),
+				config.getAutomation().getMatrixFatalErrors());
 	}
 	
 	protected SchedulerFactory createSchedulerFactory(ValueGenerators valueGenerators)
@@ -980,9 +982,9 @@ public abstract class ClearThCore
 		return matrixFunctionsFactory.createMatrixFunctions(scheduler, getSchedulerFactory());
 	}
 
-
 	public String getRepositoryPath()
 	{
 		return "";
 	}
+
 }

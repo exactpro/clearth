@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,9 +16,17 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation;
+package com.exactprosystems.clearth.automation.exceptions;
 
-public enum ActionGeneratorMessageType
+public class FatalAutomationException extends AutomationException
 {
-	FATAL_ERROR, ERROR, WARNING, INFO;
+	public FatalAutomationException(String message)
+	{
+		super(message);
+	}
+
+	public FatalAutomationException(String message, Throwable cause)
+	{
+		super(message, cause);
+	}
 }

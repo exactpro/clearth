@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.generator.ActionReader;
 import com.exactprosystems.clearth.automation.generator.CsvActionReader;
 import com.exactprosystems.clearth.automation.generator.XlsActionReader;
+import com.exactprosystems.clearth.config.MatrixFatalErrors;
 import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -69,7 +70,8 @@ public abstract class ActionGenerator
 	private final ActionFactory actionFactory;
 	private final MvelVariablesFactory mvelVariablesFactory;
 	private final MatrixFunctions matrixFunctions;
-	
+	private final MatrixFatalErrors matrixFatalErrors;
+
 
 	public ActionGenerator(Map<String, Step> steps, List<Matrix> matrices, Map<String, Preparable> preparableActions, ActionGeneratorResources resources)
 	{
@@ -83,6 +85,7 @@ public abstract class ActionGenerator
 		this.actionFactory = resources.getActionFactory();
 		this.mvelVariablesFactory = resources.getMvelFactory();
 		this.matrixFunctions = resources.getMatrixFunctions();
+		this.matrixFatalErrors = resources.getMatrixFatalErrors();
 	}
 	
 	protected abstract Logger getLogger();
@@ -378,9 +381,10 @@ public abstract class ActionGenerator
 	                                         Set<String> usedIDs)
 	{
 		String actionId = actionSettings.getActionId();
+
 		boolean isUnique =  checkActionCondition(!usedIDs.contains(actionId), matrix,
 				ActionGeneratorMessageKind.DUPLICATE_ID,
-				createFailedMessage(DUPLICATE_ACTION_ID_MESSAGE, actionId, lineNumber));
+				createFailedMessage(DUPLICATE_ACTION_ID_MESSAGE, actionId, lineNumber), matrixFatalErrors.isDuplicateActionId());
 		if (isUnique)
 			usedIDs.add(actionSettings.getActionId());
 		return isUnique;
@@ -408,16 +412,32 @@ public abstract class ActionGenerator
 	}
 
 	protected boolean checkActionCondition(boolean conditionTrue, Matrix matrix, ActionGeneratorMessageKind msgKind,
-	                                       Supplier<String> createFailedMessage)
+	                                       Supplier<String> createFailedMessage, boolean conditionTrueFatal)
 	{
+		ActionGeneratorMessageType fatalError = ActionGeneratorMessageType.FATAL_ERROR;
+		ActionGeneratorMessageType warn = ActionGeneratorMessageType.WARNING;
+
 		if (!conditionTrue)
 		{
 			String message = createFailedMessage.get();
-			getLogger().warn(message);
-			matrix.addGeneratorMessage(ActionGeneratorMessageType.WARNING, msgKind, message);
+
+			matrix.addGeneratorMessage(conditionTrueFatal ? fatalError : warn,
+					msgKind, message);
+
+			if(conditionTrueFatal)
+				getLogger().error(message);
+			else
+				getLogger().warn(message);
+
 			return false;
 		}
 		return true;
+	}
+
+	protected boolean checkActionCondition(boolean conditionTrue, Matrix matrix, ActionGeneratorMessageKind msgKind,
+	                                       Supplier<String> createFailedMessage)
+	{
+		return checkActionCondition(conditionTrue, matrix, msgKind,createFailedMessage, false);
 	}
 
 	protected Supplier<String> createFailedMessage(String msgPattern, Object ... args)
@@ -628,8 +648,8 @@ public abstract class ActionGenerator
 						{
 							allSuccessful = false;
 							String message = "Unexpected error occurred while generating action for line "+lineNumber;
-							logger.warn(message, e);
-							matrix.addGeneratorMessage(ActionGeneratorMessageType.ERROR, 
+							logger.error(message, e);
+							matrix.addGeneratorMessage(ActionGeneratorMessageType.ERROR,
 									ActionGeneratorMessageKind.UNEXPECTED_GENERATING_ERROR,
 									message + ": " + ExceptionUtils.getDetailedMessage(e));
 						}
