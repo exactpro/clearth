@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
 import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoExporter;
 import com.exactprosystems.clearth.automation.schedulerinfo.template.SchedulerInfoTemplatesProcessor;
+import com.exactprosystems.clearth.config.ClearThConfiguration;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.ConnectionsTransmitter;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
@@ -89,6 +90,7 @@ public abstract class ClearThCore
 	protected ClearThVersion cthVersion;
 
 	protected ComparisonUtils comparisonUtils;
+	protected ClearThConfiguration config;
 
 	public static <T extends ClearThCore> T getInstance()
 	{
@@ -220,7 +222,11 @@ public abstract class ClearThCore
 	{
 		return instance.getConnectionStorage();
 	}
-	
+
+	public static ClearThConfiguration config()
+	{
+		return instance.getConfig();
+	}
 	
 	public ClearThCore() throws ClearThException
 	{
@@ -247,7 +253,7 @@ public abstract class ClearThCore
 		{
 			createDefaultDirs();
 			createDirs();
-			loadConfig(depConfig.getConfigFileName());
+			config = loadConfig(depConfig.getConfigFileName());
 			
 			valueGenerators = createValueGenerators();
 			connectionStorage = createConnectionStorage();
@@ -557,7 +563,11 @@ public abstract class ClearThCore
 		cthVersion = depConfig.getCTHVersion();
 		getLogger().info("Version: {}", getVersion());
 	}
-	
+
+	protected ClearThConfiguration loadConfig(String configFileName) throws Exception
+	{
+		return ClearThConfiguration.create(new File(configFileName));
+	}
 
 	public FavoriteConnectionManager getFavoriteConnections()
 	{
@@ -570,11 +580,19 @@ public abstract class ClearThCore
 	}
 
 
+	public ClearThConfiguration getConfig()
+	{
+		return this.config;
+	}
+
 	protected abstract Logger getLogger();
 	protected abstract void createDirs() throws Exception;
-	protected abstract void loadConfig(String configFileName) throws Exception;
 	protected abstract void initOtherEntities(Object... otherEntities) throws Exception;
-	public abstract boolean isUserSchedulersAllowed();
+
+	public boolean isUserSchedulersAllowed()
+	{
+		return config.getAutomation().isUserSchedulersAllowed();
+	}
 
 	/*** "Files root" routines for absolute paths ***/
 	
@@ -730,7 +748,6 @@ public abstract class ClearThCore
 	{
 		return getRootRelative(configFiles.getDataDir());
 	}
-
 	
 	protected SchedulersManager createSchedulersManager(String schedulersDir, String schedulersCfgFilePath) throws Exception
 	{

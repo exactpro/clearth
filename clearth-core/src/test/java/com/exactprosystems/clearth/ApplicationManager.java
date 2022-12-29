@@ -48,7 +48,6 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class ApplicationManager
@@ -235,22 +234,11 @@ public class ApplicationManager
 		Logger coreLogger = LoggerFactory.getLogger(ClearThCore.class);
 		ClearThCore core = spy(ClearThCore.class);
 		when(core.getAdditionalTemplateParams()).thenReturn(null);
-		when(core.isUserSchedulersAllowed()).thenReturn(false);
 		when(core.getLogger()).thenReturn(coreLogger);
 		when(core.getValueGenerators()).thenReturn(new IncrementingValueGenerators());
 		when(core.createStepFactory()).thenReturn(createStepFactory());
 		doReturn(createExecutorFactory(core.getValueGenerators().getCommonGenerator()))
 				.when(core).createExecutorFactory(any(ValueGenerators.class));
-
-		//loadConfig() implementation
-		try
-		{
-			doNothing().when(core).loadConfig(anyString());
-		}
-		catch (Exception e)
-		{
-			throw new ClearThException(e);
-		}
 
 		//initOtherEntities() implementation
 		try

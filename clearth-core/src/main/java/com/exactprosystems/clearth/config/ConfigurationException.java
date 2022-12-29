@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,47 +16,36 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.newproject;
+package com.exactprosystems.clearth.config;
 
-import java.util.Collections;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.ConfigFiles;
-import com.exactprosystems.clearth.DeploymentConfig;
 import com.exactprosystems.clearth.utils.ClearThException;
 
-public class Application extends ClearThCore
+import static java.lang.String.format;
+
+public class ConfigurationException extends ClearThException
 {
-	private static final Logger logger = LoggerFactory.getLogger(Application.class);
-	
-	public Application() throws ClearThException
+	public ConfigurationException(String message)
 	{
-		super();
+		super(message);
 	}
 
-	@Override
-	protected Logger getLogger()
+	public ConfigurationException(Throwable cause)
 	{
-		return logger;
-	}
-	
-	@Override
-	protected void createDirs() throws Exception
-	{
+		super(cause);
 	}
 
-	@Override
-	protected void initOtherEntities(Object... otherEntities) throws Exception
+	public ConfigurationException(String message, Throwable cause)
 	{
+		super(message, cause);
 	}
 
-	@Override
-	public Map<String, Object> getAdditionalTemplateParams()
+	public ConfigurationException(String messageTemplate, Object... messageTemplateArgs)
 	{
-		return Collections.EMPTY_MAP;
+		super(format(messageTemplate, messageTemplateArgs));
+	}
+
+	public ConfigurationException(Throwable cause, String messageTemplate, Object... messageTemplateArgs)
+	{
+		super(format(messageTemplate, messageTemplateArgs), cause);
 	}
 }

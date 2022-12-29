@@ -60,7 +60,6 @@ public class ConfigFiles
 	private static final String DEFAULT_SCHEDULER_INFO_FILES_DIR = "scheduler_info_files/";
 
 	
-	
 	private final String configFileName;
 	
 	public ConfigFiles(String configFileName)
