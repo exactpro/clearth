@@ -31,6 +31,7 @@ import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.NumericStringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.StringValueParser;
+import org.apache.commons.io.FileUtils;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -57,6 +58,7 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 	protected void mockOtherApplicationFields(ClearThCore application)
 	{
 		Path tempDir = testDir.resolve("temp").toAbsolutePath();
+		FileUtils.deleteQuietly(testDir.toFile());
 		tempDir.toFile().mkdirs();
 		doReturn(tempDir.toString()).when(application).getTempDirPath();
 	}
@@ -151,14 +153,13 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 	{
 		CsvContainerResult result = CsvContainerResult.createPlainResult();
 		result.setValueHandlers(valuesComparator, valueParser);
-		
+		result.setWriteCsvReportAnyway(true);
+
 		ContainerResult nestedResult = new ContainerResult();
 		DetailedResult expectedResult = generateDetailedResult("", new ResultDetail("field", "1", "1", true));
 		nestedResult.addDetail(expectedResult);
-		
+
 		result.addDetail(nestedResult);
-		result.setWriteCsvReportAnyway(true);
-		result.close();
 		
 		result.processDetails(testDir.toFile(), null);
 		

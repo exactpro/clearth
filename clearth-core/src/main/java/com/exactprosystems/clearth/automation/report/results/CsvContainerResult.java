@@ -18,31 +18,23 @@
 
 package com.exactprosystems.clearth.automation.report.results;
 
-import com.csvreader.CsvWriter;
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
-import com.exactprosystems.clearth.automation.report.ResultDetail;
+import com.exactprosystems.clearth.automation.report.comparisonwriters.ComparisonWriter;
+import com.exactprosystems.clearth.automation.report.comparisonwriters.CsvComparisonWriter;
 import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvContainerResultReader;
-import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
+import java.nio.file.Path;
 
 public class CsvContainerResult extends ContainerResult implements AutoCloseable
 {
@@ -61,6 +53,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	protected String name;
 	
 	@JsonIgnore
+	private ComparisonWriter<ContainerResult> comparisonWriter;
 	@SuppressWarnings("rawtypes")
 	protected ValuesComparator valuesComparator;
 	@JsonIgnore
@@ -71,8 +64,6 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	@JsonIgnore
 	protected File tempReportFile = null,
 			reportFile = null;
-	@JsonIgnore
-	private CsvWriter csvWriter = null;
 	
 	// Empty constructor is required for JSON-reports
 	public CsvContainerResult()
@@ -132,11 +123,21 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		if ((!onlyFailedInHtml && totalRowsCount <= maxDisplayedRowsCount)
 				|| (onlyFailedInHtml && !detail.isSuccess() && totalRowsCount - passedRowsCount <= maxDisplayedRowsCount))
 			super.addDetail(detail);
-		if ((maxStoredRowsCount < 0 || storedRowsCount < maxStoredRowsCount) && (!onlyFailedInCsv || !detail.isSuccess()))
+		
+		if (shouldBeStored(detail))
 		{
-			writeDetailToReportFile(detail);
+			addToWriter(detail);
 			storedRowsCount++;
 		}
+	}
+	
+	protected boolean shouldBeStored(Result detail)
+	{
+		// check if max limit to store reached
+		if (maxStoredRowsCount > 0 && storedRowsCount >= maxStoredRowsCount)
+			return false;
+		
+		return !detail.isSuccess() || !onlyFailedInCsv;
 	}
 
 	@Override
@@ -155,32 +156,42 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	public void processDetails(File reportDir, Action linkedAction)
 	{
 		String headerMsg = buildHeader();
-		if (tempReportFile != null)
+		if (comparisonWriter != null)
 		{
-			if (writeCsvReportAnyway || (onlyFailedInHtml && (totalRowsCount - passedRowsCount > maxDisplayedRowsCount
-					|| passedRowsCount != 0)) || totalRowsCount > maxDisplayedRowsCount)
+			try
 			{
-				try
+				boolean writeReportAnyway = isWriteCsvReportAnyway() || (isOnlyFailedInHtml() && passedRowsCount > 0);
+				
+				Path reportPath = comparisonWriter.finishReport(reportDir.toPath(), getReportFileNamePrefix(linkedAction),
+						getReportFileNameSuffixNoExtension(), writeReportAnyway);
+				if (reportPath != null)
 				{
-					File targetFile = createTargetFile(reportDir, linkedAction);
-					Files.move(tempReportFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					targetFile = processWrittenFile(targetFile);
-					headerMsg += buildDownloadLink(targetFile);
-					
-					reportFile = targetFile;
-				}
-				catch (IOException e)
-				{
-					getLogger().error("Couldn't move written CSV report file to necessary path", e);
-					headerMsg += "<br>Error occurred while saving CSV report file. Please, see logs for details.";
+					reportFile = reportPath.toFile();
+					headerMsg += buildDownloadLink(reportFile);
 				}
 			}
-			else
-				FileUtils.deleteQuietly(tempReportFile);
-			
-			tempReportFile = null;
+			catch (IOException e)
+			{
+				getLogger().error("Couldn't move written report file to necessary path", e);
+				headerMsg += "<br>Error occurred while saving report file. Please, see logs for details.";
+			}
 		}
 		setHeader(headerMsg);
+	}
+
+	protected void addToWriter(Result detail)
+	{
+		try
+		{
+			getComparisonWriter().addDetail((ContainerResult) detail);
+		}
+		catch (IOException e)
+		{
+			if (getLogger().isDebugEnabled())
+				getLogger().error("Error occurred while writing result detail to the report file: " + detail, e);
+			else
+				getLogger().error("Error occurred while writing result detail to the report file", e);
+		}
 	}
 	
 	/**
@@ -189,65 +200,21 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	@Override
 	public void close() throws IOException
 	{
-		Utils.closeResource(csvWriter);
+		Utils.closeResource(comparisonWriter);
 	}
 	
-	
-	protected void writeDetailToReportFile(Result detail)
+	protected ComparisonWriter<ContainerResult> getComparisonWriter()
 	{
-		try
-		{
-			csvWriter = getCsvReportWriter();
-			ContainerResult mainContainer = (ContainerResult)detail;
-			List<Result> mainContainerDetails = mainContainer.getDetails();
-			if (mainContainerDetails.isEmpty())
-				return;
-			DetailedResult detailedResult = (DetailedResult)mainContainerDetails.get(0);
-			List<ResultDetail> resultDetails = detailedResult.getResultDetails();
-			
-			// Write header only if it's a first comparison row in file
-			if (!onlyFailedInCsv && totalRowsCount == 1 || onlyFailedInCsv && totalRowsCount - passedRowsCount == 1)
-				writeHeaderToReportFile(resultDetails, csvWriter);
-			String compResult = detailedResult.isSuccess() ? PASSED : FAILED;
-			// Write expected comparison data
-			csvWriter.write(mainContainer.getHeader());
-			csvWriter.write(compResult);
-			csvWriter.write(EXPECTED);
-			for (ResultDetail rd : resultDetails)
-				csvWriter.write(rd.getExpected());
-			csvWriter.endRecord();
-			// Write actual comparison data
-			csvWriter.write(mainContainer.getHeader());
-			csvWriter.write(compResult);
-			csvWriter.write(ACTUAL);
-			for (ResultDetail rd : resultDetails)
-				csvWriter.write(rd.getActual());
-			csvWriter.endRecord();
-		}
-		catch (IOException e)
-		{
-			getLogger().error("Error occurred while writing next result detail to the CSV report file", e);
-		}
+		if (comparisonWriter == null)
+			comparisonWriter = createComparisonWriter();
+		
+		return comparisonWriter;
 	}
 	
-	protected void writeHeaderToReportFile(List<ResultDetail> resultDetails, CsvWriter csvWriter) throws IOException
+	protected ComparisonWriter<ContainerResult> createComparisonWriter()
 	{
-		csvWriter.write(COLUMN_COMPARISON_NAME);
-		csvWriter.write(COLUMN_COMPARISON_RESULT);
-		csvWriter.write(COLUMN_ROW_KIND);
-		for (ResultDetail rd : resultDetails)
-			csvWriter.write(rd.getParam());
-		csvWriter.endRecord();
-	}
-	
-	protected CsvWriter getCsvReportWriter() throws IOException
-	{
-		if (tempReportFile == null || csvWriter == null)
-		{
-			tempReportFile = File.createTempFile("csvcontainerresult_report_", ".csv", new File(ClearThCore.tempPath()));
-			csvWriter = new CsvWriter(new BufferedWriter(new FileWriter(tempReportFile)), ',');
-		}
-		return csvWriter;
+		int maxBufferSize = maxDisplayedRowsCount;
+		return new CsvComparisonWriter(maxBufferSize);
 	}
 	
 	protected String buildHeader()
@@ -258,24 +225,18 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 				getStoredRowsCount());
 	}
 	
-	protected File createTargetFile(File reportDir, Action linkedAction) throws IOException
+	protected String getReportFileNamePrefix(Action linkedAction)
 	{
-		File detailsDir = new File(reportDir, DETAILS_DIR);
-		detailsDir.mkdirs();
-		return Files.createTempFile(detailsDir.toPath(), (linkedAction != null ? linkedAction.getStepName()
-				+ "_" + linkedAction.getIdInMatrix() + "_" + linkedAction.getName() : "noStep_noId_noAction") + "_",
-				"_" + name + (onlyFailedInCsv ? "_(onlyfailed)" : "") + ".csv")
-				.toFile();
+		return (linkedAction == null ? "noStep_noId_noAction" :
+				String.format("%s_%s_%s", linkedAction.getStepName(), linkedAction.getIdInMatrix(),
+						linkedAction.getName()) + "_");
 	}
 	
-	protected File processWrittenFile(File writtenFile) throws IOException
+	protected String getReportFileNameSuffixNoExtension()
 	{
-		File archivedResult = new File(writtenFile.getParentFile(), FilenameUtils.removeExtension(writtenFile.getName()) + ".zip");
-		FileOperationUtils.zipFiles(archivedResult, new File[] { writtenFile });
-		FileUtils.deleteQuietly(writtenFile);
-		return archivedResult;
+		return "_" + name + (onlyFailedInCsv ? "_(onlyfailed)" : "");
 	}
-	
+
 	protected String buildDownloadLink(File file) throws IOException
 	{
 		return "<br>Zip-archive with CSV report inside could be downloaded " +
@@ -370,7 +331,6 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		this.maxStoredRowsCount = maxStoredRowsCount;
 	}
-	
 	
 	public File getTempReportFile()
 	{
