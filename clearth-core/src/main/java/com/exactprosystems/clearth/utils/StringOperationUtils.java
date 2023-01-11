@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,10 +24,15 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.removeEnd;
+import static org.apache.commons.lang.StringUtils.removeStart;
+import static org.apache.commons.lang.StringUtils.indexOfAny;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.exactprosystems.clearth.automation.MatrixFunctions;
 
 public class StringOperationUtils
 {	
@@ -131,5 +136,49 @@ public class StringOperationUtils
 		if (isBlank(value))
 			return new String[]{};
 		return value.split(",\\s*");
+	}
+	
+	/**
+	 * Removes number comparison functions (asNumber(), isLessThan(), etc.) from given string
+	 * @param s String to remove functions from
+	 * @return argument of removed function(s). Normally, a number
+	 */
+	public static String stripNumericFunctions(String s)
+	{
+		int functionStart = -1;
+		String functionName = null;
+		
+		boolean isFormula = s.startsWith(MatrixFunctions.FORMULA_START),
+				isPreCalculated = s.startsWith("{");  //@{asNumber(X)} will come here like this: {asNumber(X)}
+		for (String fn : ComparisonUtils.SPECIAL_NUMBER_FUNCTION_NAMES)
+		{
+			functionStart = s.indexOf(fn+"(");
+			if ((functionStart == 0) 
+					|| ((functionStart == 1) && isPreCalculated)
+					|| ((functionStart == 2) && isFormula))
+			{
+				functionName = fn;
+				break;
+			}
+		}
+		
+		if (functionStart == -1)
+			return s;
+		
+		//                                             name + (
+		int cutFrom = functionStart + functionName.length() + 1;
+		
+		int cutTo = indexOfAny(s, ",)");
+		if (cutTo == -1)
+			cutTo = s.length();
+		
+		String newD = removeQuotes(s.substring(cutFrom, cutTo));
+		return stripNumericFunctions(newD);
+	}
+	
+	
+	private static String removeQuotes(String s)
+	{
+		return removeStart(removeEnd(s, "'"), "'");
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -48,6 +48,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.Map.Entry;
 
 public abstract class SQLAction extends Action implements Preparable
 {
@@ -96,7 +97,7 @@ public abstract class SQLAction extends Action implements Preparable
 		this.valueTransformer = createValueTransformer();
 		this.recordChecker = createRecordChecker();
 
-		queryParams = new LinkedHashMap<>(inputParams);
+		queryParams = createQueryParams();
 
 		try
 		{
@@ -337,6 +338,15 @@ public abstract class SQLAction extends Action implements Preparable
 	protected RecordChecker createRecordChecker()
 	{
 		return new DefaultRecordChecker();
+	}
+	
+	protected Map<String, String> createQueryParams()
+	{
+		Map<String, String> result = new LinkedHashMap<>(inputParams.size());
+		//Removing number comparison functions, if present, to not break query if corresponding values are used as query parameters
+		for (Entry<String, String> param : getInputParams().entrySet())
+			result.put(param.getKey(), StringOperationUtils.stripNumericFunctions(param.getValue()));
+		return result;
 	}
 
 	protected String loadQueryFromFile(String queryFileName) throws IOException

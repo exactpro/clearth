@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -56,9 +56,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
-/**
- * 03 June 2019
- */
 public class MatrixFunctionsTest extends BasicTestNgTest
 {
 	public static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
@@ -354,7 +351,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 								"11111111111.111111222222",
 								"99999999999.888888444444",
 								12
-						},
+						}
 				};
 	}
 

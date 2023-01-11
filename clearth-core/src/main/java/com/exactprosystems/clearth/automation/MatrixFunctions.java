@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -40,7 +40,6 @@ import java.util.*;
 
 import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
 import static com.exactprosystems.clearth.ClearThCore.valueGenerators;
-import static org.apache.commons.lang.StringUtils.*;
 
 public class MatrixFunctions
 {
@@ -1147,35 +1146,7 @@ public class MatrixFunctions
 	
 	protected String stripFunctions(String d)
 	{
-		int functionStart = -1;
-		String functionName = null;
-		for (String fn : ComparisonUtils.SPECIAL_NUMBER_FUNCTION_NAMES)
-		{
-			functionStart = d.indexOf(fn);
-			if (functionStart != -1)
-			{
-				functionName = fn;
-				break;
-			}
-		}
-		
-		if (functionStart == -1)
-			return d;
-		
-		//                                             name + (
-		int cutFrom = functionStart + functionName.length() + 1;
-		
-		int cutTo = indexOfAny(d, ",)");
-		if (cutTo == -1)
-			cutTo = d.length();
-		
-		String newD = removeQuotes(d.substring(cutFrom, cutTo));
-		return stripFunctions(newD);
-	}
-	
-	private String removeQuotes(String s)
-	{
-		return removeStart(removeEnd(s, "'"), "'");
+		return StringOperationUtils.stripNumericFunctions(d);
 	}
 	
 	//This method is meant to remove functions like {asNumber('value')}.
