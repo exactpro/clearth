@@ -56,6 +56,11 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 
 	protected long awaitedTimeout;
 	
+	protected Map<String, String> getVerificationParams()
+	{
+		return inputParams;
+	}
+	
 	protected List<DBFieldMapping> loadVerificationMapping(String fileName) throws IOException, NumberFormatException
 	{
 		return SQLUtils.loadVerificationMapping(fileName);
@@ -162,7 +167,7 @@ public abstract class VerifySQLAction extends SelectSQLAction implements Timeout
 		MultiDetailedResult result = new MultiDetailedResult();
 		int matched = 0;
 		boolean fl = false;
-		Map<String, String> params = getQueryParams();
+		Map<String, String> params = getVerificationParams();
 		for (Map<String, String> row : dbValues)
 		{
 			if (fl)
