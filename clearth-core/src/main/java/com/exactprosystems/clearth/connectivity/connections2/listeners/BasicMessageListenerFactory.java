@@ -19,7 +19,11 @@
 package com.exactprosystems.clearth.connectivity.connections2.listeners;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.*;
+import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
+import com.exactprosystems.clearth.connectivity.ListenerProperties;
+import com.exactprosystems.clearth.connectivity.MessageListener;
+import com.exactprosystems.clearth.connectivity.MultiCodec;
+import com.exactprosystems.clearth.connectivity.connections2.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections2.exceptions.ListenerException;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
@@ -31,7 +35,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static com.exactprosystems.clearth.connectivity.ListenerType.Proxy;
 import static com.exactprosystems.clearth.connectivity.ListenerType.listenerTypeByLabel;
@@ -42,7 +49,24 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 {
 	private static final Logger logger = LoggerFactory.getLogger(BasicMessageListenerFactory.class);
 
-	public MessageListener createListener(String connectionName, ListenerConfiguration configuration)
+	private final Set<Class<? extends MessageListener>> supportedListenerTypes;
+
+	public BasicMessageListenerFactory()
+	{
+		this.supportedListenerTypes = Collections.unmodifiableSet(createSupportedListenerTypes());
+	}
+
+	protected LinkedHashSet<Class<? extends MessageListener>> createSupportedListenerTypes()
+	{
+		LinkedHashSet<Class<? extends MessageListener>> result = new LinkedHashSet<>();
+		result.add(ProxyListener.class);
+		result.add(ClearThMessageCollector.class);
+		result.add(FileListener.class);
+
+		return result;
+	}
+
+	public MessageListener createListener(ClearThConnection connection, ListenerConfiguration configuration)
 			throws SettingsException, ListenerException
 	{
 		MessageListener listener;
@@ -52,22 +76,22 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 			{
 				case File :
 				{
-					listener = createFileListener(connectionName, configuration);
+					listener = createFileListener(connection, configuration);
 					break;
 				}
 				case Proxy :
 				{
-					listener = createProxyListener(connectionName, configuration);
+					listener = createProxyListener(connection, configuration);
 					break;
 				}
 				case Collector :
 				{
-					listener = createMessageCollector(connectionName, configuration);
+					listener = createMessageCollector(connection, configuration);
 					break;
 				}
 				default :
 				{
-					listener = createListenerEx(connectionName, configuration);
+					listener = createListenerEx(connection, configuration);
 					break;
 				}
 			}
@@ -87,6 +111,12 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 		return listener;
 	}
 
+	@Override
+	public Set<Class<? extends MessageListener>> getSupportedListenerTypes()
+	{
+		return supportedListenerTypes;
+	}
+
 	private ListenerProperties createProperties(ListenerConfiguration configuration)
 	{
 		return new ListenerProperties(configuration.getName(),
@@ -95,7 +125,7 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 				configuration.isActiveForSent());
 	}
 
-	protected FileListener createFileListener(String connectionName, ListenerConfiguration configuration)
+	protected FileListener createFileListener(ClearThConnection connection, ListenerConfiguration configuration)
 			throws SettingsException, ListenerException
 	{
 		ListenerProperties properties = createProperties(configuration);
@@ -116,7 +146,7 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 		FIXME replace old version of connection with a new one when it will become possible
 		It will become possible when we'll have new versions of ConnectionStorage and ProxyListner
 	 */
-	protected ProxyListener createProxyListener(String connectionName, ListenerConfiguration configuration)
+	protected ProxyListener createProxyListener(ClearThConnection connection, ListenerConfiguration configuration)
 			throws SettingsException, ListenerException
 	{
 		com.exactprosystems.clearth.connectivity.connections.ClearThConnection<?, ?> con =
@@ -143,21 +173,21 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 		}
 	}
 
-	protected MessageListener createMessageCollector(String connectionName, ListenerConfiguration configuration)
+	protected MessageListener createMessageCollector(ClearThConnection connection, ListenerConfiguration configuration)
 			throws SettingsException, ListenerException
 	{
 		Map<String, String> settings = KeyValueUtils.parseKeyValueString(configuration.getSettings(), ";", true);
 		ListenerProperties properties = createProperties(configuration);
 		String messageEndIndicator = getMessageCollectorMessageEndIndicator();
-		String type = configuration.getType();
+		String type = settings.get(ClearThMessageCollector.TYPE_SETTING);
 		if (type == null)
-			return new ClearThMessageCollector(properties, connectionName, settings, messageEndIndicator);
+			return new ClearThMessageCollector(properties, connection.getName(), settings, messageEndIndicator);
 
 
-		return new ClearThMessageCollector(properties, connectionName, createCodec(type), settings, messageEndIndicator);
+		return new ClearThMessageCollector(properties, connection.getName(), createCodec(type), settings, messageEndIndicator);
 	}
 
-	protected MessageListener createListenerEx(String connectionName, ListenerConfiguration configuration)
+	protected MessageListener createListenerEx(ClearThConnection connection, ListenerConfiguration configuration)
 			throws SettingsException, ListenerException
 	{
 		return null;

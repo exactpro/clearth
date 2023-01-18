@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -65,7 +66,7 @@ public abstract class BasicClearThMessageConnection extends BasicClearThConnecti
 		return new BasicMessageListenerFactory();
 	}
 
-	protected abstract ClearThClient createClient();
+	protected abstract ClearThClient createClient() throws SettingsException, ConnectionException;
 
 	@Override
 	public Object sendMessage(Object message) throws ConnectivityException
@@ -291,7 +292,7 @@ public abstract class BasicClearThMessageConnection extends BasicClearThConnecti
 	protected MessageListener createListener(ListenerConfiguration listenerConfiguration)
 			throws SettingsException, ConnectivityException
 	{
-		return listenerFactory.createListener(name, listenerConfiguration);
+		return listenerFactory.createListener(this, listenerConfiguration);
 	}
 
 	protected void disposeResources()
@@ -334,5 +335,10 @@ public abstract class BasicClearThMessageConnection extends BasicClearThConnecti
 				impl.dispose();
 		}
 	}
-
+	
+	@Override
+	public Set<Class<? extends MessageListener>> getSupportedListenerTypes()
+	{
+		return listenerFactory.getSupportedListenerTypes();
+	}
 }

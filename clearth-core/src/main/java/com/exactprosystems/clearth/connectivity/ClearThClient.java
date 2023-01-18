@@ -18,15 +18,22 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.util.List;
-
 import com.exactprosystems.clearth.messages.PlainMessageSender;
+
+import java.util.List;
 
 public interface ClearThClient extends PlainMessageSender
 {
 	void addMessageListener(MessageListener listener);
-	
-	void addMessageListeners(List<MessageListener> listeners);
+
+	default void addMessageListeners(List<MessageListener> listeners)
+	{
+		if (listeners != null)
+		{
+			for (MessageListener listener : listeners)
+				addMessageListener(listener);
+		}
+	}
 	
 	void start(boolean startListeners) throws ConnectivityException;
 	

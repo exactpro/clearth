@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.connectivity.connections2;
 
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
+import com.exactprosystems.clearth.connectivity.MessageListener;
 
 import java.util.List;
 import java.util.Set;
@@ -34,5 +35,5 @@ public interface ClearThMessageConnection extends ClearThRunnableConnection
 
 	List<ListenerConfiguration> getListeners();
 
-	Set<Class> getSupportedListenerTypes();
+	Set<Class<? extends MessageListener>> getSupportedListenerTypes();
 }

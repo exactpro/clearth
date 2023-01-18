@@ -16,20 +16,30 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.connectivity.connections2.listeners;
+package com.exactprosystems.clearth.connectivity.connections2.db;
 
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
-import com.exactprosystems.clearth.connectivity.MessageListener;
+import com.exactprosystems.clearth.connectivity.connections2.BasicClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections2.ClearThConnection;
-import com.exactprosystems.clearth.utils.SettingsException;
 
-import java.util.Set;
-
-public interface MessageListenerFactory
+public class DbConnection extends BasicClearThConnection
 {
-	MessageListener createListener(ClearThConnection connection, ListenerConfiguration configuration)
-			throws SettingsException, ConnectivityException;
+	@Override
+	public ClearThConnection copy()
+	{
+		DbConnection other = new DbConnection();
+		other.copyFrom(this);
+		return other;
+	}
 
-	Set<Class<? extends MessageListener>> getSupportedListenerTypes();
+	@Override
+	public DbConnectionSettings getSettings()
+	{
+		return (DbConnectionSettings) settings;
+	}
+
+	@Override
+	protected DbConnectionSettings createSettings()
+	{
+		return new DbConnectionSettings();
+	}
 }
