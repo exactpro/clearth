@@ -16,22 +16,26 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.connectivity.connections2;
+package com.exactprosystems.clearth.connectivity.connections2.validation;
 
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.connectivity.connections2.ClearThConnection;
 
-import java.time.LocalDateTime;
-
-public interface ClearThRunnableConnection extends ClearThConnection
+/**
+ * Rule for Connection settings validation.
+ */
+public interface ClearThConnectionValidationRule
 {
-	void start() throws ConnectivityException, SettingsException;
-	void stop() throws ConnectivityException;
-	void restart() throws ConnectivityException, SettingsException;
-	boolean isRunning();
-	LocalDateTime getStarted();
-	LocalDateTime getStopped();
+	/**
+	 * Tests whether this rule is applicable for this connection.
+	 * @param connectionToCheck connection to test.
+	 * @return true if this rule is applicable to specified connection.
+	 */
+	boolean isConnectionSuitable(ClearThConnection connectionToCheck);
 
-	boolean isAutoConnect();
-
+	/**
+	 * Validates connection and returns error message if validation is failed.
+	 * @param connectionToCheck connection to check.
+	 * @return error description if validation is failed. In case of passed validation can return null or empty String.
+	 */
+	String check(ClearThConnection connectionToCheck);
 }

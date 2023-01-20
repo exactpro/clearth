@@ -16,22 +16,15 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.connectivity.connections2;
+package com.exactprosystems.clearth.connectivity.connections2.validation;
 
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.connectivity.connections2.ClearThConnection;
 import com.exactprosystems.clearth.utils.SettingsException;
 
-import java.time.LocalDateTime;
+import java.util.Set;
 
-public interface ClearThRunnableConnection extends ClearThConnection
+public interface ConnectionStartValidator
 {
-	void start() throws ConnectivityException, SettingsException;
-	void stop() throws ConnectivityException;
-	void restart() throws ConnectivityException, SettingsException;
-	boolean isRunning();
-	LocalDateTime getStarted();
-	LocalDateTime getStopped();
-
-	boolean isAutoConnect();
-
+	void checkIfCanStartConnection(ClearThConnection connectionToCheck,
+	                                      Set<ClearThConnectionValidationRule> rules) throws SettingsException;
 }

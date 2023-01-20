@@ -18,15 +18,19 @@
 
 package com.exactprosystems.clearth.connectivity.connections2;
 
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+
 public interface ClearThConnection
 {
 	String getName();
 
 	void setName(String name);
 
-	String getType();
+	ConnectionTypeInfo getTypeInfo();
 
-	ClearThConnection copy();
+	void setTypeInfo(ConnectionTypeInfo typeInfo);
+
+	ClearThConnection copy() throws ConnectivityException;
 	void copyFrom(ClearThConnection other);
 
 	ClearThConnectionSettings getSettings();

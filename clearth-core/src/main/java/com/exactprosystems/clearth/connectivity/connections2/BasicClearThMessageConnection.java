@@ -130,7 +130,7 @@ public abstract class BasicClearThMessageConnection extends BasicClearThConnecti
 			if (connectionState.cantBeStarted())
 				return;
 
-			connectionState.reset();;
+			connectionState.reset();
 
 			logger.debug("Trying to start connection '{}'.", name);
 

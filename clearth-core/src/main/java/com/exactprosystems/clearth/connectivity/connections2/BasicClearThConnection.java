@@ -18,10 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity.connections2;
 
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+
 public abstract class BasicClearThConnection implements ClearThConnection
 {
 
 	protected String name = "";
+	protected ConnectionTypeInfo typeInfo;
 	protected ClearThConnectionSettings settings;
 
 	public BasicClearThConnection()
@@ -42,6 +45,18 @@ public abstract class BasicClearThConnection implements ClearThConnection
 	}
 
 	@Override
+	public ConnectionTypeInfo getTypeInfo()
+	{
+		return typeInfo;
+	}
+
+	@Override
+	public void setTypeInfo(ConnectionTypeInfo typeInfo)
+	{
+		this.typeInfo = typeInfo;
+	}
+
+	@Override
 	public ClearThConnectionSettings getSettings()
 	{
 		return settings;
@@ -52,6 +67,24 @@ public abstract class BasicClearThConnection implements ClearThConnection
 	{
 		settings.copyFrom(other.getSettings());
 		this.setName(other.getName());
+		this.setTypeInfo(other.getTypeInfo());
+	}
+
+	@Override
+	public ClearThConnection copy() throws ConnectivityException
+	{
+		try
+		{
+			ClearThConnection newConnection = this.getClass().newInstance();
+			newConnection.setName(this.getName());
+			newConnection.getSettings().copyFrom(this.getSettings());
+			newConnection.setTypeInfo(this.getTypeInfo());
+			return newConnection;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new ConnectivityException(e, "Cannot copy connection with name = %s", getName());
+		}
 	}
 
 	protected abstract ClearThConnectionSettings createSettings();

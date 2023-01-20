@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,19 +18,69 @@
 
 package com.exactprosystems.clearth.connectivity.connections2;
 
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.utils.SettingsException;
+
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Predicate;
 
 public interface ClearThConnectionStorage
 {
-	ClearThConnection findConnection(String name);
+	void registerType(ConnectionTypeInfo info);
 
-	ClearThConnection findConnection(String name, String type);
+	public Collection<String> getTypes();
+
+	List<ClearThConnection> getConnections();
+
+	default List<ClearThConnection> getConnections(String type)
+	{
+		return getConnections(type, null, null);
+	}
+
+	default List<ClearThConnection> getConnections(Predicate<ClearThConnection> predicate)
+	{
+		return getConnections(predicate, null);
+	}
+
+	<T extends ClearThConnection> List<T> getConnections(Predicate<ClearThConnection> predicate, Class<T> clazz);
+
+	<T extends ClearThConnection> List<T> getConnections(String type, Predicate<ClearThConnection> predicate,
+	                                                     Class<T> clazz);
+
+	List<String> listConnections(Predicate<ClearThConnection> predicate);
+
+	boolean containsConnection(String name);
+
+	ClearThConnection getConnection(String name);
+
+	ClearThConnection getConnection(String name, String type);
+
+	ClearThConnection findRunningConnection(String conName) throws ConnectivityException;
+
+	ClearThConnection findRunningConnection(String conName, String type) throws ConnectivityException;
 
 	void autoStartConnections();
 
 	void stopAllConnections();
-	
-	Collection<String> getTypes();
-	
-	Collection<ClearThConnection> getConnections(String type);
+
+	ClearThConnection createConnection(String type) throws ConnectivityException;
+
+	void addConnection(ClearThConnection connection) throws ConnectivityException,
+			SettingsException;
+
+	void renameConnection(ClearThConnection connection, String newName)
+			throws ConnectivityException, SettingsException;
+
+	void modifyConnection(ClearThConnection connectionToModify, ClearThConnection connectionWithNewSettings)
+			throws ConnectivityException, SettingsException;
+
+	void removeConnection(ClearThConnection connection) throws ConnectivityException;
+
+	void loadConnections();
+
+	void reloadConnections();
+
+	void validateConnectionStart(ClearThConnection connection) throws ConnectivityException, SettingsException;
+
 }
