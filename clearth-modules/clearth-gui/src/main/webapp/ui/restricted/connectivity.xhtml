@@ -9,21 +9,31 @@
 	<ui:define name="title">Connectivity</ui:define>
 
 	<ui:define name="content">
+		<p:importEnum type="com.exactprosystems.clearth.connectivity.connections2.settings.ValueClass" var="ValueClass" allSuffix="ALL"/>
+		<p:importEnum type="com.exactprosystems.clearth.connectivity.connections2.settings.InputType" var="InputType" allSuffix="ALL"/>
+		
 		<script type="text/javascript" src="#{request.contextPath}/js/cookieutils.js?version=1.0"></script>
 
 		<label class="pageTitle">Connectivity</label>
+		<h:form id="ConnectivityMenu" style="margin-bottom: 10px">
+			<p:selectOneButton id="selectedType" value="#{connectivityBean.selectedConnectionType}">
+				<p:ajax update=":Connections :ConnectivityMenu" />
+				<f:selectItems value="#{connectivityBean.connectionTypes}" var="t"
+						itemValue="#{t}" itemLabel="#{t}"/>
+			</p:selectOneButton>
+		</h:form>
+		
 <!-- Table with connections -->
 		<h:form id="Connections">
-
 <!-- Context menu for selected connection -->
 			<div class="upperContainer">
 				<div class="upperLeftContainer">
-					<p:commandButton value="New connection" actionListener="#{connectivityBean.newMqConnection}"
+					<p:commandButton value="New connection" actionListener="#{connectivityBean.newConnection}"
 									 icon="ui-icon-plusthick"
 									 update=":ConnectionDlg :Connections" oncomplete="PF('conDialog').show()"/>
 				</div>
 				<div class="upperRightContainer">
-					<p:fileUpload listener="#{connectivityBean.uploadMqConnections}"
+					<p:fileUpload listener="#{connectivityBean.uploadConnections}"
 								  allowTypes="/(\.|\/)(zip)$/" label="Upload connections"
 								  mode="advanced" auto="true" showButtons="false" multiple="false"
 								  update=":Connections :Growl" styleClass="simple">
@@ -31,7 +41,7 @@
 					<h:outputText value="&#160;&#160;&#160;"/>
 					<p:commandButton value="Download connections" ajax="false" 
 							icon="ui-icon-arrowthickstop-1-s" style="top: 1px;">
-						<p:fileDownload value="#{connectivityBean.downloadMqConnections()}" />
+						<p:fileDownload value="#{connectivityBean.downloadConnections()}" />
 					</p:commandButton>
 				</div>
 			</div>
@@ -41,7 +51,7 @@
 					<div class="upperLeftContainer">
 						<p:commandLink id="StartConnectionsButton"
 									   title="#{connectivityBean.isOneOrMoreConsSelected() ? 'Start selected connection(s)' : 'Start all connections'}"
-									   actionListener="#{connectivityBean.startMqConnections}"
+									   actionListener="#{connectivityBean.startConnections}"
 									   update=":Connections :Growl :Timer"
 									   onstart="saveConsScrollPos();"
 									   oncomplete="restoreConsScrollPos();"
@@ -101,8 +111,8 @@
 			</div>
 
 			<div class="tableContainer fullWidth" id="ConnectionsList">
-				<p:dataTable id="connectionsTable" var="connection" value="#{connectivityBean.mqConnections}" styleClass="responsiveTable toBottom"
-							 selectionMode="multiple" selection="#{connectivityBean.selectedMqConnections}" rowKey="#{connection.name}"
+				<p:dataTable id="connectionsTable" var="connection" value="#{connectivityBean.connections}" styleClass="responsiveTable toBottom"
+							 selectionMode="multiple" selection="#{connectivityBean.selectedConnections}" rowKey="#{connection.name}"
 							 rowStyleClass="#{connection.running ? 'runningConnectionRow' : null}" scrollable="true" scrollHeight="7"
 							 resizableColumns="true" liveResize="true">
 					<p:ajax event="rowSelect" update=":Connections:ConnectionOperations :SendMsgForm"/>
@@ -110,19 +120,16 @@
 					<p:ajax event="rowDblselect" update=":ConnectionDlg" oncomplete="PF('conDialog').show()" actionListener="#{connectivityBean.trueEdit}" />
 					<p:ajax event="colResize" oncomplete="saveColumnsWidths('Connections:connectionsTable')" />
 
-					<p:column styleClass="collapsedIconTable table-button" style="width: 16px; border-right: none;" resizable="false">
-						<p:rowToggler />
-					</p:column>
 					<p:column styleClass="table-button" style="width: 16px; border-right: none;" responsivePriority="1" resizable="false">
 						<p:commandLink title="Start" update=":Connections :Growl :Timer"
-								action="#{connectivityBean.startMqConnections}" rendered="#{!connection.running}"
+								action="#{connectivityBean.startConnections}" rendered="#{!connection.running}"
 								onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos();">
 							<h:graphicImage value="/images/off.png" alt="Start" style="vertical-align: middle" />
-							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedMqConnection}" />
+							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedConnection}" />
 						</p:commandLink>
 						<p:commandLink title="Stop" rendered="#{connection.running}" oncomplete="PF('stopConnectionConfirmDialog').show();">
 							<h:graphicImage value="/images/on.png" alt="Stop" style="vertical-align: middle" />
-							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedMqConnection}" />
+							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedConnection}" />
 						</p:commandLink>
 					</p:column>
 					<p:column styleClass="table-button" style="width: 21px; border-right: none;" responsivePriority="1" resizable="false">
@@ -130,42 +137,22 @@
 								action="#{connectivityBean.unfavorite}" rendered="#{connectivityBean.isFavorite(connection)}"
 								onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos();">
 							<h:graphicImage value="/images/star.png" alt="Favorite" style="vertical-align: middle" />
-							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedMqConnection}" />
+							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedConnection}" />
 						</p:commandLink>
 						<p:commandLink title="Unfavorite" update=":Connections :Growl"
 								action="#{connectivityBean.favorite}" rendered="#{!connectivityBean.isFavorite(connection)}"
 								onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos();">
 							<h:graphicImage value="/images/star_silver.png" alt="Unfavorite" style="vertical-align: middle" />
-							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedMqConnection}" />
+							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedConnection}" />
 						</p:commandLink>
 					</p:column>
-					<p:column headerText="Name" responsivePriority="1">
+					
+					<p:column headerText="Name">
 						<h:outputText value="#{connection.name}" />
 					</p:column>
-					<p:column headerText="Host" responsivePriority="4">
-						<h:outputText value="#{connection.hostname}" />
-					</p:column>
-					<p:column headerText="Port" responsivePriority="4">
-						<h:outputText value="#{connection.port}" rendered="#{connection.port >= 0}" />
-					</p:column>
-					<p:column headerText="Manager" responsivePriority="3">
-						<h:outputText value="#{connection.queueManager}"  />
-					</p:column>
-					<p:column headerText="Channel" responsivePriority="3">
-						<h:outputText value="#{connection.channel}" />
-					</p:column>
-					<p:column headerText="Receive&#160;queue" responsivePriority="2">
-						<h:outputText value="#{connection.receiveQueue}" />
-					</p:column>
-					<p:column headerText="Send&#160;queue" responsivePriority="2">
-						<h:outputText value="#{connection.sendQueue}" />
-					</p:column>
-					<p:column headerText="Received" responsivePriority="5">
-						<h:outputText value="#{connection.received}" />
-					</p:column>
-					<p:column headerText="Sent" responsivePriority="5">
-						<h:outputText value="#{connection.sent}" />
-					</p:column>
+					<p:columns value="#{connectivityBean.columns}" var="column" headerText="#{column.name}">
+						<h:outputText value="#{connectivityBean.getColumnValue(column, connection)}" />
+					</p:columns>
 					<p:column headerText="Started" responsivePriority="6">
 						<h:outputText value="#{connection.started}">
 							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
@@ -176,55 +163,6 @@
 							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
 						</h:outputText>
 					</p:column>
-
-					<p:rowExpansion>
-						<nobr>
-							<h:outputText value="Name: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.name}" />
-						</nobr>
-						<br />
-						<nobr>
-							<h:outputText value=" Host, port, manager, channel: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.hostname}, #{connection.port}, #{connection.queueManager}, #{connection.channel}" />
-						</nobr>
-						<br />
-						<nobr>
-							<h:outputText value=" Receive queue: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.receiveQueue}" />
-						</nobr>
-						<br />
-						<nobr>
-							<h:outputText value=" Send queue: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.sendQueue}" />
-						</nobr>
-						<br />
-						<nobr>
-							<h:outputText value=" Received: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.received}" />
-							<h:outputText value=" Sent: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.sent}" />
-							<h:outputText value=" Warnings: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.warnings}" />
-						</nobr>
-						<br />
-						<nobr>
-							<h:outputText value=" Auto-connect: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.autoConnect}" />
-							<h:outputText value=" Auto-reconnect: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.autoReconnect}" />
-						</nobr>
-						<br />
-						<nobr>
-							<h:outputText value=" Started: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.started}">
-								<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
-							</h:outputText>
-							<h:outputText value=" Stopped: " style="font-weight: bold;" />
-							<h:outputText value="#{connection.stopped}">
-								<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
-							</h:outputText>
-						</nobr>
-					</p:rowExpansion>
 				</p:dataTable>
 				<script>
 					ajax_handle_toBottom();
@@ -232,12 +170,13 @@
 				</script>
 			</div>
 		</h:form>
+		
 <!-- Listeners dialog -->
 		<p:dialog header="Connection listeners" widgetVar="listenersDialog" id="ListenersDlg" resizable="false" width="1000" closeOnEscape="true" modal="#{guiBean.modalDialog}"
 				  styleClass="dialog-nopadding-top-bottom">
 			<h:form id="ListenersDialog">
 				<h:panelGroup layout="block" styleClass="big-info-block" rendered="#{connectivityBean.noListenersInfo}">
-					Connection '#{connectivityBean.oneSelectedMqConnection.name}' has no listeners
+					Connection '#{connectivityBean.oneSelectedConnection.name}' has no listeners
 					<br/>
 					<p:commandButton value="Add" icon="ui-icon-plusthick" update=":ListenersDialog"
 									 actionListener="#{connectivityBean.addListener}" styleClass="margin-top"/>
@@ -254,7 +193,7 @@
 										<p:commandButton value="Add" icon="ui-icon-plusthick" update=":ListenersDialog" actionListener="#{connectivityBean.addListener}"/>
 									</div>
 								</div>
-								<p:dataTable id="listenersTable" var="listener" value="#{connectivityBean.oneSelectedMqConnection.listeners}" lazy="false"
+								<p:dataTable id="listenersTable" var="listener" value="#{connectivityBean.oneSelectedConnection.listeners}" lazy="false"
 											 styleClass="hide-table-header" emptyMessage="No listeners here"
 											 selectionMode="single" selection="#{connectivityBean.selectedListener}" rowKey="#{listener.hashCode()}"
 											 scrollable="true" scrollHeight="400">
@@ -325,7 +264,7 @@
 							</p:column>
 							<p:column rendered="#{empty connectivityBean.selectedListener}">
 								<h:panelGroup layout="block" styleClass="big-info-block">
-									Connection '#{connectivityBean.oneSelectedMqConnection.name}' has no listeners
+									Connection '#{connectivityBean.oneSelectedConnection.name}' has no listeners
 								</h:panelGroup>
 							</p:column>
 						</p:row>
@@ -344,83 +283,58 @@
 		<p:dialog header="Connection settings" widgetVar="conDialog" id="ConnectionDlg"
 				width="#{connectivityBean.oneConnectionSelected ? 360 : 390}" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ConnectionDialog">
-				<h:panelGrid id="display" columns="#{connectivityBean.oneConnectionSelected ? 2 : 3}" cellpadding="4" style="margin: 0 auto;">
-					<h:outputText value="You'll never catch me!" rendered="false" /><ui:remove><!-- This is added for correct three-column view and shouldn't be ever seen in GUI. --></ui:remove>
-					<h:outputText value="Name*:" rendered="#{connectivityBean.oneConnectionSelected}" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.name}" label="Name" rendered="#{connectivityBean.oneConnectionSelected}" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.host}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Host:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.hostname}" label="Host" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.port}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Port:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.port}" label="Port" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.queueManager}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Queue manager:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.queueManager}" label="Queue manager" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.channel}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Channel:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.channel}" label="Channel" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.retryAttemptCount}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Retry attempt count:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.retryAttemptCount}" label="Retry attempt count" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.retryTimeout}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Retry timeout:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.retryTimeout}" label="Retry timeout" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.receiveQueue}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<p:outputPanel>
-						<p:selectBooleanCheckbox value="#{connectivityBean.oneSelectedMqConnection.useReceiveQueue}" itemLabel="Receive queue:"/>
-					</p:outputPanel>
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.receiveQueue}" label="Receive queue" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.sendQueue}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Send queue:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.sendQueue}" label="Send queue" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.readDelay}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText value="Read delay*:" />
-					<p:inputText value="#{connectivityBean.oneSelectedMqConnection.readDelay}" label="Read delay" />
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.autoConnect}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText />
-					<p:selectBooleanCheckbox value="#{connectivityBean.oneSelectedMqConnection.autoConnect}" itemLabel="Auto-connect"/>
-
-					<p:selectBooleanCheckbox value="#{connectivityBean.mqConProps.autoReconnect}" rendered="#{!connectivityBean.oneConnectionSelected}" />
-					<h:outputText />
-					<p:selectBooleanCheckbox value="#{connectivityBean.oneSelectedMqConnection.autoReconnect}" itemLabel="Auto-reconnect"/>
-
-					<h:outputText rendered="false" /><ui:remove><!-- This is for three-column view as well --></ui:remove>
-					<h:outputText rendered="#{connectivityBean.copy}" />
-					<p:selectBooleanCheckbox rendered="#{connectivityBean.copy}" value="#{connectivityBean.copyListners}" itemLabel="Copy listeners" />
-
-					<f:facet name="footer">
-						<p:outputPanel layout="block" style="text-align:right">
-							<p:commandButton value="Save"
-									update=":Connections :Growl"
-									actionListener="#{connectivityBean.saveConnections}"
-									rendered="#{!connectivityBean.selectedConnectionRunning}"
-									onstart="saveConsScrollPos();"
-									oncomplete="restoreConsScrollPos(); if (args.canClose) PF('conDialog').hide();"
-									icon="ui-icon ui-icon-check">
-							</p:commandButton>
-							<p:commandButton value="Save" 
-									rendered="#{connectivityBean.selectedConnectionRunning}"
-									actionListener="#{connectivityBean.saveConnectionsAfterCopy}"
-									oncomplete="if (#{!connectivityBean.copy}) PF('restartConnectionConfirmDialog').show(); else {hideConnectionDialog(); saveConsScrollPos(); restoreConsScrollPos();}"
-									ajax="true" update=":Connections :Growl"
-									icon="ui-icon ui-icon-check" />
-							<p:commandButton value="Cancel"
-									onclick="PF('conDialog').hide();"
-									icon="ui-icon ui-icon-close" />
-						</p:outputPanel>
-					</f:facet>
-				</h:panelGrid>
+				<ui:param name="oneConnection" value="#{connectivityBean.oneConnectionSelected}" />
+				<p:dataTable value="#{connectivityBean.settingsToEdit.settings}" var="setting"
+						class="settings-table" emptyMessage="No settings available">
+					<ui:param name="valueClass" value="#{setting.properties.valueClass}" />
+					<ui:param name="inputType" value="#{setting.properties.inputType}" />
+					
+					<ui:param name="isText" value="#{valueClass==ValueClass.STRING}" />
+					<ui:param name="isInt" value="#{valueClass==ValueClass.INT}" />
+					<ui:param name="isLong" value="#{valueClass==ValueClass.LONG}" />
+					<ui:param name="isBoolean" value="#{valueClass==ValueClass.BOOLEAN}" />
+					<ui:param name="isEnum" value="#{valueClass==ValueClass.ENUM}" />
+					<ui:param name="isDefault" value="#{inputType==InputType.DEFAULT}" />
+					<ui:param name="isTextbox" value="#{inputType==InputType.TEXTBOX}" />
+					<ui:param name="isPassword" value="#{inputType==InputType.PASSWORD}" />
+					<ui:param name="isCheckbox" value="#{inputType==InputType.CHECKBOX}" />
+					
+					<p:column>
+						<p:selectBooleanCheckbox value="#{setting.applyChange}" rendered="#{!oneConnection}" />
+						<h:outputText value="#{setting.properties.name}:" style="margin-left: #{oneConnection ? '0' : '5px'}" />
+					</p:column>
+					
+					<p:column>
+						<p:inputText value="#{setting.stringValue}" rendered="#{isText and !isPassword}" />
+						<p:password value="#{setting.stringValue}" rendered="#{isText and isPassword}" />
+						<p:inputText value="#{setting.intValue}" rendered="#{isInt}" />
+						<p:inputText value="#{setting.longValue}" rendered="#{isLong}" />
+						<p:selectBooleanCheckbox value="#{setting.booleanValue}" rendered="#{isBoolean and (isDefault or isCheckbox)}" />
+						<p:inputText value="#{setting.booleanValue}" rendered="#{isBoolean and isTextbox}" />
+						<p:selectOneMenu value="#{setting.enumValue}" rendered="#{isEnum}">
+							<f:selectItems value="#{setting.properties.values}" />
+						</p:selectOneMenu>
+					</p:column>
+				</p:dataTable>
+				<p:outputPanel layout="block" style="margin-top: 10px; text-align: right">
+					<p:commandButton value="Save"
+							update=":Connections :Growl"
+							actionListener="#{connectivityBean.saveConnections}"
+							rendered="#{!connectivityBean.selectedConnectionRunning}"
+							onstart="saveConsScrollPos();"
+							oncomplete="restoreConsScrollPos(); if (args.canClose) PF('conDialog').hide();"
+							icon="ui-icon ui-icon-check">
+					</p:commandButton>
+					<p:commandButton value="Save" 
+							rendered="#{connectivityBean.selectedConnectionRunning}"
+							actionListener="#{connectivityBean.saveConnectionsAfterCopy}"
+							oncomplete="if (#{!connectivityBean.copy}) PF('restartConnectionConfirmDialog').show(); else {hideConnectionDialog(); saveConsScrollPos(); restoreConsScrollPos();}"
+							ajax="true" update=":Connections :Growl"
+							icon="ui-icon ui-icon-check" />
+					<p:commandButton value="Cancel"
+							onclick="PF('conDialog').hide();"
+							icon="ui-icon ui-icon-close" />
+				</p:outputPanel>
 			</h:form>
 		</p:dialog>
 <!-- Remove connection dialog -->
@@ -429,63 +343,63 @@
 				width="380" severity="alert" widgetVar="removeConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="RemoveConnectionConfimDialog" >
 				<p:commandButton value="Yes" update=":Connections :Growl"
-					actionListener="#{connectivityBean.removeConnections}"
-					onstart="saveConsScrollPos();"
-					oncomplete="restoreConsScrollPos(); PF('removeConnectionConfirmDialog').hide();" />
+						actionListener="#{connectivityBean.removeConnections}"
+						onstart="saveConsScrollPos();"
+						oncomplete="restoreConsScrollPos(); PF('removeConnectionConfirmDialog').hide();" />
 				<p:commandButton value="No"
-					onclick="PF('removeConnectionConfirmDialog').hide()" type="button" />
+						onclick="PF('removeConnectionConfirmDialog').hide()" type="button" />
 			</h:form>
 		</p:confirmDialog>
 <!-- Stop connection confirm dialog -->
-     <p:confirmDialog header="Stop connection(s)" message="Are you sure you wish to stop the connection(s)? This may affect running schedulers."
-						 width="380" severity="alert" widgetVar="stopConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+		<p:confirmDialog header="Stop connection(s)" message="Are you sure you wish to stop the connection(s)? This may affect running schedulers."
+				width="380" severity="alert" widgetVar="stopConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
 			<h:form id="StopConnectionConfirmDialog">
 				<p:commandButton value="Yes" update=":Connections :Growl"
-								 actionListener="#{connectivityBean.stopMqConnections}"
-								 onstart="saveConsScrollPos();"
-								 oncomplete="PF('stopConnectionConfirmDialog').hide(); restoreConsScrollPos();"
-								 ajax="true"/>
+						actionListener="#{connectivityBean.stopConnections}"
+						onstart="saveConsScrollPos();"
+						oncomplete="PF('stopConnectionConfirmDialog').hide(); restoreConsScrollPos();"
+						ajax="true"/>
 				<p:commandButton value="No"
-								 onclick="PF('stopConnectionConfirmDialog').hide();"
-								 type="button"/>
+						onclick="PF('stopConnectionConfirmDialog').hide();"
+						type="button"/>
 			</h:form>
-	 </p:confirmDialog>
+		</p:confirmDialog>
 <!-- Stopped connections errors dialog -->
-	<p:dialog header="Connections stopped due to errors" widgetVar="errorsDialog"
-			resizable="false" id="errorsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="#{guiBean.modalDialog}">
-		<p:dataTable id="errors" widgetVar="errorsTable"
-				value="#{connectivityBean.stoppedErrors}" var="errorInfo"
-				paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
-				emptyMessage="No errors">
-			<p:column headerText="Error occurred" style="width: 25%; #{width lt 200 ? 'white-space: nowrap;' : 'width: 200px'}">
-				<h:outputText value="#{errorInfo.occurredDate}">
-					<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
-				</h:outputText>
-			</p:column>
-			<p:column headerText="Connection name" style="width: 25%; #{width lt 200 ? 'white-space: nowrap;' : 'width: 200px'}">
-				<h:outputText value="#{errorInfo.connectionName}"/>
-			</p:column>
-			<p:column headerText="Stop reason" style="width: 50%; #{width lt 400 ? 'white-space: nowrap;' : 'width: 400px'}">
-				<h:outputText value="#{errorInfo.errorText}"/>
-			</p:column>
-		</p:dataTable>
-	</p:dialog>
+		<p:dialog header="Connections stopped due to errors" widgetVar="errorsDialog"
+				resizable="false" id="errorsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="#{guiBean.modalDialog}">
+			<p:dataTable id="errors" widgetVar="errorsTable"
+					value="#{connectivityBean.stoppedErrors}" var="errorInfo"
+					paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
+					emptyMessage="No errors">
+				<p:column headerText="Error occurred" style="width: 25%; #{width lt 200 ? 'white-space: nowrap;' : 'width: 200px'}">
+					<h:outputText value="#{errorInfo.occurredDate}">
+						<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+					</h:outputText>
+				</p:column>
+				<p:column headerText="Connection name" style="width: 25%; #{width lt 200 ? 'white-space: nowrap;' : 'width: 200px'}">
+					<h:outputText value="#{errorInfo.connectionName}"/>
+				</p:column>
+				<p:column headerText="Stop reason" style="width: 50%; #{width lt 400 ? 'white-space: nowrap;' : 'width: 400px'}">
+					<h:outputText value="#{errorInfo.errorText}"/>
+				</p:column>
+			</p:dataTable>
+		</p:dialog>
 <!-- Restart connection confirm dialog -->
-     <p:confirmDialog header="Restart connection(s)" message="Are you sure you wish to change running connection(s)? Saving changes requires connection(s) restart."
-					   width="380" severity="alert" widgetVar="restartConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+		<p:confirmDialog header="Restart connection(s)" message="Are you sure you wish to change running connection(s)? Saving changes requires connection(s) restart."
+				width="380" severity="alert" widgetVar="restartConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
 			<h:form id="RestartConnectionConfirmDialog">
 				<p:commandButton value="Yes" update=":Connections :Growl"
-								 actionListener="#{connectivityBean.saveConnections}"
-								 onstart="saveConsScrollPos();"
-								 oncomplete="PF('restartConnectionConfirmDialog').hide(); hideConnectionDialog(); restoreConsScrollPos();"
-								 ajax="true"/>
+						actionListener="#{connectivityBean.saveConnections}"
+						onstart="saveConsScrollPos();"
+						oncomplete="PF('restartConnectionConfirmDialog').hide(); hideConnectionDialog(); restoreConsScrollPos();"
+						ajax="true"/>
 				<p:commandButton value="No"
-								 onclick="PF('restartConnectionConfirmDialog').hide();"
-								 type="button"/>
+						onclick="PF('restartConnectionConfirmDialog').hide();"
+						type="button"/>
 			</h:form>
-	 </p:confirmDialog>
+		</p:confirmDialog>
 
-		<!-- Send message dialog -->
+<!-- Send message dialog -->
 		<p:dialog header="Send message" widgetVar="sendMsgDlg" id="SendMsgDlg" resizable="false"
 				onShow="setConnection()" showEffect="drop" hideEffect="drop" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="SendMsgForm">

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,17 +18,26 @@
 
 package com.exactprosystems.clearth.web.beans;
 
-import static com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage.MQ;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.*;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.ConnectionErrorInfo;
+import com.exactprosystems.clearth.connectivity.connections2.settings.SettingValues;
+import com.exactprosystems.clearth.connectivity.connections2.settings.ColumnsModel;
+import com.exactprosystems.clearth.connectivity.connections2.settings.SettingAccessor;
+import com.exactprosystems.clearth.connectivity.connections2.settings.SettingsModel;
+import com.exactprosystems.clearth.connectivity.connections2.settings.SettingProperties;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.web.misc.*;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
@@ -44,9 +53,10 @@ public class ConnectivityBean extends ClearThBean
 {
 	private static final String defaultListenerType = ListenerType.File.getLabel();
 	
+	private final ClearThConnectionStorage storage = ClearThCore.connectionStorage();
+	private String selectedConnectionType;
 	private final List<ClearThConnection<?, ?>> selectedConnections = new ArrayList<ClearThConnection<?, ?>>();
 	private List<ClearThConnection<?, ?>> originalSelectedCons = null;
-	private final MqConPropsToEdit mqConProps;
 	
 	private ListenerConfiguration newListener = createEmptyListener(),
 			selectedListener = null;
@@ -54,26 +64,57 @@ public class ConnectivityBean extends ClearThBean
 	private boolean copyListners = true;
 	private boolean noListenersInfo;
 	private boolean listenerInfoVisible = false;
-	private FavoriteConnectionManager favoriteConnection;
+	private FavoriteConnectionManager favoritesManager;
 	private Set<String> favoriteConnectionList;
 	private String username;
 	private List<ClearThConnection<?, ?>> connections;
 	protected String selectedType;
 	
-	public ConnectivityBean()
-	{
-		mqConProps = createMqConPropsToEdit();
-	}
-
+	private SettingValues settingsToEdit;
+	private ColumnsModel columns;
+	
 	@PostConstruct
 	protected void init()
 	{
-		this.favoriteConnection = ClearThCore.getInstance().getFavoriteConnections();
+		this.favoritesManager = ClearThCore.getInstance().getFavoriteConnections();
 		this.username = UserInfoUtils.getUserName();
-		this.favoriteConnectionList = favoriteConnection.getUserFavoriteConnectionList(username);
+		this.favoriteConnectionList = favoritesManager.getUserFavoriteConnectionList(username);
+		setSelectedConnectionType(getFirstConnectionType());
 	}
-
-
+	
+	
+	//*** Connection types ***
+	
+	public Collection<String> getConnectionTypes()
+	{
+		return storage.getTypes();
+	}
+	
+	public String getSelectedConnectionType()
+	{
+		return selectedConnectionType;
+	}
+	
+	public void setSelectedConnectionType(String selectedConnectionType)
+	{
+		this.selectedConnectionType = selectedConnectionType;
+		if (selectedConnectionType == null)
+		{
+			connections = null;
+			columns = null;
+		}
+		else
+		{
+			connections = getConnections();
+			columns = storage.getSettingsModel(selectedConnectionType).getColumnsModel();
+		}
+		
+		resetConsSelection();
+	}
+	
+	
+	//*** List of connections ***
+	
 	public SelectItem[] getConnectionsList()
 	{
 		List<ClearThConnection<?, ?>> cons = this.getConnections();
@@ -86,50 +127,78 @@ public class ConnectivityBean extends ClearThBean
 		}
 		return result;
 	}
-
+	
+	public List<ClearThConnection<?, ?>> getConnections()
+	{
+		if (StringUtils.isEmpty(selectedConnectionType))
+			return Collections.emptyList();
+		
+		List<ClearThConnection<?, ?>> res = new ArrayList<>();
+		List<ClearThConnection<?, ?>> list = getAllConnections();
+		for (ClearThConnection<?, ?> con : list)
+			if (selectedConnectionType.equals(con.getType()))
+				res.add(con);
+		return res;
+	}
+	
+	public List<SettingProperties> getColumns()
+	{
+		return columns == null ? null : columns.getColumns();
+	}
+	
+	public String getColumnValue(SettingProperties columnProps, ClearThConnection<?, ?> con)
+	{
+		try
+		{
+			Object result = columnProps.getGetter().invoke(con.getSettings());
+			return result == null ? "" : result.toString();
+		}
+		catch (Exception e)
+		{
+			getLogger().error("Could not get value of '{}'", columnProps.getFieldName(), e);
+			return null;
+		}
+	}
+	
+	
+	//*** Selection ***
+	
 	public List<ClearThConnection<?, ?>> getSelectedConnections()
 	{
 		return selectedConnections;
 	}
-
+	
 	public void setSelectedConnections(List<ClearThConnection<?, ?>> selectedConnections)
 	{
 		this.originalSelectedCons = selectedConnections;
 		this.selectedConnections.clear();
-		for (ClearThConnection<?, ?> c : originalSelectedCons)
-			this.selectedConnections.add(c.copy());
+		
+		if (!CollectionUtils.isEmpty(originalSelectedCons))
+		{
+			for (ClearThConnection<?, ?> c : originalSelectedCons)
+				this.selectedConnections.add(c.copy());
+			
+			refreshSettingsToEdit();
+		}
+		else
+			this.settingsToEdit = null;
 	}
-
-	public List<ClearThConnection<?, ?>> getSelectedXConnections(String type)
-	{
-		ClearThConnection<?, ?> con = getOneSelectedConnection();
-		if ((con == null) || (!type.equals(con.getType())))
-			return new ArrayList<>();
-		return getSelectedConnections();
-	}
-
+	
+	
 	public ClearThConnection<?, ?> getOneSelectedConnection()
 	{
 		if (selectedConnections.isEmpty())
 			return null;
 		return selectedConnections.get(0);
 	}
-
-	protected ClearThConnection<?, ?> getOneSelectedXConnection(String type)
+	
+	public void setOneSelectedConnection(ClearThConnection<?, ?> selectedCon)
 	{
-		List<ClearThConnection<?, ?>> cons = getSelectedXConnections(type);
-		if (cons.isEmpty())
-			return null;
-		return cons.get(0);
-	}
-
-	protected void setOneSelectedXConnection(ClearThConnection<?, ?> selectedCon, String type)
-	{
-		List<ClearThConnection<?, ?>> cons = new ArrayList<ClearThConnection<?, ?>>();
+		List<ClearThConnection<?, ?>> cons = new ArrayList<ClearThConnection<?, ?>>(1);
 		cons.add(selectedCon);
 		setSelectedConnections(cons);
 	}
-
+	
 	public boolean isOneConnectionSelected()
 	{
 		return selectedConnections.size() == 1;
@@ -139,70 +208,77 @@ public class ConnectivityBean extends ClearThBean
 	{
 		return selectedConnections.size() > 0;
 	}
-
-	protected MqConPropsToEdit createMqConPropsToEdit()
-	{
-		return new MqConPropsToEdit();
-	}
-
-	public MqConPropsToEdit getMqConProps()
-	{
-		return mqConProps;
-	}
-
+	
+	
 	protected void resetConsSelection()
 	{
 		originalSelectedCons = null;
 		selectedConnections.clear();
 	}
-
-	protected void newXConnection(String type)
+	
+	private void refreshSettingsToEdit()
+	{
+		SettingsModel model = storage.getSettingsModel(selectedConnectionType);
+		//It is important to create settingsToEdit from selectedConnection, i.e. from copy of original connection
+		//When values from GUI are submitted, they go into selectedConnection automatically and we can decide if we need to update the original connection
+		this.settingsToEdit = new SettingValues(model, selectedConnections.get(0), isOneConnectionSelected());
+	}
+	
+	
+	//*** CRUD ***
+	
+	public void newConnection()
 	{
 		resetConsSelection();
-		selectedConnections.add(ClearThCore.getInstance().getConnectionStorage().getConnectionFactory(type).createConnection());
+		selectedConnections.add(storage.getConnectionFactory(selectedConnectionType).createConnection());
+		refreshSettingsToEdit();
 	}
-
-	protected boolean editXConnectionProps(ClearThConnection<?, ?> connectionToEdit, ClearThConnection<?, ?> changes, ClearThConnection<?, ?> original)
-	{
-		if (connectionToEdit instanceof MQConnection)
-		{
-			editMqConnectionProps((MQConnection)connectionToEdit, (MQConnection)changes, (MQConnection)original, mqConProps);
-			return true;
-		}
-		return false;
-	}
-
+	
 	public void saveConnections()
 	{
-		Logger logger = getLogger();
-
-		if (selectedConnections.size() > 1)  //If multiple connections are edited, JSF changes only the first one. Need to apply changes to all other selected connections. The name shouldn't be changed here!
+		if (selectedConnections.size() > 1)
 		{
-			//We get here only if multiple connections are edited, thus originalSelectedCons can't be null
-			ClearThConnection<?, ?> firstCon = getOneSelectedConnection(),
-					originalFirstCon = originalSelectedCons.get(0);
-			editXConnectionProps(firstCon, firstCon, originalFirstCon);  //Restoring properties that shouldn't be edited, because JSF has changed all the properties of the first connection
-			boolean first = true;
-			for (ClearThConnection<?, ?> c : selectedConnections)
+			try
 			{
-				if (first)
+				//If multiple connections are edited, JSF changes only the first one. 
+				//Need to apply changes to all other selected connections. 
+				//The name shouldn't be changed here!
+				//We get here only if multiple connections are edited, thus originalSelectedCons can't be null
+				ClearThConnection<?, ?> firstCon = getOneSelectedConnection(),
+						originalFirstCon = originalSelectedCons.get(0);
+				
+				//Restoring properties that shouldn't be edited (change flag = false), because JSF has changed all the properties of the first connection
+				editConnectionProps(firstCon, firstCon, originalFirstCon);
+				boolean first = true;
+				for (ClearThConnection<?, ?> c : selectedConnections)
 				{
-					first = false;
-					continue;
+					if (first)
+					{
+						first = false;
+						continue;
+					}
+					editConnectionProps(c, firstCon, c);
 				}
-				editXConnectionProps(c, firstCon, c);
+			}
+			catch (Exception e)
+			{
+				getLogger().error("Error while applying changes to connection", e);
+				MessageUtils.addErrorMessage("Error", e.getMessage());
+				WebUtils.addCanCloseCallback(false);
+				return;
 			}
 		}
-
+		
 		boolean canClose = true;
 		try
 		{
+			Logger logger = getLogger();
 			if (originalSelectedCons == null || copy)
 			{
 				ClearThConnection<?, ?> selCon = getOneSelectedConnection();
 				if ((ClearThMessageConnection.isMessageConnection(selCon)) && (!copyListners))
 					((ClearThMessageConnection<?, ?>)selCon).setListeners(new ArrayList<ListenerConfiguration>());
-				ClearThCore.connectionStorage().addConnection(selCon);
+				storage.addConnection(selCon);
 				logger.info("created connection '"+selCon.getName()+"'");
 			}
 			else
@@ -211,14 +287,14 @@ public class ConnectivityBean extends ClearThBean
 				for (ClearThConnection<?, ?> c : originalSelectedCons)
 				{
 					i++;
-					ClearThCore.connectionStorage().modifyConnection(c, selectedConnections.get(i));
+					storage.modifyConnection(c, selectedConnections.get(i));
 					if (c.isRunning() && !copy)
 					{
 						stopConnection(c);
 						startConnection(c);
 					}
 				}
-
+				
 				if (logger.isInfoEnabled())
 				{
 					if (selectedConnections.size() == 1)
@@ -232,7 +308,6 @@ public class ConnectivityBean extends ClearThBean
 					}
 				}
 			}
-
 		}
 		catch (SettingsException e)
 		{
@@ -241,7 +316,9 @@ public class ConnectivityBean extends ClearThBean
 		}
 		catch (Exception e)
 		{
+			getLogger().error("Error while saving connection", e);
 			MessageUtils.addErrorMessage("Error", e.getMessage());
+			canClose = false;
 		}
 		WebUtils.addCanCloseCallback(canClose);
 	}
@@ -257,8 +334,8 @@ public class ConnectivityBean extends ClearThBean
 		try
 		{
 			for (ClearThConnection<?, ?> c : originalSelectedCons)
-				ClearThCore.connectionStorage().removeConnection(c);
-
+				storage.removeConnection(c);
+			
 			Logger logger = getLogger();
 			if (logger.isInfoEnabled())
 			{
@@ -282,12 +359,21 @@ public class ConnectivityBean extends ClearThBean
 			resetConsSelection();
 		}
 	}
-
-	protected StreamedContent downloadXConnections(String type)
+	
+	
+	public SettingValues getSettingsToEdit()
+	{
+		return settingsToEdit;
+	}
+	
+	
+	//*** Export/import ***
+	
+	public StreamedContent downloadConnections()
 	{
 		try
 		{
-			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(type);
+			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(selectedConnectionType);
 			return WebUtils.downloadFile(resultFile);
 		}
 		catch (IOException e)
@@ -297,18 +383,18 @@ public class ConnectivityBean extends ClearThBean
 		}
 	}
 	
-	protected void uploadXConnections(String type, FileUploadEvent event)
+	public void uploadConnections(FileUploadEvent event)
 	{
 		UploadedFile file = event.getFile();
 		if ((file == null) || (file.getContent().length == 0))
 			return;
-
+		
 		try
 		{
 			File storageDir = new File(ClearThCore.uploadStoragePath());
-			File storedConnections = WebUtils.storeUploadedFile(file, storageDir, type + "_connections_", ".zip");
-
-			ClearThCore.getInstance().getConnectionsTransmitter().deployConnections(type, storedConnections);
+			File storedConnections = WebUtils.storeUploadedFile(file, storageDir, selectedConnectionType + "_connections_", ".zip");
+			
+			ClearThCore.getInstance().getConnectionsTransmitter().deployConnections(selectedConnectionType, storedConnections);
 			MessageUtils.addInfoMessage("Success", "Connections successfully uploaded");
 			getLogger().info("Connections uploaded from file '" + file.getFileName() + "'");
 		}
@@ -319,7 +405,28 @@ public class ConnectivityBean extends ClearThBean
 			MessageUtils.addErrorMessage("Error", msg + ": " + e.getMessage());
 		}
 	}
-
+	
+	
+	//*** Start/stop
+	
+	public void startConnections()
+	{
+		for (ClearThConnection<?, ?> c : getAllOrSelectedConnections())
+			startConnection(c);
+	}
+	
+	public void stopConnections()
+	{
+		for (ClearThConnection<?, ?> c : getAllOrSelectedConnections())
+			stopConnection(c);
+	}
+	
+	public Collection<ConnectionErrorInfo> getStoppedErrors()
+	{
+		return storage.getStoppedConnectionsErrors();
+	}
+	
+	
 	private void refreshConnectionList()
 	{
 		connections.sort((o1, o2) -> {
@@ -332,27 +439,22 @@ public class ConnectivityBean extends ClearThBean
 			}
 		});
 	}
-
-	private List<ClearThConnection<?, ?>> getConnections()
+	
+	private List<ClearThConnection<?, ?>> getAllConnections()
 	{
-		if (connections == null || ClearThCore.connectionStorage().getConnections().size() != connections.size())
+		if (connections == null || storage.getConnections().size() != connections.size())
 		{
-			this.connections = new ArrayList<>(ClearThCore.connectionStorage().getConnections());
+			this.connections = new ArrayList<>(storage.getConnections());
 			refreshConnectionList();
 		}
 		return this.connections;
 	}
-
-	protected List<ClearThConnection<?, ?>> getXConnections(String type)
+	
+	private List<ClearThConnection<?, ?>> getAllOrSelectedConnections()
 	{
-		List<ClearThConnection<?, ?>> res = new ArrayList<>();
-		List<ClearThConnection<?, ?>> list = getConnections();
-		for (ClearThConnection<?, ?> con : list)
-			if (type.equals(con.getType()))
-				res.add(con);
-		return res;
+		return CollectionUtils.isEmpty(originalSelectedCons) ? getConnections() : originalSelectedCons;
 	}
-
+	
 	private void startConnection(ClearThConnection<?, ?> con)
 	{
 		if (!con.isRunning())
@@ -371,13 +473,7 @@ public class ConnectivityBean extends ClearThBean
 		else
 			MessageUtils.addInfoMessage("Info", "Connection '"+con.getName()+"' is already running");
 	}
-
-	protected void startXConnections(String type)
-	{
-		for (ClearThConnection<?, ?> c : getAllOrSelectedXConnections(type))
-			startConnection(c);
-	}
-
+	
 	private void stopConnection(ClearThConnection<?, ?> con)
 	{
 		if (con.isRunning())
@@ -399,18 +495,8 @@ public class ConnectivityBean extends ClearThBean
 		else
 			MessageUtils.addInfoMessage("Info", "Connection '"+con.getName()+"' is already stopped");
 	}
-
-	protected void stopXConnections(String type)
-	{
-		for (ClearThConnection<?, ?> c : getAllOrSelectedXConnections(type))
-			stopConnection(c);
-	}
-
-	public Collection<ConnectionErrorInfo> getStoppedErrors()
-	{
-		return ClearThCore.connectionStorage().getStoppedConnectionsErrors();
-	}
-
+	
+	
 	private String printExceptionMessage(Throwable t) {
 		String result = t.getClass().getName();
 		if (t.getMessage()!=null)
@@ -423,13 +509,8 @@ public class ConnectivityBean extends ClearThBean
 		}
 		return result;
 	}
-
-	protected List<ClearThConnection<?, ?>> getAllOrSelectedXConnections(String type)
-	{
-		return originalSelectedCons.isEmpty() ? getXConnections(type) : originalSelectedCons;
-	}
-
-
+	
+	
 	// Listeners
 	public ListenerConfiguration getSelectedListener()
 	{
@@ -620,21 +701,21 @@ public class ConnectivityBean extends ClearThBean
 
 	public void favorite()
 	{
-		this.favoriteConnection.favoriteStateChanged(username,
+		this.favoritesManager.favoriteStateChanged(username,
 				getOneSelectedConnection().getName(), true);
 		refreshConnectionList();
 	}
 
 	public void unfavorite()
 	{
-		this.favoriteConnection.favoriteStateChanged(username,
+		this.favoritesManager.favoriteStateChanged(username,
 				getOneSelectedConnection().getName(), false);
 		refreshConnectionList();
 	}
 
 	public boolean isConnectionRunning()
 	{
-		List<ClearThConnection<?, ?>> cons = getConnections();
+		List<ClearThConnection<?, ?>> cons = getAllConnections();
 		for (ClearThConnection<?, ?> c : cons)
 		{
 			if (c.isRunning())
@@ -656,73 +737,6 @@ public class ConnectivityBean extends ClearThBean
 		return false;
 	}
 
-	// MQ-specific methods to use on page. Implement these methods for each new connection type
-
-	public void newMqConnection()
-	{
-		newXConnection(MQ);
-	}
-
-	public List<ClearThConnection<?, ?>> getMqConnections()
-	{
-		return getXConnections(MQ);
-	}
-	
-	public List<ClearThConnection<?, ?>> getSelectedMqConnections()
-	{
-		return getSelectedXConnections(MQ);
-	}
-	
-	public void setSelectedMqConnections(List<ClearThConnection<?, ?>> selection)
-	{
-		setSelectedConnections(selection);
-	}
-	
-	public ClearThConnection<?, ?> getOneSelectedMqConnection()
-	{
-		return getOneSelectedXConnection(MQ);
-	}
-	
-	public void setOneSelectedMqConnection(ClearThConnection<?, ?> selectedCon)
-	{
-		setOneSelectedXConnection(selectedCon, MQ);
-	}
-
-	public StreamedContent downloadMqConnections()
-	{
-		return downloadXConnections(MQ);
-	}
-
-	public void uploadMqConnections(FileUploadEvent fileUploadEvent)
-	{
-		uploadXConnections(MQ, fileUploadEvent);
-	}
-
-	public void startMqConnections()
-	{
-		startXConnections(MQ);
-	}
-
-	public void stopMqConnections()
-	{
-		stopXConnections(MQ);
-	}
-
-	protected void editMqConnectionProps(MQConnection connectionToEdit, MQConnection changes, MQConnection original, MqConPropsToEdit propsToEdit)
-	{
-		connectionToEdit.setHostname(propsToEdit.isHost() ? changes.getHostname() : original.getHostname());
-		connectionToEdit.setPort(propsToEdit.isPort() ? changes.getPort() : original.getPort());
-		connectionToEdit.setQueueManager(propsToEdit.isQueueManager() ? changes.getQueueManager() : original.getQueueManager());
-		connectionToEdit.setChannel(propsToEdit.isChannel() ? changes.getChannel() : original.getChannel());
-		connectionToEdit.setUseReceiveQueue(propsToEdit.isReceiveQueue() ? changes.isUseReceiveQueue() : original.isUseReceiveQueue());
-		connectionToEdit.setReceiveQueue(propsToEdit.isReceiveQueue() ? changes.getReceiveQueue() : original.getReceiveQueue());
-		connectionToEdit.setSendQueue(propsToEdit.isSendQueue() ? changes.getSendQueue() : original.getSendQueue());
-		connectionToEdit.setReadDelay(propsToEdit.isReadDelay() ? changes.getReadDelay() : original.getReadDelay());
-		connectionToEdit.setAutoConnect(propsToEdit.isAutoConnect() ? changes.isAutoConnect() : original.isAutoConnect());
-		connectionToEdit.setAutoReconnect(propsToEdit.isAutoReconnect() ? changes.isAutoReconnect() : original.isAutoReconnect());
-		connectionToEdit.setRetryAttemptCount(propsToEdit.isRetryAttemptCount() ? changes.getRetryAttemptCount() : original.getRetryAttemptCount());
-		connectionToEdit.setRetryTimeout(propsToEdit.isRetryTimeout() ? changes.getRetryTimeout() : original.getRetryTimeout());
-	}
 	
 	protected ListenerConfiguration createEmptyListener()
 	{
@@ -745,5 +759,27 @@ public class ConnectivityBean extends ClearThBean
 	{
 		Class<?> listenerClass = getSelectedListenerClass();
 		return listenerClass == null ? false : expectedClass.isAssignableFrom(listenerClass);
+	}
+	
+	private String getFirstConnectionType()
+	{
+		Iterator<String> it = getConnectionTypes().iterator();
+		return it.hasNext() ? it.next() : null;
+	}
+	
+	private void editConnectionProps(ClearThConnection<?, ?> connectionToEdit, ClearThConnection<?, ?> changes, ClearThConnection<?, ?> original) 
+			throws Exception
+	{
+		//This method is called only if multiple connections are selected.
+		//Accessor for "Name" (which in member of ClearThConnection, not ClearThConnectionSettings) is not included in settingsToEdit in this case.
+		//So it is safe to work with ClearThConnectionSettings only
+		ClearThConnectionSettings<?> connectionToEditSettings = connectionToEdit.getSettings(),
+				changesSettings = changes.getSettings(),
+				originalSettings = original.getSettings();
+		for (SettingAccessor accessor : settingsToEdit.getSettings())
+		{
+			ClearThConnectionSettings<?> copyFrom = accessor.isApplyChange() ? changesSettings : originalSettings;
+			SettingAccessor.copyValue(accessor.getProperties(), copyFrom, connectionToEditSettings);
+		}
 	}
 }

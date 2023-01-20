@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,8 @@ import com.exactprosystems.clearth.automation.SchedulerData;
 import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
+import com.exactprosystems.clearth.connectivity.connections2.settings.SettingsModel;
+import com.exactprosystems.clearth.connectivity.connections2.settings.Processor;
 import com.exactprosystems.clearth.connectivity.validation.ConnectionStartValidator;
 import com.exactprosystems.clearth.utils.NameValidator;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -66,20 +68,32 @@ public abstract class ClearThConnectionStorage
 	protected final Lock findRunningLock = rwLock.readLock();
 	protected final Lock modifyListLock = rwLock.writeLock();
 	
-	protected final Map<String, ClearThConnectionFactory<?>> factories = new HashMap<>();
+	protected final Map<String, ClearThConnectionFactory<?>> factories = new LinkedHashMap<>();
+	protected final Map<String, SettingsModel> settingsModels = new HashMap<>();
 
 	protected final Comparator<ClearThConnection<?,?>> connectionComparator;
 	protected final ConnectionStartValidator connectionStartValidator = new ConnectionStartValidator();
 	
-	protected abstract void initFactories() throws ConnectivityException;
+	protected abstract void initFactories(Processor settingsProcessor) throws ConnectivityException;
 
 	protected abstract void initConnectionStartValidator(ConnectionStartValidator validator);
 	
 	public ClearThConnectionStorage() throws ConnectivityException
 	{
-		initFactories();
+		Processor settingsProcessor = createSettingsProcessor();
+		initFactories(settingsProcessor);
 		initConnectionStartValidator(connectionStartValidator);
 		connectionComparator = createConnectionComparator();
+	}
+	
+	public Collection<String> getTypes()
+	{
+		return Collections.unmodifiableCollection(factories.keySet());
+	}
+	
+	public SettingsModel getSettingsModel(String type)
+	{
+		return settingsModels.get(type);
 	}
 	
 	public String getConnectionsPath(String type)
@@ -626,6 +640,19 @@ public abstract class ClearThConnectionStorage
 							scheduler.getName(), !commonScheduler ? " of user '" + scheduler.getForUser() + "'" : "", e);
 				}
 			}
+		}
+	}
+	
+	
+	private Processor createSettingsProcessor() throws ConnectivityException
+	{
+		try
+		{
+			return new Processor();
+		}
+		catch (Exception e)
+		{
+			throw new ConnectivityException("Could not create connection settings processor", e);
 		}
 	}
 }

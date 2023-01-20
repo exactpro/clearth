@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.connectivity;
 
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
+import com.exactprosystems.clearth.connectivity.connections2.settings.ConnectionSetting;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -31,15 +32,20 @@ import javax.xml.bind.annotation.XmlElement;
 public abstract class BasicMqConnectionSettings<S extends BasicMqConnectionSettings<S>> extends ClearThConnectionSettings<S>
 {
 	@XmlElement
+	@ConnectionSetting(name = "Host")
 	public String hostname;
 	@XmlElement
+	@ConnectionSetting
 	public int port;
 	
 	@XmlElement
+	@ConnectionSetting(name = "Send queue")
 	public String sendQueue;
 	@XmlElement
+	@ConnectionSetting(name = "Receive queue")
 	public String receiveQueue;
 	@XmlElement
+	@ConnectionSetting(name = "Use receive queue")
 	public boolean useReceiveQueue;
 
 

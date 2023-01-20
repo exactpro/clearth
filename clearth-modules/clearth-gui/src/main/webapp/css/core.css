@@ -676,6 +676,16 @@ img {
 	padding-right: 4px;
 }
 
+.ui-widget.ui-datatable.settings-table table tbody, .ui-widget.ui-datatable.settings-table table tbody tr, .ui-widget.ui-datatable.settings-table table tbody td
+{
+	border: none;
+}
+
+.settings-table table thead tr
+{
+	display: none;
+}
+
 #homeWrapper {
 	width: 100%;
 	height: 100%;

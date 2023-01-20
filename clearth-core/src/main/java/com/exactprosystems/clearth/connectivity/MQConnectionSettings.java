@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.exactprosystems.clearth.connectivity.connections2.settings.ConnectionSetting;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Utils;
 
@@ -31,23 +32,30 @@ import com.exactprosystems.clearth.utils.Utils;
 public abstract class MQConnectionSettings extends BasicMqConnectionSettings<MQConnectionSettings>
 {
 	@XmlElement
+	@ConnectionSetting(name = "Read delay")
 	public int readDelay;
 	@XmlElement
 	public int charset;
 	
 	@XmlElement
+	@ConnectionSetting(name = "Queue manager")
 	public String queueManager;
 	@XmlElement
+	@ConnectionSetting
 	public String channel;
 
 	@XmlElement
+	@ConnectionSetting(name = "Auto-reconnect")
 	public boolean autoReconnect;
 	@XmlElement
+	@ConnectionSetting(name = "Auto-connect")
 	public boolean autoConnect;
 
 	@XmlElement
+	@ConnectionSetting(name = "Retry attempt count")
 	public int retryAttemptCount;
 	@XmlElement
+	@ConnectionSetting(name = "Retry timeout")
 	public long retryTimeout;
 
 	public MQConnectionSettings()
@@ -115,5 +123,93 @@ public abstract class MQConnectionSettings extends BasicMqConnectionSettings<MQC
 		sb.append("Retry timeout="+retryTimeout);
 
 		return sb.toString();
+	}
+	
+	
+	public int getReadDelay()
+	{
+		return readDelay;
+	}
+	
+	public void setReadDelay(int readDelay)
+	{
+		this.readDelay = readDelay;
+	}
+
+	
+	public int getCharset()
+	{
+		return charset;
+	}
+	
+	public void setCharset(int charset)
+	{
+		this.charset = charset;
+	}
+	
+	
+	public String getQueueManager()
+	{
+		return queueManager;
+	}
+	
+	public void setQueueManager(String queueManager)
+	{
+		this.queueManager = queueManager;
+	}
+	
+	
+	public String getChannel()
+	{
+		return channel;
+	}
+	
+	public void setChannel(String channel)
+	{
+		this.channel = channel;
+	}
+	
+	
+	public boolean isAutoReconnect()
+	{
+		return autoReconnect;
+	}
+	
+	public void setAutoReconnect(boolean autoReconnect)
+	{
+		this.autoReconnect = autoReconnect;
+	}
+	
+	
+	public boolean isAutoConnect()
+	{
+		return autoConnect;
+	}
+	
+	public void setAutoConnect(boolean autoConnect)
+	{
+		this.autoConnect = autoConnect;
+	}
+	
+	
+	public int getRetryAttemptCount()
+	{
+		return retryAttemptCount;
+	}
+	
+	public void setRetryAttemptCount(int retryAttemptCount)
+	{
+		this.retryAttemptCount = retryAttemptCount;
+	}
+	
+	
+	public long getRetryTimeout()
+	{
+		return retryTimeout;
+	}
+	
+	public void setRetryTimeout(long retryTimeout)
+	{
+		this.retryTimeout = retryTimeout;
 	}
 }

@@ -22,8 +22,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.exactprosystems.clearth.connectivity.connections2.settings.ConnectionSettings;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
+@ConnectionSettings(order = {"hostname", "port", "queueManager", "channel", "retryAttemptCount", "retryTimeout", 
+				"receiveQueue", "useReceiveQueue", "sendQueue", "readDelay", "autoConnect", "autoReconnect"}, 
+		columns = {"hostname", "queueManager", "channel", "sendQueue", "receiveQueue"})
 public class DefaultMQConnectionSettings extends MQConnectionSettings
 {
 	public DefaultMQConnectionSettings()

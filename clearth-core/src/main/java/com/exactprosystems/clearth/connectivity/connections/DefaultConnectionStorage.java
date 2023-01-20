@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,8 @@ package com.exactprosystems.clearth.connectivity.connections;
 
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.DefaultMQConnectionFactory;
+import com.exactprosystems.clearth.connectivity.DefaultMQConnectionSettings;
+import com.exactprosystems.clearth.connectivity.connections2.settings.Processor;
 import com.exactprosystems.clearth.connectivity.validation.ConnectionStartValidator;
 import com.exactprosystems.clearth.connectivity.validation.MQReadQNotReadByOthersRule;
 import com.exactprosystems.clearth.connectivity.validation.ListenersNotWritingToBusyFilesRule;
@@ -36,9 +38,18 @@ public class DefaultConnectionStorage extends ClearThConnectionStorage
 	}
 
 	@Override
-	public void initFactories() throws ConnectivityException
+	public void initFactories(Processor settingsProcessor) throws ConnectivityException
 	{
 		factories.put(MQ, new DefaultMQConnectionFactory());
+		
+		try
+		{
+			settingsModels.put(MQ, settingsProcessor.process(DefaultMQConnectionSettings.class));
+		}
+		catch (Exception e)
+		{
+			throw new ConnectivityException("Error while processing MQ connection settings class", e);
+		}
 	}
 
 	@Override
