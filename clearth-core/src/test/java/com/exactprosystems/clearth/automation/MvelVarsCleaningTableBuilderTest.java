@@ -120,6 +120,17 @@ public class MvelVarsCleaningTableBuilderTest extends BasicTestNgTest
 								singleton("Step1"),
 
 								cleaningTable("id0", asList("id0", "id1", "id2", "id3", "id4", "id5", "id6", "id7"))
+						},
+						{
+								mockMatrix(
+										mockAction("id1", "Step1", map("Character", "Z", "Code", "9901")),
+										mockAction("id2", "Step1", map("Code", "9901")),
+										mockAction("id3", "Step1", map("Expected", "@{pattern('[A-Z]'+id1.Character+'[A-Z0-9]{3} '+id2.Code)}",
+																		"Actual", "XZA12 9901"))),
+
+								singleton("Step1"),
+
+								cleaningTable("id3", asList("id1", "id2", "id3"))
 						}
 				};
 	}

@@ -172,9 +172,15 @@ public class MvelVarsCleaningTableBuilder
 			processExpression(formula, currentId, actionIdToLastReferringIdMap);
 	}
 
+
 	private void processExpression(String expression, String currentId, Map<String, String> actionIdToLastReferringIdMap)
 	{
 		ActionReferenceFinder refFinder = new ActionReferenceFinder(expression);
+		List<String> refFinderWarnings = refFinder.checkExpressionCorrectness();
+		for (String message : refFinderWarnings)
+		{
+			log.warn("Warning for expression '{}': {}", expression, message);
+		}
 		while (refFinder.findNext())
 		{
 			String refActionId = refFinder.nextActionId();

@@ -51,6 +51,7 @@ public class MatrixFunctions
 			FORMULA_END = "}",
 			PASSED_PARAM = "passed",
 			FAIL_REASON_PARAM = "failReason",
+			STRING_CONSTANT_QUOTE = "'",
 			
 			ERROR_TIME_FORMAT = "Could not parse '%s' as timestamp in format '%s'";
 	

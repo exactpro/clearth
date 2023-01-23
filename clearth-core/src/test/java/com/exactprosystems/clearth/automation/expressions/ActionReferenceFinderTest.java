@@ -77,7 +77,11 @@ public class ActionReferenceFinderTest
 						{"@{a.b}", set(ref("a", "b"))},
 						{"_@{a.b}_", set(ref("a", "b"))},
 						{"@{a.b}_@{c.d}_@{e.f}", set(ref("a", "b"),
-								ref("c", "d"), ref("e", "f"))}
+								ref("c", "d"), ref("e", "f"))},
+						{"@{'@{@{@{{}'  id1.tmp  '@}}@{}a.b'  }", set(ref("id1", "tmp"))},
+						{"@{pattern('[A-Z]'+id1.Character+'[A-Z0-9]{3} '+id2.Code)}", set(ref("id1", "Character"), ref("id2", "Code"))},
+						{"@{SELECT * FROM tablename where column=@{id1.Param1} and row='@{a.b}' and id=@{id2.Param1}}", 
+							set(ref("id1", "Param1"), ref("id2", "Param1"))}
 				};
 	}
 
@@ -87,7 +91,6 @@ public class ActionReferenceFinderTest
 		ActionReferenceFinder finder = new ActionReferenceFinder(text);
 		assertEquals(finder.findAll(), expResult);
 	}
-
 
 	@DataProvider(name = "empty")
 	Object[][] createEmptyValues()

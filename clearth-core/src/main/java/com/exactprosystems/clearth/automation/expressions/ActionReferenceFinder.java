@@ -18,13 +18,17 @@
 
 package com.exactprosystems.clearth.automation.expressions;
 
+
 import com.exactprosystems.clearth.utils.Pair;
 
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
+
 import static com.exactprosystems.clearth.automation.ActionExecutor.*;
 import static com.exactprosystems.clearth.automation.MatrixFunctions.FORMULA_END;
 import static com.exactprosystems.clearth.automation.MatrixFunctions.FORMULA_START;
+import static com.exactprosystems.clearth.automation.MatrixFunctions.STRING_CONSTANT_QUOTE;
 import static com.exactprosystems.clearth.automation.expressions.MvelExpressionUtils.isValidActionIdChar;
 import static com.exactprosystems.clearth.utils.StringOperationUtils.checkUnquotedSymbol;
 import static com.exactprosystems.clearth.utils.TagUtils.indexClosingTag;
@@ -50,11 +54,10 @@ public class ActionReferenceFinder
 	private boolean searchStarted;
 	private boolean searchFinished;
 
-
 	public ActionReferenceFinder(String text)
 	{
 		requireNonNull(text);
-		this.text = text;
+		this.text = removeStringLiterals(text);
 	}
 
 
@@ -95,6 +98,15 @@ public class ActionReferenceFinder
 		return text.substring(paramNameStartIndex, paramNameEndIndex);
 	}
 
+	public List<String> checkExpressionCorrectness()
+	{
+		List<String> result = new ArrayList<>();
+		//in case of odd number of quotes parsing might not work
+		//E. g. "@{.....'}a.b}" does not close nor contains any parameters
+		if (StringUtils.countMatches(text, STRING_CONSTANT_QUOTE) % 2 != 0)
+			result.add("Expression contains odd number of quotes");
+		return result;
+	}
 
 	public Collection<Pair<String, String>> findAll()
 	{
@@ -105,7 +117,6 @@ public class ActionReferenceFinder
 		}
 		return references;
 	}
-
 
 	/**
 	 * Trying to move pointers to next @{...} expression.
@@ -256,4 +267,11 @@ public class ActionReferenceFinder
 
 		return endIndex;
 	}
+
+
+	static private String removeStringLiterals(String text)
+	{
+		return text.replaceAll("'.*?'", "''");
+	}
+
 }
