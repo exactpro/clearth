@@ -18,55 +18,79 @@
 
 package com.exactprosystems.clearth.config;
 
-import com.exactprosystems.clearth.ApplicationManager;
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.ClearThException;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 
 public class ClearThConfigurationTest
 {
-	public static ClearThConfiguration configuration;
+	public static File configFile, incompleteCfgFile;
+	public static final String cfgResourcePath = "ConfigurationsClearTh/clearth.cfg",
+								incompleteCfg = "ConfigurationsClearTh/incompleteConfig.cfg";
 
 	public ClearThConfigurationTest() {}
 
 	@BeforeClass
-	public static void init() throws ConfigurationException, FileNotFoundException
+	public static void init() throws FileNotFoundException
 	{
-		File configFile = new File(resourceToAbsoluteFilePath("ConfigurationsClearTh/clearth.cfg"));
-
+		configFile = new File(resourceToAbsoluteFilePath(cfgResourcePath));
 		if(!configFile.exists() || !configFile.isFile())
 			throw new FileNotFoundException("File '" + configFile.getName() + "' not found");
 
-		configuration = ClearThConfiguration.create(configFile);
+		incompleteCfgFile = new File(resourceToAbsoluteFilePath(incompleteCfg));
+		if(!incompleteCfgFile.exists() || !incompleteCfgFile.isFile())
+			throw new FileNotFoundException("File '" + incompleteCfgFile.getName() + "' not found");
 	}
 
-	@Test
-	public void unmarshalConfig()
+	@DataProvider(name = "automationConfig")
+	Object[][] getAutomationConfig()
 	{
-		boolean userSchedulersAllowed = configuration.getAutomation().isUserSchedulersAllowed();
-		Assert.assertTrue(userSchedulersAllowed);
+		return new Object[][]
+		{
+			{
+				configFile, true
+			},
+			{
+				incompleteCfgFile, true
+			}
+		};
 	}
 
-	@Test
-	public void unmarshalCfgFromCore() throws ClearThException, IOException
+	@Test(dataProvider = "automationConfig")
+	public void testAutomationDefaultValues(File file, boolean expectedIsUserSchedulersAllowed) throws ConfigurationException
 	{
-		ApplicationManager manager = new ApplicationManager();
-		try
+		ClearThConfiguration configuration = ClearThConfiguration.create(file);
+		Automation automation = configuration.getAutomation();
+		Assert.assertEquals(automation.isUserSchedulersAllowed(), expectedIsUserSchedulersAllowed);
+	}
+
+	@DataProvider(name = "memoryMonitorConfig")
+	Object[][] getMemoryMonitorConfig()
+	{
+		return new Object[][]
 		{
-			ClearThCore core = ClearThCore.getInstance();
-			Assert.assertTrue(core.isUserSchedulersAllowed());
-		}
-		finally
-		{
-			manager.dispose();
-		}
+			{
+				configFile, 10001, 50000001, 100000001
+			},
+			{
+				incompleteCfgFile, 10003, 50000000, 100000000
+			}
+		};
+	}
+	@Test(dataProvider = "memoryMonitorConfig")
+	public void testMemoryMonitorConfig(File file, long expectedSleep, long expectedLargeDiff,
+	                                    long expectedLowMemory) throws ConfigurationException
+	{
+		ClearThConfiguration configuration = ClearThConfiguration.create(file);
+		MemoryMonitorCfg cfgMonitor = configuration.getMemory().getMonitor();
+		Assert.assertEquals(cfgMonitor.getSleep(), expectedSleep);
+		Assert.assertEquals(cfgMonitor.getLargeDiff(), expectedLargeDiff);
+		Assert.assertEquals(cfgMonitor.getLowMemory(), expectedLowMemory);
 	}
 }

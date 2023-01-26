@@ -18,15 +18,14 @@
 
 package com.exactprosystems.memorymonitor;
 
+import com.exactprosystems.clearth.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.exactprosystems.clearth.utils.Utils;
 
 public class MemoryMonitor extends Thread
 {
 	private static final Logger logger = LoggerFactory.getLogger(MemoryMonitor.class);
-	protected static final long DEFAULT_SLEEP = 10000,
+	public static final long DEFAULT_SLEEP = 10000,
 			DEFAULT_LARGEDIFF = 50000000,
 			DEFAULT_LOWMEMORY = 100000000;
 
@@ -39,10 +38,7 @@ public class MemoryMonitor extends Thread
 	//init parameters from config
 	public MemoryMonitor(String name)
 	{
-		super(name);
-		sleep = DEFAULT_SLEEP;
-		largeDiff = DEFAULT_LARGEDIFF;
-		lowMemory = DEFAULT_LOWMEMORY;
+		this(name, DEFAULT_SLEEP, DEFAULT_LARGEDIFF, DEFAULT_LOWMEMORY);
 	}
 
 	public MemoryMonitor(String name, long sleep, long largeDiff, long lowMemory)
@@ -51,6 +47,9 @@ public class MemoryMonitor extends Thread
 		this.sleep = sleep;
 		this.largeDiff = largeDiff;
 		this.lowMemory = lowMemory;
+
+		logger.info("Created memory monitor with settings: 'sleep'={}, 'largeDiff'={}, 'lowMemory'={}",
+				sleep, largeDiff, lowMemory);
 	}
 
 	public void halt()

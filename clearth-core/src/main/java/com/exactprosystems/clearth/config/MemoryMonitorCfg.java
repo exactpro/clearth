@@ -18,28 +18,51 @@
 
 package com.exactprosystems.clearth.config;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlType;
 
-@XmlType(name = "automation")
-public class Automation
+import static com.exactprosystems.memorymonitor.MemoryMonitor.*;
+
+@XmlType(name = "monitor")
+public class MemoryMonitorCfg
 {
-	private volatile boolean userSchedulersAllowed = true;
+	private long sleep = DEFAULT_SLEEP, largeDiff = DEFAULT_LARGEDIFF, lowMemory = DEFAULT_LOWMEMORY;
+	public MemoryMonitorCfg(){}
 
-	public Automation(){}
-
-	public boolean isUserSchedulersAllowed()
+	public void setSleep(long sleep)
 	{
-		return this.userSchedulersAllowed;
+		this.sleep = sleep;
 	}
 
-	public void setUserSchedulersAllowed(boolean userSchedulersAllowed)
+	public long getSleep()
 	{
-		this.userSchedulersAllowed = userSchedulersAllowed;
+		return sleep;
+	}
+
+	public void setLargeDiff(long largeDiff)
+	{
+		this.largeDiff = largeDiff;
+	}
+
+	public long getLargeDiff()
+	{
+		return largeDiff;
+	}
+
+	public void setLowMemory(long lowMemory)
+	{
+		this.lowMemory = lowMemory;
+	}
+
+	public long getLowMemory()
+	{
+		return lowMemory;
 	}
 
 	@Override
 	public String toString()
 	{
-		return " [userSchedulersAllowed = " + this.isUserSchedulersAllowed() + "]";
+			return "sleep = " + this.getSleep() +
+					"; largeDiff = " + this.getLargeDiff() +
+					"; lowMemory = " + this.getLowMemory();
 	}
 }

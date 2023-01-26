@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.report.html.template.ReportTemplat
 import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoExporter;
 import com.exactprosystems.clearth.automation.schedulerinfo.template.SchedulerInfoTemplatesProcessor;
 import com.exactprosystems.clearth.config.ClearThConfiguration;
+import com.exactprosystems.clearth.config.MemoryMonitorCfg;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.ConnectionsTransmitter;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
@@ -435,7 +436,8 @@ public abstract class ClearThCore
 	
 	protected MemoryMonitor createMemoryMonitor()
 	{
-		return new MemoryMonitor("MemoryMonitor");
+		MemoryMonitorCfg mmCfg = config().getMemory().getMonitor();
+		return new MemoryMonitor("MemoryMonitor", mmCfg.getSleep(), mmCfg.getLargeDiff(), mmCfg.getLowMemory());
 	}
 	
 	protected UsersManager createUsersManager()

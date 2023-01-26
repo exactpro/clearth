@@ -18,28 +18,29 @@
 
 package com.exactprosystems.clearth.config;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlType;
 
-@XmlType(name = "automation")
-public class Automation
+@XmlType(name = "memory")
+public class Memory
 {
-	private volatile boolean userSchedulersAllowed = true;
+	private MemoryMonitorCfg monitor;
+	public Memory(){}
 
-	public Automation(){}
-
-	public boolean isUserSchedulersAllowed()
+	public void setMonitor(MemoryMonitorCfg monitor)
 	{
-		return this.userSchedulersAllowed;
+		this.monitor = monitor;
 	}
 
-	public void setUserSchedulersAllowed(boolean userSchedulersAllowed)
+	public MemoryMonitorCfg getMonitor()
 	{
-		this.userSchedulersAllowed = userSchedulersAllowed;
+		if(monitor == null)
+			monitor = new MemoryMonitorCfg();
+		return monitor;
 	}
 
 	@Override
 	public String toString()
 	{
-		return " [userSchedulersAllowed = " + this.isUserSchedulersAllowed() + "]";
+		return " [monitor: " + this.getMonitor().toString() + "]";
 	}
 }
