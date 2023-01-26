@@ -30,15 +30,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Map;
 
 @XmlRootElement(name = "ClearThConfiguration")
 @XmlAccessorType(XmlAccessType.NONE)
 public class ClearThConfiguration
 {
 	@XmlElement
-	private Automation automation;
+	protected Automation automation;
 	@XmlElement
-	private Memory memory;
+	protected Memory memory;
+	@XmlElement
+	protected LocationConfig locations;
 
 	public ClearThConfiguration() {}
 
@@ -66,6 +69,25 @@ public class ClearThConfiguration
 		return memory;
 	}
 
+	public void setLocations(LocationConfig locations)
+	{
+		this.locations = locations;
+	}
+
+	public LocationConfig getLocations()
+	{
+		if(locations == null)
+			locations = new LocationConfig();
+		return this.locations;
+	}
+
+	public Map<String, String> getLocationsMapping()
+	{
+		if(locations == null)
+			return null;
+		return locations.getLocationsMapping();
+	}
+
 	protected static ClearThConfiguration unmarshal(File configFile) throws ConfigurationException
 	{
 		FileInputStream reader = null;
@@ -73,7 +95,7 @@ public class ClearThConfiguration
 		{
 			reader = new FileInputStream(configFile);
 			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class,
-						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class);
+						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class, LocationConfig.class, ReplacedPath.class);
 			Unmarshaller unmarshal = context.createUnmarshaller();
 
 			return (ClearThConfiguration) unmarshal.unmarshal(reader);
@@ -101,6 +123,7 @@ public class ClearThConfiguration
 	public String toString()
 	{
 		return "ClearThConfiguration {\n automation: " + this.getAutomation().toString() +
+				"\n locations: " + this.getLocations().toString() +
 				"\n memory: " + this.getMemory().toString() + "\n}";
 	}
 }

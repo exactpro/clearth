@@ -16,6 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
+
 package com.exactprosystems.clearth;
 
 public class ConfigFiles

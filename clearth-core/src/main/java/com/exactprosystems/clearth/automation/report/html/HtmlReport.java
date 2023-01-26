@@ -57,7 +57,7 @@ public class HtmlReport
 	
 	static
 	{
-		pathToResourceFiles = ClearThCore.getInstance().getReportsFilePath();
+		pathToResourceFiles = ClearThCore.getInstance().getOriginalReportsFilePath();
 	}
 	
 	public HtmlReport(){}

@@ -101,7 +101,8 @@ public class AutomationReportsBean extends ClearThBean
 
 	public String getLastLaunchReportUrl()
 	{
-		return getReportPath(getLastLaunch().getReportsPath(), getLastLaunch().getMatricesInfo().get(0).getFileName(), ActionReportWriter.HTML_REPORT_NAME);
+		XmlMatrixInfo lastLaunchInfo = getLastLaunch().getMatricesInfo().get(0);
+		return getReportPath(getLastLaunch().getReportsPath(), lastLaunchInfo.getFileName(), ActionReportWriter.HTML_REPORT_NAME);
 	}
 
 	public String getLastLaunchJsonReportUrl()
@@ -110,10 +111,12 @@ public class AutomationReportsBean extends ClearThBean
 		return getReportPath(getLastLaunch().getReportsPath(), lastLaunchInfo.getFileName(), ActionReportWriter.JSON_REPORT_NAME);
 	}
 
+
 	protected String getReportPath(String reportsPath, String matrixFileName, String reportName)
 	{
-		return MessageFormat.format("{0}/reports/{1}/{2}/{3}",                  // For example:
+		return MessageFormat.format("{0}/{1}/{2}/{3}/{4}",                  // For example:
 				ClearThCoreApplicationBean.getInstance().getAppContextPath(),       // "/clearth"
+				"reports",															// "reports"
 				reportsPath,                                                        // "admin/20171205121833073/completed"
 				automationBean.safeFileName(matrixFileName),                        // "linked_matrix_1497950729006.csv"
 				reportName);

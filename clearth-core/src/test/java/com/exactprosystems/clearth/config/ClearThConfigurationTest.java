@@ -25,6 +25,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Map;
+import java.util.HashMap;
 
 import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 
@@ -33,6 +35,14 @@ public class ClearThConfigurationTest
 	public static File configFile, incompleteCfgFile;
 	public static final String cfgResourcePath = "ConfigurationsClearTh/clearth.cfg",
 								incompleteCfg = "ConfigurationsClearTh/incompleteConfig.cfg";
+
+	private static Map<String, String> SAMPLE_MAP;
+
+	static {
+		SAMPLE_MAP = new HashMap<>();
+		SAMPLE_MAP.put("arg1", "val1");
+		SAMPLE_MAP.put("arg2", "val2");
+	}
 
 	public ClearThConfigurationTest() {}
 
@@ -63,7 +73,8 @@ public class ClearThConfigurationTest
 	}
 
 	@Test(dataProvider = "automationConfig")
-	public void testAutomationConfig(File file, boolean expectedIsUserSchedulersAllowed, boolean duplicateActionId) throws ConfigurationException
+	public void testAutomationConfig(File file, boolean expectedIsUserSchedulersAllowed, boolean duplicateActionId) 
+		throws ConfigurationException
 	{
 		ClearThConfiguration configuration = ClearThConfiguration.create(file);
 		Automation automation = configuration.getAutomation();
@@ -95,5 +106,27 @@ public class ClearThConfigurationTest
 		Assert.assertEquals(cfgMonitor.getSleep(), expectedSleep);
 		Assert.assertEquals(cfgMonitor.getLargeDiff(), expectedLargeDiff);
 		Assert.assertEquals(cfgMonitor.getLowMemory(), expectedLowMemory);
+	}
+
+	@DataProvider(name = "locationsConfig")
+	Object[][] getLocationsConfig()
+	{
+		return new Object[][]
+		{
+			{
+				configFile, SAMPLE_MAP
+			},
+			{
+				incompleteCfgFile,  null
+			}
+		};
+	}
+
+	@Test(dataProvider = "locationsConfig")
+	public void testLocationsConfig(File file, Map<String, String> expectedLocations) throws ConfigurationException
+	{
+		ClearThConfiguration configuration = ClearThConfiguration.create(file);
+		
+		Assert.assertEquals(configuration.getLocationsMapping(), expectedLocations);
 	}
 }

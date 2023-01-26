@@ -347,6 +347,14 @@ task createProject(type: Copy,
 		include 'gradlew.bat'
 		include 'gradlew'
 	}
+	from (new File("${projectDir}/docker")) {
+		include 'Dockerfile'
+		include 'clearth.cfg'
+		include 'jetty.xml'
+		include 'start.ini'
+		include 'log.properties'
+		into "docker"
+	}
 	into newProjectDir
 }
 

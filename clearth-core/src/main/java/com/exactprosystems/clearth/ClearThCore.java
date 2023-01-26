@@ -82,6 +82,7 @@ public abstract class ClearThCore
 	protected ReportTemplatesProcessor reportTemplatesProcessor;
 	protected SchedulerInfoTemplatesProcessor schedulerInfoTemplatesProcessor;
 	protected Map<String, XmlMessageHelperConfig> messageHelpers;
+	protected Map<String, String> replacedLocations;
 	protected ClearThConnectionStorage connectionStorage;
 	
 	protected SchedulerSettingsTransmitter schedulerSettingsTransmitter;
@@ -237,7 +238,7 @@ public abstract class ClearThCore
 		
 		ClearThCore.instance = this;
 	}
-
+	
 	public void init(ConfigFiles configFiles, DeploymentConfig depConfig, Object... otherEntities) throws ClearThException
 	{
 		if (root != null)
@@ -253,10 +254,12 @@ public abstract class ClearThCore
 		//Configuring application according to configuration files
 		try
 		{
+			config = loadConfig(depConfig.getConfigFileName());
+			replacedLocations = config.getLocationsMapping();
+			
 			createDefaultDirs();
 			createDirs();
-			config = loadConfig(depConfig.getConfigFileName());
-
+			reconfigureLogging();
 			valueGenerators = createValueGenerators();
 			connectionStorage = createConnectionStorage();
 			actionFactory = createActionFactory();
@@ -315,6 +318,13 @@ public abstract class ClearThCore
 		
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
+	}
+
+	//Logging is initialized before config
+	//Reconfigure logger to possibly use replacement path from config
+	protected void reconfigureLogging()
+	{
+		configureLogging();
 	}
 	
 	protected void initSystemProperties()
@@ -610,9 +620,15 @@ public abstract class ClearThCore
 		return rootOverride;
 	}
 	
-
 	public String getRootRelative(String fileName)
 	{
+		return getRootRelative(fileName, true);
+	}
+
+	public String getRootRelative(String fileName, boolean useReplacedPath)
+	{
+		if (useReplacedPath)
+			fileName = getNewPath(fileName);
 		if (new File(fileName).isAbsolute())
 			return fileName;
 		else
@@ -626,6 +642,13 @@ public abstract class ClearThCore
 	
 	public String getAppRootRelative(String fileName)
 	{
+		return getAppRootRelative(fileName, true);
+	}
+
+	public String getAppRootRelative(String fileName, boolean useReplacedPath)
+	{
+		if (useReplacedPath)
+			fileName = getNewPath(fileName);
 		if (new File(fileName).isAbsolute())
 			return fileName;
 		else
@@ -634,6 +657,7 @@ public abstract class ClearThCore
 	
 	public String excludeRoot(String fileName)
 	{
+		fileName = getNewPath(fileName);
 		if (fileName.startsWith(root))
 			return fileName.substring(root.length());
 		else
@@ -727,6 +751,11 @@ public abstract class ClearThCore
 	{
 		return getAppRootRelative(configFiles.getReportFilesDir());
 	}
+
+	public String getOriginalReportsFilePath()
+	{
+		return getAppRootRelative(configFiles.getReportFilesDir(), false);
+	}
 	
 	public String getRealTimeReportPath()
 	{
@@ -751,6 +780,13 @@ public abstract class ClearThCore
 	public String getDataDirPath()
 	{
 		return getRootRelative(configFiles.getDataDir());
+	}
+
+	protected String getNewPath(String fileName)
+	{
+		if (replacedLocations == null)
+			return fileName;
+		return replacedLocations.getOrDefault(fileName, fileName);
 	}
 	
 	protected SchedulersManager createSchedulersManager(String schedulersDir, String schedulersCfgFilePath) throws Exception

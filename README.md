@@ -56,7 +56,10 @@ $ ./gradlew createProject -PnewProjectDir=../PROJECTDIR -PnewProjectName=PROJECT
 
 The new project will be created in the directory adjacent to the repository root.
 
-Navigate to that new directory and execute the following command to start your new project within the Jetty server:
+
+## Starting ClearTH
+
+Navigate to the directory with your new project and execute the following command to start ClearTH within the Jetty server:
 ```
 $ ./gradlew jettyRun
 ```
@@ -64,6 +67,36 @@ $ ./gradlew jettyRun
 Alternatively, you can use the following command to explicitly build the WAR file with your project and deploy it to the Jetty server:
 ```
 $ ./gradlew runClearTH
+```
+
+ClearTH GUI will be available at http://localhost:8080/clearth
+
+You can log-in by using the following login/password:
+```
+admin/admin
+```
+
+
+## ClearTH in Docker
+
+Navigate to the directory with your new project and create the WAR file with your project:
+```
+$ ./gradlew copyWar
+```
+
+Build Docker image:
+```
+$ docker build -t NAME:TAG -f docker/Dockerfile .
+```
+
+Create a directory for persistent data, give it write permissions:
+```
+$ mkdir docker-volume-data && chmod o+wx docker-volume-data/
+```
+
+Now you can start ClearTH from the image you built:
+```
+$ docker run -v ./docker-volume-data:/clearth/persistentFiles -p 8080:8080 -it NAME:TAG
 ```
 
 ClearTH GUI will be available at http://localhost:8080/clearth
