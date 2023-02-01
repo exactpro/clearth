@@ -61,7 +61,7 @@ public class SimpleIbmMqReceiverThread extends BasicIbmMqMessageReceiverThread
 					logger.trace("Adding message to internal queue");
 					String m = message.readStringOfByteLength(message.getDataLength());
 
-					boolean inserted = messageQueue.offer(createReceivedMessage(m));
+					boolean inserted = receivedMessageQueue.offer(createReceivedMessage(m));
 
 					if (!inserted)
 						logger.warn("It is not possible to add message to queue due to capacity restrictions");

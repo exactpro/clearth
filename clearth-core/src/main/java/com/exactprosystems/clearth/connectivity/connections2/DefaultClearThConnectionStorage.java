@@ -32,7 +32,9 @@ import com.exactprosystems.clearth.utils.SettingsException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -76,9 +78,33 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 	}
 
 	@Override
-	public void registerType(ConnectionTypeInfo info)
+	public void registerType(ConnectionTypeInfo info) throws SettingsException
 	{
-		typeInfoMap.put(info.getType(), info);
+		checkTypeBeforeRegister(info);
+		try
+		{
+			Files.createDirectories(info.getDirectory());
+			typeInfoMap.put(info.getType(), info);
+		}
+		catch (IOException e)
+		{
+			throw new SettingsException(e);
+		}
+	}
+
+	private void checkTypeBeforeRegister(ConnectionTypeInfo suspect) throws SettingsException
+	{
+		ConnectionTypeInfo alreadyAddedType = typeInfoMap.get(suspect.getType());
+		if (alreadyAddedType != null)
+			throw new SettingsException("Connection type '"+suspect.getType()+"' already registered");
+		
+		for (ConnectionTypeInfo typeInfoInMap : typeInfoMap.values())
+		{
+			if (typeInfoInMap.getDirectory().equals(suspect.getDirectory()))
+				throw new SettingsException(format("Connection type '%s' cannot be registered, " +
+						"because it has the same directory as registered connection type '%s': '%s'",
+						suspect.getType(), typeInfoInMap.getType(), suspect.getDirectory().toAbsolutePath()));
+		}
 	}
 
 	protected ConnectionFileOperator createConnectionFileOperator()

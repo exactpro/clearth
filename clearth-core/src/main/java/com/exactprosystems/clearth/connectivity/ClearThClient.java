@@ -41,5 +41,4 @@ public interface ClearThClient extends PlainMessageSender
 	
 	long getSent();
 	long getReceived();
-	long getWarnings();
 }

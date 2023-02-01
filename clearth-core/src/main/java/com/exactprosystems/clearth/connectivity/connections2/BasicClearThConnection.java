@@ -20,12 +20,16 @@ package com.exactprosystems.clearth.connectivity.connections2;
 
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 
+import javax.xml.bind.annotation.*;
+
+@XmlAccessorType(XmlAccessType.NONE)
 public abstract class BasicClearThConnection implements ClearThConnection
 {
-
+	@XmlElement
 	protected String name = "";
-	protected ConnectionTypeInfo typeInfo;
+	@XmlElement
 	protected ClearThConnectionSettings settings;
+	protected ConnectionTypeInfo typeInfo;
 
 	public BasicClearThConnection()
 	{

@@ -164,6 +164,7 @@ public class IbmMqConnection extends BasicClearThMessageConnection
 		getSettings().setRetryTimeout(retryTimeout);
 	}
 
+	@Override
 	public boolean isAutoConnect()
 	{
 		return getSettings().isAutoConnect();

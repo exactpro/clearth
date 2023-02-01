@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.connectivity.connections2.clients;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.*;
 import com.exactprosystems.clearth.connectivity.connections2.ClearThConnectionSettings;
 import com.exactprosystems.clearth.connectivity.connections2.ClearThMessageConnection;
@@ -29,17 +28,16 @@ import com.exactprosystems.clearth.messages.MessageFileReader;
 import com.exactprosystems.clearth.messages.MessageFileWriter;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.Utils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -54,7 +52,7 @@ public abstract class BasicClearThClient implements ClearThClient
 	protected final String name;
 	protected final Path unhandledMessagesFile;
 	protected final ClearThConnectionSettings storedSettings;
-	protected final AtomicLong warnings, sent;
+	protected final AtomicLong sent;
 
 	protected final List<MessageListener> allListeners,
 			receiveListeners,
@@ -71,11 +69,10 @@ public abstract class BasicClearThClient implements ClearThClient
 	{
 		this.owner = owner;
 		name = owner.getName();
-		unhandledMessagesFile = Paths.get(ClearThCore.connectionsPath()).resolve(name+".dat");
+		unhandledMessagesFile = createUnhandledMessagesFilePath(name);
 
 		//Copying settings so that owner can change its own settings, but the client will keep the initial ones
 		storedSettings = owner.getSettings().copy();
-		warnings = new AtomicLong(0);
 		sent = new AtomicLong(0);
 
 		if (logger.isInfoEnabled())
@@ -104,6 +101,13 @@ public abstract class BasicClearThClient implements ClearThClient
 		}
 	}
 
+	protected Path createUnhandledMessagesFilePath(String name)
+	{
+		if (StringUtils.isEmpty(name))
+			throw new IllegalArgumentException("Name is not specified for connection of class " + owner.getClass().getSimpleName());
+		return owner.getTypeInfo().getDirectory().resolve(name + ".dat");
+	}
+
 	protected abstract void connect() throws ConnectionException, SettingsException;
 	protected abstract void closeConnections() throws ConnectionException;
 
@@ -114,7 +118,7 @@ public abstract class BasicClearThClient implements ClearThClient
 	protected abstract Object doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException;
 
 
-	private void loadUnhandledMessages()
+	protected void loadUnhandledMessages()
 	{
 		logger.info("{}: reading unhandled messages from file '{}'", name, unhandledMessagesFile);
 		try
@@ -342,26 +346,6 @@ public abstract class BasicClearThClient implements ClearThClient
 		logger.trace("{}: listener '{}' ({}) removed", name, listener.getName(), listener.getType());
 	}
 
-
-	/**
-	 * Notify all message handlers for received messages
-	 * @param message received message to notify listeners about
-	 */
-	public void notifyReceiveListeners(EncodedClearThMessage message)
-	{
-		notifyListeners(message, ClearThMessageDirection.RECEIVED, receiveListeners);
-	}
-
-	/**
-	 * Notify all message handlers for sent messages
-	 * @param message sent message to notify listeners about
-	 */
-	public void notifySendListeners(EncodedClearThMessage message)
-	{
-		notifyListeners(message, ClearThMessageDirection.SENT, sendListeners);
-	}
-
-
 	public boolean isRunning()
 	{
 		return running;
@@ -400,34 +384,9 @@ public abstract class BasicClearThClient implements ClearThClient
 		return receivedProcessorThread != null ? receivedProcessorThread.getProcessed() : 0;
 	}
 
-	public long getWarnings()
-	{
-		return warnings.get();
-	}
-
-
 	protected BlockingQueue<EncodedClearThMessage> createMessageQueue()
 	{
-		return new LinkedBlockingQueue<EncodedClearThMessage>();
-	}
-
-	protected final void notifyListeners(EncodedClearThMessage message, ClearThMessageDirection direction, Collection<MessageListener> listeners)
-	{
-		String dir = direction == ClearThMessageDirection.RECEIVED ? "receive" : "send";
-		for (MessageListener listener : listeners)
-		{
-			String listenerName = listener.getName(),
-					listenerType = listener.getType();
-			try
-			{
-				logger.trace("{}: notifying {} listener '{}' ({})", name, dir, listenerName, listenerType);
-				listener.onMessage(message);
-			}
-			catch (Throwable e)
-			{
-				logger.error("Error in '{}' while notifying {} listener '{}' ({})", name, dir, listenerName, listenerType, e);
-			}
-		}
+		return new LinkedBlockingQueue<>();
 	}
 
 	protected final void disposeProcessorThread(MessageProcessorThread thread)

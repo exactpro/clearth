@@ -61,7 +61,7 @@ public abstract class BasicClearThMessageConnection extends BasicClearThConnecti
 		return new RunnableConnectionState(name);
 	}
 
-	private MessageListenerFactory createListenerFactory()
+	protected MessageListenerFactory createListenerFactory()
 	{
 		return new BasicMessageListenerFactory();
 	}
@@ -74,6 +74,8 @@ public abstract class BasicClearThMessageConnection extends BasicClearThConnecti
 		try
 		{
 			readLock.lock();
+			if (client == null)
+				throw new ConnectivityException("Client is not initialized for connection " + name);
 			return client.sendMessage(message);
 		}
 		catch (IOException e)

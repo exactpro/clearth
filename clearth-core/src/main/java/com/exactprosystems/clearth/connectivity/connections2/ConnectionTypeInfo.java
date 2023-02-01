@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.connectivity.connections2;
 
 import com.exactprosystems.clearth.connectivity.connections2.validation.ClearThConnectionValidationRule;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,25 +30,25 @@ public class ConnectionTypeInfo
 	private final String type;
 	private final Class<? extends ClearThConnection> connectionClass;
 	private final Class<? extends ClearThConnectionSettings> settingsClass;
-	private final String directoryName;
+	private final Path directory;
 
 	private final Set<ClearThConnectionValidationRule> rules;
 
 
 	public ConnectionTypeInfo(String type, Class<? extends ClearThConnection> connectionClass,
-	                          Class<? extends ClearThConnectionSettings> settingsClass, String directoryName)
+	                          Class<? extends ClearThConnectionSettings> settingsClass, Path directory)
 	{
-		this(type, connectionClass, settingsClass, directoryName, null);
+		this(type, connectionClass, settingsClass, directory, null);
 	}
 
 	public ConnectionTypeInfo(String type, Class<? extends ClearThConnection> connectionClass,
-	                          Class<? extends ClearThConnectionSettings> settingsClass, String directoryName,
+	                          Class<? extends ClearThConnectionSettings> settingsClass, Path directory,
 	                          Set<ClearThConnectionValidationRule> rules)
 	{
 		this.type = type;
 		this.connectionClass = connectionClass;
 		this.settingsClass = settingsClass;
-		this.directoryName = directoryName;
+		this.directory = directory;
 		this.rules =  rules != null ? Collections.unmodifiableSet(new HashSet<>(rules)) : Collections.emptySet();
 	}
 
@@ -66,16 +67,16 @@ public class ConnectionTypeInfo
 		return settingsClass;
 	}
 
-	public String getDirectoryName()
+	public Path getDirectory()
 	{
-		return directoryName;
+		return directory;
 	}
 
 	@Override
 	public String toString()
 	{
-		return String.format("type = '%s', connectionClass = '%s', settingsClass = '%s', directoryName = '%s'", type,
-				connectionClass, settingsClass, directoryName);
+		return String.format("type = '%s', connectionClass = '%s', settingsClass = '%s', directory = '%s'", type,
+				connectionClass, settingsClass, directory);
 	}
 
 	public Set<ClearThConnectionValidationRule> getRules()

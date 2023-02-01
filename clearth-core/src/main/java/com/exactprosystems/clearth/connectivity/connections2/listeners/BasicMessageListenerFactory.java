@@ -117,7 +117,7 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 		return supportedListenerTypes;
 	}
 
-	private ListenerProperties createProperties(ListenerConfiguration configuration)
+	protected ListenerProperties createProperties(ListenerConfiguration configuration)
 	{
 		return new ListenerProperties(configuration.getName(),
 				configuration.getType(),

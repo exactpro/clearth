@@ -311,12 +311,6 @@ public abstract class ClearThMessageConnection<C extends ClearThMessageConnectio
 		return client != null ? client.getReceived() : 0;
 	}
 	
-	public long getWarnings()
-	{
-		return client != null ? client.getWarnings() : 0;
-	}
-	
-	
 	public static boolean isMessageConnection(ClearThConnection<?,?> connection)
 	{
 		return connection instanceof ClearThMessageConnection;

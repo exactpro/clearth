@@ -18,10 +18,8 @@
 
 package com.exactprosystems.clearth.connectivity.connections2;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.utils.Utils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +33,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +78,7 @@ public class ConnectionFileOperator
 	public List<ClearThConnection> loadConnections(ConnectionTypeInfo info)
 	{
 		List<ClearThConnection> connections = new ArrayList<>();
-		Path directoryPath = Paths.get(ClearThCore.getInstance().getRootRelative(info.getDirectoryName()));
+		Path directoryPath = info.getDirectory();
 		try (Stream<Path> dirStream = Files.list(directoryPath))
 		{
 			dirStream.filter(Files::isRegularFile)
@@ -91,6 +88,7 @@ public class ConnectionFileOperator
 						try
 						{
 							ClearThConnection connection = load(filePath.toFile(), info);
+							connection.setTypeInfo(info);
 							connections.add(connection);
 						}
 						catch (ConnectivityException e)
@@ -204,8 +202,7 @@ public class ConnectionFileOperator
 
 	protected File getConnectionFile(String connectionName, ConnectionTypeInfo info)
 	{
-		File file = new File(ClearThCore.getInstance().getRootRelative(info.getDirectoryName()), connectionName);
-		return file;
+		return info.getDirectory().resolve(connectionName).toFile();
 	}
 
 }

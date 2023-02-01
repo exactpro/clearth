@@ -24,25 +24,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class MessageReceiverThread extends Thread
 {
 	private final static Logger logger = LoggerFactory.getLogger(MessageReceiverThread.class);
 	protected final ClearThMessageConnection owner;
-	protected final Queue<EncodedClearThMessage> messageQueue;
+	protected final BlockingQueue<EncodedClearThMessage> receivedMessageQueue;
 	protected final long readDelay;
 	protected volatile LocalDateTime startTime, endTime;
 	protected AtomicBoolean terminated = new AtomicBoolean(false);
 
 	public MessageReceiverThread(String name, ClearThMessageConnection owner,
-	                             Queue<EncodedClearThMessage> messageQueue, long readDelay)
+	                             BlockingQueue<EncodedClearThMessage> receivedMessageQueue, long readDelay)
 	{
 		super(name);
 
 		this.owner = owner;
-		this.messageQueue = messageQueue;
+		this.receivedMessageQueue = receivedMessageQueue;
 		this.readDelay = readDelay;
 	}
 

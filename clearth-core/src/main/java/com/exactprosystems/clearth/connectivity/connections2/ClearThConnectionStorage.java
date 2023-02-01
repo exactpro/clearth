@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 
 public interface ClearThConnectionStorage
 {
-	void registerType(ConnectionTypeInfo info);
+	void registerType(ConnectionTypeInfo info) throws SettingsException;
 
 	public Collection<String> getTypes();
 
