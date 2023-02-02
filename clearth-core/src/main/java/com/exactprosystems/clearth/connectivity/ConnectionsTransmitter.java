@@ -26,30 +26,30 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ConnectionsTransmitter
 {
 	protected final static Logger logger = LoggerFactory.getLogger(ConnectionsTransmitter.class);
 	
-	public File exportConnections(String type) throws IOException
+	public File exportConnections(String type) throws IOException, ConnectivityException
 	{
 		File destDir = new File(ClearThCore.tempPath()),
 				resultFile = File.createTempFile(type + "_connections_", ".zip", destDir),
-				connectionsDir = new File(getConnectionsPath(type));
+				connectionsDir = getConnectionsPath(type).toFile();
 		
 		FileOperationUtils.zipFiles(resultFile, connectionsDir.listFiles());
 		logger.debug("Created zip file with {} connections from {} to be exported", type, connectionsDir);
 		return resultFile;
 	}
 	
-	public synchronized void deployConnections(String type, File zipFile) throws IOException
+	public synchronized void deployConnections(String type, File zipFile) throws IOException, ConnectivityException
 	{
 		File destDir = FileOperationUtils.createTempDirectory("imported_" + type + "_connections_", new File(ClearThCore.uploadStoragePath()));
 		try
 		{
 			FileOperationUtils.unzipFile(zipFile, destDir);
-			File connectionsDir = new File(getConnectionsPath(type));
+			File connectionsDir = getConnectionsPath(type).toFile();
 			String connectionsDirPath = connectionsDir.getCanonicalPath();
 			
 			File[] files = destDir.listFiles();
@@ -70,8 +70,8 @@ public class ConnectionsTransmitter
 		}
 	}
 	
-	private String getConnectionsPath(String type)
+	private Path getConnectionsPath(String type) throws ConnectivityException
 	{
-		return ClearThCore.connectionStorage().getConnectionsPath(type);
+		return ClearThCore.connectionStorage().getConnectionTypeInfo(type).getDirectory();
 	}
 }

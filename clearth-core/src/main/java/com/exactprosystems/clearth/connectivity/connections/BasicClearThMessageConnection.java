@@ -1,5 +1,5 @@
-/******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+/*******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,187 +18,227 @@
 
 package com.exactprosystems.clearth.connectivity.connections;
 
-import com.exactprosystems.clearth.connectivity.ClearThClient;
-import com.exactprosystems.clearth.connectivity.ConnectionException;
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
-import com.exactprosystems.clearth.connectivity.ListenerProperties;
-import com.exactprosystems.clearth.connectivity.MessageListener;
-import com.exactprosystems.clearth.connectivity.iface.ICodec;
-import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
+import com.exactprosystems.clearth.connectivity.*;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.connectivity.listeners.factories.BasicMessageListenerFactory;
+import com.exactprosystems.clearth.connectivity.listeners.factories.MessageListenerFactory;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.Map;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-
-/**
- * Basic implementation of ClearThMessageConnection that can be used 
- * to implement new Connection classes in Projects.
- */
-public abstract class BasicClearThMessageConnection<C extends BasicClearThMessageConnection<C, S>,
-		S extends ClearThConnectionSettings<S>>
-	extends ClearThMessageConnection<C, S>
+public abstract class BasicClearThMessageConnection extends BasicClearThRunnableConnection implements ClearThMessageConnection
 {
-	private static final Logger log = LoggerFactory.getLogger(BasicClearThMessageConnection.class);
-	
-	protected final Object managingMonitor = new Object(); // Monitor for managing operations: start and stop.
-	// Actually it is better to use ReadWriteLock here: write lock for managing operations (start, stop, ...)
-	// and read lock for regular use (send message, ...).
-	//TODO: implement it.
-	
-	
-	protected abstract ClearThClient createClient() throws ConnectivityException, SettingsException;
-	
+	private static final Logger logger = LoggerFactory.getLogger(BasicClearThMessageConnection.class);
+	protected ClearThClient client;
+	@XmlElementWrapper
+	protected final List<ListenerConfiguration> listeners = new CopyOnWriteArrayList<>();
+	protected final MessageListenerFactory listenerFactory;
+
+	protected final Lock readLock = lock.readLock();
+
+	public BasicClearThMessageConnection()
+	{
+		super();
+		listenerFactory = createListenerFactory();
+	}
+
+	protected MessageListenerFactory createListenerFactory()
+	{
+		return new BasicMessageListenerFactory();
+	}
+
+	protected abstract ClearThClient createClient() throws SettingsException, ConnectivityException;
+
+	@Override
+	public Object sendMessage(Object message) throws ConnectivityException
+	{
+		return doSendMessage(() -> client.sendMessage(message));
+	}
 	
 	@Override
-	public final void start() throws ConnectivityException, SettingsException
+	public Object sendMessage(EncodedClearThMessage message) throws ConnectivityException
 	{
-		if (cantBeStarted())
-			return;
-		
-		synchronized (managingMonitor)
+		return doSendMessage(() -> client.sendMessage(message));
+	}
+	
+	protected Object doSendMessage(Callable<Object> caller) throws ConnectivityException
+	{
+		try
 		{
-			if (cantBeStarted())
-				return;
-			
-			started = null;
-			stopped = null;
+			readLock.lock();
+			if (client == null)
+				throw new ConnectivityException("Client is not initialized for connection " + name);
+			if (!client.isRunning())
+				throw new ConnectivityException("Client is not running for connection " + name);
 
-			log.debug("Trying to start connection '{}'.", name);
+			return caller.call();
+		}
+		catch (Exception e)
+		{
+			throw new ConnectivityException("Error while sending message from connection " + name, e);
+		}
+		finally
+		{
+			readLock.unlock();
+		}
+	}
+
+	@Override
+	public void addListener(ListenerConfiguration listener)
+	{
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(ListenerConfiguration listener)
+	{
+		listeners.remove(listener);
+	}
+
+	@Override
+	public void removeAllListeners()
+	{
+		listeners.clear();
+	}
+
+	@Override
+	public List<ListenerConfiguration> getListeners()
+	{
+		return listeners;
+	}
+
+	@Override
+	protected void startResources() throws ConnectivityException, SettingsException
+	{
+		startClient();
+	}
+
+	protected void startClient() throws ConnectivityException, SettingsException
+	{
+		try
+		{
+			client = createClient();
+			client.addMessageListeners(createListeners(listeners));
+			client.start(true);
+		}
+		catch (Exception e)
+		{
+			logger.error("Could not start connection '{}'.", name, e);
+
+			disposeResources(e);
+
+			if (e instanceof SettingsException)
+				throw (SettingsException) e;
+			else if (e instanceof ConnectivityException)
+				throw (ConnectivityException) e;
+			else
+				throw new ConnectivityException(e, "Could not start connection '%s'.", name);
+		}
+	}
+
+	@Override
+	protected void restartResources() throws ConnectionException
+	{
+		if (client != null)
+		{
 			try
 			{
-				client = createClient();
-				client.addMessageListeners(createListeners(listeners));
-				client.start(true);
+				client.dispose(false);  //Keeping listeners to reuse the same instances after reconnect
 			}
-			catch (Exception e)
+			catch (ConnectivityException e)
 			{
-				log.error("Could not start connection '{}'.", name, e);
-				
-				disposeResources(e);
-				
-				if (e instanceof SettingsException)
-					throw (SettingsException) e;
-				else if (e instanceof ConnectivityException)
-					throw (ConnectivityException) e;
-				else 
-					throw new ConnectivityException(e, "Could not start connection '%s'.", name);
+				logger.warn("{}: errors occurred while closing client before reconnect. In spite of that " +
+						"reconnect will be performed", name, e);
 			}
+			client = null;
+		}
 
-			started = new Date();
-			running = true;
-			
-			log.info("Connection '{}' is now running.", name);
+		try
+		{
+			client = createClient();
+			for (ListenerConfiguration listener : listeners)
+				client.addMessageListener(listener.getImplementation());
+			client.start(false);  //Listeners are already running, started by previous client instance
+
+		}
+		catch (Exception e)
+		{
+			String msg = "Could not reconnect '"+name+"'";
+			logger.error(msg, e);
+			client = null;
+
+			if (e instanceof ConnectionException)
+				throw (ConnectionException)e;
+			throw new ConnectionException(msg, e);
 		}
 	}
-	
-	protected boolean cantBeStarted()
-	{
-		boolean running = isRunning();
-		if (running)
-			log.warn("Connection '{}' is already running.", name);
-		return running;
-	}
 
 
-	@Override
-	public final void stop() throws Exception
+	protected List<MessageListener> createListeners(List<ListenerConfiguration> configurations)
+			throws SettingsException, ConnectivityException
 	{
-		if (cantBeStopped())
-			return;
-		
-		synchronized (managingMonitor)
+		List<MessageListener> implementations = new ArrayList<>(configurations.size());
+
+		try
 		{
-			if (cantBeStopped())
-				return;
-			
-			log.debug("Trying to stop connection '{}'.", name);
-			
-			disposeResources();
+			for (ListenerConfiguration cfg : configurations)
+			{
+				if (!cfg.isActive() && !cfg.isActiveForSent())
+					continue;
+				
+				logger.debug("Adding listener '{}' ({}) to connection '{}'", cfg.getName(), cfg.getType(), name);
 
-			stopped = new Date();
-			running = false;
+				MessageListener listenerImpl = createListener(cfg);
 
-			log.info("Connection '{}' is now stopped.", name);
+				cfg.setImplementation(listenerImpl);
+				implementations.add(listenerImpl);
+			}
 		}
-	}
-	
-	@Override
-	public boolean restart() throws ConnectionException
-	{
-		if (cantBeReconnected())
-			return false;
-		
-		synchronized (managingMonitor)
+		catch (Exception e)
 		{
-			if (cantBeReconnected())
-				return false;
-			
-			if (client != null)
+			for (MessageListener listener : implementations)
 			{
 				try
 				{
-					client.dispose(false);  //Keeping listeners to reuse the same instances after reconnect
+					listener.dispose();
 				}
-				catch (ConnectivityException e)
+				catch (Exception e1)
 				{
-					log.warn("{}: errors occurred while closing client before reconnect. In spite of that reconnect will be performed", name, e);
+					logger.error("Error while disposing listener '{}' ({})", listener.getName(), listener.getType(),
+							e1);
 				}
-				client = null;
 			}
-			
-			try
-			{
-				client = createClient();
-				for (ListenerConfiguration listener : listeners)
-					client.addMessageListener(listener.getImplementation());
-				client.start(false);  //Listeners are already running, started by previous client instance
-				
-				started = new Date();
-				stopped = null;
-				log.info("'{}' reconnected", name);
-				return true;
-			}
-			catch (Exception e)
-			{
-				String msg = "Could not reconnect '"+name+"'";
-				log.error(msg, e);
-				client = null;
-				
-				if (e instanceof ConnectionException)
-					throw (ConnectionException)e;
-				throw new ConnectionException(msg, e);
-			}
+
+			if(e instanceof SettingsException)
+				throw (SettingsException) e;
+			else if(e instanceof ConnectivityException)
+				throw (ConnectivityException) e;
+			else
+				throw new ConnectivityException(e);
 		}
-	}
-	
-	
-	protected boolean cantBeStopped()
-	{
-		boolean notRunning = !isRunning();
-		if (notRunning)
-			log.warn("Connection '{}' is already stopped", name);
-		return notRunning;
-	}
-	
-	protected boolean cantBeReconnected()
-	{
-		boolean notRunning = !isRunning();
-		if (notRunning)
-			log.warn("Connection '{}' is stopped, reconnect won't be performed", name);
-		return notRunning;
+		return implementations;
 	}
 
-	
-	protected void disposeResources()
+	protected MessageListener createListener(ListenerConfiguration listenerConfiguration)
+			throws SettingsException, ConnectivityException
+	{
+		return listenerFactory.createListener(this, listenerConfiguration);
+	}
+
+	@Override
+	protected void stopResources()
 	{
 		disposeResources(null);
 	}
-	
+
 	protected void disposeResources(Exception cause)
 	{
 		try
@@ -211,46 +251,74 @@ public abstract class BasicClearThMessageConnection<C extends BasicClearThMessag
 		}
 		catch (Exception e)
 		{
-			log.error("Error while disposing client of connection '{}'.", name, e);
-			
+			logger.error("Error while disposing client of connection '{}'.", name, e);
+
 			if (cause != null)
 				cause.addSuppressed(e);
 		}
-		
+
 		disposeListeners();
-		
+
 		//No need to keep listeners instances of disposed connection
 		for (ListenerConfiguration listener : listeners)
 			listener.setImplementation(null);
 	}
 
 
+	protected void disposeListeners()
+	{
+		for (ListenerConfiguration configuration : listeners)
+		{
+			MessageListener impl = configuration.getImplementation();
+			if (impl != null)
+				impl.dispose();
+		}
+	}
 	
 	@Override
-	protected MessageListener createMessageCollector(ListenerProperties props, Map<String, String> settings)
-			throws SettingsException, ConnectivityException
+	public Set<Class<? extends MessageListener>> getSupportedListenerTypes()
 	{
-		String messageEndIndicator = getMessageEndIndicator();
+		return listenerFactory.getSupportedListenerTypes();
+	}
 
-		String type = settings.get(ClearThMessageCollector.TYPE_SETTING);
-		if (isBlank(type))
-			return new ClearThMessageCollector(props, name, settings, messageEndIndicator);
-		else
+	@Override
+	public Class<?> getListenerClass(String type)
+	{
+		return listenerFactory.getListenerClass(type);
+	}
+
+	@Override
+	public void copyFrom(ClearThConnection other)
+	{
+		super.copyFrom(other);
+
+		ClearThMessageConnection msgOther = (ClearThMessageConnection) other;
+		if (!listeners.isEmpty())
+			this.listeners.clear();
+		for (ListenerConfiguration configuration : msgOther.getListeners())
 		{
-			ICodec codec = createCodec(type);
-			return new ClearThMessageCollector(props, name, codec, settings, messageEndIndicator);
+			this.listeners.add(new ListenerConfiguration(configuration));
 		}
 	}
 
 	@Override
-	public Class<?> getMessageCollectorClass()
+	public MessageListener findListener(String listenerType)
 	{
-		return ClearThMessageCollector.class;
+		if (client == null)
+			return null;
+		
+		return client.findListener(listenerType);
+	}
+
+	@Override
+	public long getSent()
+	{
+		return client == null ? 0 : client.getSent();
 	}
 	
-	
-	protected String getMessageEndIndicator()
+	@Override
+	public long getReceived()
 	{
-		return ClearThMessageCollector.DEFAULT_MESSAGE_END_INDICATOR;
+		return client == null ? 0 : client.getReceived();
 	}
 }

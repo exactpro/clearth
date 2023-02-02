@@ -18,17 +18,17 @@
 
 package com.exactprosystems.clearth.connectivity;
 
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
-
-public class TestConnectionSettings extends ClearThConnectionSettings<TestConnectionSettings>
+public class TestConnectionSettings implements ClearThConnectionSettings
 {
-	private final BlockingQueue<String> source;
-	private final Collection<String> target;
+	private  BlockingQueue<String> source;
+	private Collection<String> target;
 	private boolean processReceived;
 	
 	public TestConnectionSettings()
@@ -50,7 +50,16 @@ public class TestConnectionSettings extends ClearThConnectionSettings<TestConnec
 	{
 		return new TestConnectionSettings(source, target, processReceived);
 	}
-	
+
+	@Override
+	public void copyFrom(ClearThConnectionSettings settings1)
+	{
+		TestConnectionSettings settings = (TestConnectionSettings) settings1; 
+		this.source = settings.source;
+		this.target = settings.target;
+		this.processReceived = settings.processReceived;
+	}
+
 	public BlockingQueue<String> getSource()
 	{
 		return source;

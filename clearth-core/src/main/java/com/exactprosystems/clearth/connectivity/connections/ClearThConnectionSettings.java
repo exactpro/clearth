@@ -1,5 +1,5 @@
-/******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+/*******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,27 @@
 
 package com.exactprosystems.clearth.connectivity.connections;
 
-public abstract class ClearThConnectionSettings<S extends ClearThConnectionSettings<S>>
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+
+import javax.xml.bind.annotation.XmlTransient;
+
+@XmlTransient
+public interface ClearThConnectionSettings
 {
-	public abstract S copy();
+	default ClearThConnectionSettings copy() throws ConnectivityException
+	{
+		ClearThConnectionSettings result = null;
+		try
+		{
+			result = this.getClass().newInstance();
+			result.copyFrom(this);
+			return result;
+		}
+		catch (InstantiationException | IllegalAccessException e)
+		{
+			throw new ConnectivityException(e);
+		}
+	}
+
+	void copyFrom(ClearThConnectionSettings settings);
 }

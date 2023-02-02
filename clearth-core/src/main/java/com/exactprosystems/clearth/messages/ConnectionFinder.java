@@ -42,28 +42,29 @@ public class ConnectionFinder
 		return InputParamsUtils.getRequiredString(inputParams, MessageAction.CONNECTIONNAME);
 	}
 	
-	public ClearThMessageConnection<?,?> findConnection(String connectionName) throws ResultException, ConnectivityException
+	public ClearThMessageConnection findConnection(String connectionName) throws ResultException, ConnectivityException
 	{
-		ClearThConnection<?,?> con = ClearThCore.connectionStorage().findRunningConnection(connectionName);
-		if (ClearThMessageConnection.isMessageConnection(con))
-			return (ClearThMessageConnection<?,?>)con;
+		ClearThConnection con = ClearThCore.connectionStorage().findRunningConnection(connectionName);
+		if (con instanceof ClearThMessageConnection)
+			return (ClearThMessageConnection) con;
 		else
 			throw ResultException.failed("Connection '" + connectionName + "' is not suitable for processing messages!");
 	}
 	
-	public ClearThMessageConnection<?,?> findConnection(Map<String, String> inputParams) throws ResultException, ConnectivityException
+	public ClearThMessageConnection findConnection(Map<String, String> inputParams) throws ResultException, ConnectivityException
 	{
 		String conName = getConnectionName(inputParams);
 		return findConnection(conName);
 	}
 	
 	
-	public ClearThMessageCollector findCollector(ClearThMessageConnection<?,?> connection) throws ResultException
+	public ClearThMessageCollector findCollector(ClearThMessageConnection connection) throws ResultException
 	{
-		String label = ListenerType.Collector.getLabel();
-		MessageListener listener = connection.findListener(label);
+		String listenerType = ListenerType.Collector.getLabel();
+		MessageListener listener = connection.findListener(listenerType);
 		if (listener == null)
-			throw ResultException.failed("Listener with type '" + label + "' is not added to specified connection");
+			throw ResultException.failed("Listener with type '" + listenerType +
+					"' is not added to specified connection");
 		
 		return (ClearThMessageCollector)listener;
 	}

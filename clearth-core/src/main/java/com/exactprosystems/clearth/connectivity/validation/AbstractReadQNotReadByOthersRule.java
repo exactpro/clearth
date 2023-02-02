@@ -18,9 +18,9 @@
 
 package com.exactprosystems.clearth.connectivity.validation;
 
-import com.exactprosystems.clearth.connectivity.BasicMqConnectionSettings;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.ibmmq.ClearThBasicMqConnectionSettings;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,33 +35,34 @@ import static org.apache.commons.lang.StringUtils.isBlank;
  * Rule to check that there are no started connections
  * reading from queues that are read by the connection being checked.
  */
-abstract public class AbstractReadQNotReadByOthersRule<C extends ClearThMessageConnection, S extends BasicMqConnectionSettings<S>>
+abstract public class AbstractReadQNotReadByOthersRule
 		implements ClearThConnectionValidationRule
 {
 	private static final Logger logger = LoggerFactory.getLogger(AbstractReadQNotReadByOthersRule.class);
 
-	protected abstract List<C> getOtherConnections(C connection);
+	protected abstract List<ClearThMessageConnection> getOtherConnections(ClearThMessageConnection connection);
 
-	protected abstract boolean useSameReceiveQueue(S settingsToCheck, S anotherSettings);
+	protected abstract boolean useSameReceiveQueue(ClearThBasicMqConnectionSettings settingsToCheck,
+	                                               ClearThBasicMqConnectionSettings anotherSettings);
 
 	@Override
-	public String check(ClearThConnection<?, ?> connection)
+	public String check(ClearThConnection connection)
 	{
 		if (!isConnectionSuitable(connection))
 			return null;
 
-		C connectionToCheck = (C) connection;
+		ClearThMessageConnection connectionToCheck = (ClearThMessageConnection) connection;
 
-		S settings = (S) connectionToCheck.getSettings();
+		ClearThBasicMqConnectionSettings settings = (ClearThBasicMqConnectionSettings) connectionToCheck.getSettings();
 
 		if (!settings.isUseReceiveQueue())
 			return null;
 
-		List<C> otherMqConnections = getOtherConnections(connectionToCheck);
+		List<ClearThMessageConnection> otherMqConnections = getOtherConnections(connectionToCheck);
 
-		for (C otherConnection : otherMqConnections)
+		for (ClearThMessageConnection otherConnection : otherMqConnections)
 		{
-			S otherConnectionSettings = (S) otherConnection.getSettings();
+			 ClearThBasicMqConnectionSettings otherConnectionSettings = (ClearThBasicMqConnectionSettings) otherConnection.getSettings();
 
 			if (!otherConnectionSettings.isUseReceiveQueue())
 				continue;

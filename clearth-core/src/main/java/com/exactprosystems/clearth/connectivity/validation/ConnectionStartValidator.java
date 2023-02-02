@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,42 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity.validation;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
-import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
 
-/**
- * Validator to check that connection can be safely started without conflicts with already running connections.
- * Example of such validations:
- * - there should be no started connections that read the same queues;
- * - there should be no connections with listeners writing to the same files (File Listener and Collector file).
- */
-public class ConnectionStartValidator
+import java.util.Set;
+
+public interface ConnectionStartValidator
 {
-	private final Set<ClearThConnectionValidationRule> rules = new HashSet<>();
-
-	public void addRule(ClearThConnectionValidationRule rule)
-	{
-		rules.add(rule);
-	}
-
-	public void checkIfCanStartConnection(ClearThConnection<?, ?> connectionToCheck) throws SettingsException
-	{
-		LineBuilder errorMessages = new LineBuilder();
-		for (ClearThConnectionValidationRule rule : rules)
-		{
-			if (rule.isConnectionSuitable(connectionToCheck))
-			{
-				String errorMessage = rule.check(connectionToCheck);
-				if (errorMessage != null)
-					errorMessages.append(errorMessage);
-			}
-		}
-
-		if (errorMessages.length() != 0)
-			throw new SettingsException(errorMessages.toString());
-	}
+	void checkIfCanStartConnection(ClearThConnection connectionToCheck,
+	                                      Set<ClearThConnectionValidationRule> rules) throws SettingsException;
 }

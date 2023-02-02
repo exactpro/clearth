@@ -18,23 +18,23 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.io.IOException;
-
+import com.exactprosystems.clearth.connectivity.connections.clients.BasicClearThClient;
+import com.exactprosystems.clearth.connectivity.connections.clients.MessageReceiverThread;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.ValueGenerator;
-import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
-import com.exactprosystems.clearth.utils.SettingsException;
+import java.io.IOException;
 
 /**
  * Minimal {@link BasicClearThClient} implementation to check its behavior
  */
-public class TestClearThClient extends BasicClearThClient<TestMessageConnection, TestConnectionSettings>
+public class TestClearThClient extends BasicClearThClient
 {
 	private static final Logger logger = LoggerFactory.getLogger(TestClearThClient.class);
 	
-	public TestClearThClient(TestMessageConnection owner) throws ConnectionException, SettingsException
+	public TestClearThClient(TestMessageConnection owner) throws ConnectivityException, SettingsException
 	{
 		super(owner);
 	}
@@ -44,21 +44,22 @@ public class TestClearThClient extends BasicClearThClient<TestMessageConnection,
 	{
 	}
 	
+	private TestConnectionSettings getStoredSettings()
+	{
+		return (TestConnectionSettings) storedSettings;
+	}
+
+
+
+	@Override
+	protected boolean isNeedReceivedProcessorThread()
+	{
+		return ((TestConnectionSettings) storedSettings).isProcessReceived();
+	}
+	
 	@Override
 	protected void closeConnections() throws ConnectionException
 	{
-	}
-	
-	@Override
-	protected Logger getLogger()
-	{
-		return logger;
-	}
-	
-	@Override
-	protected ValueGenerator getValueGenerator()
-	{
-		return null;
 	}
 	
 	@Override
@@ -70,32 +71,20 @@ public class TestClearThClient extends BasicClearThClient<TestMessageConnection,
 	@Override
 	protected MessageReceiverThread createReceiverThread()
 	{
-		return new TestReceiverThread(name, storedSettings.getSource(), receivedMessageQueue);
-	}
-	
-	@Override
-	protected boolean isNeedReceivedProcessorThread()
-	{
-		return storedSettings.isProcessReceived();
-	}
-	
-	@Override
-	protected boolean isConnectionBrokenError(Throwable error)
-	{
-		return false;
+		return new TestReceiverThread(name, getStoredSettings().getSource(), receivedMessageQueue);
 	}
 	
 	@Override
 	protected Object doSendMessage(Object message) throws IOException, ConnectivityException
 	{
-		storedSettings.getTarget().add(message.toString());
+		getStoredSettings().getTarget().add(message.toString());
 		return null;
 	}
 	
 	@Override
 	protected Object doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
-		storedSettings.getTarget().add(message.getPayload().toString());
+		getStoredSettings().getTarget().add(message.getPayload().toString());
 		return null;
 	}
 }

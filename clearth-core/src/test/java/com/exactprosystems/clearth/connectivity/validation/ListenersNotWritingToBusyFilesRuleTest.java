@@ -20,21 +20,21 @@ package com.exactprosystems.clearth.connectivity.validation;
 
 import com.exactprosystems.clearth.BasicTestNgTest;
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.*;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
-
+import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnection;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.function.Predicate;
 
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.function.Predicate;
 
 public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 {
@@ -155,7 +155,7 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 	
 	private void mockRunningConnections(ClearThCore application)
 	{
-		MQConnection anotherConnection = createConnection("MQConn",
+		IbmMqConnection anotherConnection = createConnection("MQConn",
 		                                                  new ListenerConfiguration("CollectorListener",
 		                                                                            "Collector",
 		                                                                            "contentsFileName=MyFile.txt", true, false));
@@ -183,13 +183,13 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 		else
 			return CTH_ROOT_PATH.resolve(path).toString();
 	}
-
 	
-	private MQConnection createConnection(String connectionName, ListenerConfiguration... listenerConfigurations)
+	private IbmMqConnection createConnection(String connectionName, ListenerConfiguration... listenerConfigurations)
 	{
-		MQConnection connection = new DefaultMQConnection();
+		IbmMqConnection connection = new IbmMqConnection();
 		connection.setName(connectionName);
-		connection.setListeners(Arrays.asList(listenerConfigurations));
+		for (ListenerConfiguration configuration : listenerConfigurations)
+			connection.addListener(configuration);
 		return connection;
 	}
 }

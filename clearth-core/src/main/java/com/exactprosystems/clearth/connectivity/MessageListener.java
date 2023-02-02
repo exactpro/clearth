@@ -29,7 +29,7 @@ public interface MessageListener
 {
 	void onMessage(EncodedClearThMessage message) throws IOException, IllegalArgumentException;
 	
-	void start();
+	void start() throws ConnectivityException;
 	void dispose();
 	
 	String getName();

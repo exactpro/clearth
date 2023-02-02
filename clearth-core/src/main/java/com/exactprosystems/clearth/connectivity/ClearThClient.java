@@ -1,5 +1,5 @@
-/******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+/*******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -35,10 +35,15 @@ public interface ClearThClient extends PlainMessageSender
 		}
 	}
 	
+	MessageListener findListener(String listenerType);
+	
 	void start(boolean startListeners) throws ConnectivityException;
 	
 	void dispose(boolean disposeListeners) throws ConnectivityException;
-	
+
+	boolean isRunning();
+
 	long getSent();
+	
 	long getReceived();
 }

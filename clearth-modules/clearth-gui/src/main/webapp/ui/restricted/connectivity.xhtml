@@ -9,8 +9,8 @@
 	<ui:define name="title">Connectivity</ui:define>
 
 	<ui:define name="content">
-		<p:importEnum type="com.exactprosystems.clearth.connectivity.connections2.settings.ValueClass" var="ValueClass" allSuffix="ALL"/>
-		<p:importEnum type="com.exactprosystems.clearth.connectivity.connections2.settings.InputType" var="InputType" allSuffix="ALL"/>
+		<p:importEnum type="com.exactprosystems.clearth.connectivity.connections.settings.ValueClass" var="ValueClass" allSuffix="ALL"/>
+		<p:importEnum type="com.exactprosystems.clearth.connectivity.connections.settings.InputType" var="InputType" allSuffix="ALL"/>
 		
 		<script type="text/javascript" src="#{request.contextPath}/js/cookieutils.js?version=1.0"></script>
 
@@ -155,13 +155,19 @@
 					</p:columns>
 					<p:column headerText="Started" responsivePriority="6">
 						<h:outputText value="#{connection.started}">
-							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss" type="localDateTime"/>
 						</h:outputText>
 					</p:column>
 					<p:column headerText="Stopped" responsivePriority="6">
 						<h:outputText value="#{connection.stopped}">
-							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss"/>
+							<f:convertDateTime pattern="dd.MM.yy HH:mm:ss" type="localDateTime"/>
 						</h:outputText>
+					</p:column>
+					<p:column headerText="Sent">
+						<h:outputText value="#{connection.sent}" />
+					</p:column>
+					<p:column headerText="Received">
+						<h:outputText value="#{connection.received}" />
 					</p:column>
 				</p:dataTable>
 				<script>

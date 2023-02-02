@@ -23,15 +23,19 @@ import com.exactprosystems.clearth.automation.report.html.template.ReportTemplat
 import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoExporter;
 import com.exactprosystems.clearth.automation.schedulerinfo.template.SchedulerInfoTemplatesProcessor;
 import com.exactprosystems.clearth.config.ClearThConfiguration;
+import com.exactprosystems.clearth.config.ConnectionType;
 import com.exactprosystems.clearth.config.MemoryMonitorCfg;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.ConnectionsTransmitter;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
-import com.exactprosystems.clearth.connectivity.connections.DefaultConnectionStorage;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
+import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.connections.storage.DefaultClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.iface.DefaultCodecFactory;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
+import com.exactprosystems.clearth.connectivity.validation.ClearThConnectionValidationRule;
 import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
 import com.exactprosystems.clearth.tools.ToolsFactory;
 import com.exactprosystems.clearth.tools.ToolsManager;
@@ -356,11 +360,12 @@ public abstract class ClearThCore
 	
 	protected ClearThConnectionStorage createConnectionStorage() throws ClearThException
 	{
-		return new DefaultConnectionStorage();
+		return new DefaultClearThConnectionStorage();
 	}
 	
-	protected void initConnectionStorage()
+	protected void initConnectionStorage() throws ClearThException
 	{
+		registerConnectionTypes();
 		connectionStorage.loadConnections();
 		connectionStorage.autoStartConnections();
 	}
@@ -455,6 +460,27 @@ public abstract class ClearThCore
 	protected UsersManager createUsersManager()
 	{
 		return new UsersManager();
+	}
+	
+	protected void registerConnectionTypes() throws ClearThException
+	{
+		for (ConnectionType type : config.getConnectivity().getTypesConfig().getTypes())
+		{
+			try
+			{
+				Set<ClearThConnectionValidationRule> validationRules = type.getValidationRules().createRules();
+				
+				ConnectionTypeInfo typeInfo = new ConnectionTypeInfo(type.getName(), 
+						Class.forName(type.getConnectionClass()).asSubclass(ClearThConnection.class), 
+						Paths.get(rootRelative(type.getDirectory())), 
+						validationRules);
+				connectionStorage.registerType(typeInfo);
+			}
+			catch (Exception e)
+			{
+				throw new ClearThException("Could not register connection type '"+type.getName()+"'", e);
+			}
+		}
 	}
 	
 	protected CodecsStorage loadCodecs(String codescFileName) throws Exception
@@ -935,12 +961,6 @@ public abstract class ClearThCore
 	{
 		return connectionStorage;
 	}
-
-	public void setConnectionStorage(ClearThConnectionStorage connectionStorage)
-	{
-		this.connectionStorage = connectionStorage;
-	}
-
 
 	public SchedulerSettingsTransmitter getSchedulerSettingsTransmitter()
 	{

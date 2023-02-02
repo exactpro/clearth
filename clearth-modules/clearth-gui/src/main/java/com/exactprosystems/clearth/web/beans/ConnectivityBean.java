@@ -18,24 +18,16 @@
 
 package com.exactprosystems.clearth.web.beans;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.*;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
-import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
-import com.exactprosystems.clearth.connectivity.connections.ConnectionErrorInfo;
-import com.exactprosystems.clearth.connectivity.connections2.settings.SettingValues;
-import com.exactprosystems.clearth.connectivity.connections2.settings.ColumnsModel;
-import com.exactprosystems.clearth.connectivity.connections2.settings.SettingAccessor;
-import com.exactprosystems.clearth.connectivity.connections2.settings.SettingsModel;
-import com.exactprosystems.clearth.connectivity.connections2.settings.SettingProperties;
+import com.exactprosystems.clearth.connectivity.connections.*;
+import com.exactprosystems.clearth.connectivity.connections.settings.*;
+import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
-import com.exactprosystems.clearth.web.misc.*;
-
+import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.primefaces.event.FileUploadEvent;
@@ -49,14 +41,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+
 public class ConnectivityBean extends ClearThBean
 {
 	private static final String defaultListenerType = ListenerType.File.getLabel();
 	
 	private final ClearThConnectionStorage storage = ClearThCore.connectionStorage();
 	private String selectedConnectionType;
-	private final List<ClearThConnection<?, ?>> selectedConnections = new ArrayList<ClearThConnection<?, ?>>();
-	private List<ClearThConnection<?, ?>> originalSelectedCons = null;
+	private final List<ClearThConnection> selectedConnections = new ArrayList<ClearThConnection>();
+	private List<ClearThConnection> originalSelectedCons = null;
 	
 	private ListenerConfiguration newListener = createEmptyListener(),
 			selectedListener = null;
@@ -67,7 +61,7 @@ public class ConnectivityBean extends ClearThBean
 	private FavoriteConnectionManager favoritesManager;
 	private Set<String> favoriteConnectionList;
 	private String username;
-	private List<ClearThConnection<?, ?>> connections;
+	private List<ClearThConnection> connections;
 	protected String selectedType;
 	
 	private SettingValues settingsToEdit;
@@ -114,13 +108,13 @@ public class ConnectivityBean extends ClearThBean
 	
 	
 	//*** List of connections ***
-	
+
 	public SelectItem[] getConnectionsList()
 	{
-		List<ClearThConnection<?, ?>> cons = this.getConnections();
+		List<ClearThConnection> cons = this.getConnections();
 		SelectItem[] result = new SelectItem[cons.size()];
 		int i = -1;
-		for (ClearThConnection<?, ?> c : cons)
+		for (ClearThConnection c : cons)
 		{
 			i++;
 			result[i] = new SelectItem(c.getName());
@@ -128,15 +122,15 @@ public class ConnectivityBean extends ClearThBean
 		return result;
 	}
 	
-	public List<ClearThConnection<?, ?>> getConnections()
+	public List<ClearThConnection> getConnections()
 	{
 		if (StringUtils.isEmpty(selectedConnectionType))
 			return Collections.emptyList();
 		
-		List<ClearThConnection<?, ?>> res = new ArrayList<>();
-		List<ClearThConnection<?, ?>> list = getAllConnections();
-		for (ClearThConnection<?, ?> con : list)
-			if (selectedConnectionType.equals(con.getType()))
+		List<ClearThConnection> res = new ArrayList<>();
+		List<ClearThConnection> list = getAllConnections();
+		for (ClearThConnection con : list)
+			if (selectedConnectionType.equals(con.getTypeInfo().getName()))
 				res.add(con);
 		return res;
 	}
@@ -146,7 +140,7 @@ public class ConnectivityBean extends ClearThBean
 		return columns == null ? null : columns.getColumns();
 	}
 	
-	public String getColumnValue(SettingProperties columnProps, ClearThConnection<?, ?> con)
+	public String getColumnValue(SettingProperties columnProps, ClearThConnection con)
 	{
 		try
 		{
@@ -163,20 +157,29 @@ public class ConnectivityBean extends ClearThBean
 	
 	//*** Selection ***
 	
-	public List<ClearThConnection<?, ?>> getSelectedConnections()
+	public List<ClearThConnection> getSelectedConnections()
 	{
 		return selectedConnections;
 	}
 	
-	public void setSelectedConnections(List<ClearThConnection<?, ?>> selectedConnections)
+	public void setSelectedConnections(List<ClearThConnection> selectedConnections)
 	{
 		this.originalSelectedCons = selectedConnections;
 		this.selectedConnections.clear();
 		
 		if (!CollectionUtils.isEmpty(originalSelectedCons))
 		{
-			for (ClearThConnection<?, ?> c : originalSelectedCons)
-				this.selectedConnections.add(c.copy());
+			for (ClearThConnection c : originalSelectedCons)
+			{
+				try
+				{
+					this.selectedConnections.add(c.copy());
+				}
+				catch (ConnectivityException e)
+				{
+					WebUtils.logAndGrowlException("Cannot select connection: " + c.getName(), e, getLogger());
+				}
+			}
 			
 			refreshSettingsToEdit();
 		}
@@ -185,16 +188,16 @@ public class ConnectivityBean extends ClearThBean
 	}
 	
 	
-	public ClearThConnection<?, ?> getOneSelectedConnection()
+	public ClearThConnection getOneSelectedConnection()
 	{
 		if (selectedConnections.isEmpty())
 			return null;
 		return selectedConnections.get(0);
 	}
 	
-	public void setOneSelectedConnection(ClearThConnection<?, ?> selectedCon)
+	public void setOneSelectedConnection(ClearThConnection selectedCon)
 	{
-		List<ClearThConnection<?, ?>> cons = new ArrayList<ClearThConnection<?, ?>>(1);
+		List<ClearThConnection> cons = new ArrayList<ClearThConnection>(1);
 		cons.add(selectedCon);
 		setSelectedConnections(cons);
 	}
@@ -230,7 +233,15 @@ public class ConnectivityBean extends ClearThBean
 	public void newConnection()
 	{
 		resetConsSelection();
-		selectedConnections.add(storage.getConnectionFactory(selectedConnectionType).createConnection());
+		try
+		{
+			selectedConnections.add(storage.createConnection(selectedConnectionType));
+		}
+		catch (ConnectivityException e)
+		{
+			getLogger().error("Cannot create a new connection", e);
+			MessageUtils.addErrorMessage("Error", e.getMessage());
+		}
 		refreshSettingsToEdit();
 	}
 	
@@ -244,13 +255,13 @@ public class ConnectivityBean extends ClearThBean
 				//Need to apply changes to all other selected connections. 
 				//The name shouldn't be changed here!
 				//We get here only if multiple connections are edited, thus originalSelectedCons can't be null
-				ClearThConnection<?, ?> firstCon = getOneSelectedConnection(),
+				ClearThConnection firstCon = getOneSelectedConnection(),
 						originalFirstCon = originalSelectedCons.get(0);
 				
 				//Restoring properties that shouldn't be edited (change flag = false), because JSF has changed all the properties of the first connection
 				editConnectionProps(firstCon, firstCon, originalFirstCon);
 				boolean first = true;
-				for (ClearThConnection<?, ?> c : selectedConnections)
+				for (ClearThConnection c : selectedConnections)
 				{
 					if (first)
 					{
@@ -275,23 +286,27 @@ public class ConnectivityBean extends ClearThBean
 			Logger logger = getLogger();
 			if (originalSelectedCons == null || copy)
 			{
-				ClearThConnection<?, ?> selCon = getOneSelectedConnection();
-				if ((ClearThMessageConnection.isMessageConnection(selCon)) && (!copyListners))
-					((ClearThMessageConnection<?, ?>)selCon).setListeners(new ArrayList<ListenerConfiguration>());
+				ClearThConnection selCon = getOneSelectedConnection();
+				if ((selCon instanceof ClearThMessageConnection) && !copyListners)
+					((ClearThMessageConnection)selCon).removeAllListeners();
+
 				storage.addConnection(selCon);
 				logger.info("created connection '"+selCon.getName()+"'");
 			}
 			else
 			{
 				int i = -1;
-				for (ClearThConnection<?, ?> c : originalSelectedCons)
+				for (ClearThConnection c : originalSelectedCons)
 				{
 					i++;
 					storage.modifyConnection(c, selectedConnections.get(i));
-					if (c.isRunning() && !copy)
+					if (c instanceof ClearThRunnableConnection)
 					{
-						stopConnection(c);
-						startConnection(c);
+						if (((ClearThRunnableConnection)c).isRunning() && !copy)
+						{
+							stopConnection(c);
+							startConnection(c);
+						}
 					}
 				}
 				
@@ -302,7 +317,7 @@ public class ConnectivityBean extends ClearThBean
 					else
 					{
 						CommaBuilder cb = new CommaBuilder();
-						for (ClearThConnection<?, ?> c : selectedConnections)
+						for (ClearThConnection c : selectedConnections)
 							cb.append("'"+c.getName()+"'");
 						logger.info("edited connections "+cb.toString());
 					}
@@ -333,7 +348,7 @@ public class ConnectivityBean extends ClearThBean
 	{
 		try
 		{
-			for (ClearThConnection<?, ?> c : originalSelectedCons)
+			for (ClearThConnection c : originalSelectedCons)
 				storage.removeConnection(c);
 			
 			Logger logger = getLogger();
@@ -344,7 +359,7 @@ public class ConnectivityBean extends ClearThBean
 				else
 				{
 					CommaBuilder cb = new CommaBuilder();
-					for (ClearThConnection<?, ?> c : originalSelectedCons)
+					for (ClearThConnection c : originalSelectedCons)
 						cb.append("'"+c.getName()+"'");
 					logger.info("removed connections "+cb.toString());
 				}
@@ -376,7 +391,7 @@ public class ConnectivityBean extends ClearThBean
 			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(selectedConnectionType);
 			return WebUtils.downloadFile(resultFile);
 		}
-		catch (IOException e)
+		catch (IOException | ConnectivityException e)
 		{
 			WebUtils.logAndGrowlException("Error while exporting connections", e, getLogger());
 			return null;
@@ -411,13 +426,13 @@ public class ConnectivityBean extends ClearThBean
 	
 	public void startConnections()
 	{
-		for (ClearThConnection<?, ?> c : getAllOrSelectedConnections())
+		for (ClearThConnection c : getAllOrSelectedConnections())
 			startConnection(c);
 	}
 	
 	public void stopConnections()
 	{
-		for (ClearThConnection<?, ?> c : getAllOrSelectedConnections())
+		for (ClearThConnection c : getAllOrSelectedConnections())
 			stopConnection(c);
 	}
 	
@@ -440,7 +455,7 @@ public class ConnectivityBean extends ClearThBean
 		});
 	}
 	
-	private List<ClearThConnection<?, ?>> getAllConnections()
+	private List<ClearThConnection> getAllConnections()
 	{
 		if (connections == null || storage.getConnections().size() != connections.size())
 		{
@@ -450,18 +465,25 @@ public class ConnectivityBean extends ClearThBean
 		return this.connections;
 	}
 	
-	private List<ClearThConnection<?, ?>> getAllOrSelectedConnections()
+	private List<ClearThConnection> getAllOrSelectedConnections()
 	{
 		return CollectionUtils.isEmpty(originalSelectedCons) ? getConnections() : originalSelectedCons;
 	}
 	
-	private void startConnection(ClearThConnection<?, ?> con)
+	private void startConnection(ClearThConnection con)
 	{
-		if (!con.isRunning())
+		if (!(con instanceof ClearThRunnableConnection))
+		{
+			MessageUtils.addWarningMessage("Info", "Connection '"+con.getName()+"' cannot be run.");
+			return;
+		}
+		ClearThRunnableConnection runnable = (ClearThRunnableConnection)con;
+		if (!runnable.isRunning())
 		{
 			try
 			{
-				con.start();
+				storage.validateConnectionStart(runnable);
+				runnable.start();
 				MessageUtils.addInfoMessage("Info", "Connection '"+con.getName()+"' is now running");
 				getLogger().info("started connection '"+con.getName()+"'");
 			}
@@ -474,14 +496,20 @@ public class ConnectivityBean extends ClearThBean
 			MessageUtils.addInfoMessage("Info", "Connection '"+con.getName()+"' is already running");
 	}
 	
-	private void stopConnection(ClearThConnection<?, ?> con)
+	private void stopConnection(ClearThConnection con)
 	{
-		if (con.isRunning())
+		if (!(con instanceof ClearThRunnableConnection))
+		{
+			MessageUtils.addWarningMessage("Info", "Connection '"+con.getName()+"' cannot be stopped.");
+			return;
+		}
+		ClearThRunnableConnection runnable = (ClearThRunnableConnection)con;
+		if (runnable.isRunning())
 		{
 			try
 			{
 				getLogger().trace("Disposing connection");
-				con.stop();
+				runnable.stop();
 				MessageUtils.addInfoMessage("Info", "Connection '"+con.getName()+"' stopped");
 				getLogger().info("stopped connection '"+con.getName()+"'");
 			}
@@ -526,7 +554,7 @@ public class ConnectivityBean extends ClearThBean
 
 	public void selectFirstListener()
 	{
-		ClearThMessageConnection<?, ?> con = (ClearThMessageConnection<?, ?>) getOneSelectedConnection();
+		ClearThMessageConnection con = (ClearThMessageConnection) getOneSelectedConnection();
 		List<ListenerConfiguration> listeners = con.getListeners();
 		if (isNotEmpty(listeners))
 			setSelectedListener(listeners.get(0));
@@ -541,11 +569,11 @@ public class ConnectivityBean extends ClearThBean
 
 	public boolean isCollectorPresent()
 	{
-		ClearThConnection<?, ?> c = getOneSelectedConnection();
-		if ((c == null) || (!ClearThMessageConnection.isMessageConnection(c)))
+		ClearThConnection c = getOneSelectedConnection();
+		if ((c == null) || (!(c instanceof ClearThMessageConnection)))
 			return false;
 
-		for (ListenerConfiguration listener : ((ClearThMessageConnection<?,?>)c).getListeners())
+		for (ListenerConfiguration listener : ((ClearThMessageConnection)c).getListeners())
 		{
 			if (listener.getType().equals(ListenerType.Collector.getLabel()))
 				return true;
@@ -563,7 +591,7 @@ public class ConnectivityBean extends ClearThBean
 
 	public void addListener()
 	{
-		((ClearThMessageConnection<?, ?>)getOneSelectedConnection()).addListener(newListener);
+		((ClearThMessageConnection)getOneSelectedConnection()).addListener(newListener);
 		setSelectedListener(newListener);
 		newListener = createEmptyListener();
 		noListenersInfo = false;
@@ -571,7 +599,7 @@ public class ConnectivityBean extends ClearThBean
 
 	public void removeListener()
 	{
-		ClearThMessageConnection<?, ?> con = (ClearThMessageConnection<?, ?>)getOneSelectedConnection();
+		ClearThMessageConnection con = (ClearThMessageConnection)getOneSelectedConnection();
 		List<ListenerConfiguration> listeners = con.getListeners();
 		int index = listeners.indexOf(selectedListener);
 		con.removeListener(selectedListener);
@@ -589,19 +617,19 @@ public class ConnectivityBean extends ClearThBean
 
 	public boolean selectedConHasListeners()
 	{
-		ClearThMessageConnection<?, ?> msgCon = (ClearThMessageConnection<?, ?>) getOneSelectedConnection();
+		ClearThMessageConnection msgCon = (ClearThMessageConnection) getOneSelectedConnection();
 		return msgCon != null && isNotEmpty(msgCon.getListeners());
 	}
 
 	public String getListenerDescription()
 	{
-		ClearThConnection<?, ?> c = getOneSelectedConnection();
-		if (!ClearThMessageConnection.isMessageConnection(c))
+		ClearThConnection c = getOneSelectedConnection();
+		if (!(c instanceof ClearThMessageConnection))
 			return null;
 		if ((getSelectedListener() == null) || (c == null))
 			return null;
 
-		Class<?> descriptionOwner = ((ClearThMessageConnection<?, ?>) c).getListenerClass(getSelectedListener().getType());
+		Class<?> descriptionOwner = ((ClearThMessageConnection) c).getListenerClass(getSelectedListener().getType());
 		if (descriptionOwner == null)
 			return "Error: no class found for this listener type";
 		ListenerDescription ann = descriptionOwner.getAnnotation(ListenerDescription.class);
@@ -694,7 +722,7 @@ public class ConnectivityBean extends ClearThBean
 	}
 	
 	
-	public boolean isFavorite(ClearThConnection<?, ?> con)
+	public boolean isFavorite(ClearThConnection con)
 	{
 		return this.favoriteConnectionList.contains(con.getName());
 	}
@@ -715,10 +743,10 @@ public class ConnectivityBean extends ClearThBean
 
 	public boolean isConnectionRunning()
 	{
-		List<ClearThConnection<?, ?>> cons = getAllConnections();
-		for (ClearThConnection<?, ?> c : cons)
+		List<ClearThConnection> cons = getAllConnections();
+		for (ClearThConnection c : cons)
 		{
-			if (c.isRunning())
+			if (isConnectionRunning(c))
 				return true;
 		}
 		return false;
@@ -728,13 +756,18 @@ public class ConnectivityBean extends ClearThBean
 	{
 		if (originalSelectedCons != null)
 		{
-			for (ClearThConnection<?, ?> con : originalSelectedCons)
+			for (ClearThConnection con : originalSelectedCons)
 			{
-				if (con.isRunning())
+				if (isConnectionRunning(con))
 					return true;
 			}
 		}
 		return false;
+	}
+
+	private boolean isConnectionRunning(ClearThConnection con)
+	{
+		return (con instanceof ClearThRunnableConnection) && ((ClearThRunnableConnection)con).isRunning();
 	}
 
 	
@@ -745,14 +778,14 @@ public class ConnectivityBean extends ClearThBean
 	
 	private Class<?> getSelectedListenerClass()
 	{
-		ClearThConnection<?, ?> c = getOneSelectedConnection();
-		if (c == null || !ClearThMessageConnection.isMessageConnection(c))
+		ClearThConnection c = getOneSelectedConnection();
+		if (c == null || !(c instanceof ClearThMessageConnection))
 			return null;
 		ListenerConfiguration listener = getSelectedListener();
 		if (listener == null)
 			return null;
 		
-		return ((ClearThMessageConnection<?, ?>) c).getListenerClass(listener.getType());
+		return ((ClearThMessageConnection) c).getListenerClass(listener.getType());
 	}
 	
 	private boolean checkSelectedListenerClass(Class<?> expectedClass)
@@ -767,18 +800,18 @@ public class ConnectivityBean extends ClearThBean
 		return it.hasNext() ? it.next() : null;
 	}
 	
-	private void editConnectionProps(ClearThConnection<?, ?> connectionToEdit, ClearThConnection<?, ?> changes, ClearThConnection<?, ?> original) 
+	private void editConnectionProps(ClearThConnection connectionToEdit, ClearThConnection changes, ClearThConnection original) 
 			throws Exception
 	{
 		//This method is called only if multiple connections are selected.
 		//Accessor for "Name" (which in member of ClearThConnection, not ClearThConnectionSettings) is not included in settingsToEdit in this case.
 		//So it is safe to work with ClearThConnectionSettings only
-		ClearThConnectionSettings<?> connectionToEditSettings = connectionToEdit.getSettings(),
+		ClearThConnectionSettings connectionToEditSettings = connectionToEdit.getSettings(),
 				changesSettings = changes.getSettings(),
 				originalSettings = original.getSettings();
 		for (SettingAccessor accessor : settingsToEdit.getSettings())
 		{
-			ClearThConnectionSettings<?> copyFrom = accessor.isApplyChange() ? changesSettings : originalSettings;
+			ClearThConnectionSettings copyFrom = accessor.isApplyChange() ? changesSettings : originalSettings;
 			SettingAccessor.copyValue(accessor.getProperties(), copyFrom, connectionToEditSettings);
 		}
 	}

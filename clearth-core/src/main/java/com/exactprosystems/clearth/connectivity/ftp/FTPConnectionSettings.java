@@ -21,13 +21,18 @@ package com.exactprosystems.clearth.connectivity.ftp;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
 
 
-public class FTPConnectionSettings extends ClearThConnectionSettings<FTPConnectionSettings>
+public class FTPConnectionSettings implements ClearThConnectionSettings
 {
 
 	@Override
 	public FTPConnectionSettings copy()
 	{
 		return new FTPConnectionSettings();
+	}
+
+	@Override
+	public void copyFrom(ClearThConnectionSettings settings)
+	{
 	}
 
 }

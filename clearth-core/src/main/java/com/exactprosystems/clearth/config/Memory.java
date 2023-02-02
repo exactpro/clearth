@@ -41,6 +41,6 @@ public class Memory
 	@Override
 	public String toString()
 	{
-		return " [monitor: " + this.getMonitor().toString() + "]";
+		return "[monitor: " + this.getMonitor().toString() + "]";
 	}
 }

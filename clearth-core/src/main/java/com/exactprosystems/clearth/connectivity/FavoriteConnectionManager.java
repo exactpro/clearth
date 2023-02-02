@@ -18,23 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import java.io.*;
+import java.util.*;
+import java.util.Map.Entry;
 
 import static com.exactprosystems.clearth.ClearThCore.connectionStorage;
 
@@ -93,9 +83,9 @@ public class FavoriteConnectionManager
 		}
 	}
 	
-	private boolean containsConnection(List<ClearThConnection<?,?>> conn, String name)
+	private boolean containsConnection(List<ClearThConnection> conn, String name)
 	{
-		for (ClearThConnection<?,?> connection : conn)
+		for (ClearThConnection connection : conn)
 		{
 			if (connection.getName().equals(name))
 			{

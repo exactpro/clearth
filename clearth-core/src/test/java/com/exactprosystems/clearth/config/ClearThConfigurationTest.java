@@ -22,6 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.testng.asserts.SoftAssert;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -71,6 +72,20 @@ public class ClearThConfigurationTest
 			}
 		};
 	}
+	
+	@DataProvider(name ="connectivityConfig")
+	Object[][] connectivityConfig()
+	{
+		return new Object[][]
+		{
+			{
+				configFile, "dummyType", "com.exactprosystems.clearth.connectivity.DummyConnection", "dummy_connections"
+			},
+			{
+				incompleteCfgFile, null, null, null
+			}
+		};
+	}
 
 	@Test(dataProvider = "automationConfig")
 	public void testAutomationConfig(File file, boolean expectedIsUserSchedulersAllowed, boolean duplicateActionId) 
@@ -82,6 +97,27 @@ public class ClearThConfigurationTest
 
 		MatrixFatalErrors matrixFatalErrors = automation.getMatrixFatalErrors();
 		Assert.assertEquals(matrixFatalErrors.isDuplicateActionId(), duplicateActionId);
+	}
+	
+	@Test(dataProvider = "connectivityConfig")
+	public void testConnectivityConfig(File file, String typeName, String typeClass, String typeDirectory) throws ConfigurationException
+	{
+		ClearThConfiguration configuration = ClearThConfiguration.create(file);
+		Connectivity connectivity = configuration.getConnectivity();
+		
+		ConnectionTypesConfig typesConfig = connectivity.getTypesConfig();
+		if (typeName == null)
+		{
+			Assert.assertEquals(typesConfig.getTypes().size(), 0);
+			return;
+		}
+		
+		ConnectionType actualType = typesConfig.getTypes().get(0);
+		SoftAssert soft = new SoftAssert();
+		soft.assertEquals(actualType.getName(), typeName);
+		soft.assertEquals(actualType.getConnectionClass(), typeClass);
+		soft.assertEquals(actualType.getDirectory(), typeDirectory);
+		soft.assertAll();
 	}
 
 	@DataProvider(name = "memoryMonitorConfig")

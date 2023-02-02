@@ -18,24 +18,23 @@
 
 package com.exactprosystems.clearth.connectivity.validation;
 
-import static com.exactprosystems.clearth.ClearThCore.*;
-import static com.exactprosystems.clearth.connectivity.ListenerType.*;
-import static com.exactprosystems.clearth.utils.CollectionUtils.join;
-import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
+import org.apache.commons.lang.StringUtils;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
+import static com.exactprosystems.clearth.ClearThCore.getInstance;
+import static com.exactprosystems.clearth.connectivity.ListenerType.listenerTypeByLabel;
+import static com.exactprosystems.clearth.utils.CollectionUtils.join;
+import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Rule to check that there are no started connections with listeners
@@ -43,20 +42,19 @@ import com.exactprosystems.clearth.utils.KeyValueUtils;
  */
 public class ListenersNotWritingToBusyFilesRule implements ClearThConnectionValidationRule
 {
-
 	@Override
-	public boolean isConnectionSuitable(ClearThConnection<?, ?> connectionToCheck)
+	public boolean isConnectionSuitable(ClearThConnection connectionToCheck)
 	{
-		return connectionToCheck instanceof ClearThMessageConnection<?, ?>;
+		return connectionToCheck instanceof ClearThMessageConnection;
 	}
 
 	@Override
-	public String check(ClearThConnection<?, ?> connectionToCheck)
+	public String check(ClearThConnection connectionToCheck)
 	{
 		if (!isConnectionSuitable(connectionToCheck))
 			return null;
 
-		ClearThMessageConnection<?, ?> msgConnectionToCheck = (ClearThMessageConnection<?, ?>) connectionToCheck;
+		ClearThMessageConnection msgConnectionToCheck = (ClearThMessageConnection) connectionToCheck;
 		List<ClearThMessageConnection> anotherMsgConnections = getAllStartedMsgConnections();
 		
 		String conflicts = checkListenersWritingToSameFiles(msgConnectionToCheck, anotherMsgConnections);
@@ -69,11 +67,11 @@ public class ListenersNotWritingToBusyFilesRule implements ClearThConnectionVali
 	private List<ClearThMessageConnection> getAllStartedMsgConnections()
 	{
 		return getInstance().getConnectionStorage()
-		                    .getConnections(conn -> (isConnectionSuitable(conn) && conn.isRunning()),
-		                                    ClearThMessageConnection.class);
+				.getConnections(conn -> (isConnectionSuitable(conn) && ((ClearThMessageConnection) conn).isRunning()), 
+						ClearThMessageConnection.class);
 	}
 
-	private String checkListenersWritingToSameFiles(ClearThMessageConnection<?, ?> connectionToCheck,
+	private String checkListenersWritingToSameFiles(ClearThMessageConnection connectionToCheck,
 	                                                List<ClearThMessageConnection> otherConnections)
 	{
 		List<String> conflicts = new ArrayList<>();
@@ -104,7 +102,7 @@ public class ListenersNotWritingToBusyFilesRule implements ClearThConnectionVali
 			return null;
 	}
 	
-	private Map<Path, List<String>> findWrittenFilePathsOfCheckedConnection(ClearThMessageConnection<?, ?> connection)
+	private Map<Path, List<String>> findWrittenFilePathsOfCheckedConnection(ClearThMessageConnection connection)
 	{
 		Map<Path, List<String>> paths = new HashMap<>();
 		for (ListenerConfiguration cfg : connection.getListeners())
@@ -121,7 +119,7 @@ public class ListenersNotWritingToBusyFilesRule implements ClearThConnectionVali
 	private Map<Path, String> findWrittenFilesPathOfRunningConnections(List<ClearThMessageConnection> connections)
 	{
 		Map<Path, String> pathsWithWriters = new HashMap<>();
-		for (ClearThMessageConnection<?, ?> connection : connections)
+		for (ClearThMessageConnection connection : connections)
 		{
 			for (ListenerConfiguration cfg : connection.getListeners())
 			{

@@ -49,7 +49,7 @@ public class CollectorScannerToolBean extends ClearThBean
 	protected static final List<String> noCollector = new ArrayList<>();
 	protected static final List<CollectorMessage> noMessages;
 	protected List<CollectorMessage> correctMessages = null, failedMessages = null;
-	protected ClearThMessageConnection<?, ?> selectedConnection;
+	protected ClearThMessageConnection selectedConnection;
 	protected boolean collectorVerticalAlignment = false;
 	protected int collectorScannerMessagesTab = 0;
 	protected String textToParse = "";
@@ -69,11 +69,12 @@ public class CollectorScannerToolBean extends ClearThBean
 	}
 	
 	public String getSelectedConnection()
-	{
-		// If the selected running connection was deleted, prevent scanning its collector
-		if (!ClearThCore.connectionStorage().containsConnection(selectedConnection))
-			selectedConnection = null;
-		return selectedConnection == null ? null : selectedConnection.getName();
+	{   
+		if (selectedConnection == null)
+			return null;
+		if (!ClearThCore.connectionStorage().containsConnection(selectedConnection.getName()))
+			return null;
+		return selectedConnection.getName();
 	}
 	
 	public void setSelectedConnection(String selectedConnection)

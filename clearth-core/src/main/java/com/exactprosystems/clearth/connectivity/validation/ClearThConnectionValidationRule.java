@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,12 +30,12 @@ public interface ClearThConnectionValidationRule
 	 * @param connectionToCheck connection to test.
 	 * @return true if this rule is applicable to specified connection.
 	 */
-	boolean isConnectionSuitable(ClearThConnection<?, ?> connectionToCheck);
+	boolean isConnectionSuitable(ClearThConnection connectionToCheck);
 
 	/**
 	 * Validates connection and returns error message if validation is failed.
 	 * @param connectionToCheck connection to check.
 	 * @return error description if validation is failed. In case of passed validation can return null or empty String.
 	 */
-	String check(ClearThConnection<?, ?> connectionToCheck);
+	String check(ClearThConnection connectionToCheck);
 }

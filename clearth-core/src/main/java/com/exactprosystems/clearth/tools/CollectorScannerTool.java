@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.exactprosystems.clearth.connectivity.CollectorMessage;
+import com.exactprosystems.clearth.connectivity.ListenerType;
 import com.exactprosystems.clearth.connectivity.MessageListener;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedClearThMessage;
@@ -45,9 +46,9 @@ public class CollectorScannerTool
 		return (this.collectorFilter == null || this.collectorFilter.isEmpty() || checkedValue.contains(collectorFilter));
 	}
 	
-	private MessageListener getCollector(ClearThMessageConnection<?, ?> connection)
+	private MessageListener getCollector(ClearThMessageConnection connection)
 	{
-		return connection.findListener(connection.getMessageCollectorClass());
+		return connection.findListener(ListenerType.Collector.getLabel());
 	}
 
 
@@ -98,7 +99,7 @@ public class CollectorScannerTool
 	 *          selected connection
 	 * @return list of correct messages from collector
 	 */
-	public List<CollectorMessage> getCollectorMessages(ClearThMessageConnection<?, ?> connection)
+	public List<CollectorMessage> getCollectorMessages(ClearThMessageConnection connection)
 	{
 		return (connection == null) ? null : getCollectorMessages(getCollector(connection));
 	}
@@ -133,14 +134,14 @@ public class CollectorScannerTool
 		}
 	}
 	
-	public List<CollectorMessage> getCollectorMessagesFailed(ClearThMessageConnection<?, ?> connection)
+	public List<CollectorMessage> getCollectorMessagesFailed(ClearThMessageConnection connection)
 	{
 		return (connection == null) ? null : getCollectorMessagesFailed(getCollector(connection));
 	}
 
-	public ClearThMessageConnection<?, ?> getConnectionByName(String name)
+	public ClearThMessageConnection getConnectionByName(String name)
 	{
-		return (ClearThMessageConnection<?, ?>) connectionStorage().findConnection(name);
+		return (ClearThMessageConnection) connectionStorage().getConnection(name);
 	}
 
 
@@ -153,10 +154,10 @@ public class CollectorScannerTool
 	{
 		return connectionStorage().listConnections(con -> 
 		{
-			if (ClearThMessageConnection.isMessageConnection(con))
+			if (con instanceof ClearThMessageConnection)
 			{
-				ClearThMessageConnection<?, ?> msgCon = (ClearThMessageConnection<?, ?>) con;
-				return msgCon.isRunning() && (msgCon.findListener(msgCon.getMessageCollectorClass()) != null);
+				ClearThMessageConnection msgCon = (ClearThMessageConnection) con;
+				return msgCon.isRunning() && (msgCon.findListener(ListenerType.Collector.getLabel()) != null);
 			}
 			else 
 				return false;

@@ -48,7 +48,7 @@ public class SendMessagesBean extends ClearThBean
 {
 	private final String userName = UserInfoUtils.getUserName();
 	private final Path userTemplatesDir = Paths.get(ClearThCore.templatesPath(), userName);
-	private ClearThMessageConnection<?,?> selectedConnection = null;
+	private ClearThMessageConnection selectedConnection = null;
 	private List<MessageTemplate> templates = new ArrayList<MessageTemplate>();
 	private MessageTemplate selectedTemplate = null;
 	
@@ -111,7 +111,9 @@ public class SendMessagesBean extends ClearThBean
 	{
 		if (selectedConnection==null)
 		{
-			List<ClearThMessageConnection<?,?>> msgCons = connectionStorage().getMessageConnections();
+			List<ClearThMessageConnection> msgCons =
+					connectionStorage().getConnections((con) -> con instanceof ClearThMessageConnection,
+							ClearThMessageConnection.class);
 			if (msgCons.size()>0)
 				selectedConnection = msgCons.get(0);
 		}
@@ -124,7 +126,7 @@ public class SendMessagesBean extends ClearThBean
 
 	public void setConnectionName(String connectionName)
 	{
-		selectedConnection = (ClearThMessageConnection<?,?>) connectionStorage().findConnection(connectionName);
+		selectedConnection = (ClearThMessageConnection) connectionStorage().getConnection(connectionName);
 	}
 	
 	

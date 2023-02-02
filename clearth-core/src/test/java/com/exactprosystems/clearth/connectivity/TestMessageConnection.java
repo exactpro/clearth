@@ -18,67 +18,26 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.exactprosystems.clearth.connectivity.connections.BasicClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.connections.SettingsClass;
 import com.exactprosystems.clearth.utils.SettingsException;
 
 /**
  * Minimal {@link BasicClearThMessageConnection} implementation to check its behavior 
  */
-public class TestMessageConnection extends BasicClearThMessageConnection<TestMessageConnection, TestConnectionSettings>
+@SettingsClass(TestConnectionSettings.class)
+public class TestMessageConnection extends BasicClearThMessageConnection
 {
-	private static final Logger logger = LoggerFactory.getLogger(TestMessageConnection.class);
-	
+
 	@Override
 	protected ClearThClient createClient() throws ConnectivityException, SettingsException
 	{
 		return new TestClearThClient(this);
 	}
-	
+
 	@Override
-	public Logger getLogger()
+	public boolean isAutoConnect()
 	{
-		return logger;
-	}
-	
-	@Override
-	protected MessageListener createListenerEx(ListenerProperties props, String settings)
-			throws SettingsException, ConnectivityException
-	{
-		return null;
-	}
-	
-	@Override
-	protected Class<?> getListenerClassEx(String type)
-	{
-		return null;
-	}
-	
-	@Override
-	public TestMessageConnection copy()
-	{
-		TestMessageConnection result = new TestMessageConnection();
-		result.copy(this);
-		return result;
-	}
-	
-	@Override
-	protected String initType()
-	{
-		return "Test";
-	}
-	
-	@Override
-	public String connectionFilePath()
-	{
-		return "testConnections";
-	}
-	
-	@Override
-	protected TestConnectionSettings createSettings()
-	{
-		return new TestConnectionSettings();
+		return false;
 	}
 }

@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.exactprosystems.clearth.connectivity.ListenerDescription;
 import com.exactprosystems.clearth.connectivity.ListenerProperties;
 import com.exactprosystems.clearth.connectivity.ReceiveListener;
-import com.exactprosystems.clearth.connectivity.SendListener;
 import com.exactprosystems.clearth.connectivity.SettingsDetails;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.iface.AbstractMessageListener;
@@ -35,14 +34,14 @@ import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 public class ProxyListener extends AbstractMessageListener implements ReceiveListener
 {
 	protected Logger logger = LoggerFactory.getLogger(ProxyListener.class);
-	protected ClearThMessageConnection<?,?> connector;
+	protected ClearThMessageConnection connector;
 
 	/**
 	 * Create ProxyListener
 	 * @param properties listener properties (name, active directions)
 	 * @param connector another connection to re-send messages with
 	 */
-	public ProxyListener(ListenerProperties properties, ClearThMessageConnection<?,?> connector) throws Exception
+	public ProxyListener(ListenerProperties properties, ClearThMessageConnection connector) throws Exception
 	{
 		super(properties);
 		

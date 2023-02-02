@@ -39,6 +39,8 @@ public class ClearThConfiguration
 	@XmlElement
 	protected Automation automation;
 	@XmlElement
+	protected Connectivity connectivity;
+	@XmlElement
 	protected Memory memory;
 	@XmlElement
 	protected LocationConfig locations;
@@ -56,7 +58,21 @@ public class ClearThConfiguration
 			automation = new Automation();
 		return automation;
 	}
-
+	
+	
+	public void setConnectivity(Connectivity connectivity)
+	{
+		this.connectivity = connectivity;
+	}
+	
+	public Connectivity getConnectivity()
+	{
+		if (connectivity == null)
+			connectivity = new Connectivity();
+		return connectivity;
+	}
+	
+	
 	public void setMemory(Memory memory)
 	{
 		this.memory = memory;
@@ -94,7 +110,8 @@ public class ClearThConfiguration
 		try
 		{
 			reader = new FileInputStream(configFile);
-			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class,
+			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class, Connectivity.class,
+						ConnectionTypesConfig.class, ConnectionType.class, ValidationRulesConfig.class, 
 						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class, LocationConfig.class, ReplacedPath.class);
 			Unmarshaller unmarshal = context.createUnmarshaller();
 
@@ -123,6 +140,7 @@ public class ClearThConfiguration
 	public String toString()
 	{
 		return "ClearThConfiguration {\n automation: " + this.getAutomation().toString() +
+				"\n connectivity: " + this.getConnectivity().toString() +
 				"\n locations: " + this.getLocations().toString() +
 				"\n memory: " + this.getMemory().toString() + "\n}";
 	}

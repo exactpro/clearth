@@ -131,7 +131,7 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 		
 		try
 		{
-			ClearThMessageConnection<?, ?> connection = finder.findConnection(conName);
+			ClearThMessageConnection connection = finder.findConnection(conName);
 			MessageListener collector = connection.findListener(ListenerType.Collector.getLabel());
 			if (collector == null)
 				throw ResultException.failed("No collector defined for connection '" + conName + "'");

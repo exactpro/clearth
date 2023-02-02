@@ -18,13 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
-
+import com.exactprosystems.clearth.connectivity.connections.clients.MessageReceiverThread;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class TestReceiverThread extends MessageReceiverThread
 {
@@ -34,34 +34,16 @@ public class TestReceiverThread extends MessageReceiverThread
 	
 	public TestReceiverThread(String name, BlockingQueue<String> sourceQueue, BlockingQueue<EncodedClearThMessage> messageQueue)
 	{
-		super(name, null, null, messageQueue, 0);
+		super(name, null, messageQueue, 0);
 		
 		this.sourceQueue = sourceQueue;
 	}
-	
+
 	@Override
-	protected void doRun()
+	protected void getAndHandleMessage() throws Exception
 	{
-		while (!terminated.get())
-		{
-			try
-			{
-				String msg = sourceQueue.poll(1, TimeUnit.SECONDS);
-				if (msg != null)
-					messageQueue.add(EncodedClearThMessage.newReceivedMessage(msg));
-			}
-			catch (InterruptedException e)
-			{
-				interrupt();
-				logger.error("Wait for next message interrupted", e);
-				return;
-			}
-		}
-	}
-	
-	@Override
-	protected Logger getLogger()
-	{
-		return logger;
+		String msg = sourceQueue.poll(1, TimeUnit.SECONDS);
+		if (msg != null)
+			receivedMessageQueue.add(EncodedClearThMessage.newReceivedMessage(msg));
 	}
 }

@@ -18,20 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
+import com.exactprosystems.clearth.messages.ConnectionFinder;
+import com.exactprosystems.clearth.messages.MessageFileReader;
+import com.exactprosystems.clearth.utils.ClearThException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -39,12 +32,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
 
-import com.exactprosystems.clearth.ApplicationManager;
-import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
-import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
-import com.exactprosystems.clearth.messages.ConnectionFinder;
-import com.exactprosystems.clearth.messages.MessageFileReader;
-import com.exactprosystems.clearth.utils.ClearThException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class BasicClearThClientTest
 {
@@ -52,7 +47,8 @@ public class BasicClearThClientTest
 			RECEIVED_2 = "received2",
 			SENT_1 = "sent1",
 			SENT_2 = "sent2";
-	private static final Path OUTPUT_ROOT = Paths.get("testOutput/testClient/").toAbsolutePath();
+	private static final Path OUTPUT_ROOT = Paths.get("testOutput")
+			.resolve(BasicClearThClientTest.class.getSimpleName()).toAbsolutePath();
 	
 	private ApplicationManager clearThManager;
 	private TestMessageConnection con;
@@ -83,6 +79,7 @@ public class BasicClearThClientTest
 		toReceive = Arrays.asList(RECEIVED_1, RECEIVED_2);
 		
 		Files.createDirectories(OUTPUT_ROOT);
+		clearDirectory(OUTPUT_ROOT);
 	}
 	
 	@AfterClass
@@ -96,12 +93,14 @@ public class BasicClearThClientTest
 	public void prepareConnection() throws IOException
 	{
 		con = new TestMessageConnection();
+		con.setTypeInfo(new ConnectionTypeInfo("TestTypeInfo",
+				TestMessageConnection.class,
+				OUTPUT_ROOT));
+		
 		con.setName("TestCon");
-		TestConnectionSettings settings = con.getSettings();
+		TestConnectionSettings settings = (TestConnectionSettings) con.getSettings();
 		source = settings.getSource();
 		target = settings.getTarget();
-		
-		clearDirectory(OUTPUT_ROOT);
 	}
 	
 	@Test(description = "Client behavior when no listeners are added")
@@ -121,10 +120,12 @@ public class BasicClearThClientTest
 	@Test(description = "Client behavior when it has listeners. They should get only messages they were intended to get")
 	public void withListeners() throws Exception
 	{
-		Path receivedFile = OUTPUT_ROOT.resolve("received.txt"),
-				sentFile = OUTPUT_ROOT.resolve("sent.txt"),
-				dualFile = OUTPUT_ROOT.resolve("dual.txt"),
-				noFile = OUTPUT_ROOT.resolve("no.txt");  //This file shouldn't be created because listener is switched off
+		Path receivedFile = OUTPUT_ROOT.resolve("withListeners_received.txt"),
+				sentFile = OUTPUT_ROOT.resolve("withListeners_sent.txt"),
+				dualFile = OUTPUT_ROOT.resolve("withListeners_dual.txt");
+		
+		// This file shouldn't be created because listener is switched off
+		Path noFile = OUTPUT_ROOT.resolve("withListeners_noFile.txt");  
 		
 		String type = ListenerType.File.getLabel();
 		con.addListener(new ListenerConfiguration("Received messages", type, 
@@ -163,7 +164,8 @@ public class BasicClearThClientTest
 	@Test(description = "Initialization from file with unhandled messages that should be processed as received ones")
 	public void unhandledMessages() throws Exception
 	{
-		TestConnectionSettings settings = con.getSettings();
+		String fileName = "unhandledMessagesTest.txt";
+		TestConnectionSettings settings = (TestConnectionSettings) con.getSettings();
 		settings.setProcessReceived(false);
 		con.start();  //Received messages won't be handled
 		
@@ -175,7 +177,7 @@ public class BasicClearThClientTest
 		
 		settings.setProcessReceived(true);
 		
-		Path receivedFile = OUTPUT_ROOT.resolve("received.txt");
+		Path receivedFile = OUTPUT_ROOT.resolve(fileName);
 		con.addListener(new ListenerConfiguration("Received messages", ListenerType.File.getLabel(), receivedFile.toString(), true, false));
 		con.start();  //Unhandled messages should be loaded from file and passed to received processor thread and thus to FileListener
 		waitEnd(0, toReceive.size(), 2000);
@@ -189,7 +191,7 @@ public class BasicClearThClientTest
 	@Test(description = "Initialization of Collector from file written by FileListener")
 	public void collectorFromFile() throws Exception
 	{
-		Path file = OUTPUT_ROOT.resolve("collector.txt");
+		Path file = OUTPUT_ROOT.resolve("collectorFromFile.txt");
 		ListenerConfiguration fileListenerConfig = new ListenerConfiguration("Received messages", ListenerType.File.getLabel(), file.toString(), true, true);
 		con.addListener(fileListenerConfig);
 		con.start();

@@ -20,23 +20,28 @@ package com.exactprosystems.clearth.connectivity.validation;
 
 import com.exactprosystems.clearth.BasicTestNgTest;
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.*;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
+import com.exactprosystems.clearth.connectivity.connections.storage.DefaultClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnection;
+import com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnectionSettings;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class MQReadQNotReadByOthersRuleTest extends BasicTestNgTest
 {
-	private MQReadQNotReadByOthersRule rule = new MQReadQNotReadByOthersRule();
+	private IbmMqReadQNotReadByOthersRule rule = new IbmMqReadQNotReadByOthersRule();
+	private static ConnectionTypeInfo conType = new ConnectionTypeInfo("IbmMqTestCon",
+			IbmMqConnection.class,
+			Paths.get("testOutput").resolve(MQReadQNotReadByOthersRuleTest.class.getSimpleName()));
 
 	@DataProvider(name = "invalidData")
 	public Object[][] createInvalidData() {
@@ -103,14 +108,14 @@ public class MQReadQNotReadByOthersRuleTest extends BasicTestNgTest
 	}
 
 	@Test(dataProvider = "invalidData")
-	public void checkConnectionWithConflicts(MQConnection connection, String expectedErrorMessage)
+	public void checkConnectionWithConflicts(IbmMqConnection connection, String expectedErrorMessage)
 	{
 		assertTrue(rule.isConnectionSuitable(connection));
-		assertEquals(rule.check(connection), expectedErrorMessage);
+		assertEquals(expectedErrorMessage, rule.check(connection));
 	}
 
 	@Test(dataProvider = "validData")
-	public void checkValidConnection(MQConnection connection)
+	public void checkValidConnection(IbmMqConnection connection)
 	{
 		assertTrue(rule.isConnectionSuitable(connection));
 		assertNull(rule.check(connection));
@@ -124,34 +129,35 @@ public class MQReadQNotReadByOthersRuleTest extends BasicTestNgTest
 
 	private void mockRunningConnections(ClearThCore application)
 	{
-		MQConnection anotherConnection = createConnection("MQConn", "10.64.17.130",
+		IbmMqConnection anotherConnection = createConnection("MQConn", "10.64.17.130",
 				1234, "MI_MANAGER", "MI_QUEUE", true);
-		List<MQConnection> anotherConnections = singletonList(anotherConnection);
-
-		ClearThConnectionStorage storage = mock(ClearThConnectionStorage.class);
+		
+		List<ClearThMessageConnection> anotherConnections = Collections.singletonList(anotherConnection);
+		
+		DefaultClearThConnectionStorage storage = mock(DefaultClearThConnectionStorage.class);
 		//noinspection unchecked
-		when(storage.getConnections(anyString(), any(Predicate.class), eq(MQConnection.class)))
+		when(storage.getConnections(anyString(), any(Predicate.class), eq(ClearThMessageConnection.class)))
 				.thenReturn(anotherConnections);
 
 		when(application.getConnectionStorage()).thenReturn(storage);
 	}
 
-	private MQConnection createConnection(String connectionName,
+	private IbmMqConnection createConnection(String connectionName,
 	                                      String hostname,
 	                                      int port,
 	                                      String queueManager,
 	                                      String receiveQueue,
 	                                      boolean useReceiveQueue)
 	{
-		MQConnection connection = new DefaultMQConnection();
+		IbmMqConnection connection = new IbmMqConnection();
 		connection.setName(connectionName);
-		DefaultMQConnectionSettings connectionSettings = new DefaultMQConnectionSettings();
-		connectionSettings.hostname = hostname;
-		connectionSettings.port = port;
-		connectionSettings.queueManager = queueManager;
-		connectionSettings.receiveQueue = receiveQueue;
-		connectionSettings.useReceiveQueue = useReceiveQueue;
-		connection.setSettings(connectionSettings);
+		IbmMqConnectionSettings connectionSettings = connection.getSettings();
+		connectionSettings.setHostname(hostname);
+		connectionSettings.setPort(port);
+		connectionSettings.setQueueManager(queueManager);
+		connectionSettings.setReceiveQueue(receiveQueue);
+		connectionSettings.setUseReceiveQueue(useReceiveQueue);
+		connection.setTypeInfo(conType);
 		return connection;
 	}
 }

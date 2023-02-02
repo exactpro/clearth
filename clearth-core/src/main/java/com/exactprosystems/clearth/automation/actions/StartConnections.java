@@ -29,7 +29,8 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultTableResultDetail;
 import com.exactprosystems.clearth.automation.report.results.TableResult;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConnection;
+import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import org.apache.commons.lang.StringUtils;
 
@@ -61,15 +62,23 @@ public class StartConnections extends Action
 			if(StringUtils.isBlank(connName))
 				continue;
 
-			ClearThConnection<?, ?> clearThConnection = cthConnectionStorage.findConnection(connName);
+			ClearThConnection clearThConnection = cthConnectionStorage.getConnection(connName);
 
 			if (clearThConnection == null)
 			{
 				result.addDetail(new DefaultTableResultDetail(false, Arrays.asList(connName, "Does not exist")));
 				continue;
 			}
+			
+			if (!(clearThConnection instanceof ClearThRunnableConnection))
+			{
+				result.addDetail(new DefaultTableResultDetail(false, Arrays.asList(connName, "Not runnable")));
+				continue;
+			}
 
-			if (clearThConnection.isRunning())
+			ClearThRunnableConnection msgCon = (ClearThRunnableConnection) clearThConnection;
+
+			if (msgCon.isRunning())
 			{
 				result.addDetail(new DefaultTableResultDetail(true, Arrays.asList(connName, "Already running")));
 				continue;
@@ -77,7 +86,7 @@ public class StartConnections extends Action
 
 			try
 			{
-				clearThConnection.start();
+				msgCon.start();
 				result.addDetail(new DefaultTableResultDetail(true, Arrays.asList(connName, "Started")));
 			}
 			catch (Exception e)
