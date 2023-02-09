@@ -19,28 +19,29 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.config.MatrixFatalErrors;
+import com.exactprosystems.clearth.config.SpecialActionParameters;
 
 public class ActionGeneratorResources
 {
-	private final SpecialActionParams specialActionParams;
+	private final SpecialActionParameters specialActionParameters;
 	private final ActionFactory actionFactory;
 	private final MvelVariablesFactory mvelFactory;
 	private final MatrixFunctions matrixFunctions;
 	private final MatrixFatalErrors matrixFatalErrors;
 	
-	public ActionGeneratorResources(SpecialActionParams specialActionParams, ActionFactory actionFactory, MvelVariablesFactory mvelFactory,
-			MatrixFunctions matrixFunctions, MatrixFatalErrors matrixFatalErrors)
+	public ActionGeneratorResources(SpecialActionParameters specialActionParameters, ActionFactory actionFactory, MvelVariablesFactory mvelFactory,
+									MatrixFunctions matrixFunctions, MatrixFatalErrors matrixFatalErrors)
 	{
-		this.specialActionParams = specialActionParams;
+		this.specialActionParameters = specialActionParameters;
 		this.actionFactory = actionFactory;
 		this.mvelFactory = mvelFactory;
 		this.matrixFunctions = matrixFunctions;
 		this.matrixFatalErrors = matrixFatalErrors;
 	}
 	
-	public SpecialActionParams getSpecialActionParams()
+	public SpecialActionParameters getSpecialActionParameters()
 	{
-		return specialActionParams;
+		return specialActionParameters;
 	}
 	
 	public ActionFactory getActionFactory()

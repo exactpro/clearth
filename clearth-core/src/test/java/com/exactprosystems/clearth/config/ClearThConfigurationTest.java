@@ -26,8 +26,10 @@ import org.testng.asserts.SoftAssert;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 
@@ -37,6 +39,7 @@ public class ClearThConfigurationTest
 	public static final String cfgResourcePath = "ConfigurationsClearTh/clearth.cfg",
 								incompleteCfg = "ConfigurationsClearTh/incompleteConfig.cfg";
 
+	public static Set<String> parameters;
 	private static Map<String, String> SAMPLE_MAP;
 
 	static {
@@ -57,6 +60,10 @@ public class ClearThConfigurationTest
 		incompleteCfgFile = new File(resourceToAbsoluteFilePath(incompleteCfg));
 		if(!incompleteCfgFile.exists() || !incompleteCfgFile.isFile())
 			throw new FileNotFoundException("File '" + incompleteCfgFile.getName() + "' not found");
+
+		parameters = new HashSet<>();
+		parameters.add("testcase");
+		parameters.add("keyfield");
 	}
 
 	@DataProvider(name = "automationConfig")
@@ -65,10 +72,10 @@ public class ClearThConfigurationTest
 		return new Object[][]
 		{
 			{
-				configFile, true, true
+				configFile, true, true, parameters
 			},
 			{
-				incompleteCfgFile, true, true
+				incompleteCfgFile, true, true, new HashSet<>()
 			}
 		};
 	}
@@ -88,7 +95,8 @@ public class ClearThConfigurationTest
 	}
 
 	@Test(dataProvider = "automationConfig")
-	public void testAutomationConfig(File file, boolean expectedIsUserSchedulersAllowed, boolean duplicateActionId) 
+	public void testAutomationConfig(File file, boolean expectedIsUserSchedulersAllowed, boolean duplicateActionId,
+	                                 Set<String> expParams)
 		throws ConfigurationException
 	{
 		ClearThConfiguration configuration = ClearThConfiguration.create(file);
@@ -97,6 +105,9 @@ public class ClearThConfigurationTest
 
 		MatrixFatalErrors matrixFatalErrors = automation.getMatrixFatalErrors();
 		Assert.assertEquals(matrixFatalErrors.isDuplicateActionId(), duplicateActionId);
+
+		SpecialActionParameters specialActionParameters = automation.getSpecialActionParameters();
+		Assert.assertEquals(specialActionParameters.getParameters(), expParams);
 	}
 	
 	@Test(dataProvider = "connectivityConfig")

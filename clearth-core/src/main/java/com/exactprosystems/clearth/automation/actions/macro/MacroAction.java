@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.config.SpecialActionParameters;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 
 import java.io.File;
@@ -32,8 +33,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.collections4.CollectionUtils;
 
 public class MacroAction extends Action implements Preparable
 {
@@ -81,7 +80,7 @@ public class MacroAction extends Action implements Preparable
 		File macroMatrixFile = new File(InputParamsUtils.getRequiredFilePath(inputParams, PARAM_MACRO_FILENAME));
 		Step nestedStep = new DefaultStep(buildNestedStepName(macroMatrixFile), CoreStepKind.Default.getLabel(), null,
 				StartAtType.DEFAULT, false, null, false, false, true, null);
-		SpecialActionParams specialParams = createSpecialActionParams();
+		SpecialActionParameters specialParams = createSpecialActionParams();
 		naGenerator = createActionGenerator(macroMatrixFile, copyInputParams(), nestedStep, specialParams);
 		nestedActionsReportFilePath = Paths.get(getStep().getActionsReportsDir(), getMatrix().getShortFileName(), nestedStep.getSafeName()).toString();
 		executionProgress = new NestedActionsExecutionProgress();
@@ -123,15 +122,21 @@ public class MacroAction extends Action implements Preparable
 		return String.format("%s_%s(%s)_%s_%d", getStep().getSafeName(), getIdInMatrix(), getName(), macroMatrixFile.getName(), System.currentTimeMillis());
 	}
 	
-	protected SpecialActionParams createSpecialActionParams()
+	protected SpecialActionParameters createSpecialActionParams()
 	{
 		Set<String> names = getSpecialParamsNames();
-		return CollectionUtils.isEmpty(names) ? null : new SpecialActionParams(names);
+		if(names.isEmpty())
+			return null;
+
+		SpecialActionParameters specialActionParameters = new SpecialActionParameters();
+		specialActionParameters.setParameters(names);
+
+		return specialActionParameters;
 	}
 	
-	protected NestedActionGenerator createActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step nestedStep, SpecialActionParams specialActionParams)
+	protected NestedActionGenerator createActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step nestedStep, SpecialActionParameters specialActionParameters)
 	{
-		return NestedActionGenerator.create(macroMatrixFile, macroParams, nestedStep, specialActionParams);
+		return NestedActionGenerator.create(macroMatrixFile, macroParams, nestedStep, specialActionParameters);
 	}
 	
 	protected NestedActionExecutor createActionExecutor()

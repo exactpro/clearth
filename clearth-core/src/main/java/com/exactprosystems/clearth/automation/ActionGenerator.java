@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.automation.generator.ActionReader;
 import com.exactprosystems.clearth.automation.generator.CsvActionReader;
 import com.exactprosystems.clearth.automation.generator.XlsActionReader;
 import com.exactprosystems.clearth.config.MatrixFatalErrors;
+import com.exactprosystems.clearth.config.SpecialActionParameters;
 import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -66,7 +67,7 @@ public abstract class ActionGenerator
 	protected Map<String, Preparable> preparableActions;
 	private String matrixStepName;
 	protected final StringCache stringCache = new StringCache(1_000_000, 500);
-	private final SpecialActionParams specialActionParams;
+	private final SpecialActionParameters specialActionParameters;
 	private final ActionFactory actionFactory;
 	private final MvelVariablesFactory mvelVariablesFactory;
 	private final MatrixFunctions matrixFunctions;
@@ -81,7 +82,7 @@ public abstract class ActionGenerator
 		this.matrices = matrices;
 		this.matrices.clear();
 		this.preparableActions = preparableActions;
-		this.specialActionParams = resources.getSpecialActionParams();
+		this.specialActionParameters = resources.getSpecialActionParameters();
 		this.actionFactory = resources.getActionFactory();
 		this.mvelVariablesFactory = resources.getMvelFactory();
 		this.matrixFunctions = resources.getMatrixFunctions();
@@ -332,7 +333,7 @@ public abstract class ActionGenerator
 				else
 					actionSettings.setIdInTemplate(value);
 			}
-			else if (specialActionParams != null && specialActionParams.isSpecialParamLowCase(headLow))
+			else if (specialActionParameters != null && specialActionParameters.isSpecialParamLowCase(headLow))
 			{
 				actionSettings.addServiceParam(head, value);
 			}

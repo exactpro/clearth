@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
 import com.exactprosystems.clearth.automation.schedulerinfo.SchedulerInfoExporter;
 import com.exactprosystems.clearth.automation.schedulerinfo.template.SchedulerInfoTemplatesProcessor;
+import com.exactprosystems.clearth.config.Automation;
 import com.exactprosystems.clearth.config.ClearThConfiguration;
 import com.exactprosystems.clearth.config.ConnectionType;
 import com.exactprosystems.clearth.config.MemoryMonitorCfg;
@@ -458,9 +459,10 @@ public abstract class ClearThCore
 	
 	protected ActionGeneratorResources createActionGeneratorResources(ValueGenerators valueGenerators)
 	{
-		return new ActionGeneratorResources(null, actionFactory, mvelVariablesFactory, 
+		Automation automation = config.getAutomation();
+		return new ActionGeneratorResources(automation.getSpecialActionParameters(), actionFactory, mvelVariablesFactory,
 				createMatrixFunctions(Collections.emptyMap(), null, null, true, valueGenerators.getCommonGenerator()),
-				config.getAutomation().getMatrixFatalErrors());
+				automation.getMatrixFatalErrors());
 	}
 	
 	protected SchedulerFactory createSchedulerFactory(ValueGenerators valueGenerators)

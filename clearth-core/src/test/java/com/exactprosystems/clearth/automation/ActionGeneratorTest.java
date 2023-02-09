@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.config.MatrixFatalErrors;
+import com.exactprosystems.clearth.config.SpecialActionParameters;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -31,10 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 
@@ -93,7 +91,12 @@ public class ActionGeneratorTest
 		MatrixFatalErrors matrixFatalErrors = new MatrixFatalErrors();
 		matrixFatalErrors.setDuplicateActionId(idError);
 
-		ActionGeneratorResources resources = new ActionGeneratorResources(new SpecialActionParams("Params"), actionFactory,
+		SpecialActionParameters specialActionParameters = new SpecialActionParameters();
+		Set<String> params = new HashSet<>();
+		params.add("Params");
+		specialActionParameters.setParameters(params);
+
+		ActionGeneratorResources resources = new ActionGeneratorResources(specialActionParameters, actionFactory,
 				new MvelVariablesFactory(), matrixFunctions, matrixFatalErrors);
 
 		return new DefaultActionGenerator(steps, matrices, new HashMap<String, Preparable>(), resources);
@@ -115,12 +118,17 @@ public class ActionGeneratorTest
 		List<Matrix> matrices = new ArrayList<>();
 		Map<String, Preparable> preparable = new HashMap<>();
 
-		SpecialActionParams specialParams = new SpecialActionParams(testCaseParam, groupParam);
+		SpecialActionParameters specialActionParameters = new SpecialActionParameters();
+		Set<String> params = new HashSet<>();
+		params.add(testCaseParam);
+		params.add(groupParam);
+		specialActionParameters.setParameters(params);
+
 		ActionFactory actionFactory = new ActionFactory();
 		actionFactory.loadActionsMapping(parentDir.resolve("actionsmapping.cfg"));
 		MvelVariablesFactory mvelFactory = new MvelVariablesFactory();
 		MatrixFunctions mf = new MatrixFunctions(null, null, null, false, null);
-		ActionGeneratorResources resources = new ActionGeneratorResources(specialParams, actionFactory, mvelFactory,
+		ActionGeneratorResources resources = new ActionGeneratorResources(specialActionParameters, actionFactory, mvelFactory,
 				mf, new MatrixFatalErrors());
 
 		MatrixData matrixData = new MatrixData();

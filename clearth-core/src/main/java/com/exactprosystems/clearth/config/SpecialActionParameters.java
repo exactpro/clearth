@@ -16,30 +16,42 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation;
+package com.exactprosystems.clearth.config;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 
-public class SpecialActionParams
+@XmlType(name = "specialActionParameters")
+public class SpecialActionParameters
 {
-	protected final Set<String> lowCaseNames;
+	private Set<String> parameters;
 
-	public SpecialActionParams(String... names)
+	public SpecialActionParameters() {}
+
+	@XmlElement(name = "parameter")
+	public void setParameters(Set<String> params)
 	{
-		this.lowCaseNames = new HashSet<>(names.length);
-		for (String n : names)
-			this.lowCaseNames.add(n.toLowerCase());
+		if(params != null)
+		{
+			parameters = new HashSet<>(params.size());
+			for (String s : params)
+			{
+				parameters.add(s.toLowerCase());
+			}
+		} else
+			parameters = null;
 	}
-	
-	public SpecialActionParams(Set<String> names)
+
+	public Set<String> getParameters()
 	{
-		this.lowCaseNames = new HashSet<>(names.size());
-		for (String n : names)
-			this.lowCaseNames.add(n.toLowerCase());
+		if(parameters == null)
+			parameters = new HashSet<>();
+		return parameters;
 	}
-	
-	
+
 	public boolean isSpecialParam(String name)
 	{
 		return isSpecialParamLowCase(name.toLowerCase());
@@ -47,6 +59,19 @@ public class SpecialActionParams
 	
 	public boolean isSpecialParamLowCase(String lowCaseName)
 	{
-		return lowCaseNames.contains(lowCaseName);
+		return getParameters().contains(lowCaseName);
+	}
+
+	@Override
+	public String toString()
+	{
+		if(parameters == null || parameters.isEmpty())
+			return "";
+
+		StringJoiner params = new StringJoiner(", ");
+		for(String s: parameters)
+			params.add(s);
+
+		return params.toString();
 	}
 }

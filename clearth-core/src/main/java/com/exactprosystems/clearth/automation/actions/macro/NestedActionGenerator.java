@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation.actions.macro;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.config.SpecialActionParameters;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
@@ -48,10 +49,10 @@ public class NestedActionGenerator extends ActionGenerator
 	protected Map<String, Preparable> preparableActions;
 	
 	private NestedActionGenerator(File macroMatrixFile, Map<String, String> macroParams, Step macroStep,
-			List<Matrix> matrices, Map<String, Preparable> preparableActions, SpecialActionParams specialActionParams)
+			List<Matrix> matrices, Map<String, Preparable> preparableActions, SpecialActionParameters specialActionParameters)
 	{
 		super(new HashMap<>(), matrices, preparableActions, 
-				new ActionGeneratorResources(specialActionParams, 
+				new ActionGeneratorResources(specialActionParameters,
 						ClearThCore.getInstance().getActionFactory(),
 						ClearThCore.getInstance().getMvelVariablesFactory(),
 						ClearThCore.getInstance().createMatrixFunctions(Collections.emptyMap(), null, null, true),
@@ -63,9 +64,10 @@ public class NestedActionGenerator extends ActionGenerator
 		this.preparableActions = preparableActions;
 	}
 	
-	public static NestedActionGenerator create(File macroMatrixFile, Map<String, String> macroParams, Step macroStep, SpecialActionParams specialActionParams)
+	public static NestedActionGenerator create(File macroMatrixFile, Map<String, String> macroParams, Step macroStep, SpecialActionParameters specialActionParameters)
 	{
-		return new NestedActionGenerator(macroMatrixFile, macroParams, macroStep, new ArrayList<>(), new HashMap<>(), specialActionParams);
+		return new NestedActionGenerator(macroMatrixFile, macroParams, macroStep, new ArrayList<>(), new HashMap<>(),
+				specialActionParameters);
 	}
 	
 	

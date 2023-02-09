@@ -74,20 +74,20 @@ public class ClearThConfiguration
 		return connectivity;
 	}
 	
-	
+
 	public void setData(Data data)
 	{
 		this.data = data;
 	}
-	
+
 	public Data getData()
 	{
 		if (data == null)
 			data = new Data();
 		return data;
 	}
-	
-	
+
+
 	public void setMemory(Memory memory)
 	{
 		this.memory = memory;
@@ -127,9 +127,10 @@ public class ClearThConfiguration
 			reader = new FileInputStream(configFile);
 			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class, Connectivity.class, Data.class,
 						ConnectionTypesConfig.class, ConnectionType.class, ValidationRulesConfig.class, 
-						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class, LocationConfig.class, ReplacedPath.class);
+						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class, LocationConfig.class, ReplacedPath.class,
+						SpecialActionParameters.class);
 			Unmarshaller unmarshal = context.createUnmarshaller();
-			
+
 			return (ClearThConfiguration) unmarshal.unmarshal(reader);
 		}
 		catch (FileNotFoundException e)

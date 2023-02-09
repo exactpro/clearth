@@ -26,6 +26,7 @@ public class Automation
 	private volatile boolean userSchedulersAllowed = true;
 
 	private MatrixFatalErrors matrixFatalErrors;
+	private SpecialActionParameters specialActionParameters;
 
 	public Automation(){}
 
@@ -51,10 +52,24 @@ public class Automation
 		return matrixFatalErrors;
 	}
 
+	public SpecialActionParameters getSpecialActionParameters()
+	{
+		if(specialActionParameters == null)
+			specialActionParameters = new SpecialActionParameters();
+		return specialActionParameters;
+	}
+
+	public void setSpecialActionParameters(SpecialActionParameters specialActionParameters)
+	{
+		this.specialActionParameters = specialActionParameters;
+	}
+
 	@Override
 	public String toString()
 	{
-		return " [userSchedulersAllowed = " + this.isUserSchedulersAllowed() +
-				"; matrixFatalErrors: " + this.getMatrixFatalErrors().toString() + "]";
+		return "[userSchedulersAllowed = " + this.isUserSchedulersAllowed() +
+				"; matrixFatalErrors: " + this.getMatrixFatalErrors().toString() +
+				"; specialActionParameters: " + this.getSpecialActionParameters().toString() +
+				"]";
 	}
 }
