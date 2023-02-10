@@ -48,7 +48,7 @@ public class ConnectivityBean extends ClearThBean
 	private static final String defaultListenerType = ListenerType.File.getLabel();
 	
 	private final ClearThConnectionStorage storage = ClearThCore.connectionStorage();
-	private String selectedConnectionType;
+	private ConnectionTypeInfo selectedConnectionType;
 	private final List<ClearThConnection> selectedConnections = new ArrayList<ClearThConnection>();
 	private List<ClearThConnection> originalSelectedCons = null;
 	
@@ -86,21 +86,30 @@ public class ConnectivityBean extends ClearThBean
 	
 	public String getSelectedConnectionType()
 	{
-		return selectedConnectionType;
+		return selectedConnectionType != null ? selectedConnectionType.getName() : null;
 	}
 	
 	public void setSelectedConnectionType(String selectedConnectionType)
 	{
-		this.selectedConnectionType = selectedConnectionType;
-		if (selectedConnectionType == null)
+		if (StringUtils.isEmpty(selectedConnectionType))
 		{
+			this.selectedConnectionType = null;
 			connections = null;
 			columns = null;
 		}
 		else
 		{
-			connections = getConnections();
-			columns = storage.getSettingsModel(selectedConnectionType).getColumnsModel();
+			try
+			{
+				this.selectedConnectionType = storage.getConnectionTypeInfo(selectedConnectionType);
+				connections = getConnections();
+				columns = storage.getSettingsModel(selectedConnectionType).getColumnsModel();
+			}
+			catch (Exception e)
+			{
+				WebUtils.logAndGrowlException("Could not select type '"+selectedConnectionType+"'", e, getLogger());
+				return;
+			}
 		}
 		
 		resetConsSelection();
@@ -124,13 +133,13 @@ public class ConnectivityBean extends ClearThBean
 	
 	public List<ClearThConnection> getConnections()
 	{
-		if (StringUtils.isEmpty(selectedConnectionType))
+		if (selectedConnectionType == null)
 			return Collections.emptyList();
 		
 		List<ClearThConnection> res = new ArrayList<>();
 		List<ClearThConnection> list = getAllConnections();
 		for (ClearThConnection con : list)
-			if (selectedConnectionType.equals(con.getTypeInfo().getName()))
+			if (selectedConnectionType.equals(con.getTypeInfo()))
 				res.add(con);
 		return res;
 	}
@@ -212,6 +221,16 @@ public class ConnectivityBean extends ClearThBean
 		return selectedConnections.size() > 0;
 	}
 	
+	public boolean isRunnableConnectionType()
+	{
+		return isConnectionType(ClearThRunnableConnection.class);
+	}
+	
+	public boolean isMessageConnectionType()
+	{
+		return isConnectionType(ClearThMessageConnection.class);
+	}
+	
 	
 	protected void resetConsSelection()
 	{
@@ -221,7 +240,7 @@ public class ConnectivityBean extends ClearThBean
 	
 	private void refreshSettingsToEdit()
 	{
-		SettingsModel model = storage.getSettingsModel(selectedConnectionType);
+		SettingsModel model = storage.getSettingsModel(selectedConnectionType.getName());
 		//It is important to create settingsToEdit from selectedConnection, i.e. from copy of original connection
 		//When values from GUI are submitted, they go into selectedConnection automatically and we can decide if we need to update the original connection
 		this.settingsToEdit = new SettingValues(model, selectedConnections.get(0), isOneConnectionSelected());
@@ -235,7 +254,7 @@ public class ConnectivityBean extends ClearThBean
 		resetConsSelection();
 		try
 		{
-			selectedConnections.add(storage.createConnection(selectedConnectionType));
+			selectedConnections.add(storage.createConnection(selectedConnectionType.getName()));
 		}
 		catch (ConnectivityException e)
 		{
@@ -388,7 +407,7 @@ public class ConnectivityBean extends ClearThBean
 	{
 		try
 		{
-			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(selectedConnectionType);
+			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(selectedConnectionType.getName());
 			return WebUtils.downloadFile(resultFile);
 		}
 		catch (IOException | ConnectivityException e)
@@ -409,7 +428,7 @@ public class ConnectivityBean extends ClearThBean
 			File storageDir = new File(ClearThCore.uploadStoragePath());
 			File storedConnections = WebUtils.storeUploadedFile(file, storageDir, selectedConnectionType + "_connections_", ".zip");
 			
-			ClearThCore.getInstance().getConnectionsTransmitter().deployConnections(selectedConnectionType, storedConnections);
+			ClearThCore.getInstance().getConnectionsTransmitter().deployConnections(selectedConnectionType.getName(), storedConnections);
 			MessageUtils.addInfoMessage("Success", "Connections successfully uploaded");
 			getLogger().info("Connections uploaded from file '" + file.getFileName() + "'");
 		}
@@ -617,6 +636,9 @@ public class ConnectivityBean extends ClearThBean
 
 	public boolean selectedConHasListeners()
 	{
+		if (!isMessageConnectionType())
+			return false;
+		
 		ClearThMessageConnection msgCon = (ClearThMessageConnection) getOneSelectedConnection();
 		return msgCon != null && isNotEmpty(msgCon.getListeners());
 	}
@@ -814,5 +836,10 @@ public class ConnectivityBean extends ClearThBean
 			ClearThConnectionSettings copyFrom = accessor.isApplyChange() ? changesSettings : originalSettings;
 			SettingAccessor.copyValue(accessor.getProperties(), copyFrom, connectionToEditSettings);
 		}
+	}
+	
+	private boolean isConnectionType(Class<? extends ClearThConnection> expectedClass)
+	{
+		return selectedConnectionType != null && expectedClass.isAssignableFrom(selectedConnectionType.getConnectionClass());
 	}
 }
