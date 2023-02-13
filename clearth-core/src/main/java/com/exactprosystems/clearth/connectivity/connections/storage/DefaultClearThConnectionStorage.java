@@ -485,31 +485,30 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 		ConnectionTypeInfo info = connection.getTypeInfo();
 		String connectionName = connection.getName();
 		checkConnectionType(connectionName, info);
-
+		
 		modifyListLock.lock();
 		try
 		{
-			if (!(connection instanceof ClearThRunnableConnection))
+			if (connection instanceof ClearThRunnableConnection)
 			{
-				return;
-			}
-			ClearThRunnableConnection runnableConnection = (ClearThRunnableConnection) connection;
-
-			if (runnableConnection.isRunning())
-			{
-				try
+				ClearThRunnableConnection runnableConnection = (ClearThRunnableConnection) connection;
+				
+				if (runnableConnection.isRunning())
 				{
-					runnableConnection.stop();
-				}
-				catch (Exception e)
-				{
-					throw new ConnectivityException(e, "Cannot stop connection '%s'. Running connection cannot be removed.",
-							connectionName);
+					try
+					{
+						runnableConnection.stop();
+					}
+					catch (Exception e)
+					{
+						throw new ConnectivityException(e, "Cannot stop connection '%s'. Running connection cannot be removed.",
+								connectionName);
+					}
 				}
 			}
-
+			
 			removeLink(connection);
-
+			
 			FavoriteConnectionManager fcManager = ClearThCore.getInstance().getFavoriteConnections();
 			fcManager.changeName(connectionName, null);
 		}
@@ -517,9 +516,8 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 		{
 			modifyListLock.unlock();
 		}
-
+		
 		connectionFileOperator.delete(connectionName, info);
-
 	}
 
 	protected void checkConnectionType(String connectionName, ConnectionTypeInfo info) throws ConnectivityException

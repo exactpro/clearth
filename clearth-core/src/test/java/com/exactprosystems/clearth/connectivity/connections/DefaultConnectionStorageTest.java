@@ -25,6 +25,8 @@ import com.exactprosystems.clearth.connectivity.connections.exceptions.ClassSetu
 import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.connections.storage.DefaultClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.dummy.DummyMessageConnection;
+import com.exactprosystems.clearth.connectivity.dummy.DummyPlainConnection;
+import com.exactprosystems.clearth.connectivity.dummy.DummyRunnableConnection;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.apache.commons.io.FileUtils;
@@ -56,7 +58,7 @@ public class DefaultConnectionStorageTest
 				.resolve("connections");
 		prepareDirectory(connectionDir);
 		storage = new DefaultClearThConnectionStorage();
-		dummyTypeInfo = createDummyTypeInfo();
+		dummyTypeInfo = createDummyMessageTypeInfo();
 		storage.registerType(dummyTypeInfo);
 		dbTypeInfo = createDbTypeInfo();
 		
@@ -84,7 +86,23 @@ public class DefaultConnectionStorageTest
 		}
 	}
 
-	private static ConnectionTypeInfo createDummyTypeInfo()
+	private static ConnectionTypeInfo createDummyPlainTypeInfo()
+	{
+		return new ConnectionTypeInfo(
+				DummyPlainConnection.TYPE,
+				DummyPlainConnection.class,
+				connectionDir.resolve("plain"));
+	}
+	
+	private static ConnectionTypeInfo createDummyRunnableTypeInfo()
+	{
+		return new ConnectionTypeInfo(
+				DummyRunnableConnection.TYPE,
+				DummyRunnableConnection.class,
+				connectionDir.resolve("runnable"));
+	}
+	
+	private static ConnectionTypeInfo createDummyMessageTypeInfo()
 	{
 		return new ConnectionTypeInfo(
 				DummyMessageConnection.TYPE,
@@ -265,6 +283,28 @@ public class DefaultConnectionStorageTest
 		assertNull(storage.getConnection(conName));
 		assertFalse(storage.containsConnection(conName));
 		assertFalse(hasFile(conName));
+		assertFalse(con.isRunning());
+	}
+	
+	@Test
+	public void testRemoveNonMessageConnection() throws ConnectivityException, SettingsException
+	{
+		ClearThConnectionStorage customStorage = new DefaultClearThConnectionStorage();
+		customStorage.registerType(createDummyPlainTypeInfo());
+		customStorage.registerType(createDummyRunnableTypeInfo());
+		customStorage.registerType(dummyTypeInfo);
+		
+		ClearThConnection plainCon = createAndAddConnection(DummyPlainConnection.TYPE, "PlainCon1", customStorage),
+				runnableCon = createAndAddConnection(DummyRunnableConnection.TYPE, "RunnableCon1", customStorage),
+				msgCon = createAndAddConnection(DummyMessageConnection.TYPE, "MsgCon1", customStorage);
+		
+		customStorage.removeConnection(plainCon);
+		customStorage.removeConnection(runnableCon);
+		customStorage.removeConnection(msgCon);
+		
+		assertNull("Plain connection after removal", customStorage.getConnection(plainCon.getName()));
+		assertNull("Runnable connection after removal", customStorage.getConnection(runnableCon.getName()));
+		assertNull("Message connection after removal", customStorage.getConnection(msgCon.getName()));
 	}
 	
 	@Test
@@ -312,5 +352,14 @@ public class DefaultConnectionStorageTest
 		assertTrue(((DummyMessageConnection) storage.getConnection(conName)).isRunning());
 		assertTrue(((DummyMessageConnection) storage.getConnection(conName2)).isRunning());
 		assertFalse(((DummyMessageConnection) storage.getConnection(conWithoutAutostartName)).isRunning());
+	}
+	
+	
+	private ClearThConnection createAndAddConnection(String type, String name, ClearThConnectionStorage storage) throws ConnectivityException, SettingsException
+	{
+		ClearThConnection result = storage.createConnection(type);
+		result.setName(name);
+		storage.addConnection(result);
+		return result;
 	}
 }
