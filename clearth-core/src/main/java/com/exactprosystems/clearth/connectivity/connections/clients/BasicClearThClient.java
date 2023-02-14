@@ -1,4 +1,4 @@
-/*******************************************************************************
+/******************************************************************************
  * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
@@ -45,6 +45,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
+import com.exactprosystems.clearth.data.MessageHandler;
+import com.exactprosystems.clearth.data.MessageHandlingUtils;
+
 public abstract class BasicClearThClient implements ClearThClient
 {
 	private static final Logger logger = LoggerFactory.getLogger(BasicClearThClient.class);
@@ -63,6 +66,7 @@ public abstract class BasicClearThClient implements ClearThClient
 	protected MessageReceiverThread receiverThread = null;
 	protected BlockingQueue<EncodedClearThMessage> receivedMessageQueue = createMessageQueue(),
 			sentMessageQueue;
+	protected final MessageHandler messageHandler;
 	protected boolean running = false;
 
 	public BasicClearThClient(ClearThMessageConnection owner) throws ConnectivityException, SettingsException
@@ -78,7 +82,8 @@ public abstract class BasicClearThClient implements ClearThClient
 		if (logger.isInfoEnabled())
 			logger.info("Initializing client: {}{}Name={}{}{}",
 					getClass().getCanonicalName(), Utils.EOL, name, Utils.EOL, storedSettings.toString());
-
+		
+		messageHandler = createMessageHandler();
 		allListeners = new ArrayList<>();
 		receiveListeners = new ArrayList<>();
 		sendListeners = new ArrayList<>();
@@ -97,6 +102,9 @@ public abstract class BasicClearThClient implements ClearThClient
 			{
 				logger.error("Error while closing related connections", e1);
 			}
+			
+			Utils.closeResource(messageHandler);
+			
 			throw e;
 		}
 	}
@@ -143,8 +151,21 @@ public abstract class BasicClearThClient implements ClearThClient
 			logger.info("{}: "+receivedMessageQueue.size()+" unhandled message(s) read", name);
 		}
 	}
-
-
+	
+	
+	private MessageHandler createMessageHandler() throws ConnectionException
+	{
+		try
+		{
+			return owner.getDataHandlersFactory().createMessageHandler(name);
+		}
+		catch (Exception e)
+		{
+			throw new ConnectionException("Could not create message handler", e);
+		}
+	}
+	
+	
 	protected MessageFileReader createUnhandledMessageFileReader()
 	{
 		return new MessageFileReader();
@@ -169,17 +190,17 @@ public abstract class BasicClearThClient implements ClearThClient
 
 	protected boolean isNeedSentProcessorThread()
 	{
-		return !isEmpty(sendListeners);
+		return messageHandler.isActive() || !isEmpty(sendListeners);
 	}
 
 	protected MessageProcessorThread createReceivedProcessorThread()
 	{
-		return new MessageProcessorThread(name+" (Received processor thread)", receivedMessageQueue, receiveListeners);
+		return new MessageProcessorThread(name+" (Received processor thread)", receivedMessageQueue, messageHandler, receiveListeners);
 	}
 
 	protected MessageProcessorThread createSentProcessorThread()
 	{
-		return new MessageProcessorThread(name+" (Sent processor thread)", sentMessageQueue, sendListeners);
+		return new MessageProcessorThread(name+" (Sent processor thread)", sentMessageQueue, messageHandler, sendListeners);
 	}
 
 	@Override
@@ -296,6 +317,7 @@ public abstract class BasicClearThClient implements ClearThClient
 			disposeListeners();
 
 		closeConnections();
+		Utils.closeResource(messageHandler);
 
 		running = false;
 	}
@@ -313,27 +335,29 @@ public abstract class BasicClearThClient implements ClearThClient
 
 
 	@Override
-	public final Object sendMessage(Object message) throws IOException, ConnectivityException
+	public final EncodedClearThMessage sendMessage(Object message) throws IOException, ConnectivityException
 	{
-		Object outcome = doSendMessage(message);
+		doSendMessage(message);
 		sent.incrementAndGet();
-
+		
+		EncodedClearThMessage result = createUpdatedMessage(message, null);
 		if (isNeedSentProcessorThread())
-			notifySendListeners(message, null);
-
-		return outcome;
+			notifySendListenersIndirectly(result);
+		
+		return result;
 	}
 
 	@Override
-	public final Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	public final EncodedClearThMessage sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
-		Object outcome = doSendMessage(message);
+		doSendMessage(message);
 		sent.incrementAndGet();
-
+		
+		EncodedClearThMessage result = createUpdatedMessage(message.getPayload(), message.getMetadata());
 		if (isNeedSentProcessorThread())
-			notifySendListeners(message.getPayload(), message.getMetadata());
-
-		return outcome;
+			notifySendListenersIndirectly(result);
+		
+		return result;
 	}
 
 
@@ -404,15 +428,15 @@ public abstract class BasicClearThClient implements ClearThClient
 		ClearThMessageMetadata newMetadata = new ClearThMessageMetadata(ClearThMessageDirection.SENT,
 				Instant.now(),
 				metadata != null ? metadata.getFields() : null);
+		MessageHandlingUtils.setMessageId(newMetadata, messageHandler.createMessageId(newMetadata));
 		return new EncodedClearThMessage(payload, newMetadata);
 	}
 
-	protected final void notifySendListeners(Object payload, ClearThMessageMetadata metadata) throws IOException, ConnectivityException
+	protected final void notifySendListenersIndirectly(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
-		EncodedClearThMessage updated = createUpdatedMessage(payload, metadata);
 		try
 		{
-			sentMessageQueue.put(updated);
+			sentMessageQueue.put(message);
 		}
 		catch (InterruptedException e)
 		{

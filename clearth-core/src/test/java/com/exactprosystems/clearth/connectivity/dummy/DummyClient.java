@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.connections.clients.BasicClearThClient;
 import com.exactprosystems.clearth.connectivity.connections.clients.MessageReceiverThread;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.data.MessageHandler;
 import com.exactprosystems.clearth.utils.SettingsException;
 
 import java.io.IOException;
@@ -70,7 +71,12 @@ public class DummyClient extends BasicClearThClient
 
 	public void putDirectlyToReceivedMessages(Object o) throws InterruptedException
 	{
-		receivedMessageQueue.put(new EncodedClearThMessage(o));
+		receivedMessageQueue.put(EncodedClearThMessage.newReceivedMessage(o));
+	}
+	
+	public MessageHandler getMessageHandler()
+	{
+		return messageHandler;
 	}
 	
 	@Override
@@ -123,7 +129,7 @@ public class DummyClient extends BasicClearThClient
 		{
 			Object messageToReceive = messagesToReceive.poll();
 			if (messageToReceive != null)
-				receivedMessageQueue.add(new EncodedClearThMessage(messageToReceive));
+				receivedMessageQueue.add(EncodedClearThMessage.newReceivedMessage(messageToReceive));
 		}
 
 		@Override
@@ -133,7 +139,7 @@ public class DummyClient extends BasicClearThClient
 			List<Object> messages = new ArrayList<>();
 			messagesToReceive.drainTo(messages);
 			for (Object messageToReceive : messages)
-				receivedMessageQueue.add(new EncodedClearThMessage(messageToReceive));
+				receivedMessageQueue.add(EncodedClearThMessage.newReceivedMessage(messageToReceive));
 		}
 	}
 }

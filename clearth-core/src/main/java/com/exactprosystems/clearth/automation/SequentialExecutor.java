@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,7 +23,10 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.util.*;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.data.DataHandlersFactory;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public abstract class SequentialExecutor extends Thread
 {
@@ -68,6 +71,7 @@ public abstract class SequentialExecutor extends Thread
 			List<Matrix> singleMatrixList = new ArrayList<Matrix>();
 			List<MatrixData>  scripts = scheduler.getMatricesData();
 			boolean first = true;
+			DataHandlersFactory handlersFactory = ClearThCore.getInstance().getDataHandlersFactory();
 			for (MatrixData script : scripts)
 			{
 				if (!script.isExecute())
@@ -95,10 +99,11 @@ public abstract class SequentialExecutor extends Thread
 
 				currentMatrix = script.getFile().getName();
 				scheduler.prepare(steps, singleMatrixList, Collections.singletonList(script), preparableActions);
-
+				
+				TestExecutionHandler executionHandler = handlersFactory.createTestExecutionHandler(scheduler.getName());
 				synchronized (ceMonitor)
 				{
-					currentExecutor = executorFactory.createExecutor(scheduler, singleMatrixList, startedByUser, preparableActions);
+					currentExecutor = executorFactory.createExecutor(scheduler, singleMatrixList, startedByUser, preparableActions, executionHandler);
 				}
 				currentExecutor.setExecutionMonitor(executionMonitor);
 				initExecutor(currentExecutor);

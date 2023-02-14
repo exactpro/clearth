@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,6 +45,7 @@ import com.exactprosystems.clearth.automation.report.results.ContainerResult;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.messages.RgKeyFieldNames;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 
@@ -124,6 +125,7 @@ public class MessageComparator<T extends ClearThMessage<T>>
 			result = createPlainResult("Message check result");
 			if (saveFields)
 				saveOutputFields(actualMessage);
+			result.addLinkedMessage(new EncodedClearThMessage(actualMessage.getEncodedMessage(), actualMessage.getMetadata()));
 		}
 		
 		result.addDetail(compareMainFields(expectedMessage, actualMessage, isSubMessage));

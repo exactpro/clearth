@@ -43,7 +43,7 @@ public class ClearThMessageSender<M extends ClearThMessage<M>> implements Messag
 	}
 	
 	@Override
-	public Object sendMessage(M message) throws IOException, ConnectivityException, EncodeException
+	public EncodedClearThMessage sendMessage(M message) throws IOException, ConnectivityException, EncodeException
 	{
 		Object encoded = codec.encode(message);
 		ClearThMessageMetadata metadata = message.getMetadata();

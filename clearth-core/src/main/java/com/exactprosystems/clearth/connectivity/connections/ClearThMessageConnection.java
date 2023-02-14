@@ -18,9 +18,9 @@
 
 package com.exactprosystems.clearth.connectivity.connections;
 
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
 import com.exactprosystems.clearth.connectivity.MessageListener;
+import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.messages.PlainMessageSender;
 
 import java.util.List;
@@ -28,8 +28,6 @@ import java.util.Set;
 
 public interface ClearThMessageConnection extends ClearThRunnableConnection, PlainMessageSender
 {
-	Object sendMessage(Object message) throws ConnectivityException;
-
 	void addListener(ListenerConfiguration listener);
 
 	void removeListener(ListenerConfiguration listener);
@@ -43,6 +41,9 @@ public interface ClearThMessageConnection extends ClearThRunnableConnection, Pla
 	Class<?> getListenerClass(String type);
 	
 	MessageListener findListener(String listenerType);
+	
+	DataHandlersFactory getDataHandlersFactory();
+	void setDataHandlersFactory(DataHandlersFactory dataHandlersFactory);
 	
 	long getSent();
 	long getReceived();

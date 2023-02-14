@@ -25,6 +25,7 @@ import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConnection;
 import com.exactprosystems.clearth.connectivity.connections.ConnectionErrorInfo;
 import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
@@ -32,6 +33,7 @@ import com.exactprosystems.clearth.connectivity.connections.settings.Processor;
 import com.exactprosystems.clearth.connectivity.connections.settings.SettingsModel;
 import com.exactprosystems.clearth.connectivity.validation.ConnectionStartValidator;
 import com.exactprosystems.clearth.connectivity.validation.DefaultConnectionStartValidator;
+import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.utils.NameValidator;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.apache.commons.lang.StringUtils;
@@ -78,12 +80,15 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 
 	protected final Processor settingsProcessor;
 
-	public DefaultClearThConnectionStorage() throws ConnectivityException
+	protected final DataHandlersFactory dataHandlersFactory;
+
+	public DefaultClearThConnectionStorage(DataHandlersFactory dataHandlersFactory) throws ConnectivityException
 	{
 		connectionComparator = createConnectionComparator();
 		connectionFileOperator = createConnectionFileOperator();
 		connectionStartValidator = createConnectionStartValidator();
 		settingsProcessor = createSettingsProcessor();
+		this.dataHandlersFactory = dataHandlersFactory;
 	}
 
 	@Override
@@ -363,6 +368,7 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 		{
 			ClearThConnection connection = info.getConnectionClass().newInstance();
 			setConnectionInfoType(connection, info);
+			setDataHandlersFactory(connection);
 			return connection;
 		}
 		catch (InstantiationException | IllegalAccessException e)
@@ -385,6 +391,12 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 	protected void setConnectionInfoType(ClearThConnection connection, ConnectionTypeInfo info)
 	{
 		connection.setTypeInfo(info);
+	}
+	
+	protected void setDataHandlersFactory(ClearThConnection connection)
+	{
+		if (connection instanceof ClearThMessageConnection)
+			((ClearThMessageConnection)connection).setDataHandlersFactory(dataHandlersFactory);
 	}
 
 	@Override
@@ -545,11 +557,14 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 		try
 		{
 			logger.info("Loading connections");
-
+			
 			for (ConnectionTypeInfo info : typeInfoMap.values())
 			{
 				List<ClearThConnection> connections = connectionFileOperator.loadConnections(info);
-				connections.forEach(connection -> addLink(connection, info, false));
+				connections.forEach(connection -> {
+						addLink(connection, info, false);
+						setDataHandlersFactory(connection);
+					});
 			}
 			sort();
 		}

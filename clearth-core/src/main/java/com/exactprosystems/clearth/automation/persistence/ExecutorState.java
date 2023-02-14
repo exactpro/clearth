@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,8 +26,8 @@ import java.util.*;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
-import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
-import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+import com.exactprosystems.clearth.data.DataHandlingException;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 import org.apache.commons.io.FileUtils;
 
 import com.exactprosystems.clearth.utils.XmlUtils;
@@ -106,7 +106,7 @@ public abstract class ExecutorState
 	public Executor executorFromState(Scheduler scheduler, ExecutorFactory executorFactory, Date businessDay,
 	                                  Date baseTime, String startedByUser)
 			throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException, AutomationException
+			InvocationTargetException, NoSuchMethodException, AutomationException, DataHandlingException
 	{
 		preparableActions = new HashMap<String, Preparable>();
 		List<Step> steps = null;
@@ -164,10 +164,11 @@ public abstract class ExecutorState
 				}
 			}
 		}
-
+		
+		TestExecutionHandler executionHandler = ClearThCore.getInstance().getDataHandlersFactory().createTestExecutionHandler(scheduler.getName());
 		GlobalContext globalContext =
 				executorFactory.createGlobalContext(businessDay, baseTime, this.weekendHoliday, this.holidays,
-						startedByUser);
+						startedByUser, executionHandler);
 
 		Executor result = executorFactory.createExecutor(scheduler, steps, matrices, globalContext, preparableActions);
 		result.setFixedIds(this.fixedIDs);

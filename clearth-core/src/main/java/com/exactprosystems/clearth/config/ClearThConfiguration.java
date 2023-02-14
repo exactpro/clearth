@@ -44,6 +44,8 @@ public class ClearThConfiguration
 	protected Memory memory;
 	@XmlElement
 	protected LocationConfig locations;
+	@XmlElement
+	protected Data data;
 
 	public ClearThConfiguration() {}
 
@@ -70,6 +72,19 @@ public class ClearThConfiguration
 		if (connectivity == null)
 			connectivity = new Connectivity();
 		return connectivity;
+	}
+	
+	
+	public void setData(Data data)
+	{
+		this.data = data;
+	}
+	
+	public Data getData()
+	{
+		if (data == null)
+			data = new Data();
+		return data;
 	}
 	
 	
@@ -110,11 +125,11 @@ public class ClearThConfiguration
 		try
 		{
 			reader = new FileInputStream(configFile);
-			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class, Connectivity.class,
+			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class, Connectivity.class, Data.class,
 						ConnectionTypesConfig.class, ConnectionType.class, ValidationRulesConfig.class, 
 						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class, LocationConfig.class, ReplacedPath.class);
 			Unmarshaller unmarshal = context.createUnmarshaller();
-
+			
 			return (ClearThConfiguration) unmarshal.unmarshal(reader);
 		}
 		catch (FileNotFoundException e)
@@ -141,6 +156,7 @@ public class ClearThConfiguration
 	{
 		return "ClearThConfiguration {\n automation: " + this.getAutomation().toString() +
 				"\n connectivity: " + this.getConnectivity().toString() +
+				"\n data: " + this.getData().toString() +
 				"\n locations: " + this.getLocations().toString() +
 				"\n memory: " + this.getMemory().toString() + "\n}";
 	}

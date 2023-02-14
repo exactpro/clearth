@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,20 +29,20 @@ import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 public interface PlainMessageSender
 {
 	/**
-	 * Sends given message. Can return some object as outcome
+	 * Sends given message
 	 * @param message to send
-	 * @return sending outcome, if present
+	 * @return sent message
 	 * @throws IOException if message cannot be sent due to I/O error
 	 * @throws ConnectivityException if connection to message destination is broken
 	 */
-	Object sendMessage(Object message) throws IOException, ConnectivityException;
+	EncodedClearThMessage sendMessage(Object message) throws IOException, ConnectivityException;
 	
 	/**
-	 * Sends given message. Can return some object as outcome
+	 * Sends given message
 	 * @param encoded message with metadata to send
-	 * @return sending outcome, if present
+	 * @return sent message
 	 * @throws IOException if message cannot be sent due to I/O error
 	 * @throws ConnectivityException if connection to message destination is broken
 	 */
-	Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException;
+	EncodedClearThMessage sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException;
 }

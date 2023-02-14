@@ -27,6 +27,8 @@ import com.exactprosystems.clearth.connectivity.connections.storage.DefaultClear
 import com.exactprosystems.clearth.connectivity.dummy.DummyMessageConnection;
 import com.exactprosystems.clearth.connectivity.dummy.DummyPlainConnection;
 import com.exactprosystems.clearth.connectivity.dummy.DummyRunnableConnection;
+import com.exactprosystems.clearth.data.DataHandlersFactory;
+import com.exactprosystems.clearth.data.DefaultDataHandlersFactory;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.apache.commons.io.FileUtils;
@@ -44,6 +46,7 @@ import static org.junit.Assert.*;
 public class DefaultConnectionStorageTest
 {
 	private static ApplicationManager applicationManager;
+	private static DataHandlersFactory dataHandlersFactory;
 	private static DefaultClearThConnectionStorage storage;
 	private static Path connectionDir;
 	private static ConnectionTypeInfo dummyTypeInfo;
@@ -57,7 +60,8 @@ public class DefaultConnectionStorageTest
 				.resolve(DefaultConnectionStorageTest.class.getSimpleName())
 				.resolve("connections");
 		prepareDirectory(connectionDir);
-		storage = new DefaultClearThConnectionStorage();
+		dataHandlersFactory = new DefaultDataHandlersFactory();
+		storage = new DefaultClearThConnectionStorage(dataHandlersFactory);
 		dummyTypeInfo = createDummyMessageTypeInfo();
 		storage.registerType(dummyTypeInfo);
 		dbTypeInfo = createDbTypeInfo();
@@ -122,6 +126,14 @@ public class DefaultConnectionStorageTest
 		return Files.exists(connectionDir.resolve(conName + ".xml"));
 	}
 	
+	@Test
+	public void testConnectionCreation() throws ConnectivityException
+	{
+		ClearThConnection con = storage.createConnection(dummyTypeInfo.getName());
+		assertEquals(dummyTypeInfo, con.getTypeInfo());
+		assertEquals(((ClearThMessageConnection)con).getDataHandlersFactory(), dataHandlersFactory);
+	}
+	
 	@Test(expected = SettingsException.class)
 	public void testAddConnectionsWithSameName() throws ConnectivityException, SettingsException
 	{
@@ -147,7 +159,7 @@ public class DefaultConnectionStorageTest
 	{
 		ConnectionTypeInfo dbConType = new ConnectionTypeInfo("DB", 
 				DbConnection.class, dummyTypeInfo.getDirectory());
-		DefaultClearThConnectionStorage storageToBreak = new DefaultClearThConnectionStorage();
+		DefaultClearThConnectionStorage storageToBreak = new DefaultClearThConnectionStorage(dataHandlersFactory);
 		storageToBreak.registerType(dummyTypeInfo);
 		storageToBreak.registerType(dbConType);
 	}
@@ -171,7 +183,7 @@ public class DefaultConnectionStorageTest
 
 		DummyMessageConnection con = new DummyMessageConnection();
 		con.setName(conName);
-		ClearThConnectionStorage tmpStorage = new DefaultClearThConnectionStorage();
+		ClearThConnectionStorage tmpStorage = new DefaultClearThConnectionStorage(dataHandlersFactory);
 		tmpStorage.registerType(dummyTypeInfo);
 		tmpStorage.registerType(dbTypeInfo);
 		assertThrows(ConnectivityException.class, () -> tmpStorage.addConnection(con));
@@ -289,7 +301,7 @@ public class DefaultConnectionStorageTest
 	@Test
 	public void testRemoveNonMessageConnection() throws ConnectivityException, SettingsException
 	{
-		ClearThConnectionStorage customStorage = new DefaultClearThConnectionStorage();
+		ClearThConnectionStorage customStorage = new DefaultClearThConnectionStorage(new DefaultDataHandlersFactory());
 		customStorage.registerType(createDummyPlainTypeInfo());
 		customStorage.registerType(createDummyRunnableTypeInfo());
 		customStorage.registerType(dummyTypeInfo);

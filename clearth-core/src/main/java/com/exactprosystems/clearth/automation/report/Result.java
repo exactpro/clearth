@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation.report;
 
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -28,6 +29,9 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.MINIMAL_CLASS)
 public abstract class Result implements Serializable
@@ -41,6 +45,9 @@ public abstract class Result implements Serializable
 	private Throwable error = null;
 	private String message = null,
 			comment = null;
+	
+	private Collection<EncodedClearThMessage> linkedMessages;
+	
 	protected FailReason failReason = FailReason.FAILED;
 	private FailoverException failoverData;
 
@@ -126,7 +133,26 @@ public abstract class Result implements Serializable
 		else
 			this.comment += ' ' + comment;
 	}
-
+	
+	
+	public Collection<EncodedClearThMessage> getLinkedMessages()
+	{
+		return linkedMessages == null ? Collections.emptyList() : Collections.unmodifiableCollection(linkedMessages);
+	}
+	
+	public void addLinkedMessage(EncodedClearThMessage message)
+	{
+		if (linkedMessages == null)
+			linkedMessages = new ArrayList<>();
+		linkedMessages.add(message);
+	}
+	
+	public void clearLinkedMessages()
+	{
+		linkedMessages = null;
+	}
+	
+	
 	public FailReason getFailReason()
 	{
 		return failReason;

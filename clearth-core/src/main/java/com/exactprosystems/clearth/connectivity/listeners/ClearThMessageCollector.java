@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -226,7 +226,9 @@ public class ClearThMessageCollector extends AbstractMessageListener implements 
 					cthMessage = codec.decode(payload);
 				}
 			}
-
+			
+			cthMessage.setMetadata(message.getMetadata());
+			
 			if (!validateType(cthMessage.getField(ClearThMessage.MSGTYPE)))
 			{
 				logger.trace("Skipped message: {}", cthMessage);

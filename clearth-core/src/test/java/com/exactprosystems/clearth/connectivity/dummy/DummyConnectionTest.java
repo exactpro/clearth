@@ -27,6 +27,7 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnec
 import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
 import com.exactprosystems.clearth.connectivity.connections.clients.BasicClearThClient;
 import com.exactprosystems.clearth.connectivity.connections.storage.DefaultClearThConnectionStorage;
+import com.exactprosystems.clearth.data.DefaultDataHandlersFactory;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.apache.commons.io.FileUtils;
@@ -66,7 +67,7 @@ public class DummyConnectionTest
 		testingDirectory = Paths.get("testOutput")
 				.resolve(DummyConnectionTest.class.getSimpleName());
 		prepareDirectory(testingDirectory);
-		storage = new DefaultClearThConnectionStorage();
+		storage = new DefaultClearThConnectionStorage(new DefaultDataHandlersFactory());
 		dummyTypeInfo = createDummyTypeInfo();
 		storage.registerType(dummyTypeInfo);
 	}
@@ -147,10 +148,10 @@ public class DummyConnectionTest
 
 		List<String> lines = testConWithListener(conName, message, true, false);
 
-		//dummy message thread provides no metadata for encoded message so there should be two lines (last empty)
-		assertEquals(2, lines.size());
-		assertEquals(message, lines.get(0));
-		assertEquals("", lines.get(1));
+		//1st line is metadata, 2nd line is message itself, 3rd line is empty
+		assertEquals(3, lines.size());
+		assertEquals(message, lines.get(1));
+		assertEquals("", lines.get(2));
 	}
 
 	@Test
@@ -161,11 +162,11 @@ public class DummyConnectionTest
 
 		List<String> lines = testConWithListener(conName, message, true, true);
 
-		// 2 lines from receive listener, 3 from send listener; they can have different order
-		// depending on order, 1st or 2nd line can be the message; but 4th line will always be the message
-		assertEquals(5, lines.size());
-		assertEquals(message, lines.get(3));
-		assertTrue(message.equals(lines.get(0)) || message.equals(lines.get(1)));
+		//3 lines from receive listener, 3 from send listener; they can have different order
+		//1st and 4th line will always be the message
+		assertEquals(6, lines.size());
+		assertEquals(message, lines.get(1));
+		assertEquals(message, lines.get(4));
 	}
 
 	private List<String> testConWithListener(String conName, String messageToSend, boolean activeForReceived, boolean activeForSent)

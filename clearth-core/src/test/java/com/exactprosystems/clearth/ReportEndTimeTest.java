@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,7 @@ package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.actions.TestAction;
+import com.exactprosystems.clearth.data.DefaultTestExecutionHandler;
 import com.exactprosystems.clearth.utils.ClearThException;
 
 import org.junit.BeforeClass;
@@ -53,7 +54,7 @@ public class ReportEndTimeTest
 		clearThManager = new ApplicationManager();
 		scheduler = clearThManager.getScheduler(SCHEDULER_NAME, USER_NAME);
 		executor = new DefaultExecutorFactory(null).createExecutor(scheduler,null,USER_NAME,
-				null);
+				null, new DefaultTestExecutionHandler());
 
 
 		List<Action> firstStepActions = initializeActions(START, START_PLUS_100,START_PLUS_100,START_PLUS_200);

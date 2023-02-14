@@ -31,6 +31,8 @@ import com.exactprosystems.clearth.automation.persistence.StepState;
 import com.exactprosystems.clearth.automation.steps.AskForContinue;
 import com.exactprosystems.clearth.automation.steps.Default;
 import com.exactprosystems.clearth.automation.steps.Sleep;
+import com.exactprosystems.clearth.data.DataHandlingException;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -898,7 +900,8 @@ public abstract class Scheduler
 			
 			doBeforeStartExecution();
 			
-			executor = executorFactory.createExecutor(this, matrices, userName, preparableActions);
+			TestExecutionHandler executionHandler = ClearThCore.getInstance().getDataHandlersFactory().createTestExecutionHandler(getName());
+			executor = executorFactory.createExecutor(this, matrices, userName, preparableActions, executionHandler);
 //			executor.globalContext.setLoadedContext(GlobalContext.ACTIONS_MAPPING, actionsMapping);
 			initExecutor(executor);
 			executor.start();
@@ -1004,7 +1007,10 @@ public abstract class Scheduler
 		}
 	}
 	
-	synchronized public boolean restoreState(String userName) throws IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, AutomationException {
+	synchronized public boolean restoreState(String userName) 
+			throws IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, 
+			InvocationTargetException, NoSuchMethodException, AutomationException, DataHandlingException
+	{
 		if (isRunning())
 			return false;
 		

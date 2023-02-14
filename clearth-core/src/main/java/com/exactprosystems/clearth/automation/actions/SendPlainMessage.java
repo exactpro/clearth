@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -54,14 +54,13 @@ public class SendPlainMessage extends Action
 		PlainMessageSender sender = getMessageSender(stepContext, matrixContext, globalContext);
 		try
 		{
-			sendMessage(sender, message, metadata);
+			EncodedClearThMessage sentMessage = sendMessage(sender, message, metadata);
+			return createResult(message, sentMessage);
 		}
 		catch (Exception e)
 		{
 			return DefaultResult.failed("Could not send message", e);
 		}
-		
-		return null;
 	}
 
 	protected PlainMessageSender getMessageSender(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
@@ -133,11 +132,21 @@ public class SendPlainMessage extends Action
 		return metaFields;
 	}
 	
-	private void sendMessage(PlainMessageSender sender, String message, ClearThMessageMetadata metadata) throws ConnectivityException, IOException
+	private EncodedClearThMessage sendMessage(PlainMessageSender sender, String message, ClearThMessageMetadata metadata) throws ConnectivityException, IOException
 	{
 		if (metadata != null)
-			sender.sendMessage(new EncodedClearThMessage(message, metadata));
+			return sender.sendMessage(new EncodedClearThMessage(message, metadata));
 		else
-			sender.sendMessage(message);
+			return sender.sendMessage(message);
+	}
+	
+	private Result createResult(String message, EncodedClearThMessage sentMessage)
+	{
+		if (sentMessage == null)
+			return null;
+		
+		DefaultResult result = new DefaultResult();
+		result.addLinkedMessage(sentMessage);
+		return result;
 	}
 }

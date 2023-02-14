@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.exactprosystems.clearth.ValueGenerator;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public abstract class ExecutorFactory
 {
@@ -33,9 +34,11 @@ public abstract class ExecutorFactory
 		this.valueGenerator = valueGenerator;
 	}
 	
-	public abstract Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser, Map<String, Preparable> preparableActions);
+	public abstract Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser, Map<String, Preparable> preparableActions,
+			TestExecutionHandler executionHandler);
 	public abstract Executor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext, Map<String, Preparable> preparableActions);
-	public abstract GlobalContext createGlobalContext(Date businessDay, Date baseTime, boolean weekendHoliday, Map<String, Boolean> holidays, String startedByUser);
+	public abstract GlobalContext createGlobalContext(Date businessDay, Date baseTime, boolean weekendHoliday, Map<String, Boolean> holidays, String startedByUser,
+			TestExecutionHandler executionHandler);
 	public abstract FailoverStatus createFailoverStatus();
 	
 	public ValueGenerator getValueGenerator()

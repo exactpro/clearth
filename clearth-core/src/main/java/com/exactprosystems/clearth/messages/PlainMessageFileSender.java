@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -37,14 +37,14 @@ public class PlainMessageFileSender implements PlainMessageSender
 	}
 
 	@Override
-	public String sendMessage(Object message) throws IOException
+	public EncodedClearThMessage sendMessage(Object message) throws IOException
 	{
 		FileUtils.writeStringToFile(file, message.toString(), UTF_8);
-		return message.toString();
+		return EncodedClearThMessage.newSentMessage(message);
 	}
 
 	@Override
-	public Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	public EncodedClearThMessage sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
 		return sendMessage(message.getPayload());
 	}

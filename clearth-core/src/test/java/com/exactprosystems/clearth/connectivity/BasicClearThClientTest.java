@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -40,6 +40,8 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.exactprosystems.clearth.data.DefaultDataHandlersFactory;
 
 public class BasicClearThClientTest
 {
@@ -98,6 +100,7 @@ public class BasicClearThClientTest
 				OUTPUT_ROOT));
 		
 		con.setName("TestCon");
+		con.setDataHandlersFactory(new DefaultDataHandlersFactory());
 		TestConnectionSettings settings = (TestConnectionSettings) con.getSettings();
 		source = settings.getSource();
 		target = settings.getTarget();

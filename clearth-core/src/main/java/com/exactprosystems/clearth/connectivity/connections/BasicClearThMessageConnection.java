@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.connectivity.*;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.listeners.factories.BasicMessageListenerFactory;
 import com.exactprosystems.clearth.connectivity.listeners.factories.MessageListenerFactory;
+import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ public abstract class BasicClearThMessageConnection extends BasicClearThRunnable
 	protected final MessageListenerFactory listenerFactory;
 
 	protected final Lock readLock = lock.readLock();
+	protected DataHandlersFactory dataHandlersFactory;
 
 	public BasicClearThMessageConnection()
 	{
@@ -58,18 +60,32 @@ public abstract class BasicClearThMessageConnection extends BasicClearThRunnable
 	protected abstract ClearThClient createClient() throws SettingsException, ConnectivityException;
 
 	@Override
-	public Object sendMessage(Object message) throws ConnectivityException
+	public EncodedClearThMessage sendMessage(Object message) throws ConnectivityException
 	{
 		return doSendMessage(() -> client.sendMessage(message));
 	}
 	
 	@Override
-	public Object sendMessage(EncodedClearThMessage message) throws ConnectivityException
+	public EncodedClearThMessage sendMessage(EncodedClearThMessage message) throws ConnectivityException
 	{
 		return doSendMessage(() -> client.sendMessage(message));
 	}
 	
-	protected Object doSendMessage(Callable<Object> caller) throws ConnectivityException
+	
+	@Override
+	public DataHandlersFactory getDataHandlersFactory()
+	{
+		return dataHandlersFactory;
+	}
+	
+	@Override
+	public void setDataHandlersFactory(DataHandlersFactory dataHandlersFactory)
+	{
+		this.dataHandlersFactory = dataHandlersFactory;
+	}
+	
+	
+	protected EncodedClearThMessage doSendMessage(Callable<EncodedClearThMessage> caller) throws ConnectivityException
 	{
 		try
 		{

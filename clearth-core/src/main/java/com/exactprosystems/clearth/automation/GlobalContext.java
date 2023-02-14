@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public class GlobalContext
 {
@@ -34,12 +35,14 @@ public class GlobalContext
 	private final Map<String, Boolean> holidays;
 	private final MatrixFunctions matrixFunctions;
 	private final String startedByUser;
-	private final List<String> attemtedConnections;
+	private final List<String> attemptedConnections;
 	private final Set<Statement> statements;
+	private final TestExecutionHandler executionHandler;
 	
 	private Date started, finished;
 	
-	public GlobalContext(Date currentDate, boolean weekendHoliday, Map<String, Boolean> holidays, MatrixFunctions matrixFunctions, String startedByUser)
+	public GlobalContext(Date currentDate, boolean weekendHoliday, Map<String, Boolean> holidays, MatrixFunctions matrixFunctions, String startedByUser,
+			TestExecutionHandler executionHandler)
 	{
 		this.loadedContext = new HashMap<String, Object>();
 		
@@ -55,8 +58,10 @@ public class GlobalContext
 		this.holidays = holidays;
 		this.matrixFunctions = matrixFunctions;
 		this.startedByUser = startedByUser;
-		this.attemtedConnections = new ArrayList<String>(0);
+		this.attemptedConnections = new ArrayList<String>(0);
 		this.statements = ConcurrentHashMap.newKeySet();
+		
+		this.executionHandler = executionHandler;
 		
 		this.started = null;
 		this.finished = null;
@@ -115,9 +120,9 @@ public class GlobalContext
 		return startedByUser;
 	}
 	
-	public List<String> getAttemtedConnections()
+	public List<String> getAttemptedConnections()
 	{
-		return attemtedConnections;
+		return attemptedConnections;
 	}
 
 	/**
@@ -136,6 +141,12 @@ public class GlobalContext
 	public void unregisterStatement(Statement statement)
 	{
 		statements.remove(statement);
+	}
+	
+	
+	public TestExecutionHandler getExecutionHandler()
+	{
+		return executionHandler;
 	}
 	
 	
@@ -162,7 +173,7 @@ public class GlobalContext
 	public void clearContext()
 	{
 		loadedContext.clear();
-		attemtedConnections.clear();
+		attemptedConnections.clear();
 		holidays.clear();
 		statements.clear();
 	}

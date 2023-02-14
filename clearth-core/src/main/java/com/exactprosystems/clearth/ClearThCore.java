@@ -36,6 +36,7 @@ import com.exactprosystems.clearth.connectivity.iface.DefaultCodecFactory;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
 import com.exactprosystems.clearth.connectivity.validation.ClearThConnectionValidationRule;
+import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
 import com.exactprosystems.clearth.tools.ToolsFactory;
 import com.exactprosystems.clearth.tools.ToolsManager;
@@ -98,6 +99,8 @@ public abstract class ClearThCore
 	protected ComparisonUtils comparisonUtils;
 
 	protected ClearThConfiguration config;
+	
+	protected DataHandlersFactory dataHandlersFactory;
 
 	public static <T extends ClearThCore> T getInstance()
 	{
@@ -264,6 +267,7 @@ public abstract class ClearThCore
 			createDefaultDirs();
 			createDirs();
 			reconfigureLogging();
+			dataHandlersFactory = createDataHandlersFactory();
 			valueGenerators = createValueGenerators();
 			connectionStorage = createConnectionStorage();
 			actionFactory = createActionFactory();
@@ -296,7 +300,7 @@ public abstract class ClearThCore
 			configureReportTemplates(reportTemplatesProcessor);
 			schedulerInfoTemplatesProcessor = createSchedulerInfoTemplatesProcessor();
 			prepareRealTimeReport();
-
+			
 			initSchedulersManager();
 			initConnectionStorage();
 			initFavoriteConnectionManager();
@@ -360,7 +364,7 @@ public abstract class ClearThCore
 	
 	protected ClearThConnectionStorage createConnectionStorage() throws ClearThException
 	{
-		return new DefaultClearThConnectionStorage();
+		return new DefaultClearThConnectionStorage(dataHandlersFactory);
 	}
 	
 	protected void initConnectionStorage() throws ClearThException
@@ -369,7 +373,7 @@ public abstract class ClearThCore
 		connectionStorage.loadConnections();
 		connectionStorage.autoStartConnections();
 	}
-
+	
 	protected ActionFactory createActionFactory()
 	{
 		return new ActionFactory();
@@ -422,6 +426,19 @@ public abstract class ClearThCore
 		Files.createDirectories(Paths.get(getAutomationStoragePath()));
 		Files.createDirectories(Paths.get(getScriptsPath()));
 		Files.createDirectories(Paths.get(getLastExecutionPath()));
+	}
+	
+	protected DataHandlersFactory createDataHandlersFactory() throws ClearThException
+	{
+		String className = config.getData().getDataHandlersFactory();
+		try
+		{
+			return (DataHandlersFactory) Class.forName(className).getConstructor().newInstance();
+		}
+		catch (Exception e)
+		{
+			throw new ClearThException("Could not create data handlers factory by class "+className, e);
+		}
 	}
 	
 	protected ValueGenerators createValueGenerators()
@@ -563,7 +580,7 @@ public abstract class ClearThCore
 	{
 		return new ReportTemplatesProcessor();
 	}
-
+	
 	/**
 	 * Configuration of report templates.
 	 * Override this method to add support of custom Results.
@@ -981,6 +998,7 @@ public abstract class ClearThCore
 	{
 		connectionStorage.stopAllConnections();
 		memoryMonitor.halt();
+		Utils.closeResource(dataHandlersFactory);
 	}
 
 	
@@ -1037,7 +1055,13 @@ public abstract class ClearThCore
 	{
 		return matrixFunctionsFactory.createMatrixFunctions(scheduler, getSchedulerFactory());
 	}
-
+	
+	public DataHandlersFactory getDataHandlersFactory()
+	{
+		return dataHandlersFactory;
+	}
+	
+	
 	public String getRepositoryPath()
 	{
 		return "";

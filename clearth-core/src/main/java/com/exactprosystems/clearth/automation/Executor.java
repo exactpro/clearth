@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,6 +29,7 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.automation.steps.AskForContinue;
 import com.exactprosystems.clearth.automation.steps.Default;
 import com.exactprosystems.clearth.automation.steps.Sleep;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.ObjectWrapper;
 import com.exactprosystems.clearth.utils.Utils;
@@ -69,6 +70,7 @@ public abstract class Executor extends Thread
 	protected final FailoverStatus failoverStatus;
 	protected final Map<String, Preparable> preparableActions;
 	protected final ActionParamsCalculator paramsCalculator;
+	protected final TestExecutionHandler executionHandler;
 	protected final ActionExecutor actionExecutor;
 	protected final List<StepData> stepData;
 
@@ -108,6 +110,7 @@ public abstract class Executor extends Thread
 		this.failoverStatus = failoverStatus;
 		this.preparableActions = preparableActions;
 		this.paramsCalculator = createParamsCalculator();
+		this.executionHandler = globalContext.getExecutionHandler();
 		this.actionExecutor = createActionExecutor();
 		this.stepData = new ArrayList<>(steps.size());
 	}
@@ -138,6 +141,7 @@ public abstract class Executor extends Thread
 
 			started = Calendar.getInstance().getTime();
 			scheduler.setLastExecutorStartedTime(started);
+			globalContext.setStarted(started);
 			getLogger().info("Start of scheduler execution");
 			ended = null;
 			
@@ -182,7 +186,8 @@ public abstract class Executor extends Thread
 			if (!interrupted.get())
 			{
 				status.add("Executing steps and actions...");
-				globalContext.setStarted(started);
+				handleExecutionStart();
+				
 				for (Step step : steps)
 				try
 				{
@@ -238,7 +243,7 @@ public abstract class Executor extends Thread
 							}
 						}
 						
-						step.setStarted(Calendar.getInstance().getTime());
+						stepStarted(step);
 						
 						checkStepFileName(step, steps);
 						
@@ -392,6 +397,7 @@ public abstract class Executor extends Thread
 		finally
 		{
 			terminated.set(true);
+			handleExecutionEnd();
 
 			//Disposing all connections
 			disposeConnections();
@@ -416,6 +422,7 @@ public abstract class Executor extends Thread
 				sleepTimer = null;
 			}
 			Utils.closeResource(actionExecutor);
+			Utils.closeResource(executionHandler);
 		}
 	}
 
@@ -426,20 +433,92 @@ public abstract class Executor extends Thread
 		completedReportsDir = reportsDir + REPORTDIR_COMPLETED + "/";
 		actionsReportsDir = reportsDir + REPORTDIR_ACTIONS + "/";
 	}
-
+	
+	
+	protected void stepStarted(Step step)
+	{
+		step.setStarted(Calendar.getInstance().getTime());
+		
+		if (!checkExecutionHandler("step start"))
+			return;
+		
+		try
+		{
+			executionHandler.onGlobalStepStart(new StepMetadata(step.getName(), step.getStarted().toInstant()));
+		}
+		catch (Exception e)
+		{
+			getLogger().warn("Error occurred while handling start of global step '"+step.getName()+"'", e);
+		}
+	}
+	
 	protected void stepFinished(Step step)
 	{
 		step.clearContexts();
 		step.clearSyncActions();
+		
+		if (!checkExecutionHandler("step end"))
+			return;
+		
+		try
+		{
+			executionHandler.onGlobalStepEnd();
+		}
+		catch (Exception e)
+		{
+			getLogger().warn("Error occurred while handling end of global step '"+step.getName()+"'", e);
+		}
 	}
-
+	
+	
 	protected void clearSteps()
 	{
 		steps.forEach(Step::clearActions);
 		if (scheduler.executor != null) // We can't clear steps if it is executor created in seqExec
 			steps.clear();
 	}
-
+	
+	
+	protected void handleExecutionStart()
+	{
+		if (!checkExecutionHandler("scheduler start"))
+			return;
+		
+		try
+		{
+			List<String> matrixNames = matrices.stream().map(Matrix::getName).collect(Collectors.toList());
+			executionHandler.onTestStart(matrixNames, globalContext);
+		}
+		catch (Exception e)
+		{
+			getLogger().warn("Error occurred while handling test start", e);
+		}
+	}
+	
+	protected void handleExecutionEnd()
+	{
+		if (!checkExecutionHandler("scheduler end"))
+			return;
+		
+		try
+		{
+			executionHandler.onTestEnd();
+		}
+		catch (Exception e)
+		{
+			getLogger().warn("Error occurred while handling test end", e);
+		}
+	}
+	
+	protected boolean checkExecutionHandler(String eventName)
+	{
+		boolean result = executionHandler.isActive();
+		if (!result)
+			getLogger().trace("Test execution handler is inactive, {} handling is skipped", eventName);
+		return result;
+	}
+	
+	
 	public void clearMatricesContexts()
 	{
 		matrices.forEach(matrix -> matrix.getContext().clearContext());

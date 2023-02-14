@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,6 +26,7 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.EncodeException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.messages.*;
 import com.exactprosystems.clearth.utils.Stopwatch;
@@ -46,9 +47,8 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		try
 		{
 			beforeSend(msg, stepContext, matrixContext, globalContext);
-			Object sendOutcome = sender.sendMessage(msg);
-			String ans = sendOutcome != null ? sendOutcome.toString() : null;
-			afterSend(msg, ans, stepContext, matrixContext, globalContext);
+			EncodedClearThMessage sentMessage = sender.sendMessage(msg);
+			afterSend(msg, sentMessage, stepContext, matrixContext, globalContext);
 			
 			if (timeout > 0)
 			{
@@ -67,7 +67,7 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 				}
 			}
 			
-			return createResult(msg, ans);
+			return createResult(msg, sentMessage);
 		}
 		catch (EncodeException e)
 		{
@@ -139,7 +139,7 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 	{
 	}
 	
-	protected void afterSend(T msg, String answer, StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException
+	protected void afterSend(T msg, EncodedClearThMessage sentMessage, StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException
 	{
 	}
 
@@ -148,8 +148,13 @@ public abstract class SendMessageAction<T extends ClearThMessage<T>> extends Mes
 		return null;
 	}
 	
-	protected Result createResult(T msg, String sendingResult)
+	protected Result createResult(T msg, EncodedClearThMessage sentMessage)
 	{
-		return null;
+		if (sentMessage == null)
+			return null;
+		
+		DefaultResult result = new DefaultResult();
+		result.addLinkedMessage(sentMessage);
+		return result;
 	}
 }

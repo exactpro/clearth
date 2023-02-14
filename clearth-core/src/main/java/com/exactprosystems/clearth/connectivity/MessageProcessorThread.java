@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,7 +27,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.data.HandledMessageId;
+import com.exactprosystems.clearth.data.MessageHandler;
+import com.exactprosystems.clearth.data.MessageHandlingUtils;
 
 public class MessageProcessorThread extends Thread
 {
@@ -35,13 +39,16 @@ public class MessageProcessorThread extends Thread
 	
 	protected AtomicBoolean terminated = new AtomicBoolean(false);
 	protected final BlockingQueue<EncodedClearThMessage> messageQueue;
+	protected final MessageHandler handler;
 	protected final List<MessageListener> listeners;
 	protected final AtomicLong processed = new AtomicLong(0);
 	
-	public MessageProcessorThread(String name, final BlockingQueue<EncodedClearThMessage> messageQueue, final List<MessageListener> listeners)
+	public MessageProcessorThread(String name, final BlockingQueue<EncodedClearThMessage> messageQueue,
+			MessageHandler handler, final List<MessageListener> listeners)
 	{
 		super(name);
 		this.messageQueue = messageQueue;
+		this.handler = handler;
 		this.listeners = listeners;
 	}
 	
@@ -63,7 +70,8 @@ public class MessageProcessorThread extends Thread
 					logger.trace("Getting message from internal queue, messages count = " + messageQueue.size());
 				EncodedClearThMessage message = messageQueue.poll(1000, TimeUnit.MILLISECONDS);
 				if (message != null)
-				{ 
+				{
+					handleMessage(message);
 					notifyListeners(message);
 					processed.incrementAndGet();
 				}
@@ -82,6 +90,21 @@ public class MessageProcessorThread extends Thread
 		}
 		
 		logger.info("MessageProcessor Thread finished");
+	}
+	
+	private void handleMessage(EncodedClearThMessage message)
+	{
+		try
+		{
+			addId(message);
+			
+			if (handler.isActive())
+				handler.onMessage(message);
+		}
+		catch (Exception e)
+		{
+			logger.error("Error while handling message", e);
+		}
 	}
 	
 	private void notifyListeners(EncodedClearThMessage message)
@@ -103,5 +126,17 @@ public class MessageProcessorThread extends Thread
 	public long getProcessed()
 	{
 		return processed.get();
+	}
+	
+	
+	private void addId(EncodedClearThMessage message)
+	{
+		ClearThMessageMetadata metadata = message.getMetadata();
+		if (metadata == null)
+			return;
+		
+		HandledMessageId id = MessageHandlingUtils.getMessageId(metadata);
+		if (id == null)
+			MessageHandlingUtils.setMessageId(metadata, handler.createMessageId(metadata));
 	}
 }

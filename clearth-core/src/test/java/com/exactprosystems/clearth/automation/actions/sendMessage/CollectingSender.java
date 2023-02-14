@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -31,17 +31,17 @@ public class CollectingSender implements PlainMessageSender
 	private final List<Object> sentMessages = new ArrayList<>();
 	
 	@Override
-	public Object sendMessage(Object message) throws IOException, ConnectivityException
+	public EncodedClearThMessage sendMessage(Object message) throws IOException, ConnectivityException
 	{
 		sentMessages.add(message);
-		return null;
+		return EncodedClearThMessage.newSentMessage(message);
 	}
 	
 	@Override
-	public Object sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	public EncodedClearThMessage sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
 		sentMessages.add(message);
-		return null;
+		return EncodedClearThMessage.newSentMessage(message.getPayload());
 	}
 	
 	

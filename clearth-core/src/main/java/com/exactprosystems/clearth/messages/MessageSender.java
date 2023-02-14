@@ -23,6 +23,7 @@ import java.io.IOException;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.EncodeException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 
 /**
  * Interface for classes that send ClearThMessage
@@ -32,12 +33,12 @@ import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 public interface MessageSender<M extends ClearThMessage<M>>
 {
 	/**
-	 * Sends given message. Can return some text as outcome
+	 * Sends given message
 	 * @param message to send
-	 * @return sending outcome, if present
+	 * @return sent message
 	 * @throws IOException if message cannot be sent due to I/O error
 	 * @throws ConnectivityException if connection to message destination is broken
 	 * @throws EncodeException if given message cannot be encoded before writing it to destination
 	 */
-	Object sendMessage(M message) throws IOException, ConnectivityException, EncodeException;
+	EncodedClearThMessage sendMessage(M message) throws IOException, ConnectivityException, EncodeException;
 }

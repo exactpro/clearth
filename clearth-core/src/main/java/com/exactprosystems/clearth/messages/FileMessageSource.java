@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import com.exactprosystems.clearth.connectivity.DecodeException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
+import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
 import com.exactprosystems.clearth.utils.Utils;
 
 /**
@@ -91,6 +92,11 @@ public class FileMessageSource implements MessageSource
 	
 	protected ClearThMessage<?> decodeMessage(String message) throws DecodeException
 	{
-		return codec.decode(message);
+		if (codec != null)
+			return codec.decode(message);
+		
+		ClearThMessage<?> result = new SimpleClearThMessage();
+		result.setEncodedMessage(message);
+		return result;
 	}
 }

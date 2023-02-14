@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,11 +29,13 @@ import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerType;
 import com.exactprosystems.clearth.connectivity.MessageListener;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
+import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
 import com.exactprosystems.clearth.messages.CollectorMessageSource;
 import com.exactprosystems.clearth.messages.ConnectionFinder;
-import com.exactprosystems.clearth.messages.StringFileMessageSource;
-import com.exactprosystems.clearth.messages.StringMessageSource;
+import com.exactprosystems.clearth.messages.FileMessageSource;
+import com.exactprosystems.clearth.messages.MessageSource;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
@@ -51,7 +53,7 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws ResultException, FailoverException
 	{
 		String messageToFind = InputParamsUtils.getRequiredString(getInputParams(), MESSAGE);
-		StringMessageSource source = getMessageSource();
+		MessageSource source = getMessageSource();
 		
 		ComparisonUtils cu = ClearThCore.comparisonUtils();
 		long sleepTime = 200;
@@ -62,11 +64,15 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 			{
 				try
 				{
-					String msg;
-					while ((msg = source.nextStringMessage()) != null)
+					ClearThMessage<?> msg;
+					while ((msg = source.nextMessage()) != null)
 					{
-						if (cu.compareValues(messageToFind, msg))
-							return DefaultResult.passed("Message found");
+						if (cu.compareValues(messageToFind, msg.getEncodedMessage()))
+						{
+							Result result = DefaultResult.passed("Message found");
+							result.addLinkedMessage(new EncodedClearThMessage(msg.getEncodedMessage(), msg.getMetadata()));
+							return result;
+						}
 					}
 				}
 				catch (ParametersException e)
@@ -118,13 +124,13 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 		return new CollectorMessageSource(collector, true);
 	}
 	
-	protected StringMessageSource getFileSource() 
+	protected MessageSource getFileSource() 
 	{
 		File file = InputParamsUtils.getRequiredFile(getInputParams(), MessageAction.FILENAME);
-		return new StringFileMessageSource(file);
+		return new FileMessageSource(file, null);
 	}
 	
-	protected StringMessageSource getCollectorMessageSource() throws FailoverException
+	protected MessageSource getCollectorMessageSource() throws FailoverException
 	{
 		ConnectionFinder finder = getConnectionFinder();
 		String conName = finder.getConnectionName(getInputParams());
@@ -146,7 +152,7 @@ public class ReceivePlainMessage extends Action implements TimeoutAwaiter
 		}
 	}
 	
-	protected StringMessageSource getMessageSource() throws FailoverException
+	protected MessageSource getMessageSource() throws FailoverException
 	{
 		if (!getInputParam(MessageAction.CONNECTIONNAME, "").isEmpty())
 			return getCollectorMessageSource();

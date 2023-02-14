@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.ValueGenerator;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public class DefaultExecutorFactory extends ExecutorFactory
 {
@@ -33,10 +34,11 @@ public class DefaultExecutorFactory extends ExecutorFactory
 	}
 
 	@Override
-	public Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser, Map<String, Preparable> preparableActions)
+	public Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser, Map<String, Preparable> preparableActions, 
+			TestExecutionHandler executionHandler)
 	{
 		GlobalContext globalContext = 
-				createGlobalContext(scheduler.getBusinessDay(), scheduler.getBaseTime(), scheduler.isWeekendHoliday(), scheduler.getHolidays(), startedByUser);
+				createGlobalContext(scheduler.getBusinessDay(), scheduler.getBaseTime(), scheduler.isWeekendHoliday(), scheduler.getHolidays(), startedByUser, executionHandler);
 		if (scheduler.isTestMode())
 			globalContext.setLoadedContext(GlobalContext.TEST_MODE, true);
 		Executor result = new DefaultExecutor(scheduler, scheduler.getSteps(), matrices, 
@@ -52,11 +54,13 @@ public class DefaultExecutorFactory extends ExecutorFactory
 	}
 	
 	@Override
-	public GlobalContext createGlobalContext(Date businessDay, Date baseTime, boolean weekendHoliday, Map<String, Boolean> holidays, String startedByUser)
+	public GlobalContext createGlobalContext(Date businessDay, Date baseTime, boolean weekendHoliday, Map<String, Boolean> holidays, String startedByUser, 
+			TestExecutionHandler executionHandler)
 	{
 		GlobalContext globalContext = new GlobalContext(businessDay, weekendHoliday, holidays,
 				ClearThCore.getInstance().createMatrixFunctions(holidays, businessDay, baseTime, weekendHoliday, valueGenerator),
-				startedByUser);
+				startedByUser,
+				executionHandler);
 		return globalContext;
 	}
 	

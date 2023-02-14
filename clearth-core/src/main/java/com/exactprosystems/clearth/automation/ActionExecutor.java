@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,6 +26,7 @@ import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.map.UnmodifiableMap;
@@ -57,6 +58,7 @@ public class ActionExecutor implements Closeable
 	private final GlobalContext globalContext;
 	private final ActionParamsCalculator calculator;
 	private final ActionReportWriter reportWriter;
+	private final TestExecutionHandler executionHandler;
 	private final FailoverStatus failoverStatus;
 	private final boolean ignoreAllConnectionsFailures;
 	private final Set<String> connectionsToIgnoreFailures;
@@ -72,6 +74,7 @@ public class ActionExecutor implements Closeable
 		this.globalContext = globalContext;
 		this.calculator = calculator;
 		this.reportWriter = reportWriter;
+		this.executionHandler = globalContext.getExecutionHandler();
 		this.failoverStatus = failoverStatus;
 		this.ignoreAllConnectionsFailures = ignoreAllConnectionsFailures;
 		this.connectionsToIgnoreFailures = connectionsToIgnoreFailures;
@@ -112,7 +115,7 @@ public class ActionExecutor implements Closeable
 	{
 		Matrix matrix = action.getMatrix();
 		String stepName = action.getStepName();
-		if (!matrix.getStepSuccess().containsKey(stepName))
+		if (!matrix.getStepSuccess().containsKey(stepName))  //If this is first executed action of this step in matrix
 			matrix.setStepSuccessful(stepName, true);
 	}
 	
@@ -324,8 +327,9 @@ public class ActionExecutor implements Closeable
 		action.setResult(result);
 		applyActionResult(action, false);
 		applyStepSuccess(action);
-
+		
 		reportWriter.updateReports(action, actionsReportsDir, action.getStep().getSafeName());
+		handleAction(action);  //TODO: handle previously saved action?
 		processActionResult(action);
 		
 		// If asynchronous action is finished and failed, need to decrement number of successful actions for certain step
@@ -399,6 +403,7 @@ public class ActionExecutor implements Closeable
 		matrix.addStepStatusComment(stepName, "One or more actions CRASHED");
 		
 		reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
+		handleAction(action);
 	}
 	
 	
@@ -558,7 +563,10 @@ public class ActionExecutor implements Closeable
 			return;
 		
 		if (globalContext.getLoadedContext(GlobalContext.TEST_MODE) == null)
+		{
 			result.clearDetails();
+			result.clearLinkedMessages();
+		}
 	}
 	
 	protected SubActionData createSubActionData(Action action)
@@ -737,21 +745,43 @@ public class ActionExecutor implements Closeable
 				reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
 		}
 		
+		handleAction(action);
+		
 		processActionResult(action);
 		applyStepSuccess(action);
 		
 		if (getLogger().isDebugEnabled())
 			getLogger().debug("Finished{}", actionDesc != null ? actionDesc : action.getDescForLog(""));
 		
-		if (needReturn)  //If action had failed due to failover and has been aborted by user, but returned a result: result is written to report, now it's time to end the step due to abortation
+		//If action had failed due to failover and has been aborted by user, but returned a result: 
+		//result is written to report, now it's time to end the step due to abortion
+		if (needReturn)
 			return false;
 		return true;
+	}
+	
+	private void handleAction(Action action)
+	{
+		if (!executionHandler.isActive())
+		{
+			logger.trace("Test execution handler is inactive, action handling is skipped");
+			return;
+		}
+		
+		try
+		{
+			executionHandler.onAction(action);
+		}
+		catch (Exception e)
+		{
+			logger.warn(String.format("Error occurred while handling execution of action '%s' (%s)", action.getIdInMatrix(), action.getName()), e);
+		}
 	}
 	
 	protected void handleNonExecutableAction(Action action, boolean stepExecutable)
 	{
 		MvelVariables variables = action.getMatrix().getMvelVars();
-
+		
 		if (stepExecutable && (action.getFormulaExecutable() != null))
 		{
 			Result actionResult = new DefaultResult();
@@ -759,8 +789,9 @@ public class ActionExecutor implements Closeable
 			actionResult.setFailReason(FailReason.NOT_EXECUTED);
 			action.setResult(actionResult);
 			variables.saveOutputParams(action);
-
+			
 			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
+			handleAction(action);
 		}
 		variables.cleanAfterAction(action);
 	}

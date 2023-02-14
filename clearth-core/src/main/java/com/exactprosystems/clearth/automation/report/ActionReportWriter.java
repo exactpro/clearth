@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -74,11 +74,11 @@ public class ActionReportWriter
 		writeJsonActionReport(action, actionsReportsDir, stepFileName);
 	}
 
-    protected void writeJsonActionReport(Action action, String actionsReportsDir, String actionsReportFile)
-    {
+	protected void writeJsonActionReport(Action action, String actionsReportsDir, String actionsReportFile)
+	{
 		String reportFilePath = getJsonStepReportPath(actionsReportsDir, action.getMatrix().getShortFileName(), actionsReportFile);
 		File reportFile = new File(reportFilePath);
-
+		
 		PrintWriter writer = null;
 		try
 		{
@@ -87,15 +87,12 @@ public class ActionReportWriter
 				writer.println("[");
 			else
 				writer.println(",");
-
+			
 			ActionReport actionReport = createActionReport(action);
 			String jsonActionReport = new JsonMarshaller<ActionReport>().marshal(actionReport);
-
-
+			
 			if (!action.isAsync() || action.isPayloadFinished())
-			{
 				writer.println(jsonActionReport);
-			}
 			else
 			{
 				writePreReportData(writer, action, JSON);
@@ -103,9 +100,9 @@ public class ActionReportWriter
 				writePostReportData(writer, action, JSON);
 			}
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
-			getLogger().error("Error occurred while writing json action report", e);
+			getLogger().error("Error occurred while writing JSON action report", e);
 		}
 		finally
 		{
@@ -115,9 +112,9 @@ public class ActionReportWriter
 				writer.close();
 			}
 		}
-    }
+	}
 
-    /**
+	/**
 	 * Updates already written reports with actual result of asynchronous action.
 	 * @param action asynchronous action to update report
 	 * @param actionsReportsDir path to directory with execution reports data. Action report file is located in it

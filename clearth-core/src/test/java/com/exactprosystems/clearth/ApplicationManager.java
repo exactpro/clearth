@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,7 @@ package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.Stopwatch;
@@ -311,11 +312,11 @@ class TestingExecutorFactory extends DefaultExecutorFactory
 
 	@Override
 	public Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser,
-			Map<String, Preparable> preparableActions)
+			Map<String, Preparable> preparableActions, TestExecutionHandler executionHandler)
 	{
 		GlobalContext globalContext =
 				createGlobalContext(scheduler.getBusinessDay(), scheduler.getBaseTime(), scheduler.isWeekendHoliday(),
-						scheduler.getHolidays(), startedByUser);
+						scheduler.getHolidays(), startedByUser, executionHandler);
 		if (scheduler.isTestMode())
 			globalContext.setLoadedContext(GlobalContext.TEST_MODE, true);
 		return new TestingExecutor(scheduler, scheduler.getSteps(), matrices,
