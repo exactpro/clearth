@@ -23,5 +23,6 @@ public enum InputType
 	DEFAULT,
 	TEXTBOX,
 	PASSWORD,
-	CHECKBOX;
+	CHECKBOX,
+	TEXTAREA;
 }

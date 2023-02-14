@@ -292,9 +292,10 @@
 		</p:dialog>
 <!-- Connection dialog -->
 		<p:dialog header="Connection settings" widgetVar="conDialog" id="ConnectionDlg"
-				width="#{connectivityBean.oneConnectionSelected ? 360 : 390}" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
+				width="500" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ConnectionDialog">
 				<ui:param name="oneConnection" value="#{connectivityBean.oneConnectionSelected}" />
+				<ui:param name="inputWidth" value="width: 265px;" />
 				<p:dataTable value="#{connectivityBean.settingsToEdit.settings}" var="setting"
 						class="settings-table" emptyMessage="No settings available">
 					<ui:param name="valueClass" value="#{setting.properties.valueClass}" />
@@ -309,20 +310,29 @@
 					<ui:param name="isTextbox" value="#{inputType==InputType.TEXTBOX}" />
 					<ui:param name="isPassword" value="#{inputType==InputType.PASSWORD}" />
 					<ui:param name="isCheckbox" value="#{inputType==InputType.CHECKBOX}" />
+					<ui:param name="isTextarea" value="#{inputType==InputType.TEXTAREA}" />
 					
-					<p:column>
+					<p:column style="width: 180px">
 						<p:selectBooleanCheckbox value="#{setting.applyChange}" rendered="#{!oneConnection}" />
 						<h:outputText value="#{setting.properties.name}:" style="margin-left: #{oneConnection ? '0' : '5px'}" />
 					</p:column>
 					
 					<p:column>
-						<p:inputText value="#{setting.stringValue}" rendered="#{isText and !isPassword}" />
-						<p:password value="#{setting.stringValue}" rendered="#{isText and isPassword}" />
-						<p:inputText value="#{setting.intValue}" rendered="#{isInt}" />
-						<p:inputText value="#{setting.longValue}" rendered="#{isLong}" />
+						<p:inputText value="#{setting.stringValue}" rendered="#{isText and (isDefault or isTextbox)}"
+								style="#{inputWidth}" />
+						<p:password value="#{setting.stringValue}" rendered="#{isText and isPassword}"
+								style="#{inputWidth}" />
+						<p:inputTextarea value="#{setting.stringValue}" rendered="#{isText and isTextarea}"
+								autoResize="false" style="resize: none; #{inputWidth} height: 250px;" />
+						<p:inputText value="#{setting.intValue}" rendered="#{isInt}"
+								style="#{inputWidth}" />
+						<p:inputText value="#{setting.longValue}" rendered="#{isLong}"
+								style="#{inputWidth}" />
 						<p:selectBooleanCheckbox value="#{setting.booleanValue}" rendered="#{isBoolean and (isDefault or isCheckbox)}" />
-						<p:inputText value="#{setting.booleanValue}" rendered="#{isBoolean and isTextbox}" />
-						<p:selectOneMenu value="#{setting.enumValue}" rendered="#{isEnum}">
+						<p:inputText value="#{setting.booleanValue}" rendered="#{isBoolean and isTextbox}"
+								style="#{inputWidth}" />
+						<p:selectOneMenu value="#{setting.enumValue}" rendered="#{isEnum}"
+								style="#{inputWidth}">
 							<f:selectItems value="#{setting.properties.values}" />
 						</p:selectOneMenu>
 					</p:column>
