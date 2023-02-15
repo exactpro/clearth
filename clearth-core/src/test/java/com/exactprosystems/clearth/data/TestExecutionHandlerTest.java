@@ -55,7 +55,7 @@ public class TestExecutionHandlerTest
 	private final Path filesRoot = ApplicationManager.USER_DIR.resolve("src").resolve("test").resolve("resources").resolve("TestExecutionHandler"),
 			configsDir = filesRoot.resolve("configs"),
 			configFile = configsDir.resolve("config.cfg"),
-			outputDir = Paths.get("testOutput").resolve("TestExecutionHandlerTest");
+			outputDir = Paths.get("testOutput", "TestExecutionHandlerTest");
 	private DummyHandlersFactory dataHandlersFactory;
 	private ApplicationManager appManager;
 	

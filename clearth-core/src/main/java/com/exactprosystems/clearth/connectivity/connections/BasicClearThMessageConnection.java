@@ -307,14 +307,13 @@ public abstract class BasicClearThMessageConnection extends BasicClearThRunnable
 	public void copyFrom(ClearThConnection other)
 	{
 		super.copyFrom(other);
-
+		
 		ClearThMessageConnection msgOther = (ClearThMessageConnection) other;
+		dataHandlersFactory = msgOther.getDataHandlersFactory();
 		if (!listeners.isEmpty())
-			this.listeners.clear();
+			listeners.clear();
 		for (ListenerConfiguration configuration : msgOther.getListeners())
-		{
-			this.listeners.add(new ListenerConfiguration(configuration));
-		}
+			listeners.add(new ListenerConfiguration(configuration));
 	}
 
 	@Override

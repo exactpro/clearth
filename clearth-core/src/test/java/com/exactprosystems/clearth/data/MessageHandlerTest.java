@@ -43,7 +43,7 @@ import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollecto
 
 public class MessageHandlerTest
 {
-	private final Path storage = Paths.get("testOutput").resolve("MessageHandlerTest").resolve("connections");
+	private final Path storage = Paths.get("testOutput", "MessageHandlerTest", "connections");
 	
 	@BeforeClass
 	public void init() throws IOException

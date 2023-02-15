@@ -699,6 +699,7 @@ public class ConnectivityBean extends ClearThBean
 	public void trueCopy()
 	{
 		copy = true;
+		copyListners = true;
 	}
 
 	public void trueEdit()
