@@ -231,6 +231,10 @@ public class ConnectivityBean extends ClearThBean
 		return isConnectionType(ClearThMessageConnection.class);
 	}
 	
+	public boolean isCheckableConnectionType()
+	{
+		return isConnectionType(ClearThCheckableConnection.class);
+	}
 	
 	protected void resetConsSelection()
 	{
@@ -455,6 +459,12 @@ public class ConnectivityBean extends ClearThBean
 			stopConnection(c);
 	}
 	
+	public void checkConnections()
+	{
+		for (ClearThConnection c : getAllOrSelectedConnections())
+			checkConnection(c);
+	}
+	
 	public Collection<ConnectionErrorInfo> getStoppedErrors()
 	{
 		return storage.getStoppedConnectionsErrors();
@@ -542,7 +552,29 @@ public class ConnectivityBean extends ClearThBean
 		else
 			MessageUtils.addInfoMessage("Info", "Connection '"+con.getName()+"' is already stopped");
 	}
-	
+
+	private void checkConnection(ClearThConnection con)
+	{
+		getLogger().debug("Checking configuration for connection '{}'", con.getName());
+		if (!(con instanceof ClearThCheckableConnection))
+		{
+			MessageUtils.addWarningMessage("Info", "Connection '" + con.getName() + "' cannot be checked");
+			return;
+		}
+
+		try
+		{
+			((ClearThCheckableConnection) con).check();
+			String message = "Check for connection '" + con.getName() + "' was successful";
+			getLogger().debug(message);
+			MessageUtils.addInfoMessage("Info", message);
+		}
+		catch (Exception e)
+		{
+			String message = "Error occurred while checking connection '" + con.getName() + "'";
+			WebUtils.logAndGrowlException(message, e, getLogger());
+		}
+	}
 	
 	private String printExceptionMessage(Throwable t) {
 		String result = t.getClass().getName();

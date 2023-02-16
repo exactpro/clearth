@@ -27,6 +27,7 @@
 		<h:form id="Connections">
 			<ui:param name="isRunnableConnection" value="#{connectivityBean.isRunnableConnectionType()}" />
 			<ui:param name="isMessageConnection" value="#{connectivityBean.isMessageConnectionType()}" />
+			<ui:param name="isCheckableConnection" value="#{connectivityBean.isCheckableConnectionType()}" />
 <!-- Context menu for selected connection -->
 			<div class="upperContainer">
 				<div class="upperLeftContainer">
@@ -70,10 +71,20 @@
 							<h:graphicImage value="/images/stop.png" alt="Stop connections" style="top: 2px"/>
 						</p:commandLink>
 
+						<p:commandLink id="CheckConnectionsButton"
+								rendered="#{isCheckableConnection}"
+								title="#{connectivityBean.isOneOrMoreConsSelected() ? 'Check selected connection(s)' : 'Check all connections'}"
+								action="#{connectivityBean.checkConnections}"
+								update=":Growl"
+								style="margin-right: 10px;">
+							<h:graphicImage value="/images/check.png" alt="Check connections" style="top: 2px"/>
+						</p:commandLink>
+
 						<p:commandLink title="Send message"
 								rendered="#{isMessageConnection}" 
 								oncomplete="PF('sendMsgDlg').show()" 
-								update=":SendMsgForm">
+								update=":SendMsgForm" 
+								style="margin-right: 10px;">
 							<h:graphicImage value="/images/sendmessages.png" alt="Send msg" style="top: 2px"/>
 						</p:commandLink>
 						
@@ -125,14 +136,14 @@
 					<p:ajax event="rowDblselect" update=":ConnectionDlg" oncomplete="PF('conDialog').show()" actionListener="#{connectivityBean.trueEdit}" />
 					<p:ajax event="colResize" oncomplete="saveColumnsWidths('Connections:connectionsTable')" />
 
-					<p:column styleClass="table-button" style="width: 16px; border-right: none;" responsivePriority="1" resizable="false">
+					<p:column rendered="#{isRunnableConnection}" styleClass="table-button" style="width: 16px; border-right: none;" responsivePriority="1" resizable="false">
 						<p:commandLink title="Start" update=":Connections :Growl :Timer"
-								action="#{connectivityBean.startConnections}" rendered="#{isRunnableConnection and !connection.running}"
+								action="#{connectivityBean.startConnections}" rendered="#{!connection.running}"
 								onstart="saveConsScrollPos();" oncomplete="restoreConsScrollPos();">
 							<h:graphicImage value="/images/off.png" alt="Start" style="vertical-align: middle" />
 							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedConnection}" />
 						</p:commandLink>
-						<p:commandLink title="Stop" rendered="#{isRunnableConnection and connection.running}" oncomplete="PF('stopConnectionConfirmDialog').show();">
+						<p:commandLink title="Stop" rendered="#{connection.running}" oncomplete="PF('stopConnectionConfirmDialog').show();">
 							<h:graphicImage value="/images/on.png" alt="Stop" style="vertical-align: middle" />
 							<f:setPropertyActionListener value="#{connection}" target="#{connectivityBean.oneSelectedConnection}" />
 						</p:commandLink>
