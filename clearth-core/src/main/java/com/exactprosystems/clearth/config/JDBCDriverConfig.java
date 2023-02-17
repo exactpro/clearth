@@ -18,47 +18,35 @@
 
 package com.exactprosystems.clearth.config;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
+import java.util.List;
 
-@XmlType(name = "connectivity")
+@XmlType(name = "jdbcDrivers")
 @XmlAccessorType(XmlAccessType.NONE)
-public class Connectivity
+public class JDBCDriverConfig
 {
-	@XmlElement(name = "types")
-	private ConnectionTypesConfig typesConfig;
-	@XmlElement(name = "jdbcDrivers")
-	private JDBCDriverConfig jdbcDrivers;
-	
-	public Connectivity(){}
-	
+	@XmlElement(name = "driverClass")
+	private List<String> driverClassNames;
+
+	public List<String> getDriverClassNames()
+	{
+		if(driverClassNames == null)
+			driverClassNames = new ArrayList<>();
+		return driverClassNames;
+	}
+
+	public void setDriverClassNames(List<String> driverClass)
+	{
+		this.driverClassNames = driverClass;
+	}
+
 	@Override
 	public String toString()
 	{
-		return "[typesConfig: " + getTypesConfig().toString() + "; jdbcDrivers: " + getJdbcDrivers().toString() + "]";
-	}
-	
-	
-	public ConnectionTypesConfig getTypesConfig()
-	{
-		if (typesConfig == null)
-			typesConfig = new ConnectionTypesConfig();
-		return typesConfig;
-	}
-	
-	public void setTypesConfig(ConnectionTypesConfig typesConfig)
-	{
-		this.typesConfig = typesConfig;
-	}
-
-	public JDBCDriverConfig getJdbcDrivers()
-	{
-		if(jdbcDrivers == null)
-			jdbcDrivers = new JDBCDriverConfig();
-		return jdbcDrivers;
-	}
-
-	public void setJdbcDrivers(JDBCDriverConfig jdbcDrivers)
-	{
-		this.jdbcDrivers = jdbcDrivers;
+		return "Driver classes: " + getDriverClassNames().toString();
 	}
 }

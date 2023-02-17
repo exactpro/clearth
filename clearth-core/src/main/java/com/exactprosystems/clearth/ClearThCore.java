@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
@@ -372,6 +373,7 @@ public abstract class ClearThCore
 	
 	protected void initConnectionStorage() throws ClearThException
 	{
+		registerJdbcDrivers();
 		registerConnectionTypes();
 		connectionStorage.loadConnections();
 		connectionStorage.autoStartConnections();
@@ -482,7 +484,23 @@ public abstract class ClearThCore
 	{
 		return new UsersManager();
 	}
-	
+
+	protected void registerJdbcDrivers() throws ClearThException
+	{
+		List<String> driverClasses = config.getConnectivity().getJdbcDrivers().getDriverClassNames();
+		for(String driverClass: driverClasses)
+		{
+			try
+			{
+				Driver driver = (Driver) Class.forName(driverClass).newInstance();
+				DriverManager.registerDriver(driver);
+			} catch (Exception e)
+			{
+				throw new ClearThException("JDBC driver '" + driverClass + "' not registered: " + e.getMessage(), e);
+			}
+		}
+	}
+
 	protected void registerConnectionTypes() throws ClearThException
 	{
 		for (ConnectionType type : config.getConnectivity().getTypesConfig().getTypes())

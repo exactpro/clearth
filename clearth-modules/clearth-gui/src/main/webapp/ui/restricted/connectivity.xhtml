@@ -331,7 +331,7 @@
 					<p:column>
 						<p:inputText value="#{setting.stringValue}" rendered="#{isText and (isDefault or isTextbox)}"
 								style="#{inputWidth}" />
-						<p:password value="#{setting.stringValue}" rendered="#{isText and isPassword}"
+						<p:password value="#{setting.passwordValue}" rendered="#{isText and isPassword}"
 								style="#{inputWidth}" />
 						<p:inputTextarea value="#{setting.stringValue}" rendered="#{isText and isTextarea}"
 								autoResize="false" style="resize: none; #{inputWidth} height: 250px;" />

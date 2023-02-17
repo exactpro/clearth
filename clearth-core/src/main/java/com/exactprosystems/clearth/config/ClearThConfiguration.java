@@ -126,7 +126,7 @@ public class ClearThConfiguration
 		{
 			reader = new FileInputStream(configFile);
 			JAXBContext context = JAXBContext.newInstance(ClearThConfiguration.class, Automation.class, Connectivity.class, Data.class,
-						ConnectionTypesConfig.class, ConnectionType.class, ValidationRulesConfig.class, 
+						ConnectionTypesConfig.class, ConnectionType.class, ValidationRulesConfig.class, JDBCDriverConfig.class,
 						Memory.class, MemoryMonitorCfg.class, MatrixFatalErrors.class, LocationConfig.class, ReplacedPath.class,
 						SpecialActionParameters.class);
 			Unmarshaller unmarshal = context.createUnmarshaller();

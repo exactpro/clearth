@@ -19,6 +19,9 @@
 package com.exactprosystems.clearth.connectivity.db;
 
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
+import com.exactprosystems.clearth.connectivity.connections.settings.ConnectionSetting;
+import com.exactprosystems.clearth.connectivity.connections.settings.ConnectionSettings;
+import com.exactprosystems.clearth.connectivity.connections.settings.InputType;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import org.apache.commons.lang.StringUtils;
 
@@ -31,22 +34,34 @@ import static java.lang.String.format;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
+@ConnectionSettings(order = {"jdbcUrl", "username", "password", "initializationQuery"},
+		columns = {"jdbcUrl", "username"})
 public class DbConnectionSettings implements ClearThConnectionSettings
 {
 	@XmlElement
+	@ConnectionSetting(name = "URL")
 	private String jdbcUrl;
+
 	@XmlElement
+	@ConnectionSetting(name = "Username")
 	private String username;
+
 	@XmlElement
+	@ConnectionSetting(inputType = InputType.PASSWORD)
 	private String password;
+
+	@XmlElement
+	@ConnectionSetting(name = "Initialization query", inputType = InputType.TEXTAREA)
+	private String initializationQuery;
 
 	public DbConnectionSettings()
 	{
 		jdbcUrl = "";
 		username = "";
 		password = "";
+		initializationQuery = "";
 	}
-	
+
 	public DbConnectionSettings(DbConnectionSettings settings)
 	{
 		copyFrom(settings);
@@ -81,6 +96,16 @@ public class DbConnectionSettings implements ClearThConnectionSettings
 	{
 		this.password = password;
 	}
+
+	public String getInitializationQuery()
+	{
+		return initializationQuery;
+	}
+
+	public void setInitializationQuery(String initializationQuery)
+	{
+		this.initializationQuery = initializationQuery;
+	}
 	
 	@Override
 	public String toString()
@@ -89,6 +114,7 @@ public class DbConnectionSettings implements ClearThConnectionSettings
 		lb.append("JDBC url = " + jdbcUrl);
 		lb.append("username = " + username);
 		lb.append("password = " + (StringUtils.isEmpty(password) ? "null" : "*****"));
+		lb.append("initialization query = " + initializationQuery);
 		return lb.toString();
 	}
 
@@ -112,5 +138,6 @@ public class DbConnectionSettings implements ClearThConnectionSettings
 		this.jdbcUrl = settings.jdbcUrl;
 		this.username = settings.username;
 		this.password = settings.password;
+		this.initializationQuery = settings.initializationQuery;
 	}
 }
