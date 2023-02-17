@@ -116,8 +116,8 @@ public abstract class BasicClearThClient implements ClearThClient
 		return owner.getTypeInfo().getDirectory().resolve(name + ".dat");
 	}
 
-	protected abstract void connect() throws ConnectionException, SettingsException;
-	protected abstract void closeConnections() throws ConnectionException;
+	protected abstract void connect() throws ConnectivityException, SettingsException;
+	protected abstract void closeConnections() throws ConnectivityException;
 
 	protected abstract boolean isNeedReceiverThread();
 	protected abstract MessageReceiverThread createReceiverThread();
@@ -303,7 +303,7 @@ public abstract class BasicClearThClient implements ClearThClient
 	}
 
 	@Override
-	public void dispose(boolean disposeListeners) throws ConnectionException
+	public void dispose(boolean disposeListeners) throws ConnectivityException
 	{
 		disposeReceiverThread();
 		disposeReceivedProcessorThread();

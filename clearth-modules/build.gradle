@@ -1,3 +1,7 @@
+import org.xml.sax.SAXParseException
+
+import java.util.concurrent.Callable
+
 ext {
     cthImpl = 'implementation "com.exactprosystems.clearth:clearth-core'
     installationFiles = "${projectDir}/installation"
@@ -51,7 +55,91 @@ def putImplementation(moduleImpl, clearthDir) {
     }
     println("- Module dependency added to project's 'build.gradle' file: ${moduleImpl}")
 }
+/**
+ * adds type to clearth.cfg under &lt;connectivity> - &lt;types> (and creates/expands them if necessary). For example, this:
+ * <pre>
+ * type = new Tuple4("FOO", "org.foobar.Foo", "connections/foo", ["org.foobar.Bar1", "org.foobar.Bar2"]
+ * </pre>
+ * Will result into adding this to clearth.cfg:
+ * <pre>
+ *     &lt;type>
+ *         &lt;name>FOO&lt;/name>
+ *         &lt;connectionClass>org.foobar.Foo&lt;/connectionClass>
+ *         &lt;directory>connections/foo&lt;/directory>
+ *         &lt;validationRules>
+ *             &lt;ruleClass>org.foobar.Bar1&lt;/ruleClass>
+ *             &lt;ruleClass>org.foobar.Bar2&lt;/ruleClass>
+ *         &lt;/validationRules>
+ *     &lt;/type>
+ * </pre>
+ * if array list is not specified then &lt;validationRules> tag won't be created.
+ * @param typeToAdd type that should be added: first - name, second - connectionClass, third - directory
+ * @param clearthDir directory with clearTh Project where type will be added (searched in cfg/clearth.cfg)
+ * @throws GradleException if tag &lt;ClearThConfiguration> not found in clearth.cfg or file has incorrect xml structure
+ */
+def addConnectionTypeToCfg(Tuple4 typeToAdd, clearthDir) {
+    File clearThCfg = new File("${clearthDir}/cfg/clearth.cfg")
+    if (!clearThCfg.exists())
+        throw new GradleException("File clearth.cfg not found in ${clearthDir}/cfg")
+    
+    Node clearThRootNode
+    try {
+        clearThRootNode = new XmlParser().parse(clearThCfg)
+    }
+    catch (SAXParseException | IOException e) { // is thrown when clearth.cfg is not valid XML file or cannot be read
+        throw new GradleException("Error occurred while reading clearth.cfg file as XML: " + e.getMessage(), e)
+    }
+    if (clearThRootNode.name() != 'ClearThConfiguration')
+        throw new GradleException("Root tag 'ClearThConfiguration' not found in clearth.cfg (found '${clearThRootNode.name()}' instead)")
+    
+    Node clearThRootNodeRenewed = addConnectionTypeInfo(clearThRootNode, typeToAdd)
+    
+    XmlNodePrinter clearThCfgPrinter = new XmlNodePrinter(new IndentPrinter(new FileWriter(clearThCfg), '\t'))
+    clearThCfgPrinter.setPreserveWhitespace(true)
+    clearThCfgPrinter.print(clearThRootNodeRenewed)
+    
+    println("- Type '${typeToAdd.getFirst()}' added to clearth.cfg")
+}
 
+static Node addConnectionTypeInfo(Node rootNode, Tuple4<String, String, String, List<String>> connectionTypeInfo) {
+    Node connectivityNode = computeIfAbsent(rootNode, 'connectivity')
+    Node typesNode = computeIfAbsent(connectivityNode, 'types')
+    
+    Node typeNode = typesNode.appendNode('type')
+    typeNode.appendNode('name', connectionTypeInfo.first)
+    typeNode.appendNode('connectionClass', connectionTypeInfo.second)
+    typeNode.appendNode('directory', connectionTypeInfo.third)
+    if (connectionTypeInfo && !connectionTypeInfo.isEmpty()) {
+        Node rulesNode = typeNode.appendNode('validationRules')
+        connectionTypeInfo.fourth.forEach {rulesNode.appendNode('ruleClass', it)}
+    }
+    return rootNode
+}
+
+static Node computeIfAbsent(Node parentNode, String childToAdd) {
+    Node result = parentNode.get(childToAdd)?.getAt(0)
+    if (!result) {
+        result = parentNode.appendNode(childToAdd)
+    }
+    
+    return result
+}
+
+def installModule(clearthDir, moduleName, moduleImpl, List<Callable> methodsToCall) {
+    checkCthDir(clearthDir)
+
+    if (file("${clearthDir}/build.gradle").text.contains(moduleImpl)) {
+        println("${moduleName} module is already installed in project: ${clearthDir}")
+        return
+    }
+    println("Installing ${moduleName} module in project: ${clearthDir}")
+    
+    methodsToCall?.forEach { it -> it.call() }
+    
+    putImplementation(moduleImpl, clearthDir)
+
+    println("${moduleName} module has been installed")
+}
 
 def installMsgModule(clearthDir, moduleName, moduleImpl, moduleCodec, moduleDictName, moduleDictPath) {
     checkCthDir(clearthDir)
@@ -67,4 +155,10 @@ def installMsgModule(clearthDir, moduleName, moduleImpl, moduleCodec, moduleDict
     putImplementation(moduleImpl, clearthDir)
 
     println("${moduleName} module has been installed")
+}
+
+def installConTypeModule(clearThDir, moduleName, moduleImpl, type) {
+    installModule(clearThDir, moduleName, moduleImpl, [
+            { addConnectionTypeToCfg(type, clearThDir) }
+    ])
 }

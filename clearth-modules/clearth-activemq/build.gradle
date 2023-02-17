@@ -1,0 +1,44 @@
+dependencies {
+    implementation "org.apache.activemq:activemq-broker:5.16.6"
+    implementation "org.apache.activemq:activemq-kahadb-store:5.16.6"
+}
+
+publishing {
+    publications {
+        activeMq(MavenPublication) {
+            groupId = "${group}"
+            artifactId = 'clearth-activemq'
+            version = "${version}"
+
+            from components.java
+        }
+    }
+}
+
+configurations {
+    all {
+        exclude group: 'org.apache.activemq', module: 'activemq-openwire-legacy'
+        exclude group: 'org.apache.activemq.protobuf', module: 'activemq-protobuf'
+    }
+}
+
+ext {
+    moduleName = 'ActiveMQ'
+    moduleImpl = 'com.exactprosystems.clearth:clearth-activemq'
+    if (!project.hasProperty('clearthDir'))
+        clearthDir = undef
+}
+
+artifactoryPublish {
+    publications(publishing.publications.activeMq)
+}
+
+task installModule {
+    doLast {
+        def type = new Tuple4("ActiveMQ",
+                "com.exactprosystems.clearth.connectivity.jms.activemq.ActiveMqConnection",
+                "connections/activemq",
+                ["com.exactprosystems.clearth.connectivity.jms.activemq.ActiveMqReadQNotReadByOthersRule"])
+        installConTypeModule(clearthDir, moduleName, moduleImpl, type)
+    }
+}
