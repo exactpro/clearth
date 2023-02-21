@@ -96,10 +96,15 @@ public class MessageProcessorThread extends Thread
 	{
 		try
 		{
-			addId(message);
+			HandledMessageId id = addId(message);
 			
 			if (handler.isActive())
+			{
+				logger.trace("Handling messsage '{}'", id);
 				handler.onMessage(message);
+			}
+			else
+				logger.trace("Skipped handling messsage '{}'", id);
 		}
 		catch (Exception e)
 		{
@@ -129,14 +134,18 @@ public class MessageProcessorThread extends Thread
 	}
 	
 	
-	private void addId(EncodedClearThMessage message)
+	private HandledMessageId addId(EncodedClearThMessage message)
 	{
 		ClearThMessageMetadata metadata = message.getMetadata();
 		if (metadata == null)
-			return;
+			return null;
 		
 		HandledMessageId id = MessageHandlingUtils.getMessageId(metadata);
 		if (id == null)
-			MessageHandlingUtils.setMessageId(metadata, handler.createMessageId(metadata));
+		{
+			id = handler.createMessageId(metadata);
+			MessageHandlingUtils.setMessageId(metadata, id);
+		}
+		return id;
 	}
 }

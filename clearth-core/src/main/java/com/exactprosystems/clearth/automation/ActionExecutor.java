@@ -764,12 +764,13 @@ public class ActionExecutor implements Closeable
 	{
 		if (!executionHandler.isActive())
 		{
-			logger.trace("Test execution handler is inactive, action handling is skipped");
+			logger.trace("Skipped handling execution of action '%s' (%s)", action.getIdInMatrix(), action.getName());
 			return;
 		}
 		
 		try
 		{
+			logger.trace("Handling execution of action '%s' (%s)", action.getIdInMatrix(), action.getName());
 			executionHandler.onAction(action);
 		}
 		catch (Exception e)

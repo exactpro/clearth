@@ -263,6 +263,8 @@ public abstract class ClearThCore
 		try
 		{
 			config = loadConfig(depConfig.getConfigFileName());
+			getLogger().info("Using configuration: {}", config);
+			
 			replacedLocations = config.getLocationsMapping();
 			
 			createDefaultDirs();
