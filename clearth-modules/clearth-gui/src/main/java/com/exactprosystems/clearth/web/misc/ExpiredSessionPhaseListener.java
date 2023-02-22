@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,68 +45,64 @@ public class ExpiredSessionPhaseListener implements PhaseListener
 	
 	String SESSION_EXPIRED_PAGE_CONTEXT_PARAM = "session_expired_page";
 	
+	
 	public void afterPhase(PhaseEvent event)
 	{
 	}
 
 	public void beforePhase(PhaseEvent event)
 	{
-		if (!UserInfoUtils.isLoggedIn())
+		if (UserInfoUtils.isLoggedIn())
+			return;
+		
+		FacesContext fc = FacesContext.getCurrentInstance();
+		ExternalContext ec = fc.getExternalContext();
+		if (ec.isResponseCommitted())
+			return;
+		
+		HttpServletResponse response = (HttpServletResponse) ec.getResponse();
+		HttpServletRequest request = (HttpServletRequest) ec.getRequest();
+		
+		String page = ec.getInitParameter(SESSION_EXPIRED_PAGE_CONTEXT_PARAM);
+		if (page == null)
 		{
-			FacesContext fc = FacesContext.getCurrentInstance();
+			logger.error("Redirect page for expired session is not described in web.xml. Please, add context parameter '"+SESSION_EXPIRED_PAGE_CONTEXT_PARAM+"'");
+			return;
+		}
+		
+		String url =  ec.getRequestContextPath() + page;
+		try
+		{
 			PrimeFaces rc = PrimeFaces.current();
-			ExternalContext ec = fc.getExternalContext();
-			HttpServletResponse response = (HttpServletResponse) ec.getResponse();
-			HttpServletRequest request = (HttpServletRequest) ec.getRequest();
-
-			
-			String page = ec.getInitParameter(SESSION_EXPIRED_PAGE_CONTEXT_PARAM);
-			
-			if (page == null)
+			if (((rc != null && PrimeFaces.current().isAjaxRequest()) || (fc.getPartialViewContext().isPartialRequest()))
+					&& fc.getResponseWriter() == null && fc.getRenderKit() == null)
 			{
-				logger.error("Redirect page for expired session is not described in web.xml. Please, add context parameter '"+SESSION_EXPIRED_PAGE_CONTEXT_PARAM+"'");
-				return;
-			}
-			
-			String url =  ec.getRequestContextPath() + page;
+				response.setCharacterEncoding(request.getCharacterEncoding());
 
-			if (ec.isResponseCommitted())
-			{
-				return;
-			}
+				RenderKitFactory factory = (RenderKitFactory) FactoryFinder
+						.getFactory(FactoryFinder.RENDER_KIT_FACTORY);
+				
+				ViewHandler viewHandler = fc.getApplication().getViewHandler();
 
-			try
-			{
-				if (((rc != null && PrimeFaces.current().isAjaxRequest()) || (fc.getPartialViewContext().isPartialRequest()))
-						&& fc.getResponseWriter() == null && fc.getRenderKit() == null)
+				RenderKit renderKit = factory.getRenderKit(fc, viewHandler.calculateRenderKitId(fc));
+
+				ResponseWriter responseWriter = renderKit.createResponseWriter(response.getWriter(), null,
+						request.getCharacterEncoding());
+				fc.setResponseWriter(responseWriter);
+				
+				if (fc.getViewRoot() == null)
 				{
-					response.setCharacterEncoding(request.getCharacterEncoding());
-
-					RenderKitFactory factory = (RenderKitFactory) FactoryFinder
-							.getFactory(FactoryFinder.RENDER_KIT_FACTORY);
-					
-					ViewHandler viewHandler = fc.getApplication().getViewHandler();
-
-					RenderKit renderKit = factory.getRenderKit(fc, viewHandler.calculateRenderKitId(fc));
-
-					ResponseWriter responseWriter = renderKit.createResponseWriter(response.getWriter(), null,
-							request.getCharacterEncoding());
-					fc.setResponseWriter(responseWriter);
-					
-					if (fc.getViewRoot() == null) {
-						UIViewRoot view = viewHandler.createView(fc, "");
-						fc.setViewRoot(view); 
-					}
-					
-					ec.redirect(url);
-					
+					UIViewRoot view = viewHandler.createView(fc, page);
+					fc.setViewRoot(view); 
 				}
-
-			} catch (Exception e)
-			{
-				logger.error("Redirect to the specified page '" + url + "' failed");
-				throw new FacesException(e);
+				
+				ec.redirect(url);
 			}
+		}
+		catch (Exception e)
+		{
+			logger.error("Redirect to '" + url + "' failed", e);
+			throw new FacesException(e);
 		}
 	}
 
@@ -114,5 +110,4 @@ public class ExpiredSessionPhaseListener implements PhaseListener
 	{
 		return PhaseId.RESTORE_VIEW;
 	}
-
 }
