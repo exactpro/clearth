@@ -1,0 +1,41 @@
+dependencies {
+    implementation "com.ibm.mq:com.ibm.mq.allclient:9.2.5.0"
+    
+    testImplementation "org.testng:testng:6.14.3"
+}
+
+publishing {
+    publications {
+        ibmMq(MavenPublication) {
+            groupId = "${group}"
+            artifactId = 'clearth-ibmmq'
+            version = "${version}"
+
+            from components.java
+        }
+    }
+}
+
+ext {
+    moduleName = 'IBM MQ'
+    moduleImpl = 'com.exactprosystems.clearth:clearth-ibmmq'
+    if (!project.hasProperty('clearthDir'))
+        clearthDir = undef
+}
+
+artifactoryPublish {
+    publications(publishing.publications.ibmMq)
+}
+
+task installModule {
+    doLast {
+        def type = new Tuple4("IBM MQ",
+                "com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnection",
+                "connections/ibmmq",
+                [
+                    "com.exactprosystems.clearth.connectivity.validation.ListenersNotWritingToBusyFilesRule",
+                    "com.exactprosystems.clearth.connectivity.validation.IbmMqReadQNotReadByOthersRule"
+                ])
+        installConTypeModule(clearthDir, moduleName, moduleImpl, type)
+    }
+}

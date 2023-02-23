@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.connectivity.ibmmq;
+package com.exactprosystems.clearth.connectivity.mq;
 
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
 import com.exactprosystems.clearth.connectivity.connections.settings.ConnectionSetting;
@@ -47,6 +47,10 @@ public abstract class ClearThBasicMqConnectionSettings implements ClearThConnect
 	@XmlElement
 	@ConnectionSetting(name = "Use receive queue")
 	private boolean useReceiveQueue;
+	
+	@XmlElement
+	@ConnectionSetting(name = "Read delay")
+	private int readDelay;
 
 	public ClearThBasicMqConnectionSettings()
 	{
@@ -55,6 +59,7 @@ public abstract class ClearThBasicMqConnectionSettings implements ClearThConnect
 		useReceiveQueue = true;
 		hostname = null;
 		port = -1;
+		readDelay = 1000;
 	}
 
 
@@ -112,6 +117,16 @@ public abstract class ClearThBasicMqConnectionSettings implements ClearThConnect
 		this.useReceiveQueue = useReceiveQueue;
 	}
 
+	public int getReadDelay()
+	{
+		return readDelay;
+	}
+
+	public void setReadDelay(int readDelay)
+	{
+		this.readDelay = readDelay;
+	}
+
 	@Override
 	public String toString()
 	{
@@ -122,6 +137,7 @@ public abstract class ClearThBasicMqConnectionSettings implements ClearThConnect
 
 		sb.add("Host = ").append(hostname);
 		sb.add("Port = ").append(port);
+		sb.add("Read delay = ").append(readDelay);
 		
 		return sb.toString();
 	}
@@ -145,5 +161,6 @@ public abstract class ClearThBasicMqConnectionSettings implements ClearThConnect
 
 		this.hostname = settings.hostname;
 		this.port = settings.port;
+		this.readDelay = settings.readDelay;
 	}
 }

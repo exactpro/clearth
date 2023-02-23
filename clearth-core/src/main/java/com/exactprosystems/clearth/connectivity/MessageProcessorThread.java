@@ -66,7 +66,7 @@ public class MessageProcessorThread extends Thread
 		{
 			try 
 			{
-				if (logger.isTraceEnabled())
+				if (logger.isTraceEnabled() && messageQueue.size() > 0)
 					logger.trace("Getting message from internal queue, messages count = " + messageQueue.size());
 				EncodedClearThMessage message = messageQueue.poll(1000, TimeUnit.MILLISECONDS);
 				if (message != null)

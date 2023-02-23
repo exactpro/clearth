@@ -18,15 +18,11 @@
 
 package com.exactprosystems.clearth.connectivity.jms;
 
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
-import com.exactprosystems.clearth.connectivity.connections.settings.ConnectionSetting;
 import com.exactprosystems.clearth.connectivity.connections.settings.ConnectionSettings;
-import com.exactprosystems.clearth.connectivity.ibmmq.ClearThBasicMqConnectionSettings;
-import com.exactprosystems.clearth.utils.LineBuilder;
+import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -35,39 +31,4 @@ import javax.xml.bind.annotation.XmlRootElement;
 		columns = {"hostname", "sendQueue", "receiveQueue"})
 public class JmsConnectionSettings extends ClearThBasicMqConnectionSettings
 {
-	@XmlElement
-	@ConnectionSetting(name = "Read delay")
-	private long readDelay;
-	
-	public JmsConnectionSettings()
-	{
-		readDelay = 1000;
-	}
-	
-	public long getReadDelay()
-	{
-		return readDelay;
-	}
-
-	public void setReadDelay(long readDelay)
-	{
-		this.readDelay = readDelay;
-	}
-
-	@Override
-	public String toString()
-	{
-		LineBuilder lb = new LineBuilder();
-		lb.append(super.toString());
-		lb.add("Read delay=").append(readDelay);
-
-		return lb.toString();
-	}
-	
-	@Override
-	public void copyFrom(ClearThConnectionSettings settings)
-	{
-		super.copyFrom(settings);
-		this.readDelay = ((JmsConnectionSettings) settings).getReadDelay();
-	}
 }

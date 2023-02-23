@@ -20,7 +20,7 @@ package com.exactprosystems.clearth.connectivity.validation;
 
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
-import com.exactprosystems.clearth.connectivity.ibmmq.ClearThBasicMqConnectionSettings;
+import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +29,7 @@ import java.net.*;
 import java.util.Enumeration;
 import java.util.List;
 
+import static com.exactprosystems.clearth.ClearThCore.getInstance;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
@@ -40,10 +41,17 @@ abstract public class AbstractReadQNotReadByOthersRule
 {
 	private static final Logger logger = LoggerFactory.getLogger(AbstractReadQNotReadByOthersRule.class);
 
-	protected abstract List<ClearThMessageConnection> getOtherConnections(ClearThMessageConnection connection);
-
 	protected abstract boolean useSameReceiveQueue(ClearThBasicMqConnectionSettings settingsToCheck,
 	                                               ClearThBasicMqConnectionSettings anotherSettings);
+
+	protected List<ClearThMessageConnection> getOtherConnections(ClearThMessageConnection connection)
+	{
+		return getInstance()
+				.getConnectionStorage()
+				.getConnections(connection.getTypeInfo().getName(),
+						con -> ((ClearThMessageConnection) con).isRunning(),
+						ClearThMessageConnection.class);
+	}
 
 	@Override
 	public String check(ClearThConnection connection)

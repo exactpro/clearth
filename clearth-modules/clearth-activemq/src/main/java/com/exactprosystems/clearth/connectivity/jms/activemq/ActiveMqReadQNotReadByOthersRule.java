@@ -19,14 +19,9 @@
 package com.exactprosystems.clearth.connectivity.jms.activemq;
 
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
-import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
-import com.exactprosystems.clearth.connectivity.ibmmq.ClearThBasicMqConnectionSettings;
+import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
 import com.exactprosystems.clearth.connectivity.validation.AbstractReadQNotReadByOthersRule;
 import org.apache.commons.lang.StringUtils;
-
-import java.util.List;
-
-import static com.exactprosystems.clearth.ClearThCore.getInstance;
 
 public class ActiveMqReadQNotReadByOthersRule extends AbstractReadQNotReadByOthersRule
 {
@@ -35,16 +30,6 @@ public class ActiveMqReadQNotReadByOthersRule extends AbstractReadQNotReadByOthe
 	public boolean isConnectionSuitable(ClearThConnection connectionToCheck)
 	{
 		return connectionToCheck instanceof ActiveMqConnection;
-	}
-
-	@Override
-	protected List<ClearThMessageConnection> getOtherConnections(ClearThMessageConnection connection)
-	{
-		return getInstance()
-				.getConnectionStorage()
-				.getConnections(connection.getTypeInfo().getName(),
-						con -> ((ClearThMessageConnection) con).isRunning(),
-						ClearThMessageConnection.class);
 	}
 
 	@Override

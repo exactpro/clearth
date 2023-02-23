@@ -1,5 +1,5 @@
-/******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+/*******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,17 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity.validation;
 
-import com.exactprosystems.clearth.connectivity.ibmmq.ClearThBasicMqConnectionSettings;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
-import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.ibmmq.BasicIbmMqClient;
 import com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnection;
 import com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnectionSettings;
+import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.List;
-
-import static com.exactprosystems.clearth.ClearThCore.getInstance;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 public class IbmMqReadQNotReadByOthersRule extends AbstractReadQNotReadByOthersRule
@@ -38,18 +34,6 @@ public class IbmMqReadQNotReadByOthersRule extends AbstractReadQNotReadByOthersR
 	{
 		return connectionToCheck instanceof IbmMqConnection;
 	}
-
-	
-	@Override
-	protected List<ClearThMessageConnection> getOtherConnections(ClearThMessageConnection connection)
-	{
-		return getInstance()
-				.getConnectionStorage()
-				.getConnections(connection.getTypeInfo().getName(),
-						(con) -> ((ClearThMessageConnection) con).isRunning(),
-				                ClearThMessageConnection.class);
-	}
-
 
 	@Override
 	protected boolean useSameReceiveQueue(ClearThBasicMqConnectionSettings settingsToCheck1,

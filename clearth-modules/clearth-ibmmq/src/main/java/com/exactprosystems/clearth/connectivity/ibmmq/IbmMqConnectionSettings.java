@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.connectivity.ibmmq;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
 import com.exactprosystems.clearth.connectivity.connections.settings.ConnectionSetting;
 import com.exactprosystems.clearth.connectivity.connections.settings.ConnectionSettings;
+import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
 import com.exactprosystems.clearth.utils.LineBuilder;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -35,9 +36,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 		columns = {"hostname", "queueManager", "channel", "sendQueue", "receiveQueue"})
 public class IbmMqConnectionSettings extends ClearThBasicMqConnectionSettings
 {
-	@XmlElement
-	@ConnectionSetting(name = "Read delay")
-	private int readDelay;
 	@XmlElement
 	private int charset;
 
@@ -65,7 +63,6 @@ public class IbmMqConnectionSettings extends ClearThBasicMqConnectionSettings
 	public IbmMqConnectionSettings()
 	{
 		super();
-		readDelay = 1000;
 		charset = 850;
 		queueManager = "";
 		channel = null;
@@ -80,16 +77,6 @@ public class IbmMqConnectionSettings extends ClearThBasicMqConnectionSettings
 	public IbmMqConnectionSettings(IbmMqConnectionSettings settings)
 	{
 		copyFrom(settings);
-	}
-
-	public int getReadDelay()
-	{
-		return readDelay;
-	}
-
-	public void setReadDelay(int readDelay)
-	{
-		this.readDelay = readDelay;
 	}
 
 	public int getCharset()
@@ -168,7 +155,6 @@ public class IbmMqConnectionSettings extends ClearThBasicMqConnectionSettings
 		LineBuilder sb = new LineBuilder();
 		sb.append(super.toString()).eol();
 
-		sb.add("Read delay = ").append(readDelay);
 		sb.add("Charset = ").append(charset);
 		sb.add("Queue manager = ").append(queueManager);
 		sb.add("Channel = " ).append(channel).eol();
@@ -193,7 +179,6 @@ public class IbmMqConnectionSettings extends ClearThBasicMqConnectionSettings
 		super.copyFrom(settings1);
 		IbmMqConnectionSettings settings = (IbmMqConnectionSettings) settings1; 
 		
-		this.readDelay = settings.readDelay;
 		this.charset = settings.charset;
 		this.queueManager = settings.queueManager;
 		this.channel = settings.channel;

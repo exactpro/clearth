@@ -45,8 +45,6 @@ import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.sql.ClearThDbConnection;
 import com.exactprosystems.clearth.xmldata.*;
 import com.exactprosystems.memorymonitor.MemoryMonitor;
-import com.ibm.mq.MQException;
-import com.ibm.mq.constants.CMQC;
 import freemarker.template.TemplateModelException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -357,14 +355,8 @@ public abstract class ClearThCore
 	protected void initLogging()
 	{
 		configureLogging();
-		configureMqLogging();
 	}
 	
-	protected void configureMqLogging()
-	{
-		MQException.logExclude(CMQC.MQRC_NO_MSG_AVAILABLE);
-		MQException.logExclude(CMQC.MQRC_UNEXPECTED_ERROR);
-	}
 	
 	protected ClearThConnectionStorage createConnectionStorage() throws ClearThException
 	{
