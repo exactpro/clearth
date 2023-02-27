@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
@@ -46,7 +45,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	private static final long serialVersionUID = 5699150687216722251L;
 	private static final Logger logger = LoggerFactory.getLogger(CsvContainerResult.class);
 	
-	protected final String COLUMN_COMPARISON_NAME = "Comparison name",
+	public static final String COLUMN_COMPARISON_NAME = "Comparison name",
 			COLUMN_COMPARISON_RESULT = "Comparison result", COLUMN_ROW_KIND = "Row kind";
 	
 	protected int maxDisplayedRowsCount = 50,
@@ -58,7 +57,8 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	protected String name;
 	
 	@JsonIgnore
-	protected File tempReportFile = null;
+	protected File tempReportFile = null,
+			reportFile = null;
 	@JsonIgnore
 	private CsvWriter csvWriter = null;
 	
@@ -150,9 +150,12 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 			{
 				try
 				{
-					Path targetFilePath = createTargetFilePath(reportDir, linkedAction);
-					Files.move(tempReportFile.toPath(), targetFilePath, StandardCopyOption.REPLACE_EXISTING);
-					headerMsg += processWrittenFile(targetFilePath.toFile());
+					File targetFile = createTargetFile(reportDir, linkedAction);
+					Files.move(tempReportFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					targetFile = processWrittenFile(targetFile);
+					headerMsg += buildDownloadLink(targetFile);
+					
+					reportFile = targetFile;
 				}
 				catch (IOException e)
 				{
@@ -162,6 +165,8 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 			}
 			else
 				FileUtils.deleteQuietly(tempReportFile);
+			
+			tempReportFile = null;
 		}
 		setHeader(headerMsg);
 	}
@@ -241,22 +246,28 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 				getStoredRowsCount());
 	}
 	
-	protected Path createTargetFilePath(File reportDir, Action linkedAction) throws IOException
+	protected File createTargetFile(File reportDir, Action linkedAction) throws IOException
 	{
 		File detailsDir = new File(reportDir, DETAILS_DIR);
 		detailsDir.mkdirs();
 		return Files.createTempFile(detailsDir.toPath(), (linkedAction != null ? linkedAction.getStepName()
 				+ "_" + linkedAction.getIdInMatrix() + "_" + linkedAction.getName() : "noStep_noId_noAction") + "_",
-				"_" + name + (onlyFailedInCsv ? "_(onlyfailed)" : "") + ".csv");
+				"_" + name + (onlyFailedInCsv ? "_(onlyfailed)" : "") + ".csv")
+				.toFile();
 	}
 	
-	protected String processWrittenFile(File writtenFile) throws IOException
+	protected File processWrittenFile(File writtenFile) throws IOException
 	{
 		File archivedResult = new File(writtenFile.getParentFile(), FilenameUtils.removeExtension(writtenFile.getName()) + ".zip");
 		FileOperationUtils.zipFiles(archivedResult, new File[] { writtenFile });
 		FileUtils.deleteQuietly(writtenFile);
+		return archivedResult;
+	}
+	
+	protected String buildDownloadLink(File file) throws IOException
+	{
 		return "<br>Zip-archive with CSV report inside could be downloaded " +
-				"<a href=\"" + archivedResult.getParentFile().getName() + File.separator + archivedResult.getName() + "\">here</a>";
+				"<a href=\"" + file.getParentFile().getName() + File.separator + file.getName() + "\">here</a>";
 	}
 	
 	
@@ -335,7 +346,19 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		this.maxStoredRowsCount = maxStoredRowsCount;
 	}
-
+	
+	
+	public File getTempReportFile()
+	{
+		return tempReportFile;
+	}
+	
+	public File getReportFile()
+	{
+		return reportFile;
+	}
+	
+	
 	protected Logger getLogger()
 	{
 		return logger;
