@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,14 +18,14 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.connections;
 
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.SettingsException;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 public interface DbConnectionSupplier extends AutoCloseable
 {
-	Connection getConnection(boolean forExpectedData) throws SQLException, SettingsException;
+	Connection getConnection(boolean forExpectedData) throws ConnectivityException, SettingsException;
 	IValueTransformer getValueTransformer();
 }

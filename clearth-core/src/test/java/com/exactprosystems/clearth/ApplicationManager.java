@@ -20,6 +20,8 @@ package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.config.ClearThConfiguration;
+import com.exactprosystems.clearth.config.ConfigurationException;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
 import com.exactprosystems.clearth.utils.ClearThException;
@@ -72,9 +74,17 @@ public class ApplicationManager
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 	private static boolean clearAppRoot = true, clearLogs = true;
+	private String configFilePath;
+	private DeploymentConfig deploymentConfig;
 
 	public ApplicationManager() throws ClearThException
 	{
+		initClearThInstance();
+	}
+
+	public ApplicationManager(String configFilePath) throws ClearThException
+	{
+		this.configFilePath = configFilePath;
 		initClearThInstance();
 	}
 
@@ -271,7 +281,22 @@ public class ApplicationManager
 			throw new ClearThException(e);
 		}
 
+		try
+		{
+			if(configFilePath != null)
+				when(core.loadConfig(deploymentConfig.getConfigFileName())).thenAnswer(invocation -> loadConfig(configFilePath));
+		}
+		catch (Exception e)
+		{
+			throw new ClearThException(e);
+		}
+
 		return core;
+	}
+
+	protected ClearThConfiguration loadConfig(String configFile) throws ConfigurationException
+	{
+		return ClearThConfiguration.create(new File(configFile));
 	}
 
 	private ExecutorFactory createExecutorFactory(ValueGenerator valueGenerator)
@@ -294,11 +319,11 @@ public class ApplicationManager
 	{
 		if (ClearThCore.getInstance() == null)
 		{
-			ClearThCore application = getCoreInstance();
-			DeploymentConfig dc = getDeploymentConfig();
+			deploymentConfig = getDeploymentConfig();
 			ConfigFiles configFiles = getConfigFiles();
-			dc.init(configFiles);
-			application.init(configFiles, dc);
+			deploymentConfig.init(configFiles);
+			ClearThCore application = getCoreInstance();
+			application.init(configFiles, deploymentConfig);
 		}
 	}
 }

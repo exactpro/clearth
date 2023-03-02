@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
@@ -81,7 +82,7 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	
 	
 	protected DbDataReader createDbDataReader(TableDataReaderSettings settings, DbConnectionSupplier dbConnectionSupplier)
-			throws IOException, SQLException, SettingsException
+			throws IOException, SQLException, SettingsException, ConnectivityException
 	{
 		boolean forExpectedData = settings.isForExpectedData();
 		String source = settings.getSourceData();

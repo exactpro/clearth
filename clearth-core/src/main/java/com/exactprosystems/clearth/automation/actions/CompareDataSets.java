@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,10 +28,8 @@ import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.BigDecimalValueTransformer;
-import com.exactprosystems.clearth.utils.ComparisonUtils;
-import com.exactprosystems.clearth.utils.IValueTransformer;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonConfiguration;
@@ -39,7 +37,7 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonExceptio
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
-import com.exactprosystems.clearth.utils.tabledata.comparison.connections.StubDbConnectionSupplier;
+import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DefaultDbConnectionSupplier;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.IndexedStringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.StringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.TableDataComparator;
@@ -93,6 +91,10 @@ public class CompareDataSets extends Action
 		{
 			return DefaultResult.failed(e.getMessage(), (Exception)e.getCause());
 		}
+		catch (ConnectivityException | SettingsException e)
+		{
+			return DefaultResult.failed("Error while preparing connection: " + e.getMessage(), e);
+		}
 		finally
 		{
 			Utils.closeResource(expectedReader);
@@ -100,8 +102,7 @@ public class CompareDataSets extends Action
 			Utils.closeResource(dbConnectionSupplier);
 		}
 	}
-	
-	
+
 	protected Map<String, String> getActionParameters()
 	{
 		return copyInputParams();
@@ -119,8 +120,9 @@ public class CompareDataSets extends Action
 	}
 	
 	protected DbConnectionSupplier createDbConnectionSupplier(Map<String, String> actionParameters, GlobalContext globalContext)
+			throws ConnectivityException, SettingsException
 	{
-		return new StubDbConnectionSupplier();
+		return new DefaultDbConnectionSupplier(actionParameters, globalContext);
 	}
 	
 	
