@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.MINIMAL_CLASS)
 public abstract class Result implements Serializable
@@ -205,5 +206,25 @@ public abstract class Result implements Serializable
 		if (comment != null)
 			builder.add(prefix).add("Comment: ").add(comment).eol();
 		return builder; 
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Result result = (Result) o;
+		return success == result.success && crashed == result.crashed && inverted == result.inverted &&
+				Objects.equals(error, result.error) && Objects.equals(message, result.message) &&
+				Objects.equals(comment, result.comment) &&
+				Objects.equals(linkedMessages, result.linkedMessages) && failReason == result.failReason &&
+				Objects.equals(failoverData, result.failoverData);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(success, crashed, inverted, error, message, comment, linkedMessages, failReason,
+				failoverData);
 	}
 }

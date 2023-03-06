@@ -25,6 +25,8 @@ import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonData;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.SimpleValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.IOException;
@@ -42,10 +44,10 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	protected TableRowMatcher<A, B, C> rowMatcher;
 	
 	public IndexedTableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
-			TableRowMatcher<A, B, C> rowMatcher, TableRowsComparator<A, B> rowsComparator)
+			TableRowMatcher<A, B, C> rowMatcher, TableRowsComparator<A, B> rowsComparator, ValueParser<A, B> valueParser)
 			throws IOException, ParametersException
 	{
-		super(expectedReader, actualReader, rowsComparator);
+		super(expectedReader, actualReader, rowsComparator, valueParser);
 		this.rowMatcher = rowMatcher;
 		checkHeaders();
 		
@@ -74,9 +76,9 @@ public abstract class IndexedTableDataComparator<A, B, C> extends TableDataCompa
 	}
 	
 	public IndexedTableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
-			TableRowMatcher<A, B, C> rowMatcher) throws IOException, ParametersException
+			TableRowMatcher<A, B, C> rowMatcher, ValueParser<A, B> valueParser) throws IOException, ParametersException
 	{
-		this(expectedReader, actualReader, rowMatcher, new TableRowsComparator<>());
+		this(expectedReader, actualReader, rowMatcher, new TableRowsComparator<>(new SimpleValuesComparator<>()), valueParser);
 	}
 	
 	/**

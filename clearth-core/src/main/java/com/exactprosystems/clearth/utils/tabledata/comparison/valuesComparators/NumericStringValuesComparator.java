@@ -1,5 +1,5 @@
-/******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+/*******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
+package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
 
 import com.exactprosystems.clearth.automation.MatrixFunctions;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
@@ -28,43 +28,41 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.util.Map;
 
-public class NumericStringTableRowsComparator extends StringTableRowsComparator
+public class NumericStringValuesComparator extends StringValuesComparator
 {
-	private final static Logger logger = LoggerFactory.getLogger(NumericStringTableRowsComparator.class);
-	
+	private final static Logger logger = LoggerFactory.getLogger(NumericStringValuesComparator.class);
 	protected final Map<String, BigDecimal> numericColumns;
 	protected final IValueTransformer bdValueTransformer;
-	
-	public NumericStringTableRowsComparator(ComparisonUtils comparisonUtils,
-			Map<String, BigDecimal> numericColumns, IValueTransformer bdValueTransformer)
+
+	public NumericStringValuesComparator(ComparisonUtils comparisonUtils, Map<String, BigDecimal> numericColumns,
+	                                     IValueTransformer bdValueTransformer)
 	{
 		super(comparisonUtils);
 		this.numericColumns = numericColumns;
 		this.bdValueTransformer = bdValueTransformer;
 	}
-	
 	@Override
-	public boolean compareValues(String value1, String value2, String column) throws Exception
+	public boolean compareValues(String expectedValue, String actualValue, String column) throws Exception
 	{
 		// Check if it's need to compare values as numbers or not.
 		// value1 is usually expected one and could contain formula from ComparisonUtils.
 		// So need to process it like not-numeric value in default way
-		if (StringUtils.isNotBlank(value1) && StringUtils.isNotBlank(value2)
-				&& !value1.startsWith(MatrixFunctions.FORMULA_START) && numericColumns.containsKey(column))
+		if (StringUtils.isNotBlank(expectedValue) && StringUtils.isNotBlank(actualValue)
+				&& !expectedValue.startsWith(MatrixFunctions.FORMULA_START) && numericColumns.containsKey(column))
 		{
 			try
 			{
-				BigDecimal bdValue1 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value1) : value1),
-						bdValue2 = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(value2) : value2),
+				BigDecimal bdExpectedValue = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(expectedValue) : expectedValue),
+						bdActualValue = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(actualValue) : actualValue),
 						precision = numericColumns.get(column);
-				return bdValue1.subtract(bdValue2).abs().compareTo(precision) <= 0;
+				return bdExpectedValue.subtract(bdActualValue).abs().compareTo(precision) <= 0;
 			}
 			catch (Exception e)
 			{
 				logger.trace("Couldn't present values '{}' and '{}' for numeric column '{}' as BigDecimal." +
-						" They will be compared by default as strings", value1, value2, column, e);
+						" They will be compared by default as strings", expectedValue, actualValue, column, e);
 			}
 		}
-		return super.compareValues(value1, value2, column);
+		return super.compareValues(expectedValue, actualValue, column);
 	}
 }

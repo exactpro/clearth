@@ -20,8 +20,9 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators;
 
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
-import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.StringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.converters.StringValueParser;
 
 import java.io.IOException;
 
@@ -34,12 +35,12 @@ public class StringTableDataComparator extends TableDataComparator<String, Strin
 			BasicTableDataReader<String, String, ?> actualReader, TableRowsComparator<String, String> rowsComparator)
 			throws IOException
 	{
-		super(expectedReader, actualReader, rowsComparator);
+		super(expectedReader, actualReader, rowsComparator, new StringValueParser());
 	}
 	
 	public StringTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
 			BasicTableDataReader<String, String, ?> actualReader, ComparisonUtils comparisonUtils) throws IOException
 	{
-		this(expectedReader, actualReader, new StringTableRowsComparator(comparisonUtils));
+		this(expectedReader, actualReader, new TableRowsComparator<>(new StringValuesComparator(comparisonUtils)));
 	}
 }

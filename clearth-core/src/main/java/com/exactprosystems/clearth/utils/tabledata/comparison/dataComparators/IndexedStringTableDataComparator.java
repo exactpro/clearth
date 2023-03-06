@@ -24,8 +24,9 @@ import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.IndexedStringTableData;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
-import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.StringTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.converters.StringValueParser;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.IOException;
@@ -39,14 +40,15 @@ public class IndexedStringTableDataComparator extends IndexedTableDataComparator
 			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher,
 			TableRowsComparator<String, String> rowsComparator) throws IOException, ParametersException
 	{
-		super(expectedReader, actualReader, rowMatcher, rowsComparator);
+		super(expectedReader, actualReader, rowMatcher, rowsComparator, new StringValueParser());
 	}
 	
 	public IndexedStringTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
 			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher,
 			ComparisonUtils comparisonUtils) throws IOException, ParametersException
 	{
-		super(expectedReader, actualReader, rowMatcher, new StringTableRowsComparator(comparisonUtils));
+		super(expectedReader, actualReader, rowMatcher,
+				new TableRowsComparator(new StringValuesComparator(comparisonUtils)), new StringValueParser());
 	}
 	
 	

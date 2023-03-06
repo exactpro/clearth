@@ -24,8 +24,12 @@ import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
+import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvContainerResultReader;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -47,7 +51,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	
 	public static final String COLUMN_COMPARISON_NAME = "Comparison name",
 			COLUMN_COMPARISON_RESULT = "Comparison result", COLUMN_ROW_KIND = "Row kind";
-	
+	public static final String PASSED = "PASSED", FAILED = "FAILED", EXPECTED = "EXPECTED", ACTUAL = "ACTUAL";
 	protected int maxDisplayedRowsCount = 50,
 			maxStoredRowsCount = -1,
 			storedRowsCount = 0,
@@ -55,6 +59,14 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 			passedRowsCount = 0;
 	protected boolean writeCsvReportAnyway = false, onlyFailedInHtml = false, onlyFailedInCsv = false;
 	protected String name;
+	
+	@JsonIgnore
+	@SuppressWarnings("rawtypes")
+	protected ValuesComparator valuesComparator;
+	@JsonIgnore
+	@SuppressWarnings("rawtypes")
+	protected ValueParser valueParser;
+	
 	
 	@JsonIgnore
 	protected File tempReportFile = null,
@@ -196,18 +208,18 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 			// Write header only if it's a first comparison row in file
 			if (!onlyFailedInCsv && totalRowsCount == 1 || onlyFailedInCsv && totalRowsCount - passedRowsCount == 1)
 				writeHeaderToReportFile(resultDetails, csvWriter);
-			String compResult = detailedResult.isSuccess() ? "PASSED" : "FAILED";
+			String compResult = detailedResult.isSuccess() ? PASSED : FAILED;
 			// Write expected comparison data
 			csvWriter.write(mainContainer.getHeader());
 			csvWriter.write(compResult);
-			csvWriter.write("EXPECTED");
+			csvWriter.write(EXPECTED);
 			for (ResultDetail rd : resultDetails)
 				csvWriter.write(rd.getExpected());
 			csvWriter.endRecord();
 			// Write actual comparison data
 			csvWriter.write(mainContainer.getHeader());
 			csvWriter.write(compResult);
-			csvWriter.write("ACTUAL");
+			csvWriter.write(ACTUAL);
 			for (ResultDetail rd : resultDetails)
 				csvWriter.write(rd.getActual());
 			csvWriter.endRecord();
@@ -268,6 +280,18 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		return "<br>Zip-archive with CSV report inside could be downloaded " +
 				"<a href=\"" + file.getParentFile().getName() + File.separator + file.getName() + "\">here</a>";
+	}
+	
+	@JsonIgnore
+	@SuppressWarnings("unchecked")
+	public CsvContainerResultReader getReader() throws SettingsException, IOException
+	{
+		if (valuesComparator == null)
+			throw new SettingsException("Values comparator is required but not provided");
+		if (valueParser == null)
+			throw new SettingsException("Value parser is required but not provided");
+		
+		return new CsvContainerResultReader(reportFile, valuesComparator, valueParser);
 	}
 	
 	
@@ -357,8 +381,13 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		return reportFile;
 	}
-	
-	
+
+	public<A, B> void setValueHandlers(ValuesComparator<A, B> valuesComparator, ValueParser<A, B> valueParser)
+	{
+		this.valuesComparator = valuesComparator;
+		this.valueParser = valueParser;
+	}
+
 	protected Logger getLogger()
 	{
 		return logger;

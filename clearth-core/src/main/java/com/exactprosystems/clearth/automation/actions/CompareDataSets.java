@@ -47,8 +47,10 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories.St
 import com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories.TableDataReaderFactory;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.KeyColumnsRowsCollector;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.StringKeyColumnsRowsCollector;
-import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.NumericStringTableRowsComparator;
-import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.StringTableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.NumericStringValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 
@@ -140,18 +142,23 @@ public class CompareDataSets extends Action
 				:  new NumericStringTableRowMatcher(compConfig.getKeyColumns(), compConfig.getNumericColumns(), bdValueTransformer);
 	}
 	
-	protected StringTableRowsComparator createTableRowsComparator()
+	protected TableRowsComparator<String, String> createTableRowsComparator()
+	{
+		return new TableRowsComparator<>(createValuesComparator());
+	}
+
+	protected ValuesComparator<String, String> createValuesComparator()
 	{
 		ComparisonUtils comparisonUtils = ClearThCore.comparisonUtils();
-		return compConfig.getNumericColumns().isEmpty() ? new StringTableRowsComparator(comparisonUtils)
-				: new NumericStringTableRowsComparator(comparisonUtils, compConfig.getNumericColumns(), bdValueTransformer);
+		return compConfig.getNumericColumns().isEmpty() ? new StringValuesComparator(comparisonUtils) :
+				new NumericStringValuesComparator(comparisonUtils, compConfig.getNumericColumns(), bdValueTransformer);
 	}
 	
 	
 	protected TableDataComparator<String, String> createTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
 			BasicTableDataReader<String, String, ?> actualReader) throws IOException, ParametersException
 	{
-		StringTableRowsComparator rowsComparator = createTableRowsComparator();
+		TableRowsComparator<String, String> rowsComparator = createTableRowsComparator();
 		return compConfig.getKeyColumns().isEmpty() ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
 				: new IndexedStringTableDataComparator(expectedReader, actualReader, createTableRowMatcher(), rowsComparator);
 	}

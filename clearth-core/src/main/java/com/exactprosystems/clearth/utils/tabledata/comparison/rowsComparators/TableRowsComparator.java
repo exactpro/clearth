@@ -22,8 +22,7 @@ import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonData;
-
-import java.util.Objects;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 
 /**
  * Class that compares two table data rows.
@@ -32,6 +31,13 @@ import java.util.Objects;
  */
 public class TableRowsComparator<A, B>
 {
+	private final ValuesComparator<A, B> valuesComparator;
+
+	public TableRowsComparator(ValuesComparator<A, B> valuesComparator)
+	{
+		this.valuesComparator = valuesComparator;
+	}
+
 	/**
 	 * Compares two specified {@link TableRow} objects.
 	 * @param row1 first object of comparison, usually marked as 'expected'.
@@ -94,8 +100,13 @@ public class TableRowsComparator<A, B>
 		}
 	}
 	
-	protected boolean compareValues(B value1, B value2, A column) throws Exception
+	protected boolean compareValues(B expectedValue, B actualValue, A column) throws Exception
 	{
-		return Objects.equals(value1, value2);
+		return valuesComparator.compareValues(expectedValue, actualValue, column);
+	}
+
+	public ValuesComparator<A,B> getValuesComparator()
+	{
+		return valuesComparator;
 	}
 }

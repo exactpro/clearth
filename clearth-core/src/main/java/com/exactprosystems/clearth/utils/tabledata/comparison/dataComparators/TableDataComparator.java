@@ -24,6 +24,9 @@ import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonData;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.SimpleValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -43,13 +46,15 @@ public class TableDataComparator<A, B> implements AutoCloseable
 	
 	protected boolean expectedReadMore, actualReadMore;
 	protected final TableRowsComparator<A, B> rowsComparator;
+	protected final ValueParser<A, B> valueParser;
 	
 	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader,
-			TableRowsComparator<A, B> rowsComparator) throws IOException
+			TableRowsComparator<A, B> rowsComparator, ValueParser<A, B> valueParser) throws IOException
 	{
 		this.expectedReader = expectedReader;
 		this.actualReader = actualReader;
 		this.rowsComparator = rowsComparator;
+		this.valueParser = valueParser;
 		
 		this.expectedReader.start();
 		this.actualReader.start();
@@ -63,10 +68,12 @@ public class TableDataComparator<A, B> implements AutoCloseable
 		commonHeader = new TableHeader<>(commonHeaderSet);
 	}
 	
-	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader, BasicTableDataReader<A, B, ?> actualReader)
+	public TableDataComparator(BasicTableDataReader<A, B, ?> expectedReader,
+	                           BasicTableDataReader<A, B, ?> actualReader, 
+	                           ValueParser<A, B> valueParser)
 			throws IOException
 	{
-		this(expectedReader, actualReader, new TableRowsComparator<>());
+		this(expectedReader, actualReader, new TableRowsComparator<>(new SimpleValuesComparator<>()), valueParser);
 	}
 	
 	/**
@@ -98,6 +105,16 @@ public class TableDataComparator<A, B> implements AutoCloseable
 	public TableRow<A, B> getCurrentRow()
 	{
 		return currentRow;
+	}
+	
+	public ValuesComparator<A, B> getValuesComparator()
+	{
+		return rowsComparator.getValuesComparator();
+	}
+	
+	public ValueParser<A, B> getValueParser()
+	{
+		return valueParser;
 	}
 	
 	/**
