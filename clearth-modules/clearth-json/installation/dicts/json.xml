@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTf-8" standalone="yes"?>
+<JsonDictionaryDesc>
+    <!--
+    Here you can add JSON message descriptions, for example:
+    
+    <messageDesc type="JsonExample">
+        <typeCondition value="typeConditionValue" />
+        <fieldDesc source="simpleField" name="simpleField" />
+        <fieldDesc source="containerField" name="containerField">
+            <fieldDesc source="childField" name="childField" />
+        </fieldDesc>
+    </messageDesc>
+    -->
+</JsonDictionaryDesc>

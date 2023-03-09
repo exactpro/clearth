@@ -1,0 +1,6 @@
+    <CodecConfig>
+        <Name>Json</Name>
+        <DictionaryFile>json.xml</DictionaryFile>
+        <Dictionary>com.exactprosystems.clearth.connectivity.json.JsonDictionary</Dictionary>
+        <Codec>com.exactprosystems.clearth.connectivity.json.JsonCodec</Codec>
+    </CodecConfig>

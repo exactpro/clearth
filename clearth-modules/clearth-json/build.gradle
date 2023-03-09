@@ -1,7 +1,7 @@
 generateJavaFromXsd {
-	inputs.file file("${xsdDir}/xml.xsd")
+	inputs.file file("${xsdDir}/json.xsd")
 
-	outputs.files fileTree("${genJavaDir}/com/exactprosystems/clearth/connectivity/xml").include('*.java')
+	outputs.files fileTree("${genJavaDir}/com/exactprosystems/clearth/connectivity/json").include('*.java')
 
 	doLast {
 		ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
@@ -15,24 +15,24 @@ generateJavaFromXsd {
 			produces(dir: "${genJaxbDir}/com/exactprosystems/clearth/connectivity/message", includes: '*')
 		}
 
-		ant.xjc(schema: "${xsdDir}/xml.xsd",
-				destdir: "${genJavaDir}", package: 'com.exactprosystems.clearth.connectivity.xml',
+		ant.xjc(schema: "${xsdDir}/json.xsd",
+				destdir: "${genJavaDir}", package: 'com.exactprosystems.clearth.connectivity.json',
 				removeOldOutput: 'yes', extension: true)
 		{
 			arg(value: "-catalog")
 			arg(value: "${coreXsdDir}/message.cat")
 			arg(value: "-b")
 			arg(value: "${genDir}/message.episode")
-			produces(dir: "${genJavaDir}/com/exactprosystems/clearth/connectivity/xml", includes: '*')
+			produces(dir: "${genJavaDir}/com/exactprosystems/clearth/connectivity/json", includes: '*')
 		}
-}
+	}
 }
 
 publishing {
 	publications {
-		xml(MavenPublication) {
+		json(MavenPublication) {
 			groupId = "${group}"
-			artifactId = 'clearth-xml'
+			artifactId = 'clearth-json'
 			version = "${version}"
 			
 			from components.java
@@ -41,13 +41,13 @@ publishing {
 }
 
 artifactoryPublish {
-	publications(publishing.publications.xml)
+	publications(publishing.publications.json)
 }
 
 ext {
-	moduleName = 'XML'
-	moduleImpl = 'com.exactprosystems.clearth:clearth-xml'
-	moduleDict = "xml.xml"
+	moduleName = 'JSON'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-json'
+	moduleDict = "json.xml"
 	if (!project.hasProperty('clearthDir'))
 		clearthDir = undef
 }
@@ -56,6 +56,14 @@ task installModule {
 	doLast {
 		def codec = file("${projectDir}/installation/codec.xml").text
 		def dictPath = "${projectDir}/installation/dicts/${moduleDict}"
-		installMsgModule(clearthDir, moduleName, moduleImpl, codec, moduleDict, dictPath)
+		def actions = file("${projectDir}/installation/actions.cfg").text
+		
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+					{ putCodec(codec, moduleName, clearthDir) },
+					{ putDictionary(moduleDict, dictPath, clearthDir) },
+					{ putActions(clearthDir, actions) }
+				]
+		)
 	}
 }

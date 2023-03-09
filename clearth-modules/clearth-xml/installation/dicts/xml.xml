@@ -4,7 +4,7 @@
     Here you can add XML message descriptions, for example:
     
     <messageDesc name="XmlExample" type="XmlExample" rootTag="XmlExample">
-        <typeContains>&lt;MsgType&gt;XmlExample&lt;MsgType&gt;</typeContains>
+        <typeCondition value="&lt;MsgType&gt;XmlExample&lt;/MsgType&gt;" />
         <fieldDesc source="Header">
             <attrDesc name="HeaderAttribute" source="attr" />
             <attrDesc name="EmptyAttribute" source="empty_attr" empty="true" />

@@ -1,0 +1,12 @@
+{
+  "msgType" : "TestMessage",
+  "name" : "DummyName",
+  "price" : 250,
+  "tradeTS" : "2023-03-27 15:30:24",
+  "confirmed" : true,
+  "linkedData" : [ {
+    "name" : "LD1"
+  }, {
+    "name" : "Link2"
+  } ]
+}

@@ -33,3 +33,5 @@ temp
 /clearth-modules/clearth-gui/bin
 /clearth-core/test-output
 /connections/
+/clearth-modules/clearth-json/test-output
+/clearth-modules/clearth-json/bin

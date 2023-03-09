@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTf-8" standalone="yes"?>
+<JsonDictionaryDesc>
+	<messageDesc type="Msg1">
+		<typeCondition value="MessageOne" />
+		<fieldDesc source="tag" name="Tag" />
+	</messageDesc>
+	
+	<messageDesc type="TestMessage">
+		<typeCondition value="&quot;msgType&quot; *: *&quot;TestMessage&quot;" />
+		<fieldDesc source="msgType" name="MsgType" />
+		<fieldDesc source="name" name="Name" type="text" />
+		<fieldDesc source="price" name="Price" type="number" />
+		<fieldDesc source="tradeTS" name="Timestamp" type="timestamp" />
+		<fieldDesc source="confirmed" name="Confirmed" type="boolean" />
+		<fieldDesc source="linkedData" name="Linked" repeat="true">
+			<fieldDesc source="name" name="name" />
+		</fieldDesc>
+	</messageDesc>
+	
+	<messageDesc type="Msg2">
+		<typeCondition value="Message2" />
+		<fieldDesc source="tag1" name="Tag1" />
+		<fieldDesc source="tag2" name="Tag2" />
+	</messageDesc>
+</JsonDictionaryDesc>

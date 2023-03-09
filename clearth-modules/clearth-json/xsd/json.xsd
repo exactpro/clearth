@@ -1,0 +1,70 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			xmlns:msg="http://exactpro.com/clearth/message"
+			xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+			jaxb:version="2.1">
+	<xsd:import schemaLocation="http://exactpro.com/clearth/message/message.xsd" namespace="http://exactpro.com/clearth/message"/>
+
+	<xsd:complexType name="JsonKeyDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageKeyDesc">
+				<xsd:attribute name="forSubMsg" type="xsd:string"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:simpleType name="JsonFieldType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="text"/>
+			<xsd:enumeration value="number"/>
+			<xsd:enumeration value="boolean"/>
+			<xsd:enumeration value="date"/>
+			<xsd:enumeration value="time"/>
+			<xsd:enumeration value="timestamp"/>
+			<xsd:enumeration value="textArray"/>
+			<xsd:enumeration value="numberArray"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:complexType name="JsonFieldDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageFieldDesc">
+				<xsd:sequence>
+					<xsd:element name="fieldDesc" type="JsonFieldDesc" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+				<xsd:attribute name="name" type="xsd:string"/>
+				<xsd:attribute name="source" type="xsd:string" />
+				<xsd:attribute name="mandatory" type="xsd:boolean" default="false"/>
+				<xsd:attribute name="repeat" type="xsd:boolean" default="false"/>
+				<xsd:attribute name="type" type="JsonFieldType" default="text"/>
+				<xsd:attribute name="reference" type="xsd:string"/>
+				<xsd:attribute name="allowUndefinedFields" type="xsd:boolean" default="false"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="JsonMessageDesc">
+		<xsd:complexContent>
+			<xsd:extension base="msg:MessageDesc">
+				<xsd:sequence>
+					<xsd:element name="key" type="JsonKeyDesc" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element name="fieldDesc" type="JsonFieldDesc" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+				<xsd:attribute name="name" type="xsd:string"/>
+				<xsd:attribute name="allowUndefinedFields" type="xsd:boolean" default="false"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:element name="JsonDictionaryDesc">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="msg:DictionaryDesc">
+					<xsd:sequence>
+						<xsd:element name="messageDesc" type="JsonMessageDesc" minOccurs="1" maxOccurs="unbounded"/>
+						<xsd:element name="commonFieldDesc" type="JsonFieldDesc" minOccurs="0" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

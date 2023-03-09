@@ -49,6 +49,13 @@ def putDictionary(dictName, dictPath, clearthDir) {
     }
 }
 
+def putActions(clearthDir, actions) {
+    def mappingPath = "${clearthDir}/cfg/actionsmapping.cfg"
+    def mapping = file(mappingPath)
+    mapping.append("\n${actions}")
+    println("- Actions added to project's actions mapping: ${mappingPath}")
+}
+
 def putImplementation(moduleImpl, clearthDir) {
     ant.replaceregexp(match: "${cthImpl}", replace: "implementation \"${moduleImpl}:\${core_version}\"\n\t${cthImpl}") {
         fileset(dir: "${clearthDir}", includes: 'build.gradle')
