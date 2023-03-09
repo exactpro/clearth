@@ -79,7 +79,7 @@ public class CsvContainerResultReader implements AutoCloseable
 			throws Exception
 	{
 		DetailedResult result = new DetailedResult();
-
+		result.setComment(expectedRow.getValue(COLUMN_COMPARISON_NAME));
 		for (String header : expectedRow.getHeader())
 		{
 			if (COLUMN_COMPARISON_NAME.equals(header) || COLUMN_ROW_KIND.equals(header) || COLUMN_COMPARISON_RESULT.equals(header))

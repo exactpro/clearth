@@ -75,9 +75,10 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 		numericValuesComparator = new NumericStringValuesComparator(comparisonUtils, numericColumns, valueTransformer);
 	}
 	
-	private DetailedResult generateDetailedResult(ResultDetail... resultDetails)
+	private DetailedResult generateDetailedResult(String comment, ResultDetail... resultDetails)
 	{
 		DetailedResult result = new DetailedResult();
+		result.setComment(comment);
 		for (ResultDetail resultDetail : resultDetails)
 			result.addResultDetail(resultDetail);
 		
@@ -88,13 +89,13 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 	private void passedReportTest() throws Exception
 	{
 		File file = new File(zipFilesPath.resolve("passedReport.zip").toUri());
-		DetailedResult expectedResult1 = generateDetailedResult(
+		DetailedResult expectedResult1 = generateDetailedResult("Row #12",
 				new ResultDetail("Column_1", "1", "1", true),
 				new ResultDetail("Column_2", "2", "2", true),
 				new ResultDetail("Column_3", "3", "3", true),
 				new ResultDetail("Column_4","2023-03-02", "2023-03-02", true));
 		
-		DetailedResult expectedResult2 = generateDetailedResult(
+		DetailedResult expectedResult2 = generateDetailedResult("Row #13",
 				new ResultDetail("Column_1", "4", "4", true),
 				new ResultDetail("Column_2", "5.0", "5.0", true),
 				new ResultDetail("Column_3", "6", "6", true),
@@ -111,7 +112,7 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 	private void failedReportTest() throws Exception
 	{
 		File file = new File(zipFilesPath.resolve("failedReport.zip").toUri());
-		DetailedResult expectedResult1 = generateDetailedResult(
+		DetailedResult expectedResult1 = generateDetailedResult("Row #12",
 				new ResultDetail("Column_1", "1", "1", true),
 				new ResultDetail("Column_2", "2", "90", false),
 				new ResultDetail("Column_3", "3", "3", true),
@@ -129,7 +130,7 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 	private void numericReportTest() throws Exception
 	{
 		File file = new File(zipFilesPath.resolve("numericsPassedReport.zip").toUri());
-		DetailedResult expectedResult = generateDetailedResult(
+		DetailedResult expectedResult = generateDetailedResult("Row #12",
 				new ResultDetail("Column_1", "1", "1.1", true));
 		try (CsvContainerResultReader reader = new CsvContainerResultReader(file, numericValuesComparator, valueParser))
 		{
@@ -151,7 +152,7 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 		result.setValueHandlers(valuesComparator, valueParser);
 		
 		ContainerResult nestedResult = new ContainerResult();
-		DetailedResult expectedResult = generateDetailedResult(new ResultDetail("field", "1", "1", true));
+		DetailedResult expectedResult = generateDetailedResult("", new ResultDetail("field", "1", "1", true));
 		nestedResult.addDetail(expectedResult);
 		
 		result.addDetail(nestedResult);
