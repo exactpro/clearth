@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.result;
 
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
+
 /**
  * Comparison detail for the one table data column.
  * @param <A> class of column object.
@@ -38,6 +40,11 @@ public class ColumnComparisonDetail<A, B>
 		this.actualValue = actualValue;
 		this.identical = identical;
 		this.info = info;
+	}
+	
+	public ColumnComparisonDetail(A column, B expectedValue, B actualValue, ComparisonResult compResult)
+	{
+		this(column, expectedValue, actualValue, compResult.isIdentical(), compResult.isInfo());
 	}
 	
 	public void setColumn(A column)

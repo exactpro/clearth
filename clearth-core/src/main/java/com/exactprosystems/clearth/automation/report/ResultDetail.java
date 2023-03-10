@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation.report;
 
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.utils.LineBuilder;
 
 import java.io.Serializable;
@@ -46,8 +47,17 @@ public class ResultDetail implements Serializable
 		this.identical = identical;
 		this.info = false;
 	}
-	
-	
+
+	public ResultDetail(String param, String expected, String actual, ComparisonResult compResult)
+	{
+
+		this.param = param;
+		setExpected(expected);
+		this.actual = actual;
+		this.identical = compResult.isIdentical();
+		this.info = compResult.isInfo();
+	}
+
 	public String getParam()
 	{
 		return param;

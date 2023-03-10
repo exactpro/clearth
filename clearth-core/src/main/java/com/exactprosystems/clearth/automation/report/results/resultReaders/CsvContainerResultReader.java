@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation.report.results.resultReaders;
 
 import com.exactprosystems.clearth.automation.report.ResultDetail;
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
@@ -110,11 +111,11 @@ public class CsvContainerResultReader implements AutoCloseable
 	@SuppressWarnings("unchecked")
 	protected ResultDetail createResultDetail(String header, String expectedValue, String actualValue) throws Exception
 	{
-		boolean identical = valuesComparator.compareValues(valueParser.parseValue(expectedValue),
+		ComparisonResult compResult = valuesComparator.compareValues(valueParser.parseValue(expectedValue),
 				valueParser.parseValue(actualValue),
 				valueParser.parseHeader(header));
 		
-		return new ResultDetail(header, expectedValue, actualValue, identical);
+		return new ResultDetail(header, expectedValue, actualValue, compResult);
 	}
 
 	@Override

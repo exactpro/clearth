@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.result;
 
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 
 import java.util.ArrayList;
@@ -50,12 +51,17 @@ public class RowComparisonData<A, B>
 	
 	public void addComparisonDetail(A column, B expectedValue, B actualValue, boolean identical)
 	{
-		addComparisonDetail(new ColumnComparisonDetail<>(column, expectedValue, actualValue, identical, false));
+		addComparisonDetail(new ColumnComparisonDetail<>(column, expectedValue, actualValue, ComparisonResult.from(identical)));
+	}
+	
+	public void addComparisonDetail(A column, B expectedValue, B actualValue, ComparisonResult identical)
+	{
+		addComparisonDetail(new ColumnComparisonDetail<>(column, expectedValue, actualValue, identical));
 	}
 	
 	public void addInfoComparisonDetail(A column, B expectedValue, B actualValue)
 	{
-		addComparisonDetail(new ColumnComparisonDetail<>(column, expectedValue, actualValue, true, true));
+		addComparisonDetail(new ColumnComparisonDetail<>(column, expectedValue, actualValue, ComparisonResult.INFO));
 	}
 	
 	public void addErrorMsg(String errorMsg)

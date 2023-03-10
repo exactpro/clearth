@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
 
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 
 public class StringValuesComparator implements ValuesComparator<String, String>
@@ -30,8 +31,8 @@ public class StringValuesComparator implements ValuesComparator<String, String>
 	}
 
 	@Override
-	public boolean compareValues(String expectedValue, String actualValue, String column) throws Exception
+	public ComparisonResult compareValues(String expectedValue, String actualValue, String column) throws Exception
 	{
-		return comparisonUtils.compareValues(expectedValue, actualValue);
+		return ComparisonResult.from(comparisonUtils.compareValues(expectedValue, actualValue));
 	}
 }

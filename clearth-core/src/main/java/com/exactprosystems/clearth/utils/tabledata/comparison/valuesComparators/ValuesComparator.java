@@ -18,7 +18,9 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
 
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
+
 public interface ValuesComparator<A, B>
 {
-	boolean compareValues(B expectedValue, B actualValue, A columnName) throws Exception;
+	ComparisonResult compareValues(B expectedValue, B actualValue, A columnName) throws Exception;
 }

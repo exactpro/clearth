@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators;
 
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
@@ -70,7 +71,7 @@ public class TableRowsComparator<A, B>
 			for (A column : commonHeader)
 			{
 				compData.addComparisonDetail(column, row1 != null ? row1.getValue(column) : null,
-						row2 != null ? row2.getValue(column) : null, false);
+						row2 != null ? row2.getValue(column) : null, ComparisonResult.FAILED);
 			}
 			return false;
 		}
@@ -100,7 +101,7 @@ public class TableRowsComparator<A, B>
 		}
 	}
 	
-	protected boolean compareValues(B expectedValue, B actualValue, A column) throws Exception
+	protected ComparisonResult compareValues(B expectedValue, B actualValue, A column) throws Exception
 	{
 		return valuesComparator.compareValues(expectedValue, actualValue, column);
 	}

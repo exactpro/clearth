@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
 
 import com.exactprosystems.clearth.automation.MatrixFunctions;
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import org.apache.commons.lang.StringUtils;
@@ -42,7 +43,7 @@ public class NumericStringValuesComparator extends StringValuesComparator
 		this.bdValueTransformer = bdValueTransformer;
 	}
 	@Override
-	public boolean compareValues(String expectedValue, String actualValue, String column) throws Exception
+	public ComparisonResult compareValues(String expectedValue, String actualValue, String column) throws Exception
 	{
 		// Check if it's need to compare values as numbers or not.
 		// value1 is usually expected one and could contain formula from ComparisonUtils.
@@ -55,7 +56,7 @@ public class NumericStringValuesComparator extends StringValuesComparator
 				BigDecimal bdExpectedValue = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(expectedValue) : expectedValue),
 						bdActualValue = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(actualValue) : actualValue),
 						precision = numericColumns.get(column);
-				return bdExpectedValue.subtract(bdActualValue).abs().compareTo(precision) <= 0;
+				return ComparisonResult.from(bdExpectedValue.subtract(bdActualValue).abs().compareTo(precision) <= 0);
 			}
 			catch (Exception e)
 			{

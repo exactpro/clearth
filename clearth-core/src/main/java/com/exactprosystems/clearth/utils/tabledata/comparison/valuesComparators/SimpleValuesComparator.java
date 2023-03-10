@@ -18,13 +18,15 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
 
+import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
+
 import java.util.Objects;
 
 public class SimpleValuesComparator<A, B> implements ValuesComparator<A, B>
 {
 	@Override
-	public boolean compareValues(B expectedValue, B actualValue, A columnName) throws Exception
+	public ComparisonResult compareValues(B expectedValue, B actualValue, A columnName) throws Exception
 	{
-		return Objects.equals(expectedValue, actualValue);
+		return ComparisonResult.from(Objects.equals(expectedValue, actualValue));
 	}
 }
