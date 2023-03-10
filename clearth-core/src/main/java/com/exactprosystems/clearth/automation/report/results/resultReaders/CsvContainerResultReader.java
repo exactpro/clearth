@@ -25,6 +25,8 @@ import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +38,7 @@ import static com.exactprosystems.clearth.automation.report.results.CsvContainer
 
 public class CsvContainerResultReader implements AutoCloseable
 {
+	private static final Logger logger = LoggerFactory.getLogger(CsvContainerResultReader.class);
 	private ZipFile zipFile;
 	protected final CsvDataReader reader;
 	@SuppressWarnings("rawtypes")
@@ -49,7 +52,9 @@ public class CsvContainerResultReader implements AutoCloseable
 	{
 		this.valuesComparator = valuesComparator;
 		this.valueParser = valueParser;
-		this.reader = createCsvDataReader(zipFile);
+		
+		reader = createCsvDataReader(zipFile);
+		logger.trace("Created reader for {}", zipFile.getCanonicalPath());
 		reader.start();
 	}
 
@@ -74,7 +79,6 @@ public class CsvContainerResultReader implements AutoCloseable
 		return toDetailedResult(expectedRow, actualRow);
 	}
 	
-	@SuppressWarnings("unchecked")
 	protected DetailedResult toDetailedResult(TableRow<String, String> expectedRow, TableRow<String, String> actualRow)
 			throws Exception
 	{
@@ -85,28 +89,32 @@ public class CsvContainerResultReader implements AutoCloseable
 			if (COLUMN_COMPARISON_NAME.equals(header) || COLUMN_ROW_KIND.equals(header) || COLUMN_COMPARISON_RESULT.equals(header))
 				continue;
 
-			String expectedValue = expectedRow.getValue(header);
-			String actualValue = actualRow.getValue(header);
-			boolean identical = valuesComparator.compareValues(valueParser.parseValue(expectedValue),
-					valueParser.parseValue(actualValue),
-					valueParser.parseHeader(header));
-			result.addResultDetail(new ResultDetail(header, expectedValue, actualValue, identical));
+			result.addResultDetail(createResultDetail(header,  expectedRow.getValue(header), actualRow.getValue(header)));
 		}
 
 		String comparisonResultValue = expectedRow.getValue(COLUMN_COMPARISON_RESULT);
 		if (FAILED.equals(comparisonResultValue) && result.isSuccess() ||
 				PASSED.equals(comparisonResultValue) && !result.isSuccess())
 		{
-			throw new IllegalStateException(String.format("Error while getting row with comparison name = '%s': " +
-							"result of detail from CSV file is %s, but result contained in row is %s. result parsed: " +
-							"%s",
+			logger.trace("Error while getting row with comparison name = '{}': " +
+							"result of detail from CSV file is {}, but result contained in row is {}. result parsed: {}",
 					expectedRow.getValue(COLUMN_COMPARISON_NAME),
 					result.isSuccess() ? PASSED : FAILED,
 					comparisonResultValue,
-					result));
+					result);
 		}
 
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected ResultDetail createResultDetail(String header, String expectedValue, String actualValue) throws Exception
+	{
+		boolean identical = valuesComparator.compareValues(valueParser.parseValue(expectedValue),
+				valueParser.parseValue(actualValue),
+				valueParser.parseHeader(header));
+		
+		return new ResultDetail(header, expectedValue, actualValue, identical);
 	}
 
 	@Override

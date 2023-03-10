@@ -141,7 +141,8 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 		try (CsvContainerResultReader reader = new CsvContainerResultReader(file, valuesComparator, valueParser))
 		{
 			// wrong parse because of wrong values comparator
-			assertThrows(IllegalStateException.class, reader::readNext);
+			assertNotEquals(reader.readNext(), expectedResult);
+			assertNull(reader.readNext());
 		}
 	}
 	
