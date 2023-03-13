@@ -1,0 +1,3 @@
+#ID,#GlobalStep,#Action,#Query,#ConnectionName,#SaveQueryResult
+id1,Step1,SingleSelectSQLAction,Select * from testTable,con1,0
+id2,Step1,UpdateSQLAction,"update testTable set id=6,param1=555,param2=888 where id=1",con1,0

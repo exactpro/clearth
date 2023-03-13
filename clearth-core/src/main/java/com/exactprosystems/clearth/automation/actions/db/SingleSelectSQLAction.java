@@ -27,7 +27,7 @@ import com.exactprosystems.clearth.utils.Utils;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public abstract class SingleSelectSQLAction extends SelectSQLAction
+public class SingleSelectSQLAction extends SelectSQLAction
 {
 	protected IValueTransformer dbValueTransformer = createDbValueTransformer();
 

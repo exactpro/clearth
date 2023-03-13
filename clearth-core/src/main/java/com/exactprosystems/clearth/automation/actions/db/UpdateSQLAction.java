@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,18 +18,15 @@
 
 package com.exactprosystems.clearth.automation.actions.db;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 
-/**
- * Created by vitaly.barkhatov on 7/29/14.
- */
-public abstract class UpdateSQLAction extends SQLAction
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+
+public class UpdateSQLAction extends SQLAction
 {
 	@Override
 	protected Result executeQuery() throws Exception

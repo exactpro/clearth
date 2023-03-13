@@ -23,9 +23,9 @@ import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.actions.db.checkers.DefaultRecordChecker;
 import com.exactprosystems.clearth.automation.actions.db.checkers.RecordChecker;
 import com.exactprosystems.clearth.automation.actions.db.resultProcessors.ResultSetProcessor;
-import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.ResultSetProcessorSettings;
-import com.exactprosystems.clearth.automation.actions.db.resultProcessors.SaveToFileResultSetProcessor;
 import com.exactprosystems.clearth.automation.actions.db.resultProcessors.SaveToContextResultSetProcessor;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.SaveToFileResultSetProcessor;
+import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.ResultSetProcessorSettings;
 import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.SaveToContextRSProcessorSettings;
 import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.SaveToFileRSProcessorSettings;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
@@ -33,26 +33,30 @@ import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.automation.report.results.TableResult;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
-import com.exactprosystems.clearth.utils.sql.StubValueTransformer;
 import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
+import com.exactprosystems.clearth.utils.sql.StubValueTransformer;
 import com.exactprosystems.clearth.utils.sql.conversion.ConversionSettings;
 import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMapping;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 public abstract class SQLAction extends Action implements Preparable
 {
-
 	private GlobalContext globalContext;
 	private MatrixContext matrixContext;
 	private StepContext stepContext;
@@ -72,11 +76,13 @@ public abstract class SQLAction extends Action implements Preparable
 			MAX_DISPLAYED_ROWS_COUNT = "MaxDisplayedRowsCount",
 			QUERY_FILE = "QueryFile",
 			QUERY = "Query",
-			MAPPING_FILE = "MappingFile";
+			MAPPING_FILE = "MappingFile",
+			CONNECTION_NAME = "ConnectionName";
 
 	public static final String OUT_QUERY_RESULT_PATH = "OutResultPath",
 				OUT_ROWS_COUNT = "RowsCount",
-				OUT_TABLE_DATA = "tabledata";
+				OUT_TABLE_DATA = "tabledata",
+				CONNECTION_TYPE = "DB";
 
 	protected File fileDir;
 	protected String fileName;
@@ -86,6 +92,7 @@ public abstract class SQLAction extends Action implements Preparable
 	protected boolean useQuotes;
 	protected boolean compressResult;
 	protected int maxDisplayedRows;
+	protected String connectionName;
 
 	@Override
 	public Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext) throws FailoverException
@@ -125,6 +132,7 @@ public abstract class SQLAction extends Action implements Preparable
 		useQuotes = handler.getBoolean(PARAM_USE_QUOTES, false);
 		compressResult = handler.getBoolean(PARAM_COMPRESS_RESULT, false);
 		maxDisplayedRows = handler.getInteger(MAX_DISPLAYED_ROWS_COUNT, 50);
+		connectionName = handler.getRequiredString(CONNECTION_NAME);
 		handler.check();
 
 		String queryString = getQueryString();
@@ -212,7 +220,14 @@ public abstract class SQLAction extends Action implements Preparable
 
 	protected abstract Result executeQuery() throws Exception;
 
-	protected abstract Connection getDBConnection() throws Exception;
+	protected Connection getDBConnection() throws ConnectivityException, SettingsException
+	{
+		DbConnection dbConnection = (DbConnection) ClearThCore.connectionStorage().getConnection(connectionName, CONNECTION_TYPE);
+		if (dbConnection == null)
+			throw new ConnectivityException("Connection '%s' does not exist", connectionName);
+
+		return dbConnection.getConnection();
+	}
 
 	/**
 	 * Override this method to return true in implementations with DB Connection Pool.

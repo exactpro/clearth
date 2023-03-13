@@ -18,15 +18,15 @@
 
 package com.exactprosystems.clearth.automation.actions.db;
 
-import java.io.IOException;
-import java.sql.*;
-
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 
-public abstract class SelectSQLAction extends SQLAction
+import java.io.IOException;
+import java.sql.*;
+
+public class SelectSQLAction extends SQLAction
 {
 	protected PreparedStatement prepareStatement(String query, String[] keys, Connection con) throws SQLException {
 		PreparedStatement parametrizedQuery = SQLUtils.prepareQuery(query, keys, getQueryParams(), con, valueTransformer, getVerificationMapping());
@@ -66,5 +66,8 @@ public abstract class SelectSQLAction extends SQLAction
 		}
 	}
 
-	protected abstract Result processResultSet(ResultSet rs, String[] keys) throws SQLException, IOException, ResultException;
+	protected Result processResultSet(ResultSet rs, String[] keys) throws SQLException, IOException, ResultException
+	{
+		return processQueryResult(rs);
+	}
 }

@@ -43,7 +43,7 @@ import java.util.Map;
 
 import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
 
-public abstract class VerifySQLAction extends SelectSQLAction implements TimeoutAwaiter
+public class VerifySQLAction extends SelectSQLAction implements TimeoutAwaiter
 {
 	protected static final String PARAM_OUTPUTPARAMS = "OutputParams",
 			USE_CP_FROM = "UseCPFrom",

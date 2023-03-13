@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,23 +19,23 @@
 package com.exactprosystems.clearth.automation.actions.db;
 
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 
 /**
- * Abstract class to get data for CheckPointer from DB according to query 
- * @author vladimir.panarin
+ * Class to get data for CheckPointer from DB according to query 
  */
 
-public abstract class SQLCheckPointer extends SelectSQLAction
+public class SQLCheckPointer extends SelectSQLAction
 {
 	private static final String POSTFIX = "_cp",
 			QUERY_POSTFIX = "Query",

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -34,7 +34,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 
-public abstract class SQLBatchAction extends SQLAction
+public class SQLBatchAction extends SQLAction
 {
 	public static final String VALUES_ACTIONS = "ValuesActions";
 	public static final String SIZE_OF_BATCH = "SizeOfBatch";
