@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,12 +18,14 @@
 
 package com.exactprosystems.clearth.tools;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manager of all built-in tools. 
@@ -43,7 +45,8 @@ public class ToolsManager
 			TOOL_MESSAGE_HELPER = "Message helper",
 			TOOL_EXP_CALC = "Expression calculator",
 			TOOL_DICT_VALIDATOR = "Dictionary validator",
-			TOOL_MATRIX_UPDATER = "Matrix updater";
+			TOOL_MATRIX_UPDATER = "Matrix updater",
+			TOOL_SQL_EXECUTOR = "SQL Executor";
 	
 	protected final ToolsInfo toolsInfo;
 	protected final ToolsFactory toolsFactory;
@@ -80,6 +83,7 @@ public class ToolsManager
 		result.add(createToolInfo(50, TOOL_EXP_CALC));
 		result.add(createToolInfo(70, TOOL_DICT_VALIDATOR));
 		result.add(createToolInfo(80, TOOL_MATRIX_UPDATER));
+		result.add(createToolInfo(90, TOOL_SQL_EXECUTOR));
 		return result;
 	}
 	

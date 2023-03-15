@@ -1,0 +1,104 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+				xmlns:ui="http://java.sun.com/jsf/facelets"
+				xmlns:h="http://java.sun.com/jsf/html"
+				xmlns:f="http://java.sun.com/jsf/core"
+				xmlns:p="http://primefaces.org/ui"
+				xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+	<h:form id="SqlExecutor">
+		<div class="ui-grid ui-grid-responsive" style="margin-top: 10px">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-12">
+					<p:selectOneMenu value="#{sqlBean.selectedConnection}" style="float: left;">
+						<p:ajax listener="#{queryBean.loadQueryNames()}"
+								update="conCheck queryControl querySelector queryBody queryName queryComment"/>
+						<f:selectItem itemValue="" itemLabel="-Choose DB connection-" noSelectionOption="true" />
+						<f:selectItems value="#{sqlBean.getConnectionNames()}" />
+					</p:selectOneMenu>
+					<p:outputPanel id="conCheck" style="float: left; margin-left: 10px;">
+						<p:commandButton value="Check" ajax="true" update=":Growl" disabled="#{empty(sqlBean.selectedConnection)}"
+								action="#{sqlBean.checkConnection()}">
+						</p:commandButton>
+					</p:outputPanel>
+				</div>
+			</div>
+			
+			<br />
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-7">
+					<p:inputTextarea id="queryBody" placeholder="Query"
+							value="#{sqlBean.queryBody}" autoResize="false" 
+							style="resize: none; height: 120px; width: 95%; margin-bottom: 5px;" />
+					<br />
+				</div>
+				
+				<div class="ui-grid-col-2">
+					<p:outputPanel id="queryControl">
+						<p:commandButton id='execute' value="Execute" ajax="false" 
+								disabled="#{sqlBean.running || empty(sqlBean.selectedConnection)}"
+								actionListener="#{sqlBean.executeQuery()}"
+								action="tools?faces-redirect=true" style="width: 40%"/>
+						<p:commandButton id="cancel" value="Cancel" ajax="false" disabled="#{!sqlBean.running}"
+								actionListener="#{sqlBean.cancel()}"
+								action="tools?faces-redirect=true" style="width: 25%; margin-left: 5px"/>
+					</p:outputPanel>
+				</div>
+				
+				<div class="ui-grid-col-3">
+					<p:selectOneMenu id="querySelector"
+							value="#{sqlBean.queryName}"
+							update="queryBody queryName queryComment :Growl"
+							filter="true" filterMatchMode="startsWith"
+							style="width: 90%">
+						<p:ajax listener="#{queryBean.loadQuery}"
+								update="queryName queryBody queryComment"/>
+						<f:selectItem itemValue="" itemLabel="-Choose saved query-" noSelectionOption="true" />
+						<f:selectItems value="#{queryBean.getQueryNames()}" />
+					</p:selectOneMenu>
+					<p:inputText id="queryName" placeholder="Name"
+							value="#{sqlBean.queryName}"
+							style="resize: none; width: 65%; margin: 5px 0;" />
+					<p:commandButton value="Save" ajax="false"
+							actionListener="#{queryBean.saveQuery()}"
+							action="tools?faces-redirect=true"
+							style="width: 25%; float: right; right: 5%; margin: 5px -3px 5px 0;" />
+					<p:inputTextarea id="queryComment" rows="3" placeholder="Comment"
+							value="#{sqlBean.queryComment}"
+							style="resize: none; width: 65%; margin-bottom: 5px;" />
+				</div>
+			</div>
+			
+			<div class="ui-grid-row">
+				<h:panelGrid class="ui-grid-col-12" id="sqlExecutorGrid">
+					<h:outputText value="Result:" />
+					<h:form>
+						<p:dataTable id="resultTable" var="row"
+								value="#{sqlBean.resultRows}"
+								tableStyle="width: auto;"
+								emptyMessage="#{sqlBean.running ? 'Loading data...' : 'No records found'}"
+								paginator="true" paginatorPosition="top" rows="10"
+								paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink}
+										{PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink} {Download}"
+								lazy="true">
+							<f:facet name="{Download}">
+								<p:commandButton value="Download" ajax="false" style="float: right; margin-top: -3px">
+									<p:fileDownload value="#{sqlBean.downloadCsvResult()}" />
+								</p:commandButton>
+							</f:facet>
+							<p:columns value="#{sqlBean.resultHeader}" var="h">
+								<f:facet name="header">
+									#{h}
+								</f:facet>
+								<h:outputText value="#{sqlBean.getLimitedColumnValueString(row.getValue(h))}"
+										style="white-space: pre" />
+							</p:columns>
+						</p:dataTable>
+					</h:form>
+					<p:poll id="sqlExecutorPoll" interval="3" update="sqlExecutorGrid queryControl :Growl"
+							widgetVar="sqlExecutorPoll"
+							autoStart="#{sqlBean.running}" />
+				</h:panelGrid>
+			</div>
+		</div>
+	</h:form>
+</ui:composition>

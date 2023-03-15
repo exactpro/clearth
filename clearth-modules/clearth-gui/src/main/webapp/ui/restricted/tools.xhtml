@@ -39,7 +39,7 @@
 				<div class="upperRightContainer">
 					All tools: 
 					<br />
-					<p:selectOneMenu id="currentTool" value="#{toolsBean.activeTab}">
+					<p:selectOneMenu id="currentTool" value="#{toolsBean.activeTab}" height="100%">
 						<f:selectItems value="#{toolsBean.allTools.tools}" var="tool"
 							itemValue="#{tool.id}" itemLabel="#{tool.name}"/>
 						<p:ajax update=":Container :OperationsMenu" />
@@ -216,7 +216,7 @@
 					<br/>
 					<p:selectOneMenu id="currentConnection" value="#{collectorScannerToolBean.selectedConnection}"
 							style="width:300px;">
-						<f:selectItem itemLabel="&lt;Choose connection&gt;" itemValue="#{null}" />
+						<f:selectItem itemLabel="-Choose connection-" itemValue="#{null}" />
 						<f:selectItems value="#{collectorScannerToolBean.collectingConnections}" var="connection" />
 						<f:ajax update=":CollectorMessagesForm" render=":CollectorMessagesForm" />
 					</p:selectOneMenu>
@@ -312,7 +312,7 @@
 					<p:fileUpload value="#{configMakerToolBean.file}" mode="simple" skinSimple="true" /><br />
 					<br />
 					<p:selectOneMenu id="configMakerSchedulerCB" value="#{configMakerToolBean.selectedScheduler}" style="vertical-align: bottom">
-						<f:selectItem itemLabel="Select a scheduler" itemValue="" noSelectionOption="false"/>
+						<f:selectItem itemLabel="-Select a scheduler-" itemValue="" noSelectionOption="false"/>
 						<f:selectItems value="#{toolsBean.schedulers}"/>
 					</p:selectOneMenu>
 					&#160;
@@ -350,7 +350,7 @@
 					<c:if test="#{messageHelperToolBean.messageHelpers.size() ge 5}">
 						<div>
 							<p:selectOneMenu id="currentMessageHelpFormat" value="#{messageHelperToolBean.currentMessageHelpFormat}" effectSpeed="fast" style="width:200px">
-								<f:selectItem itemLabel="&lt;Choose a format&gt;" itemValue="#{null}"/>
+								<f:selectItem itemLabel="-Choose a format-" itemValue="#{null}"/>
 								<f:selectItems value="#{messageHelperToolBean.messageHelpers}"/>
 								<p:ajax event="change" update=":MessageHelp" />
 							</p:selectOneMenu>
@@ -360,7 +360,7 @@
 					<c:if test="#{messageHelperToolBean.currentMessageHelpFormat != null &amp;&amp; !messageHelperToolBean.currentMessageHelpFormat.isEmpty()}">
 						<p:selectOneMenu id="currentMessageHelperType" value="#{messageHelperToolBean.currentMessageHelperType}"
 								style="width:200px;" height="#{messageHelperToolBean.messageHelperTypes.size() > 15 ? 400 : (messageHelperToolBean.messageHelperTypes.size()+1)*27}">
-							<f:selectItem itemLabel="&lt;Choose a message type&gt;" itemValue="#{null}" />
+							<f:selectItem itemLabel="-Choose a message type-" itemValue="#{null}" />
 							<f:selectItems value="#{messageHelperToolBean.messageHelperTypes}" var="msg" />
 							<p:ajax event="change" update=":MessageHelp :Growl" process="@this" oncomplete="resetFilters();" />
 						</p:selectOneMenu>
@@ -441,7 +441,7 @@
 									<div style="font-weight: bold; width: 100%">Scheduler:</div>
 									<p:selectOneMenu id="inputExpr_panel_scheduler" value="#{ecToolBean.selectedScheduler}" 
 											title="Applies scheduler-specific settings for this calculation" style="width: 99%;">
-										<f:selectItem itemLabel="&lt;Select a scheduler&gt;" itemValue="" noSelectionOption="false" />
+										<f:selectItem itemLabel="-Select a scheduler-" itemValue="" noSelectionOption="false" />
 										<f:selectItems value="#{toolsBean.schedulers}" />
 									</p:selectOneMenu>
 								</div>
@@ -670,7 +670,11 @@
 			<p:outputPanel rendered="#{toolsBean.activeTab == 80}">
 				<ui:include src="tools/matrixUpdater.xhtml"/>
 			</p:outputPanel>
-			
+<!-- SQL Executor -->
+			<p:outputPanel rendered="#{toolsBean.activeTab == 90}">
+				<ui:include src="tools/sqlExecutor.xhtml"/>
+			</p:outputPanel>
+
 		</p:outputPanel>
 	</ui:define>
 </ui:composition>

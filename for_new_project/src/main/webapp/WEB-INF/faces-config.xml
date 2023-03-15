@@ -223,6 +223,22 @@
 		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.MatrixUpdaterToolBean</managed-bean-class>
 		<managed-bean-scope>session</managed-bean-scope>
 	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>sqlBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.sqlexecutor.SqlExecutorBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+
+	<managed-bean>
+		<managed-bean-name>queryBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.sqlexecutor.QueryBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>sqlBean</property-name>
+			<value>#{sqlBean}</value>
+		</managed-property>
+	</managed-bean>
 <!--End of Tools beans-->
 
 	<factory>
