@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -35,6 +36,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -80,7 +82,10 @@ public class SchedulerReportsTest
 		loadStepsForExecuteTest(scheduler);
 		loadMatricesForExecuteTest(scheduler);
 		scheduler.start(userName);
-		waitForSchedulerToStop(scheduler, 100, 10000);
+
+		//If for some step last async action has WaitAsyncEnd=No created reports might contain Failure message
+		waitForSchedulerToStop(scheduler, 1, 10000);
+
 		List<XmlSchedulerLaunchInfo> launchesInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
 		if (launchesInfo == null || launchesInfo.isEmpty())
 		{
@@ -122,30 +127,29 @@ public class SchedulerReportsTest
 			verifyReport(htmlReport);
 		}
 	}
+	
 
 	private void verifyReport(File report) throws IOException
 	{
 		String extension = FilenameUtils.getExtension(report.getName());
+		List<String> stringsForSearch = getStringsForSearch();
 
-		try (BufferedReader reader = new BufferedReader(new FileReader(report)))
+		//Report will be short and reading full report greatly eases debugging
+		List<String> reportLines = FileUtils.readLines(report, StandardCharsets.UTF_8);
+	
+		boolean lineIsContains = false;
+		for (String currentLine : reportLines)
 		{
-			List<String> stringsForSearch = getStringsForSearch();
-
-			String line;
-			boolean lineIsContains = false;
-			while ((line = reader.readLine()) != null)
+			for (String forSearch : stringsForSearch)
 			{
-				for (String forSearch : stringsForSearch)
-				{
-					lineIsContains = line.contains(getReportDataCommentBlock(forSearch, extension));
-					if (lineIsContains)
-						break;
-				}
+				lineIsContains = currentLine.contains(getReportDataCommentBlock(forSearch, extension));
 				if (lineIsContains)
 					break;
 			}
-			assertFalse("Report shouldn't contain pre/post report data", lineIsContains);
+			if (lineIsContains)
+				break;
 		}
+		assertFalse("Report shouldn't contain pre/post report data. Breaking report: " + String.join("\n", reportLines), lineIsContains);
 	}
 
 	private String getReportDataCommentBlock(String commentBlock, String extension)
