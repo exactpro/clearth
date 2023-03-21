@@ -19,8 +19,8 @@
 package com.exactprosystems.clearth.automation.actions.compareDataSets;
 
 import com.exactprosystems.clearth.ApplicationManager;
-import com.exactprosystems.clearth.automation.TestActionUtils;
 import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.TestActionUtils;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -34,7 +34,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
 
-import static com.exactprosystems.clearth.ApplicationManager.*;
+import static com.exactprosystems.clearth.ApplicationManager.ADMIN;
+import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
 
 public class CompareDataSetsTest {
 

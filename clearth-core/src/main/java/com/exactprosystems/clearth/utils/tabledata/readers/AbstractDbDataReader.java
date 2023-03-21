@@ -22,7 +22,6 @@ import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.ObjectToStringTransformer;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

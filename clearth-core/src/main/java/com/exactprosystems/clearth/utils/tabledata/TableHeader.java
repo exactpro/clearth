@@ -42,7 +42,6 @@ public class TableHeader<A> implements Iterable<A>
 		}
 	}
 	
-	
 	@Override
 	public Iterator<A> iterator()
 	{
@@ -91,5 +90,10 @@ public class TableHeader<A> implements Iterable<A>
 
 	public Collection<A> toCollection() {
 		return Collections.unmodifiableCollection(columns.keySet());
+	}
+	
+	public Set<A> toSet()
+	{
+		return Collections.unmodifiableSet(columns.keySet());
 	}
 }

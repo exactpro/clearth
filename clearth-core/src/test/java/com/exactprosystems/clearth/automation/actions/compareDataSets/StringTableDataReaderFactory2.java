@@ -19,7 +19,7 @@
 package com.exactprosystems.clearth.automation.actions.compareDataSets;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 import com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories.StringTableDataReaderFactory;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;

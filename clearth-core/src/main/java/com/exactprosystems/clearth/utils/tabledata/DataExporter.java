@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
+
 import java.io.IOException;
 
 public class DataExporter<A, B, C extends BasicTableData<A, B>>

@@ -19,7 +19,6 @@
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
 import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
 import java.io.*;

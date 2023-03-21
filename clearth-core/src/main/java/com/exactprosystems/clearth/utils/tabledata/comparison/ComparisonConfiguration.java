@@ -20,8 +20,15 @@ package com.exactprosystems.clearth.utils.tabledata.comparison;
 
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.IValueTransformer;
+import com.exactprosystems.clearth.utils.XmlUtils;
 import com.exactprosystems.clearth.utils.inputparams.ParametersHandler;
+import com.exactprosystems.clearth.utils.tabledata.comparison.mappings.DataMapping;
+import com.exactprosystems.clearth.utils.tabledata.comparison.mappings.StringDataMapping;
+import com.exactprosystems.clearth.utils.tabledata.comparison.mappings.descs.MappingDesc;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +41,7 @@ public class ComparisonConfiguration
 	private static final String MAX_ROWS_TO_STORE_TEMPLATE = "Max%sRowsInReport";
 	public static final String KEY_COLUMNS = "KeyColumns",
 			NUMERIC_COLUMNS = "NumericColumns",
+			MAPPING_FILE_NAME = "MappingFileName",
 			CHECK_DUPLICATES = "CheckDuplicates",
 			MAX_PASSED_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, "Passed"),
 			MAX_FAILED_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, "Failed"),
@@ -43,6 +51,7 @@ public class ComparisonConfiguration
 	protected final IValueTransformer bdValueTransformer;
 	protected Set<String> keyColumns;
 	protected Map<String, BigDecimal> numericColumns;
+	protected DataMapping<String> dataMapping;
 	
 	protected boolean checkDuplicates;
 	
@@ -64,11 +73,40 @@ public class ComparisonConfiguration
 	{
 		keyColumns = handler.getSet(KEY_COLUMNS, ",");
 		numericColumns = getNumericColumns(handler.getSet(NUMERIC_COLUMNS, ","));
+		File mappingFile = handler.getFile(MAPPING_FILE_NAME);
+		if (mappingFile != null)
+		{
+			if (!CollectionUtils.isEmpty(keyColumns) || !MapUtils.isEmpty(numericColumns))
+				throw new ParametersException("Parameters '" + KEY_COLUMNS + "' and '" + NUMERIC_COLUMNS +
+						"' are not compatible with parameter '" + MAPPING_FILE_NAME + "'");
+
+			dataMapping = getDataMapping(mappingFile);
+			keyColumns = dataMapping.getKeyColumns();
+			numericColumns = dataMapping.getNumericColumns();
+		}
+
 		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
 		maxPassedRowsToStore = handler.getInteger(MAX_PASSED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
 		maxFailedRowsToStore = handler.getInteger(MAX_FAILED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
 		maxNotFoundRowsToStore = handler.getInteger(MAX_NOT_FOUND_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
 		maxExtraRowsToStore = handler.getInteger(MAX_EXTRA_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+	}
+
+	protected DataMapping<String> getDataMapping(File file)
+			throws ParametersException
+	{
+		if (file == null)
+			return null;
+
+		try
+		{
+			MappingDesc mappingDesc = XmlUtils.unmarshalObject(MappingDesc.class, file.getCanonicalPath());
+			return new StringDataMapping(mappingDesc);
+		}
+		catch (Exception e)
+		{
+			throw new ParametersException("Error while loading data mapping file " + file.getAbsolutePath(), e);
+		}
 	}
 
 	protected Map<String, BigDecimal> getNumericColumns(Set<String> columnsWithScales) throws ParametersException
@@ -97,6 +135,10 @@ public class ComparisonConfiguration
 		return numericColumns;
 	}
 	
+	public DataMapping<String> getDataMapping()
+	{
+		return dataMapping;
+	}
 	
 	public Set<String> getKeyColumns()
 	{

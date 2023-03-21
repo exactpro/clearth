@@ -18,7 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
 
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;

@@ -20,7 +20,6 @@ package com.exactprosystems.clearth.utils.tabledata.readers;
 
 import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 
 import java.io.File;
 import java.io.FileNotFoundException;

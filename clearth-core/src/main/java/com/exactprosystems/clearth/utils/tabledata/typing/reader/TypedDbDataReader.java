@@ -20,7 +20,7 @@ package com.exactprosystems.clearth.utils.tabledata.typing.reader;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.javaFunction.BiFunctionWithException;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbRowFilter;

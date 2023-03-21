@@ -53,6 +53,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.exactprosystems.clearth.ApplicationManager.*;
+import static org.testng.Assert.assertTrue;
 
 public class DbConnectionSupplierTest
 {
@@ -99,6 +100,7 @@ public class DbConnectionSupplierTest
 		scheduler.start(ADMIN);
 
 		waitForSchedulerToStop(scheduler, 1000,10000);
+		assertTrue(scheduler.isSuccessful());
 	}
 
 	@Test
@@ -113,13 +115,13 @@ public class DbConnectionSupplierTest
 		Assert.assertFalse(supplierConnection.isClosed());
 
 		defSupplier.close();
-		Assert.assertTrue(supplierConnection.isClosed());
+		assertTrue(supplierConnection.isClosed());
 
 		Connection globalContextConn = context.getDbConnection(CON2);
 		Assert.assertFalse(globalContextConn.isClosed());
 
 		context.clearContext();
-		Assert.assertTrue(globalContextConn.isClosed());
+		assertTrue(globalContextConn.isClosed());
 	}
 
 	@Test(expectedExceptions = ParametersException.class)

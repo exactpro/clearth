@@ -19,7 +19,7 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators;
 
 import com.exactprosystems.clearth.utils.ComparisonUtils;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.StringValueParser;

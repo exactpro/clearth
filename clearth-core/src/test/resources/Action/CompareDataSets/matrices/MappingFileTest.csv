@@ -1,0 +1,29 @@
+//Constants:
+//path=clearth-core/src/test/resources/Action/CompareDataSets/testData/MappingTest
+
+#Comment,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Base test to check mappings between columns",id1,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/simpleExpected.csv,@{matrix.path}/simpleActual.csv,@{matrix.path}/simpleMapping.xml
+
+#Comment,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Keys test",id2,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/keyExpected.csv,@{matrix.path}/keyActual.csv,@{matrix.path}/keyMapping.xml
+
+#Comment,#KeyColumns,#Invert,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Keys failed due to columns mixing test",B,true,id3,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/keyExpected.csv,@{matrix.path}/keyActual.csv,@{matrix.path}/keyMapping.xml
+
+#Comment,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Ignore test",id4,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/ignoreExpected.csv,@{matrix.path}/ignoreActual.csv,@{matrix.path}/ignoreMapping.xml
+
+#Comment,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Info test",id5,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/infoExpected.csv,@{matrix.path}/infoActual.csv,@{matrix.path}/infoMapping.xml
+
+#Comment,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Numeric successful test",id6,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/numericExpected.csv,@{matrix.path}/numericActual.csv,@{matrix.path}/numericMappingSuccess.xml
+
+#Comment,#NumericColumns,#Invert,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Numeric failed due to columns mixing test","B:0.1",true,id7,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/numericExpected.csv,@{matrix.path}/numericActual.csv,@{matrix.path}/numericMappingSuccess.xml
+
+#Comment,#Invert,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Numeric failed due to precision test",true,id8,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/numericExpected.csv,@{matrix.path}/numericActual.csv,@{matrix.path}/numericMappingFail.xml
+
+#Comment,#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName
+"Complex test",id9,MappingStep,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/complexExpected.csv,@{matrix.path}/complexActual.csv,@{matrix.path}/complexMapping.xml

@@ -30,7 +30,6 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.utils.*;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonConfiguration;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
@@ -41,14 +40,19 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.connections.Defaul
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.IndexedStringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.StringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.TableDataComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.mappings.DataMapping;
 import com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories.StringTableDataReaderFactory;
 import com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories.TableDataReaderFactory;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.KeyColumnsRowsCollector;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.StringKeyColumnsRowsCollector;
+import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.MappedTableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.MappedStringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.NumericStringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.readers.MappedTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 
@@ -59,13 +63,15 @@ public class CompareDataSets extends Action
 {
 	protected IValueTransformer bdValueTransformer = null;
 	protected ComparisonConfiguration compConfig;
-	
+	protected TableDataReaderFactory<String, String> readerFactory;
+	protected DbConnectionSupplier dbConnectionSupplier;
+
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
 		BasicTableDataReader<String, String, ?> expectedReader = null, actualReader = null;
-		DbConnectionSupplier dbConnectionSupplier = null;
+		
 		try
 		{
 			getLogger().debug("Initializing comparison configuration");
@@ -75,11 +81,9 @@ public class CompareDataSets extends Action
 			
 			getLogger().debug("Preparing data readers");
 			dbConnectionSupplier = createDbConnectionSupplier(actionParameters, globalContext);
-			TableDataReaderFactory<String, String> readerFactory = createTableDataReaderFactory();
-			expectedReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters,
-					true), dbConnectionSupplier);
-			actualReader = readerFactory.createTableDataReader(createTableDataReaderSettings(actionParameters,
-					false), dbConnectionSupplier);
+			readerFactory = createTableDataReaderFactory();
+			expectedReader = createTableDataReader(actionParameters, true);
+			actualReader = createTableDataReader(actionParameters, false);
 			
 			return makeComparison(expectedReader, actualReader);
 		}
@@ -107,6 +111,19 @@ public class CompareDataSets extends Action
 	protected boolean isNeedCloseDbConnection()
 	{
 		return false;
+	}
+
+	private BasicTableDataReader<String, String,?> createTableDataReader(Map<String, String> actionParameters, boolean forExpected)
+			throws ParametersException, TableDataException
+	{
+		BasicTableDataReader<String, String, ?> tableDataReader = readerFactory.createTableDataReader(
+				createTableDataReaderSettings(actionParameters, forExpected), dbConnectionSupplier);
+		
+		DataMapping<String> dataMapping = compConfig.getDataMapping();
+		if (dataMapping != null)
+			tableDataReader = new MappedTableDataReader<>(tableDataReader, dataMapping.getHeaderMapper(forExpected));
+		
+		return tableDataReader;
 	}
 
 	protected Map<String, String> getActionParameters()
@@ -152,14 +169,23 @@ public class CompareDataSets extends Action
 	
 	protected TableRowsComparator<String, String> createTableRowsComparator()
 	{
+		if (compConfig.getDataMapping() != null)
+			return new MappedTableRowsComparator<>(createValuesComparator(), compConfig.getDataMapping());
+		
 		return new TableRowsComparator<>(createValuesComparator());
 	}
 
 	protected ValuesComparator<String, String> createValuesComparator()
 	{
 		ComparisonUtils comparisonUtils = ClearThCore.comparisonUtils();
-		return compConfig.getNumericColumns().isEmpty() ? new StringValuesComparator(comparisonUtils) :
-				new NumericStringValuesComparator(comparisonUtils, compConfig.getNumericColumns(), bdValueTransformer);
+		
+		if (compConfig.getDataMapping() != null)
+			return new MappedStringValuesComparator(comparisonUtils, compConfig.getDataMapping(), bdValueTransformer);
+		
+		if (!compConfig.getNumericColumns().isEmpty())
+			return new NumericStringValuesComparator(comparisonUtils, compConfig.getNumericColumns(), bdValueTransformer);
+		
+		 return new StringValuesComparator(comparisonUtils);
 	}
 	
 	

@@ -1,14 +1,14 @@
-/******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+/*******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
- *
+ *  
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,14 +16,12 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata;
+package com.exactprosystems.clearth.utils.tabledata.readers;
+
+import com.exactprosystems.clearth.utils.tabledata.*;
 
 import java.io.IOException;
 import java.util.Set;
-
-import com.exactprosystems.clearth.utils.tabledata.readers.TableDataReader;
-
-import static com.exactprosystems.clearth.utils.Utils.nvl;
 
 /**
  * Abstract ancestor for classes that read table-like data from various sources
@@ -74,8 +72,8 @@ public abstract class BasicTableDataReader<A, B, C extends BasicTableData<A, B>>
 	public C start() throws IOException
 	{
 		Set<A> header = readHeader();
-		RowsListFactory<A, B> rowsListFactory = nvl(this.rowsListFactory,
-				RowsListFactories.<A, B>linkedListFactory());
+		if (rowsListFactory == null)
+			rowsListFactory = RowsListFactories.linkedListFactory();
 		tableData = createTableData(header, rowsListFactory);
 		return tableData;
 	}

@@ -33,6 +33,7 @@ import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.*;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.typing.*;
 import com.exactprosystems.clearth.utils.tabledata.typing.converter.DbTypesConverter;
 import com.exactprosystems.clearth.utils.tabledata.typing.converter.GenericDbTypesConverter;
