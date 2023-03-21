@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.utils.SpecialValue;
+import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
@@ -72,7 +73,7 @@ public class SQLBatchAction extends SQLAction
 		finally
 		{
 			if (isNeedCloseDbConnection())
-				connection.close();
+				Utils.closeResource(connection);
 		}
 	}
 

@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.connections;
 
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -26,6 +27,7 @@ import java.sql.Connection;
 
 public interface DbConnectionSupplier extends AutoCloseable
 {
-	Connection getConnection(boolean forExpectedData) throws ConnectivityException, SettingsException;
+	Connection getConnection(boolean forExpectedData) throws ConnectivityException, SettingsException,
+			ParametersException;
 	IValueTransformer getValueTransformer();
 }

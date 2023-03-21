@@ -20,14 +20,21 @@ package com.exactprosystems.clearth.automation.actions.compareDataSets;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.GlobalContext;
+import com.exactprosystems.clearth.automation.MatrixFunctions;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.db.DbConnection;
+import com.exactprosystems.clearth.data.DefaultTestExecutionHandler;
+import com.exactprosystems.clearth.generators.IncrementingValueGenerator;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DefaultDbConnectionSupplier;
 import org.apache.commons.io.FileUtils;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -38,8 +45,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.exactprosystems.clearth.ApplicationManager.*;
 
@@ -52,7 +63,8 @@ public class DbConnectionSupplierTest
 	private static final File SCHEDULER_STEP_CONFIG = RES_DIR.resolve("configs").resolve("config.cfg").toFile(),
 								MATRIX_TEST_ACTION = RES_DIR.resolve("matrices").toFile();
 	private static final File CFG_FILE = RES_DIR.resolve("clearth.cfg").toFile();
-	private static String con1 = "con1", con2 = "con2";
+	private static final String CON1 = "con1", CON2 = "con2", ACTUAL_PARAM_NAME = "ActualConnectionName";
+	private static ClearThConnectionStorage storage;
 
 	@BeforeClass
 	public static void init() throws Exception
@@ -65,7 +77,7 @@ public class DbConnectionSupplierTest
 
 		manager = new ApplicationManager(CFG_FILE.toString());
 
-		createStorage();
+		initStorage();
 	}
 
 	@AfterClass
@@ -78,9 +90,8 @@ public class DbConnectionSupplierTest
 	public void testCreateConnectionSupplier()
 			throws ClearThException, AutomationException, SQLException, SettingsException
 	{
-		ClearThConnectionStorage storage = ClearThCore.connectionStorage();
-		createTable("expectedTable", (DbConnection) storage.getConnection(con1));
-		createTable("actualTable", (DbConnection) storage.getConnection(con2));
+		createTable("expectedTbl", (DbConnection) storage.getConnection(CON1));
+		createTable("actualTbl", (DbConnection) storage.getConnection(CON2));
 
 		Scheduler scheduler = manager.getScheduler(ADMIN, ADMIN);
 		manager.loadSteps(scheduler, SCHEDULER_STEP_CONFIG);
@@ -90,12 +101,51 @@ public class DbConnectionSupplierTest
 		waitForSchedulerToStop(scheduler, 1000,10000);
 	}
 
-	protected static void createStorage() throws ConnectivityException, SettingsException
+	@Test
+	public void testCloseConnection() throws Exception
 	{
-		ClearThConnectionStorage connectionStorage = ClearThCore.connectionStorage();
+		GlobalContext context = createGlobalContext();
+		Map<String, String> params = new HashMap<>();
+		params.put(ACTUAL_PARAM_NAME, CON2);
 
-		connectionStorage.addConnection(createCon(connectionStorage, con1));
-		connectionStorage.addConnection(createCon(connectionStorage, con2));
+		DefaultDbConnectionSupplier defSupplier = new DefaultDbConnectionSupplier(params, context);
+		Connection supplierConnection = defSupplier.getConnection(false);
+		Assert.assertFalse(supplierConnection.isClosed());
+
+		defSupplier.close();
+		Assert.assertTrue(supplierConnection.isClosed());
+
+		Connection globalContextConn = context.getDbConnection(CON2);
+		Assert.assertFalse(globalContextConn.isClosed());
+
+		context.clearContext();
+		Assert.assertTrue(globalContextConn.isClosed());
+	}
+
+	@Test(expectedExceptions = ParametersException.class)
+	public void testUnexpectedConnectionName() throws Exception
+	{
+		GlobalContext context = createGlobalContext();
+		Map<String, String> params = new HashMap<>();
+		params.put(ACTUAL_PARAM_NAME, CON2);
+
+		DefaultDbConnectionSupplier defSupplier = new DefaultDbConnectionSupplier(params, context);
+		defSupplier.getConnection(true);
+	}
+
+	private GlobalContext createGlobalContext()
+	{
+		return new GlobalContext(new Date(),
+				false,new HashMap<>(),
+				new MatrixFunctions(new HashMap<>(), new Date(),new Date(), false, new IncrementingValueGenerator(1)),
+				"ADMIN", new DefaultTestExecutionHandler());
+	}
+
+	protected static void initStorage() throws ConnectivityException, SettingsException
+	{
+		storage = ClearThCore.connectionStorage();
+		storage.addConnection(createCon(storage, CON1));
+		storage.addConnection(createCon(storage, CON2));
 	}
 
 	private static DbConnection createCon(ClearThConnectionStorage storage, String conName)

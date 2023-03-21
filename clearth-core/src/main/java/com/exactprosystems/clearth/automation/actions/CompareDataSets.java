@@ -93,14 +93,20 @@ public class CompareDataSets extends Action
 		}
 		catch (ConnectivityException | SettingsException e)
 		{
-			return DefaultResult.failed("Error while preparing connection: " + e.getMessage(), e);
+			return DefaultResult.failed("Error while getting connection: " + e.getMessage(), e);
 		}
 		finally
 		{
 			Utils.closeResource(expectedReader);
 			Utils.closeResource(actualReader);
-			Utils.closeResource(dbConnectionSupplier);
+			if (isNeedCloseDbConnection())
+				Utils.closeResource(dbConnectionSupplier);
 		}
+	}
+
+	protected boolean isNeedCloseDbConnection()
+	{
+		return false;
 	}
 
 	protected Map<String, String> getActionParameters()

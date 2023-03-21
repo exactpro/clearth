@@ -1,2 +1,3 @@
 #ID,#Globalstep,#Action,#ExpectedFormat,#ExpectedSource,#ActualFormat,#ActualSource,#ExpectedConnectionName,#ActualConnectionName
 id1,Step1,CompareDataSets,Query,Select * from expectedTbl,Query,Select * from actualTbl,con1,con2
+id2,Step1,CompareDataSets,Query,Select * from expectedTbl,Query,Select * from actualTbl,con1,con2

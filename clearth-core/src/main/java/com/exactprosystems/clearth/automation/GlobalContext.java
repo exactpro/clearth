@@ -18,12 +18,15 @@
 
 package com.exactprosystems.clearth.automation;
 
+import com.exactprosystems.clearth.automation.exceptions.ResultException;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.data.TestExecutionHandler;
+import com.exactprosystems.clearth.utils.SettingsException;
+
+import java.sql.Connection;
 import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.exactprosystems.clearth.automation.exceptions.ResultException;
-import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public class GlobalContext
 {
@@ -38,7 +41,7 @@ public class GlobalContext
 	private final List<String> attemptedConnections;
 	private final Set<Statement> statements;
 	private final TestExecutionHandler executionHandler;
-	
+	private final OpenedDbConnections openedDbConnections;
 	private Date started, finished;
 	
 	public GlobalContext(Date currentDate, boolean weekendHoliday, Map<String, Boolean> holidays, MatrixFunctions matrixFunctions, String startedByUser,
@@ -60,7 +63,8 @@ public class GlobalContext
 		this.startedByUser = startedByUser;
 		this.attemptedConnections = new ArrayList<String>(0);
 		this.statements = ConcurrentHashMap.newKeySet();
-		
+		this.openedDbConnections = new OpenedDbConnections();
+
 		this.executionHandler = executionHandler;
 		
 		this.started = null;
@@ -172,9 +176,16 @@ public class GlobalContext
 
 	public void clearContext()
 	{
+		openedDbConnections.clear();
 		loadedContext.clear();
 		attemptedConnections.clear();
 		holidays.clear();
 		statements.clear();
 	}
+
+	public Connection getDbConnection(String conName) throws ConnectivityException, SettingsException
+	{
+		return openedDbConnections.getConnection(conName);
+	}
+
 }

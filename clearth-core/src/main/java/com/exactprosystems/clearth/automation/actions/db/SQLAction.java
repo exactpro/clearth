@@ -34,7 +34,6 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.automation.report.results.TableResult;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
@@ -81,8 +80,7 @@ public abstract class SQLAction extends Action implements Preparable
 
 	public static final String OUT_QUERY_RESULT_PATH = "OutResultPath",
 				OUT_ROWS_COUNT = "RowsCount",
-				OUT_TABLE_DATA = "tabledata",
-				CONNECTION_TYPE = "DB";
+				OUT_TABLE_DATA = "tabledata";
 
 	protected File fileDir;
 	protected String fileName;
@@ -222,11 +220,7 @@ public abstract class SQLAction extends Action implements Preparable
 
 	protected Connection getDBConnection() throws ConnectivityException, SettingsException
 	{
-		DbConnection dbConnection = (DbConnection) ClearThCore.connectionStorage().getConnection(connectionName, CONNECTION_TYPE);
-		if (dbConnection == null)
-			throw new ConnectivityException("Connection '%s' does not exist", connectionName);
-
-		return dbConnection.getConnection();
+		return globalContext.getDbConnection(connectionName);
 	}
 
 	/**
