@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,16 +20,22 @@ package com.exactprosystems.clearth.utils.inputparams;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
-import static com.exactprosystems.clearth.utils.ClearThEnumUtils.valueOfIgnoreCase;
-import static com.exactprosystems.clearth.utils.ClearThEnumUtils.enumToTextValues;
-
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConnection;
+import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
+import static com.exactprosystems.clearth.utils.ClearThEnumUtils.enumToTextValues;
+import static com.exactprosystems.clearth.utils.ClearThEnumUtils.valueOfIgnoreCase;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class InputParamsUtils
@@ -37,6 +43,7 @@ public class InputParamsUtils
 	public static final List<String> YES = Arrays.asList("y", "yes", "true", "1"),
 			NO = Arrays.asList("n", "no", "false", "0");
 	public static final String ERROR_PARAM_MISSING = "Required input parameter '%s' is not filled in matrix";
+	public static final String TYPE_DB = "DB";
 
 	private InputParamsUtils()
 	{
@@ -278,5 +285,137 @@ public class InputParamsUtils
 					+ key 
 					+ "' has incorrect format. It should be one of the following (ignoring case): " 
 					+ enumToTextValues(enumClass));
+	}
+
+	public static ClearThConnection getRequiredClearThConnection(Map<String, String> inputParams, String key, String type)
+					throws ResultException
+	{
+		return getClearThConnection(inputParams, key, null, true, type);
+	}
+
+	public static ClearThConnection getClearThConnection(Map<String, String> inputParams, String key, String defaultConName, String type)
+					throws ResultException
+	{
+		return getClearThConnection(inputParams, key, defaultConName, false, type);
+	}
+	public static ClearThConnection getRequiredClearThConnection(Map<String, String> inputParams, String key)
+					throws ResultException
+	{
+		return getClearThConnection(inputParams, key, null, true, null);
+	}
+	
+	public static ClearThConnection getClearThConnection(Map<String, String> inputParams, String key, String defaultConName)
+					throws ResultException
+	{
+		return getClearThConnection(inputParams, key, defaultConName, false, null);
+	}
+	
+	private static ClearThConnection getClearThConnection(Map<String, String> inputParams, String key,
+					String defaultConName, boolean required, String type) throws ResultException
+	{
+		String conName = inputParams.get(key);
+
+		if (StringUtils.isBlank(conName))
+		{
+			if (required)
+				throw ResultException.failed(String.format(ERROR_PARAM_MISSING, key));
+			conName = defaultConName;
+		}
+		
+		ClearThConnection connection = ClearThCore.connectionStorage().getConnection(conName);
+		
+		if (connection == null)
+			throw ResultException.failed("Connection with name '" + conName + "' does not exist");
+		
+		if(type != null)
+			checkConnectionType(connection, type);
+
+		return connection;
+	}
+
+	private static void checkConnectionType(ClearThConnection connection, String type)
+	{
+		String conType = connection.getTypeInfo().getName();
+		if (!conType.equals(type))
+			throw ResultException.failed("Connection '" + connection.getName()
+						+ "' has type " + conType + " while expected type " + type);
+	}
+	
+	public static ClearThMessageConnection getRequiredClearThMessageConnection(Map<String, String> inputParams,
+					String key, String type) throws ResultException
+	{
+		return getClearThMessageConnection(inputParams, key, null, true, type);
+	}
+
+	public static ClearThMessageConnection getClearThMessageConnection(Map<String, String> inputParams,
+					String key, String defaultConName, String type) throws ResultException
+	{
+		return getClearThMessageConnection(inputParams, key, defaultConName, false, type);
+	}
+	
+	public static ClearThMessageConnection getRequiredClearThMessageConnection(Map<String, String> inputParams,
+					String key) throws ResultException
+	{
+		return getClearThMessageConnection(inputParams, key, null, true, null);
+	}
+	
+	public static ClearThMessageConnection getClearThMessageConnection(Map<String, String> inputParams,
+					String key, String defaultConName) throws ResultException
+	{
+		return getClearThMessageConnection(inputParams, key, defaultConName, false, null);
+	}
+	
+	private static ClearThMessageConnection getClearThMessageConnection(Map<String, String> inputParams,
+					String key, String defaultConName, boolean required, String type) throws ResultException
+	{
+		ClearThConnection cthConn = getClearThConnection(inputParams, key, defaultConName, required, type);
+		if (!(cthConn instanceof ClearThMessageConnection))
+			throw ResultException.failed("Connection '" + cthConn.getName() + "' does not support messages");
+		return (ClearThMessageConnection) cthConn;
+	}
+
+	public static ClearThRunnableConnection getRequiredClearThRunnableConnection(Map<String, String> inputParams,
+					String key, String type) throws ResultException
+	{
+		return getClearThRunnableConnection(inputParams, key, null, true, type);
+	}
+
+	public static ClearThRunnableConnection getClearThRunnableConnection(Map<String, String> inputParams,
+					String key, String defaultConName, String type) throws ResultException
+	{
+		return getClearThRunnableConnection(inputParams, key, defaultConName, false, type);
+	}
+	
+	public static ClearThRunnableConnection getRequiredClearThRunnableConnection(Map<String, String> inputParams,
+					String key) throws ResultException
+	{
+		return getClearThRunnableConnection(inputParams, key, null, true, null);
+	}
+	
+	public static ClearThRunnableConnection getClearThRunnableConnection(Map<String, String> inputParams,
+					String key, String defaultConName) throws ResultException
+	{
+		return getClearThRunnableConnection(inputParams, key, defaultConName, false, null);
+	}
+	
+	private static ClearThRunnableConnection getClearThRunnableConnection(Map<String, String> inputParams,
+					String key, String defaultConName, boolean required, String type) throws ResultException
+	{
+		ClearThConnection cthConn = getClearThConnection(inputParams, key, defaultConName, required, type);
+		if (!(cthConn instanceof ClearThRunnableConnection))
+			throw ResultException.failed("Connection '" + cthConn.getName() + "' is not runnable");
+		return (ClearThRunnableConnection) cthConn;
+	}
+
+	public static DbConnection getRequiredDbConnection(Map<String, String> inputParams, String key)
+					throws ResultException
+	{
+		return (DbConnection) getClearThConnection(inputParams, key, null, true, TYPE_DB);
+	}
+
+	public static DbConnection getDbConnection(Map<String, String> inputParams, String key, String defaultConName)
+					throws ResultException
+	{
+		return (DbConnection) getClearThConnection(inputParams, key, defaultConName, false, TYPE_DB);
 	}
 }

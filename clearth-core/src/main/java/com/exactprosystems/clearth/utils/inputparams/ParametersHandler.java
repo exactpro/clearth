@@ -20,6 +20,11 @@ package com.exactprosystems.clearth.utils.inputparams;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.automation.exceptions.ResultException;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
+import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConnection;
+import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.Pair;
@@ -83,7 +88,7 @@ public class ParametersHandler
 	protected static final int POSITIVE = 1;
 	protected static final int NEGATIVE = -1;
 	protected static final int NON_NEGATIVE = 0;
-
+	public static final String TYPE_DB = "DB";
 	protected final Map<String, String> params;
 	protected final List<ValidationError> errors = new ArrayList<ValidationError>();
 
@@ -1020,6 +1025,11 @@ public class ParametersHandler
 		if (!unexpectedValueErrors.isEmpty())
 			errorMessages.add("The following parameters have unexpected values: " + joinNamesPossibleValues(unexpectedValueErrors));
 
+
+		List<ConnectivityParameterError> connectivityParameterErrors = filter(errors, ConnectivityParameterError.class);
+		if (!connectivityParameterErrors.isEmpty())
+			errorMessages.add("Error(s) while getting connection(s): " + joinNamesConnectionErrors(connectivityParameterErrors));
+
 		return !errorMessages.isEmpty() ? StringUtils.join(errorMessages, "; \n") : null;
 	}
 	
@@ -1096,4 +1106,159 @@ public class ParametersHandler
 		}
 		return cb.toString();
 	}
+
+	private static String joinNamesConnectionErrors(List<ConnectivityParameterError> errors)
+	{
+		CommaBuilder cb = new CommaBuilder();
+		for (ConnectivityParameterError e : errors)
+			cb.append(String.format("'%s' (%s)", e.getName(), e.getExceptionMessage()));
+
+		return cb.toString();
+	}
+
+	// Connectivity ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	public ClearThConnection getRequiredClearThConnection(String key, String type)
+					throws ResultException
+	{
+		return getClearThConnection(key, null, type, true);
+	}
+
+	public ClearThConnection getClearThConnection(String key, String defaultConName, String type)
+					throws ResultException
+	{
+		return getClearThConnection(key, defaultConName, type,false);
+	}
+	
+	public ClearThConnection getRequiredClearThConnection(String key) throws ResultException
+	{
+		return getClearThConnection(key, null, null, true);
+	}
+	
+	public ClearThConnection getClearThConnection(String key, String defaultConName) throws ResultException
+	{
+		return getClearThConnection(key, defaultConName, null,false);
+	}
+
+	private ClearThConnection getClearThConnection(String key, String defaultConName, String type, boolean required)
+					throws ResultException
+	{
+		String conName = params.get(key);
+
+		if (StringUtils.isBlank(conName))
+		{
+			if (required)
+			{
+				errors.add(new RequiredParameterError(key));
+				return null;
+			}
+			conName = defaultConName;
+		}
+		ClearThConnection connection = ClearThCore.connectionStorage().getConnection(conName);
+
+		if (connection == null)
+		{
+			errors.add(new ConnectivityParameterError(conName, "does not exist"));
+			return null;
+		}
+		if(type != null && !checkConnectionType(connection, type))
+			return null;
+		
+		return connection;
+	}
+	
+	private boolean checkConnectionType(ClearThConnection connection, String type)
+	{
+		String conType = connection.getTypeInfo().getName();
+		if (!conType.equals(type))
+		{
+			errors.add(new ConnectivityParameterError(connection.getName(),
+					"has unexpected type " + conType + " while expected type " + type));
+			return false;
+		}
+		return true;
+	}
+	
+	public ClearThMessageConnection getRequiredClearThMessageConnection(String key, String type)
+					throws ResultException
+	{
+		return getClearThMessageConnection(key, null, type, true);
+	}
+
+	public ClearThMessageConnection getClearThMessageConnection(String key, String defaultConName, String type)
+					throws ResultException
+	{
+		return getClearThMessageConnection(key, defaultConName, type, false);
+	}
+
+	public ClearThMessageConnection getRequiredClearThMessageConnection(String key) throws ResultException
+	{
+		return getClearThMessageConnection(key, null, null, true);
+	}
+	
+	public ClearThMessageConnection getClearThMessageConnection(String key, String defaultConName) throws ResultException
+	{
+		return getClearThMessageConnection(key, defaultConName, null, false);
+	}
+	
+	private ClearThMessageConnection getClearThMessageConnection(String key, String defaultConName, String type,
+					 boolean required) throws ResultException
+	{
+		ClearThConnection cthConn = getClearThConnection(key, defaultConName, type, required);
+		if (cthConn == null)
+			return null;
+		if (!(cthConn instanceof ClearThMessageConnection))
+		{
+			errors.add(new ConnectivityParameterError(cthConn.getName(), "does not support messages"));
+			return null;
+		}
+		return (ClearThMessageConnection) cthConn;
+	}
+
+	public ClearThRunnableConnection getRequiredClearThRunnableConnection(String key, String type)
+					throws ResultException
+	{
+		return getClearThRunnableConnection(key, null, type, true);
+	}
+
+	public ClearThRunnableConnection getClearThRunnableConnection(String key, String defaultConName, String type)
+					throws ResultException
+	{
+		return getClearThRunnableConnection(key, defaultConName, type, false);
+	}
+
+	public ClearThRunnableConnection getRequiredClearThRunnableConnection(String key) throws ResultException
+	{
+		return getClearThRunnableConnection(key, null, null, true);
+	}
+	
+	public ClearThRunnableConnection getClearThRunnableConnection(String key, String defaultConName) throws ResultException
+	{
+		return getClearThRunnableConnection(key, defaultConName, null, false);
+	}
+	
+	private ClearThRunnableConnection getClearThRunnableConnection(String key, String defaultConName, String type,
+					boolean required) throws ResultException
+	{
+		ClearThConnection cthConn = getClearThConnection(key, defaultConName, type, required);
+		if (cthConn == null)
+			return null;
+		if (!(cthConn instanceof ClearThRunnableConnection))
+		{
+			errors.add(new ConnectivityParameterError(cthConn.getName(), "is not runnable"));
+			return null;
+		}
+		return (ClearThRunnableConnection) cthConn;
+	}
+
+	public DbConnection getRequiredDbConnection(String key) throws ResultException
+	{
+		return (DbConnection) getClearThConnection(key, null, TYPE_DB, true);
+	}
+
+	public DbConnection getDbConnection(String key, String defaultConName) throws ResultException
+	{
+		return (DbConnection) getClearThConnection(key, defaultConName, TYPE_DB, false);
+	}
+
 }
