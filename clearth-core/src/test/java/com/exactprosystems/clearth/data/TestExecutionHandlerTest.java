@@ -35,7 +35,6 @@ import org.testng.asserts.SoftAssert;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.HandlingApplicationManager;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.TestActionUtils;
 import com.exactprosystems.clearth.automation.report.Result;
@@ -63,7 +62,7 @@ public class TestExecutionHandlerTest
 	public void init() throws ClearThException
 	{
 		dataHandlersFactory = new DummyHandlersFactory();
-		appManager = new HandlingApplicationManager(dataHandlersFactory);
+		appManager = new ApplicationManager(dataHandlersFactory);
 	}
 	
 	@AfterClass

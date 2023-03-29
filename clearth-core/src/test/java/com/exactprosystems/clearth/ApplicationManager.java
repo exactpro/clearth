@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.config.ClearThConfiguration;
 import com.exactprosystems.clearth.config.ConfigurationException;
+import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.generators.IncrementingValueGenerators;
 import com.exactprosystems.clearth.utils.ClearThException;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,15 +78,24 @@ public class ApplicationManager
 	private static boolean clearAppRoot = true, clearLogs = true;
 	private String configFilePath;
 	private DeploymentConfig deploymentConfig;
-
+	private DataHandlersFactory dataHandlersFactory;
+	
 	public ApplicationManager() throws ClearThException
 	{
+		initClearThInstance();
+	}
+	
+	public ApplicationManager(DataHandlersFactory dataHandlersFactory) throws ClearThException
+	{
+		this.dataHandlersFactory = dataHandlersFactory;
+		
 		initClearThInstance();
 	}
 
 	public ApplicationManager(String configFilePath) throws ClearThException
 	{
 		this.configFilePath = configFilePath;
+
 		initClearThInstance();
 	}
 
@@ -107,6 +118,23 @@ public class ApplicationManager
 			File logs = new File(LOGS_DIR);
 			if (logs.exists())
 				FileUtils.cleanDirectory(logs);
+		}
+	}
+
+	protected void resetClearThInstance()
+	{
+		if (ClearThCore.getInstance() == null)
+			return;
+		
+		try
+		{
+			Field field = ClearThCore.class.getDeclaredField("instance");
+			field.setAccessible(true);
+			field.set(ClearThCore.class, null);
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -250,7 +278,9 @@ public class ApplicationManager
 		when(core.createStepFactory()).thenReturn(createStepFactory());
 		doReturn(createExecutorFactory(core.getValueGenerators().getCommonGenerator()))
 				.when(core).createExecutorFactory(any(ValueGenerators.class));
-
+		if (dataHandlersFactory != null)
+			doReturn(dataHandlersFactory).when(core).createDataHandlersFactory();
+		
 		//initOtherEntities() implementation
 		try
 		{
@@ -317,14 +347,14 @@ public class ApplicationManager
 
 	protected void initClearThInstance() throws ClearThException
 	{
-		if (ClearThCore.getInstance() == null)
-		{
-			deploymentConfig = getDeploymentConfig();
-			ConfigFiles configFiles = getConfigFiles();
-			deploymentConfig.init(configFiles);
-			ClearThCore application = getCoreInstance();
-			application.init(configFiles, deploymentConfig);
-		}
+		if (ClearThCore.getInstance() != null)
+			resetClearThInstance();
+		
+		deploymentConfig = getDeploymentConfig();
+		ConfigFiles configFiles = getConfigFiles();
+		deploymentConfig.init(configFiles);
+		ClearThCore application = getCoreInstance();
+		application.init(configFiles, deploymentConfig);
 	}
 }
 
