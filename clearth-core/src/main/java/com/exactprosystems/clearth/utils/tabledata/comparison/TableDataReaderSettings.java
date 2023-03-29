@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,7 +19,9 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison;
 
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import com.exactprosystems.clearth.utils.inputparams.ParametersHandler;
+import com.exactprosystems.clearth.utils.sql.DbConnectionSupplier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +32,9 @@ public class TableDataReaderSettings
 			COMMON_PARAM = "Common", EXPECTED_PARAM = "Expected", ACTUAL_PARAM = "Actual",
 			
 			CSV_DELIMITER = "CsvDelimiter", SCRIPT_FILE_PARAMS = "ScriptFileParams",
-			SCRIPT_SHELL_NAME = "ScriptShellName", SCRIPT_SHELL_OPTION = "ScriptShellOption";
+			SCRIPT_SHELL_NAME = "ScriptShellName", SCRIPT_SHELL_OPTION = "ScriptShellOption",
+			EXPECTED_CONNECTION_PARAM_NAME = "ExpectedConnectionName",
+			ACTUAL_CONNECTION_PARAM_NAME = "ActualConnectionName";
 	
 	// Default parameters which should be available for all types of readers
 	protected final boolean forExpectedData;
@@ -40,17 +44,30 @@ public class TableDataReaderSettings
 	protected char csvDelimiter;
 	protected String scriptFileParams, shellName, shellOption;
 	protected Map<String, String> sqlQueryParams;
+	protected DbConnectionSupplier dbConnectionSupplier;
 	
-	public TableDataReaderSettings(Map<String, String> params, boolean forExpectedData) throws ParametersException
+	public TableDataReaderSettings(Map<String, String> params, boolean forExpectedData, DbConnectionSupplier dbConnectionSupplier)
+			throws ParametersException
 	{
 		this.forExpectedData = forExpectedData;
 		sqlQueryParams = new HashMap<>(params);
+		this.dbConnectionSupplier = dbConnectionSupplier;
 		
 		ParametersHandler handler = new ParametersHandler(params);
 		loadSettings(handler);
 		handler.check();
 	}
-	
+
+	public DbConnectionSupplier getDbConnectionSupplier()
+	{
+		return dbConnectionSupplier;
+	}
+
+	public boolean isNeedCloseDbConnection()
+	{
+		return false;
+	}
+
 	protected void loadSettings(ParametersHandler handler) throws ParametersException
 	{
 		sourceType = handler.getRequiredString((forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM) + SOURCE_TYPE);
@@ -79,7 +96,13 @@ public class TableDataReaderSettings
 		shellOption = handler.getString(SCRIPT_SHELL_OPTION + COMMON_PARAM,
 				handler.getString(SCRIPT_SHELL_OPTION + (forExpectedData ? EXPECTED_PARAM : ACTUAL_PARAM), "-c"));
 	}
-	
+
+	public String getDbConName()
+	{
+		return InputParamsUtils.getRequiredString(getSqlQueryParams(),
+				isForExpectedData() ? EXPECTED_CONNECTION_PARAM_NAME : ACTUAL_CONNECTION_PARAM_NAME);
+	}
+
 	protected boolean isSourceDataRequired(String sourceType) {
 		return true;
 	}

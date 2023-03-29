@@ -16,18 +16,29 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.connections;
+package com.exactprosystems.clearth.automation.actions.compareDataSets;
 
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.utils.IValueTransformer;
-import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.sql.DbConnectionSupplier;
+import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 
-import java.sql.Connection;
+import java.util.Map;
 
-public interface DbConnectionSupplier extends AutoCloseable
+public class TableDataReaderSettings_DB extends TableDataReaderSettings
 {
-	Connection getConnection(boolean forExpectedData) throws ConnectivityException, SettingsException,
-			ParametersException;
-	IValueTransformer getValueTransformer();
+	protected boolean needCloseDbConnection;
+
+	public TableDataReaderSettings_DB(Map<String, String> params, boolean forExpectedData, DbConnectionSupplier supplier,
+					boolean needCloseDbConnection) throws ParametersException
+	{
+		super(params, forExpectedData, supplier);
+		this.needCloseDbConnection = needCloseDbConnection;
+	}
+
+	@Override
+	public boolean isNeedCloseDbConnection()
+	{
+		return needCloseDbConnection;
+	}
+
 }

@@ -18,10 +18,9 @@
 
 package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
 
-import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
-import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 
 /**
  * Factory to create and configure {@link BasicTableDataReader} instances based on specified settings.
@@ -30,6 +29,6 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConn
  */
 public interface TableDataReaderFactory<A, B>
 {
-	BasicTableDataReader<A, B, ?> createTableDataReader(TableDataReaderSettings settings,
-			DbConnectionSupplier dbConnectionSupplier) throws TableDataException;
+	BasicTableDataReader<A, B, ?> createTableDataReader(TableDataReaderSettings settings)
+			throws TableDataException;
 }

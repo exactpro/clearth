@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -16,21 +16,15 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation.actions.compareDataSets;
+package com.exactprosystems.clearth.utils.sql;
 
-import com.exactprosystems.clearth.automation.exceptions.ParametersException;
-import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.utils.SettingsException;
 
-import java.util.Map;
+import java.sql.Connection;
 
-public class TableDataReaderSettings2 extends TableDataReaderSettings {
-
-    public TableDataReaderSettings2(Map<String, String> params, boolean forExpectedData) throws ParametersException {
-        super(params, forExpectedData, null);
-    }
-
-    @Override
-    protected boolean isSourceDataRequired(String sourceType) {
-        return !sourceType.equalsIgnoreCase(StringTableDataReaderFactory2.LOAD_FILE);
-    }
+@FunctionalInterface
+public interface DbConnectionSupplier
+{
+	Connection getConnection(String name) throws ConnectivityException, SettingsException;
 }

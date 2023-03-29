@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.actions.compareDataSets;
 
+import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.actions.CompareDataSets;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
@@ -33,7 +34,9 @@ public class CompareDataSets2 extends CompareDataSets {
     }
 
     @Override
-    protected TableDataReaderSettings createTableDataReaderSettings(Map<String, String> actionParameters, boolean forExpectedData) throws ParametersException {
+    protected TableDataReaderSettings createTableDataReaderSettings(Map<String, String> actionParameters,
+             boolean forExpectedData, GlobalContext globalContext) throws ParametersException
+    {
         return new TableDataReaderSettings2(actionParameters, forExpectedData);
     }
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,20 +19,20 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.readerFactories;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
 import com.exactprosystems.clearth.utils.scripts.ScriptUtils;
+import com.exactprosystems.clearth.utils.sql.DbConnectionSupplier;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
-import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
-import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
 
@@ -48,18 +48,17 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 {
 	public static final String DB_QUERY = "Query", DB_QUERY_FILE = "QueryFile",
 			CSV_FILE = "CsvFile", SCRIPT = "Script", SCRIPT_FILE = "ScriptFile";
-	
 	private final List<String> availableSourceTypes = new ArrayList<>(Arrays.asList(DB_QUERY, DB_QUERY_FILE, CSV_FILE, SCRIPT, SCRIPT_FILE));
 	
 	@Override
-	public BasicTableDataReader<String, String, ?> createTableDataReader(TableDataReaderSettings settings,
-			DbConnectionSupplier dbConnectionSupplier) throws TableDataException
+	public BasicTableDataReader<String, String, ?> createTableDataReader(TableDataReaderSettings settings)
+					throws TableDataException
 	{
 		try
 		{
 			String sourceType = settings.getSourceType();
 			if (sourceType.equalsIgnoreCase(DB_QUERY) || sourceType.equalsIgnoreCase(DB_QUERY_FILE))
-				return createDbDataReader(settings, dbConnectionSupplier);
+				return createDbDataReader(settings);
 			else if (sourceType.equalsIgnoreCase(CSV_FILE))
 				return createCsvDataReader(settings);
 			else if (sourceType.equalsIgnoreCase(SCRIPT) || sourceType.equalsIgnoreCase(SCRIPT_FILE))
@@ -80,24 +79,31 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 				+ (settings.isForExpectedData() ? "expected" : "actual") + " data reader. Acceptable ones are: "
 				+ getAvailableSourceTypes().stream().collect(Collectors.joining("', '", "'", "'")) + ".");
 	}
-	
-	
-	protected DbDataReader createDbDataReader(TableDataReaderSettings settings, DbConnectionSupplier dbConnectionSupplier)
-			throws IOException, SQLException, SettingsException, ConnectivityException, ParametersException
+
+	protected DbDataReader createDbDataReader(TableDataReaderSettings settings)
+			throws IOException, SQLException, ConnectivityException, SettingsException
 	{
 		boolean forExpectedData = settings.isForExpectedData();
+		String connectionName = settings.getDbConName();
+		DbConnectionSupplier dbSupplier = settings.getDbConnectionSupplier();
+
 		String source = settings.getSourceData();
 		ParametrizedQuery query = settings.getSourceType().equalsIgnoreCase(DB_QUERY) ? SQLUtils.parseSQLTemplate(source, getQueryPreprocessor())
 				: SQLUtils.parseSQLTemplate(new File(ClearThCore.rootRelative(source)), getQueryPreprocessor());
-		PreparedStatement statement = query.createPreparedStatement(dbConnectionSupplier.getConnection(forExpectedData),
+		PreparedStatement statement = query.createPreparedStatement(dbSupplier.getConnection(connectionName),
 				settings.getSqlQueryParams());
 		
-		DbDataReader dbDataReader = new DbDataReader(statement);
+		DbDataReader dbDataReader = new DbDataReader(statement, settings.isNeedCloseDbConnection());
 		dbDataReader.setQueryDescription("for " + (forExpectedData ? "expected" : "actual") + " data");
-		dbDataReader.setValueTransformer(dbConnectionSupplier.getValueTransformer());
+		dbDataReader.setValueTransformer(getValueTransformer());
 		return dbDataReader;
 	}
-	
+
+	protected IValueTransformer getValueTransformer()
+	{
+		return null;
+	}
+
 	protected CsvDataReader createCsvDataReader(TableDataReaderSettings settings) throws IOException
 	{
 		CsvDataReader csvDataReader = new CsvDataReader(new BufferedReader(new FileReader(ClearThCore.rootRelative(settings.getSourceData()))));

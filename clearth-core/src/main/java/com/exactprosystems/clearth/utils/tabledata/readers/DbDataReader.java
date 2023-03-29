@@ -37,13 +37,18 @@ public class DbDataReader extends AbstractDbDataReader<StringTableData>
 	{
 		super(preparedStatement);
 	}
-	
+
+	public DbDataReader(PreparedStatement preparedStatement, boolean needCloseDbConnection)
+	{
+		super(preparedStatement, needCloseDbConnection);
+	}
+
 	@Override
 	protected StringTableData createTableData(Set<String> header, RowsListFactory<String, String> rowsListFactory)
 	{
 		return new StringTableData(header, rowsListFactory);
 	}
-	
+
 	
 	/**
 	 * Executes SQL query and reads its result to the table data object.

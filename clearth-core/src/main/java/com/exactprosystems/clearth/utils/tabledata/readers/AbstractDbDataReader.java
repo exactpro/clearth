@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,12 +45,19 @@ public abstract class AbstractDbDataReader<C extends BasicTableData<String, Stri
 	protected IValueTransformer valueTransformer;
 	protected ObjectToStringTransformer objectTransformer;
 	protected String queryDescription = null;
+	protected boolean needCloseDbConnection;
 	
 	public AbstractDbDataReader(PreparedStatement preparedStatement)
 	{
 		this.statement = preparedStatement;
 	}
-	
+
+	public AbstractDbDataReader(PreparedStatement preparedStatement, boolean needCloseDbConnection)
+	{
+		this.statement = preparedStatement;
+		this.needCloseDbConnection = needCloseDbConnection;
+	}
+
 	@Override
 	protected Set<String> readHeader() throws IOException
 	{
@@ -111,13 +118,14 @@ public abstract class AbstractDbDataReader<C extends BasicTableData<String, Stri
 		try
 		{
 			statement.close(); // This should close appropriate ResultSet object too
+			if (needCloseDbConnection)
+				statement.getConnection().close();
 		}
 		catch (SQLException e)
 		{
 			throw new IOException(e);
 		}
 	}
-	
 	
 	protected void executeStatement() throws IOException
 	{
@@ -155,7 +163,7 @@ public abstract class AbstractDbDataReader<C extends BasicTableData<String, Stri
 		return logger;
 	}
 	
-	
+
 	public void setDbRowFilter(DbRowFilter dbRowFilter)
 	{
 		this.dbRowFilter = dbRowFilter;

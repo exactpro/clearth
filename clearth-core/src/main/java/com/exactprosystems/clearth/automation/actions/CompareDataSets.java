@@ -28,15 +28,15 @@ import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.utils.*;
+import com.exactprosystems.clearth.utils.BigDecimalValueTransformer;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
+import com.exactprosystems.clearth.utils.IValueTransformer;
+import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonConfiguration;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
-import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DbConnectionSupplier;
-import com.exactprosystems.clearth.utils.tabledata.comparison.connections.DefaultDbConnectionSupplier;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.IndexedStringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.StringTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.TableDataComparator;
@@ -64,27 +64,24 @@ public class CompareDataSets extends Action
 	protected IValueTransformer bdValueTransformer = null;
 	protected ComparisonConfiguration compConfig;
 	protected TableDataReaderFactory<String, String> readerFactory;
-	protected DbConnectionSupplier dbConnectionSupplier;
 
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
 		BasicTableDataReader<String, String, ?> expectedReader = null, actualReader = null;
-		
 		try
 		{
 			getLogger().debug("Initializing comparison configuration");
 			Map<String, String> actionParameters = getActionParameters();
 			bdValueTransformer = createBigDecimalValueTransformer();
 			compConfig = createComparisonConfiguration(actionParameters);
-			
+
 			getLogger().debug("Preparing data readers");
-			dbConnectionSupplier = createDbConnectionSupplier(actionParameters, globalContext);
 			readerFactory = createTableDataReaderFactory();
-			expectedReader = createTableDataReader(actionParameters, true);
-			actualReader = createTableDataReader(actionParameters, false);
-			
+			expectedReader = createTableDataReader(actionParameters, true, globalContext);
+			actualReader = createTableDataReader(actionParameters, false, globalContext);
+
 			return makeComparison(expectedReader, actualReader);
 		}
 		catch (ParametersException | IOException e)
@@ -95,34 +92,23 @@ public class CompareDataSets extends Action
 		{
 			return DefaultResult.failed(e.getMessage(), (Exception)e.getCause());
 		}
-		catch (ConnectivityException | SettingsException e)
-		{
-			return DefaultResult.failed("Error while getting connection: " + e.getMessage(), e);
-		}
 		finally
 		{
 			Utils.closeResource(expectedReader);
 			Utils.closeResource(actualReader);
-			if (isNeedCloseDbConnection())
-				Utils.closeResource(dbConnectionSupplier);
 		}
 	}
 
-	protected boolean isNeedCloseDbConnection()
-	{
-		return false;
-	}
-
-	private BasicTableDataReader<String, String,?> createTableDataReader(Map<String, String> actionParameters, boolean forExpected)
-			throws ParametersException, TableDataException
+	private BasicTableDataReader<String, String,?> createTableDataReader(Map<String, String> actionParameters,
+					boolean forExpected, GlobalContext globalContext) throws ParametersException, TableDataException
 	{
 		BasicTableDataReader<String, String, ?> tableDataReader = readerFactory.createTableDataReader(
-				createTableDataReaderSettings(actionParameters, forExpected), dbConnectionSupplier);
-		
+				createTableDataReaderSettings(actionParameters, forExpected, globalContext));
+
 		DataMapping<String> dataMapping = compConfig.getDataMapping();
 		if (dataMapping != null)
 			tableDataReader = new MappedTableDataReader<>(tableDataReader, dataMapping.getHeaderMapper(forExpected));
-		
+
 		return tableDataReader;
 	}
 
@@ -141,18 +127,11 @@ public class CompareDataSets extends Action
 	{
 		return new ComparisonConfiguration(actionParameters, bdValueTransformer);
 	}
-	
-	protected DbConnectionSupplier createDbConnectionSupplier(Map<String, String> actionParameters, GlobalContext globalContext)
-			throws ConnectivityException, SettingsException
-	{
-		return new DefaultDbConnectionSupplier(actionParameters, globalContext);
-	}
-	
-	
+
 	protected TableDataReaderSettings createTableDataReaderSettings(Map<String, String> actionParameters,
-			boolean forExpectedData) throws ParametersException
+			boolean forExpectedData, GlobalContext globalContext) throws ParametersException
 	{
-		return new TableDataReaderSettings(actionParameters, forExpectedData);
+		return new TableDataReaderSettings(actionParameters, forExpectedData, globalContext::getDbConnection);
 	}
 	
 	protected TableDataReaderFactory<String, String> createTableDataReaderFactory()
@@ -171,20 +150,20 @@ public class CompareDataSets extends Action
 	{
 		if (compConfig.getDataMapping() != null)
 			return new MappedTableRowsComparator<>(createValuesComparator(), compConfig.getDataMapping());
-		
+
 		return new TableRowsComparator<>(createValuesComparator());
 	}
 
 	protected ValuesComparator<String, String> createValuesComparator()
 	{
 		ComparisonUtils comparisonUtils = ClearThCore.comparisonUtils();
-		
+
 		if (compConfig.getDataMapping() != null)
 			return new MappedStringValuesComparator(comparisonUtils, compConfig.getDataMapping(), bdValueTransformer);
-		
+
 		if (!compConfig.getNumericColumns().isEmpty())
 			return new NumericStringValuesComparator(comparisonUtils, compConfig.getNumericColumns(), bdValueTransformer);
-		
+
 		 return new StringValuesComparator(comparisonUtils);
 	}
 	

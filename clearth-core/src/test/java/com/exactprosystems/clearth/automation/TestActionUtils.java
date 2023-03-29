@@ -18,20 +18,19 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import com.exactprosystems.clearth.utils.SettingsException;
-import org.slf4j.Logger;
-
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.LoggerStub;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.data.DefaultTestExecutionHandler;
+import com.exactprosystems.clearth.generators.IncrementingValueGenerator;
 import com.exactprosystems.clearth.utils.ClearThException;
+import com.exactprosystems.clearth.utils.SettingsException;
+import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.*;
 
 public class TestActionUtils
 {
@@ -70,5 +69,13 @@ public class TestActionUtils
 		List<Scheduler> userSchedulers = manager.getUserSchedulers(userName);
 		if (userSchedulers != null)
 			userSchedulers.clear();
+	}
+
+	public static GlobalContext createGlobalContext(String user)
+	{
+		return new GlobalContext(new Date(),
+				false,new HashMap<>(),
+				new MatrixFunctions(new HashMap<>(), new Date(),new Date(), false, new IncrementingValueGenerator(1)),
+				user, new DefaultTestExecutionHandler());
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,19 +18,29 @@
 
 package com.exactprosystems.clearth.automation.actions.compareDataSets;
 
+import com.exactprosystems.clearth.automation.GlobalContext;
+import com.exactprosystems.clearth.automation.actions.CompareDataSets;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.sql.DbConnectionSupplier;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
 
 import java.util.Map;
 
-public class TableDataReaderSettings2 extends TableDataReaderSettings {
+public class CompareDataSets_DB extends CompareDataSets {
 
-    public TableDataReaderSettings2(Map<String, String> params, boolean forExpectedData) throws ParametersException {
-        super(params, forExpectedData, null);
+    protected boolean needCloseDbConnection;
+    protected DbConnectionSupplier supplier;
+    public CompareDataSets_DB(boolean needCloseDbConnection, DbConnectionSupplier supplier)
+    {
+        super();
+        this.needCloseDbConnection = needCloseDbConnection;
+        this.supplier = supplier;
     }
-
     @Override
-    protected boolean isSourceDataRequired(String sourceType) {
-        return !sourceType.equalsIgnoreCase(StringTableDataReaderFactory2.LOAD_FILE);
+    protected TableDataReaderSettings createTableDataReaderSettings(Map<String, String> actionParameters,
+             boolean forExpectedData, GlobalContext globalContext) throws ParametersException
+    {
+        return new TableDataReaderSettings_DB(actionParameters, forExpectedData, supplier, needCloseDbConnection);
     }
+
 }
