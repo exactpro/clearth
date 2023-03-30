@@ -215,9 +215,15 @@
 					<b>Connection to browse:</b>
 					<br/>
 					<p:selectOneMenu id="currentConnection" value="#{collectorScannerToolBean.selectedConnection}"
-							style="width:300px;">
+							var = "con" style="width:300px;">
 						<f:selectItem itemLabel="-Choose connection-" itemValue="#{null}" />
 						<f:selectItems value="#{collectorScannerToolBean.collectingConnections}" var="connection" />
+						<p:column style="display:flex; align-items:center">
+							<h:graphicImage value="/images/star.png" alt="Favorite" style="vertical-align: middle"
+									rendered="#{collectorScannerToolBean.isFavorite(con)}" />
+							&#160;
+							<h:outputText value="#{con}" />
+						</p:column>
 						<f:ajax update=":CollectorMessagesForm" render=":CollectorMessagesForm" />
 					</p:selectOneMenu>
 				</h:form>

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,6 +27,7 @@ import java.util.List;
 import com.exactprosystems.clearth.connectivity.CollectorMessage;
 import com.exactprosystems.clearth.connectivity.ListenerType;
 import com.exactprosystems.clearth.connectivity.MessageListener;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ReceivedStringMessage;
@@ -146,13 +147,13 @@ public class CollectorScannerTool
 
 
 	/**
-	 * Returns names of all message connections which contain collector
+	 * Returns all message connections which contain collector
 	 * 
-	 * @return list of connections names
+	 * @return list of connections
 	 */
-	public List<String> getCollectingConnections()
+	public List<ClearThConnection> getCollectingConnections()
 	{
-		return connectionStorage().listConnections(con -> 
+		return connectionStorage().getConnections(con -> 
 		{
 			if (con instanceof ClearThMessageConnection)
 			{

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,10 +20,14 @@ package com.exactprosystems.clearth.web.beans.tools;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.CollectorMessage;
+import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.tools.CollectorScannerTool;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
+import com.exactprosystems.clearth.web.misc.FavoritesSortedCache;
+import com.exactprosystems.clearth.web.misc.ProcessedConnectionsCache;
+import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.model.StreamedContent;
@@ -39,6 +43,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CollectorScannerToolBean extends ClearThBean
 {
@@ -54,6 +60,9 @@ public class CollectorScannerToolBean extends ClearThBean
 	protected int collectorScannerMessagesTab = 0;
 	protected String textToParse = "";
 	
+	protected ProcessedConnectionsCache cachedConnections;
+	protected Set<String> favoriteConnectionList;
+	
 	protected CollectorScannerTool collectorScannerTool;
 	
 	static
@@ -66,6 +75,11 @@ public class CollectorScannerToolBean extends ClearThBean
 	public void init()
 	{
 		collectorScannerTool = ClearThCore.getInstance().getToolsFactory().createCollectorScannerTool();
+		
+		FavoriteConnectionManager favoriteConnection = ClearThCore.getInstance().getFavoriteConnections();
+		String username = UserInfoUtils.getUserName();
+		this.favoriteConnectionList = favoriteConnection.getUserFavoriteConnectionList(username);
+		this.cachedConnections = new FavoritesSortedCache(this.favoriteConnectionList);
 	}
 	
 	public String getSelectedConnection()
@@ -194,7 +208,13 @@ public class CollectorScannerToolBean extends ClearThBean
 	
 	public List<String> getCollectingConnections()
 	{
-		return collectorScannerTool.getCollectingConnections();
+		return cachedConnections.refreshIfNeeded(collectorScannerTool.getCollectingConnections()).stream()
+			.map(con -> con.getName()).collect(Collectors.toList());
+	}
+	
+	public boolean isFavorite(String conName)
+	{
+		return this.favoriteConnectionList.contains(conName);
 	}
 	
 	

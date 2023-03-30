@@ -25,6 +25,8 @@ import com.exactprosystems.clearth.connectivity.connections.settings.*;
 import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.web.misc.ProcessedConnectionsCache;
+import com.exactprosystems.clearth.web.misc.FavoritesSortedCache;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
@@ -59,7 +61,8 @@ public class ConnectivityBean extends ClearThBean
 	private boolean noListenersInfo;
 	private boolean listenerInfoVisible = false;
 	private FavoriteConnectionManager favoritesManager;
-	private Set<String> favoriteConnectionList;
+	private ProcessedConnectionsCache cachedConnections;
+	private Set<String> favoriteConnections;
 	private String username;
 	private List<ClearThConnection> connections;
 	protected String selectedType;
@@ -72,7 +75,8 @@ public class ConnectivityBean extends ClearThBean
 	{
 		this.favoritesManager = ClearThCore.getInstance().getFavoriteConnections();
 		this.username = UserInfoUtils.getUserName();
-		this.favoriteConnectionList = favoritesManager.getUserFavoriteConnectionList(username);
+		this.favoriteConnections = favoritesManager.getUserFavoriteConnectionList(username);
+		this.cachedConnections  = new FavoritesSortedCache(this.favoriteConnections);
 		setSelectedConnectionType(getFirstConnectionType());
 	}
 	
@@ -137,7 +141,7 @@ public class ConnectivityBean extends ClearThBean
 			return Collections.emptyList();
 		
 		List<ClearThConnection> res = new ArrayList<>();
-		List<ClearThConnection> list = getAllConnections();
+		List<ClearThConnection> list = cachedConnections.refreshIfNeeded(storage.getConnections());
 		for (ClearThConnection con : list)
 			if (selectedConnectionType.equals(con.getTypeInfo()))
 				res.add(con);
@@ -471,29 +475,6 @@ public class ConnectivityBean extends ClearThBean
 	}
 	
 	
-	private void refreshConnectionList()
-	{
-		connections.sort((o1, o2) -> {
-			boolean isC1Fav = isFavorite(o1);
-			boolean isC2Fav = isFavorite(o2);
-			if (isC1Fav == isC2Fav) {
-				return o1.getName().compareToIgnoreCase(o2.getName());
-			} else {
-				return (isC1Fav) ? -1 : 1;
-			}
-		});
-	}
-	
-	private List<ClearThConnection> getAllConnections()
-	{
-		if (connections == null || storage.getConnections().size() != connections.size())
-		{
-			this.connections = new ArrayList<>(storage.getConnections());
-			refreshConnectionList();
-		}
-		return this.connections;
-	}
-	
 	private List<ClearThConnection> getAllOrSelectedConnections()
 	{
 		return CollectionUtils.isEmpty(originalSelectedCons) ? getConnections() : originalSelectedCons;
@@ -779,27 +760,25 @@ public class ConnectivityBean extends ClearThBean
 	
 	public boolean isFavorite(ClearThConnection con)
 	{
-		return this.favoriteConnectionList.contains(con.getName());
+		return favoriteConnections.contains(con.getName());
 	}
 
 	public void favorite()
 	{
-		this.favoritesManager.favoriteStateChanged(username,
-				getOneSelectedConnection().getName(), true);
-		refreshConnectionList();
+		updateFavoriteState(true);
 	}
 
 	public void unfavorite()
 	{
-		this.favoritesManager.favoriteStateChanged(username,
-				getOneSelectedConnection().getName(), false);
-		refreshConnectionList();
+		updateFavoriteState(false);
 	}
 
 	public boolean isConnectionRunning()
 	{
-		List<ClearThConnection> cons = getAllConnections();
-		for (ClearThConnection c : cons)
+		if (connections == null)
+			return false;
+		
+		for (ClearThConnection c : connections)
 		{
 			if (isConnectionRunning(c))
 				return true;
@@ -874,5 +853,12 @@ public class ConnectivityBean extends ClearThBean
 	private boolean isConnectionType(Class<? extends ClearThConnection> expectedClass)
 	{
 		return selectedConnectionType != null && expectedClass.isAssignableFrom(selectedConnectionType.getConnectionClass());
+	}
+	
+	private void updateFavoriteState(boolean isFavorite)
+	{
+		favoritesManager.favoriteStateChanged(username,
+				getOneSelectedConnection().getName(), isFavorite);
+		this.connections = getConnections();
 	}
 }
