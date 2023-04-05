@@ -18,21 +18,18 @@
 
 package com.exactprosystems.clearth.utils;
 
-import static java.lang.Integer.max;
-import static java.lang.Integer.parseInt;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.removeEnd;
-import static org.apache.commons.lang.StringUtils.removeStart;
-import static org.apache.commons.lang.StringUtils.indexOfAny;
+import com.exactprosystems.clearth.automation.MatrixFunctions;
+import com.exactprosystems.clearth.automation.exceptions.UnbalancedExpressionException;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.exactprosystems.clearth.automation.MatrixFunctions;
+import static java.lang.Integer.max;
+import static java.lang.Integer.parseInt;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static org.apache.commons.lang.StringUtils.*;
 
 public class StringOperationUtils
 {	
@@ -180,5 +177,41 @@ public class StringOperationUtils
 	private static String removeQuotes(String s)
 	{
 		return removeStart(removeEnd(s, "'"), "'");
+	}
+
+	public static void checkBracketsBalance(String function) throws UnbalancedExpressionException
+	{
+		int openBracket = 0;
+		boolean openQuote = false;
+
+		for(int i = 0; i < function.length(); i++)
+		{
+			char ch = function.charAt(i);
+
+			if (ch == '\'' && (i == 0 || function.charAt(i - 1) != '\\'))
+			{
+				openQuote = !openQuote;
+				continue;
+			}
+			if (!openQuote)
+			{
+				if (ch == '(')
+				{
+					openBracket++;
+					continue;
+				}
+				if (ch == ')')
+				{
+					openBracket--;
+					if (openBracket < 0)
+						throw new UnbalancedExpressionException("Unbalanced closing bracket at position " + (i + 1));
+				}
+			}
+		}
+		if (openQuote)
+			throw new UnbalancedExpressionException("Unbalanced quotes");
+
+		if (openBracket != 0)
+			throw new UnbalancedExpressionException("Unbalanced opening bracket");
 	}
 }

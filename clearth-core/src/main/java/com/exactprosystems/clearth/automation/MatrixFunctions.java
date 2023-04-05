@@ -928,7 +928,7 @@ public class MatrixFunctions
 	{
 		return calculateExpression(expression, paramName, mvelVars, fixedIDs, currentAction, iterationWrapper, true);
 	}
-	
+
 	private Object calculateExpression(String expression, String paramName, Map<String, Object> mvelVars,
 									  Map<String, String> fixedIDs, Action currentAction, ObjectWrapper iterationWrapper, boolean needClassCheck) throws Exception
 	{
@@ -984,6 +984,9 @@ public class MatrixFunctions
 			}
 
 			if (formula.contains("(") && formula.contains(")")) {
+
+				StringOperationUtils.checkBracketsBalance(formula);
+
 				int bracket = -1;
 //				int formLen = formula.length();
 				int lastInd = 0;
@@ -1000,6 +1003,8 @@ public class MatrixFunctions
 					boolean isDone = false;
 
 					while (!isDone) {
+						if (formula.length() == currInd)
+							break;
 						char currChar = formula.charAt(currInd);
 						if ((currChar == ',' || currChar == ')') && !isStringLiteral && isFuncParameters == 0) {
 							String param = formula.substring(lastInd, currInd);

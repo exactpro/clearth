@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,17 +19,15 @@
 package com.exactprosystems.clearth.tools;
 
 import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.automation.exceptions.UnbalancedExpressionException;
 import com.exactprosystems.clearth.utils.ClearThException;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class ExpressionCalculatorToolTest {
 
@@ -75,6 +73,14 @@ public class ExpressionCalculatorToolTest {
                 {
                         PREFIX + TEST_EXPRESSION + PREFIX + TEST_EXPRESSION + POSTFIX,
                         PREFIX + current_date + PREFIX + current_date + POSTFIX
+                },
+                {
+                        "@{pattern('123(')}",
+                        "{pattern('123(')}"
+                },
+                {
+                        "@{pattern('\\\'123(')}",
+                        "{pattern(''123(')}"
                 }
         };
     }
@@ -91,6 +97,27 @@ public class ExpressionCalculatorToolTest {
     public void test(String expression, String expected) throws Exception {
         String actual = calculatorTool.calculate(expression, null);
         assertEquals(actual, expected);
+    }
+
+    @DataProvider(name = "invalidExpressions")
+    public Object[][] providerInvalidExpression()
+    {
+        return new Object[][]
+                {
+                        {"@{(format(time(0),'YYYY-MM-dd')}"},
+                        {"@{format(time(0),'YYYY-MM-dd'))}"},
+                        {"@{)format(time(0),'YYYY-MM-dd')(}"},
+                        {"@{format(time(0),')}"},
+                        {"@{)))(((}"},
+                        {"@{pattern('123(\\')}"},
+                        {"@{'\\'pattern('123(')}"}
+                };
+    }
+
+    @Test(dataProvider = "invalidExpressions", expectedExceptions = UnbalancedExpressionException.class)
+    public void testUnbalancedBrackets(String invalidExpression) throws Exception
+    {
+        calculatorTool.calculate(invalidExpression, null);
     }
 
 
