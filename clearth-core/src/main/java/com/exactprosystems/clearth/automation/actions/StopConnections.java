@@ -24,25 +24,26 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConne
 
 import java.util.Arrays;
 
-public class StartConnections extends RunnableConnectionsAction
+public class StopConnections extends RunnableConnectionsAction
 {
 	@Override
 	protected TableResultDetail doWithConnection(ClearThRunnableConnection msgCon)
 	{
 		String connName = msgCon.getName();
-		if (msgCon.isRunning())
-			return new DefaultTableResultDetail(true, Arrays.asList(connName, "Already running"));
+
+		if (!msgCon.isRunning())
+			return new DefaultTableResultDetail(true, Arrays.asList(connName, "Already stopped"));
 
 		try
 		{
-			msgCon.start();
-			return new DefaultTableResultDetail(true, Arrays.asList(connName, "Started"));
+			msgCon.stop();
+			return new DefaultTableResultDetail(true, Arrays.asList(connName, "Stopped"));
 		}
 		catch (Exception e)
 		{
-			logger.error("Could not start connection '"+connName+"'", e);
+			logger.error("Could not stop connection '" + connName + "'", e);
 			return new DefaultTableResultDetail(false, Arrays.asList(connName,
-					"Could not start. Error: " + e.getMessage()));
+					"Could not stop. Error: " + e.getMessage()));
 		}
 	}
 }
