@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,17 +18,12 @@
 
 package com.exactprosystems.clearth.automation.report.results;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-/**
- * @author daria.plotnikova
- *
- */
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonIgnoreProperties({"useFailReasonColor"})
 public class TableResult extends Result
@@ -75,7 +70,7 @@ public class TableResult extends Result
 		details.clear();
 	}
 	
-	public void addDetail(DefaultTableResultDetail detail)
+	public void addDetail(TableResultDetail detail)
 	{
 		details.add(detail);
 		if ((isSuccess()) && (!detail.isIdentical()))
@@ -87,7 +82,7 @@ public class TableResult extends Result
 
 	public void addDetail(boolean identical,List<String> params)
 	{
-		DefaultTableResultDetail detail = new DefaultTableResultDetail(identical,params);
+		TableResultDetail detail = new DefaultTableResultDetail(identical,params);
 		addDetail(detail);
 	}
 
@@ -140,6 +135,4 @@ public class TableResult extends Result
 	{
 		this.useFailReasonColor = useFailReasonColor;
 	}
-	
-	
 }
