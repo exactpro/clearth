@@ -383,8 +383,13 @@
 			</h:form>
 		</p:confirmDialog>
 <!-- Stop connection confirm dialog -->
-		<p:confirmDialog header="Stop connection(s)" message="Are you sure you wish to stop the connection(s)? This may affect running schedulers."
-				width="380" severity="alert" widgetVar="stopConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+		<p:confirmDialog header="Stop connection(s)" width="380" severity="alert" widgetVar="stopConnectionConfirmDialog"
+				closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+			<f:facet name="message">
+				<h:outputText value="Are you sure you wish to stop the connection(s)? "/>
+				<br/>
+				<h:outputText value="This may affect running schedulers."/>
+			</f:facet>
 			<h:form id="StopConnectionConfirmDialog">
 				<p:commandButton value="Yes" update=":Connections :Growl"
 						actionListener="#{connectivityBean.stopConnections}"
@@ -417,8 +422,13 @@
 			</p:dataTable>
 		</p:dialog>
 <!-- Restart connection confirm dialog -->
-		<p:confirmDialog header="Restart connection(s)" message="Are you sure you wish to change running connection(s)? Saving changes requires connection(s) restart."
-				width="380" severity="alert" widgetVar="restartConnectionConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+		<p:confirmDialog header="Restart connection(s)" width="380" severity="alert" widgetVar="restartConnectionConfirmDialog"
+				closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+			<f:facet name="message">
+				<h:outputText value="Are you sure you wish to change running connection(s)?"/>
+				<br/>
+				<h:outputText value="Saving changes requires connection(s) restart."/>
+			</f:facet>
 			<h:form id="RestartConnectionConfirmDialog">
 				<p:commandButton value="Yes" update=":Connections :Growl"
 						actionListener="#{connectivityBean.saveConnections}"

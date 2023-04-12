@@ -115,7 +115,7 @@
 		<p:confirmDialog id="RemoveUserConfirmDlg" header="#{userManagementBean.oneUserSelected ? 'User removal' : 'Users removal'}" 
 				message="Are you sure you want to remove #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
 				width="380" severity="alert" widgetVar="removeUserConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
-			<h:form id="RemoveUserConfimDialog" >
+			<h:form id="RemoveUserConfirmDialog" >
 				<p:commandButton value="Yes" update=":UserOperations :UsersList :Growl"
 					actionListener="#{userManagementBean.removeUsers}"
 					onstart="saveUsersScrollPos();"
@@ -126,9 +126,9 @@
 		</p:confirmDialog>
 		
 		<p:confirmDialog id="KillUserConfirmDlg" header="#{userManagementBean.oneUserSelected ? 'Killing user' : 'Killing users'}" 
-				message="Are you sure use want to kill activities of #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?" 
+				message="Are you sure you want to kill activities of #{userManagementBean.oneUserSelected ? 'this user' : 'selected users'}?"
 				severity="alert" widgetVar="killConfirmationDlg" closeOnEscape="true" modal="#{guiBean.modalDialog}">
-			<h:form id="KillConfimationDialog" width="200">
+			<h:form id="KillConfirmationDlg" width="200">
 				<p:commandButton value="Yes" update=":UserOperations :UsersList :Growl"
 					actionListener="#{userManagementBean.killUsers}"
 					onstart="saveUsersScrollPos();"
