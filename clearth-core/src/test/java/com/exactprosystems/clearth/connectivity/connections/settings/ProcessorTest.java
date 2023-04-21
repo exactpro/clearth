@@ -111,7 +111,7 @@ public class ProcessorTest
 	
 	private void checkDefinedFieldsOrder(SettingsModel model)
 	{
-		List<Object> expected = Arrays.asList(Arrays.array("login", "password", "host", "port", "mode", "timeout", "autoReconnect")),
+		List<Object> expected = Arrays.asList(Arrays.array("login", "password", "host", "port", "mode", "timeout", "autoReconnect", "multiline")),
 				actual = model.getFieldsModel().getSettingsProps().stream()
 						.map(SettingProperties::getFieldName).collect(Collectors.toList());
 		Assert.assertEquals(actual, expected, "Fields are extracted from class in defined order");
@@ -122,15 +122,24 @@ public class ProcessorTest
 		FieldsModel fields = model.getFieldsModel();
 		
 		SoftAssert soft = new SoftAssert();
-		soft.assertEquals(fields.getSettingProps("host").getValueClass(), ValueClass.STRING, "Value class of 'host' field");
-		soft.assertEquals(fields.getSettingProps("port").getValueClass(), ValueClass.INT, "Value class of 'port' field");
+		soft.assertEquals(fields.getSettingProps("host").getValueTypeInfo().getType(), ValueType.STRING, "Value type of 'host' field");
+		soft.assertEquals(fields.getSettingProps("port").getValueTypeInfo().getType(), ValueType.INT, "Value type of 'port' field");
 		soft.assertEquals(fields.getSettingProps("login").getName(), "Username", "Defined name of 'login' field");
 		soft.assertEquals(fields.getSettingProps("password").getInputType(), InputType.PASSWORD, "Input type for 'password' field");
-		soft.assertEquals(fields.getSettingProps("mode").getName(), "Connection mode", "Defined name of 'mode' field");
-		soft.assertEquals(fields.getSettingProps("mode").getValueClass(), ValueClass.ENUM, "Value class of 'mode' field");
-		soft.assertEquals(fields.getSettingProps("timeout").getValueClass(), ValueClass.LONG, "Value class of 'timeout' field");
-		soft.assertEquals(fields.getSettingProps("autoReconnect").getName(), "AutoReconnect", "Automatically assigned name of 'autoReconect' field");
-		soft.assertEquals(fields.getSettingProps("autoReconnect").getValueClass(), ValueClass.BOOLEAN, "Value class of 'autoReconect' field");
+		
+		SettingProperties mode = fields.getSettingProps("mode");
+		soft.assertEquals(mode.getName(), "Connection mode", "Defined name of 'mode' field");
+		soft.assertEquals(mode.getValueTypeInfo().getType(), ValueType.ENUM, "Value type of 'mode' field");
+		
+		soft.assertEquals(fields.getSettingProps("timeout").getValueTypeInfo().getType(), ValueType.LONG, "Value type of 'timeout' field");
+		
+		SettingProperties autoReconnect = fields.getSettingProps("autoReconnect");
+		soft.assertEquals(autoReconnect.getName(), "AutoReconnect", "Automatically assigned name of 'autoReconect' field");
+		soft.assertEquals(autoReconnect.getValueTypeInfo().getType(), ValueType.BOOLEAN, "Value type of 'autoReconect' field");
+		
+		ValueTypeInfo multilineInfo = fields.getSettingProps("multiline").getValueTypeInfo();
+		soft.assertEquals(multilineInfo.getType(), ValueType.SPECIAL, "Value type of 'multiline' field");
+		soft.assertEquals(multilineInfo.getValueClass(), List.class, "Value class of 'multiline' field");
 		soft.assertAll();
 	}
 }

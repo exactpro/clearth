@@ -28,16 +28,16 @@ public class SettingProperties
 	private final String name,
 			fieldName;
 	private final InputType inputType;
-	private final ValueClass valueClass;
+	private final ValueTypeInfo valueTypeInfo;
 	private final Method getter,
 			setter;
 	
-	public SettingProperties(String name, InputType inputType, ValueClass valueClass, Field field, Class<?> methodsOwner) throws SettingDeclarationException
+	public SettingProperties(String name, InputType inputType, ValueTypeInfo valueTypeInfo, Field field, Class<?> methodsOwner) throws SettingDeclarationException
 	{
 		this.name = name;
 		this.fieldName = field.getName();
 		this.inputType = inputType;
-		this.valueClass = valueClass;
+		this.valueTypeInfo = valueTypeInfo;
 		
 		String variableName = StringUtils.capitalize(fieldName);
 		Class<?> owner = methodsOwner != null ? methodsOwner : field.getDeclaringClass();
@@ -45,12 +45,12 @@ public class SettingProperties
 		this.setter = findSetter(variableName, field, owner);
 	}
 	
-	public SettingProperties(String name, InputType inputType, ValueClass valueClass, Method getter, Method setter)
+	public SettingProperties(String name, InputType inputType, ValueTypeInfo valueTypeInfo, Method getter, Method setter)
 	{
 		this.name = name;
 		this.fieldName = name;
 		this.inputType = inputType;
-		this.valueClass = valueClass;
+		this.valueTypeInfo = valueTypeInfo;
 		this.getter = getter;
 		this.setter = setter;
 	}
@@ -71,9 +71,9 @@ public class SettingProperties
 		return inputType;
 	}
 	
-	public ValueClass getValueClass()
+	public ValueTypeInfo getValueTypeInfo()
 	{
-		return valueClass;
+		return valueTypeInfo;
 	}
 	
 	public Method getGetter()

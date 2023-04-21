@@ -843,7 +843,7 @@ public class ConnectivityBean extends ClearThBean
 		ClearThConnectionSettings connectionToEditSettings = connectionToEdit.getSettings(),
 				changesSettings = changes.getSettings(),
 				originalSettings = original.getSettings();
-		for (SettingAccessor accessor : settingsToEdit.getSettings())
+		for (SettingAccessor accessor : settingsToEdit.getAllSettings())
 		{
 			ClearThConnectionSettings copyFrom = accessor.isApplyChange() ? changesSettings : originalSettings;
 			SettingAccessor.copyValue(accessor.getProperties(), copyFrom, connectionToEditSettings);

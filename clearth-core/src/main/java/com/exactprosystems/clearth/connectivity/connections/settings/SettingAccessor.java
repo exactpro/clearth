@@ -117,12 +117,12 @@ public class SettingAccessor
 	}
 	
 	
-	protected Object getValue() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	public Object getValue() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		return properties.getGetter().invoke(owner);
 	}
 	
-	protected void setValue(Object value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	public void setValue(Object value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		properties.getSetter().invoke(owner, value);
 	}

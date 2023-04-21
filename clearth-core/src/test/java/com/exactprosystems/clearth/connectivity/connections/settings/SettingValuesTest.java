@@ -19,7 +19,13 @@
 package com.exactprosystems.clearth.connectivity.connections.settings;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
@@ -57,5 +63,30 @@ private Processor processor;
 		soft.assertEquals(conSettings.getTimeout(), ((long)Integer.MAX_VALUE+10), "Timeout");
 		soft.assertEquals(conSettings.isAutoReconnect(), true, "Auto-reconnect");
 		soft.assertAll();
+	}
+	
+	@Test
+	public void supportedTypes() throws SettingDeclarationException
+	{
+		SettingsModel model = processor.process(CorrectSettings.class);
+		SettingValues values = new SettingValues(model, new DummyConnection(), false);
+		
+		List<String> expectedAll = Arrays.asList("login", "password", "host", "port", "mode", "timeout", "autoReconnect", "multiline"),
+				expectedSupported = new ArrayList<>(expectedAll);
+		expectedSupported.remove("multiline");  //This field is List<String>, which is not supported by GUI and shouldn't be present among supported settings
+		
+		List<String> actualAll = collectNames(values.getAllSettings()),
+				actualSupported = collectNames(values.getSupportedSettings());
+		
+		Assert.assertEquals(actualAll, expectedAll, "All settings");
+		Assert.assertEquals(actualSupported, expectedSupported, "Supported settings");
+	}
+	
+	
+	private List<String> collectNames(Collection<SettingAccessor> accessors)
+	{
+		return accessors.stream()
+				.map(a -> a.getProperties().getFieldName())
+				.collect(Collectors.toList());
 	}
 }

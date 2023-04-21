@@ -31,7 +31,7 @@ public class EnumSettingProperties extends SettingProperties
 	public EnumSettingProperties(String name, InputType inputType, Field field, Class<?> methodsOwner)
 			throws SettingDeclarationException
 	{
-		super(name, inputType, ValueClass.ENUM, field, methodsOwner);
+		super(name, inputType, ValueTypeInfo.ENUM, field, methodsOwner);
 		values = Collections.unmodifiableMap(buildValues(field));
 	}
 	

@@ -41,7 +41,7 @@ public class Processor
 	
 	public Processor() throws NoSuchMethodException, SecurityException
 	{
-		nameProps = new SettingProperties(FIELD_NAME, InputType.TEXTBOX, ValueClass.STRING, 
+		nameProps = new SettingProperties(FIELD_NAME, InputType.TEXTBOX, ValueTypeInfo.STRING, 
 				ClearThConnection.class.getMethod("getName"),
 				ClearThConnection.class.getMethod("setName", String.class));
 	}
@@ -104,8 +104,8 @@ public class Processor
 			
 			String name = getName(annotation, f);
 			InputType type = annotation.inputType();
-			ValueClass valueClass = getValueClass(f.getType());
-			SettingProperties setting = createSettingData(name, type, valueClass, f, fieldsOwner);
+			ValueTypeInfo valueInfoInfo = ValueTypeInfo.byClass(f.getType());
+			SettingProperties setting = createSettingData(name, type, valueInfoInfo, f, fieldsOwner);
 			result.put(setting.getFieldName(), setting);
 		}
 		return result;
@@ -156,22 +156,10 @@ public class Processor
 		return StringUtils.isBlank(result) ? StringUtils.capitalize(field.getName()) : result;
 	}
 	
-	private ValueClass getValueClass(Class<?> type) throws SettingDeclarationException
+	private SettingProperties createSettingData(String name, InputType type, ValueTypeInfo valueTypeInfo, Field field, Class<?> methodsOwner) throws SettingDeclarationException
 	{
-		try
-		{
-			return ValueClass.byClass(type);
-		}
-		catch (IllegalArgumentException e)
-		{
-			throw new SettingDeclarationException(e.getMessage());
-		}
-	}
-	
-	private SettingProperties createSettingData(String name, InputType type, ValueClass valueClass, Field field, Class<?> methodsOwner) throws SettingDeclarationException
-	{
-		return valueClass != ValueClass.ENUM
-				? new SettingProperties(name, type, valueClass, field, methodsOwner)
+		return valueTypeInfo.getType() != ValueType.ENUM
+				? new SettingProperties(name, type, valueTypeInfo, field, methodsOwner)
 				: new EnumSettingProperties(name, type, field, methodsOwner);
 	}
 }

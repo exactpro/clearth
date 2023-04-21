@@ -28,46 +28,63 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSet
 
 public class SettingValues
 {
-	private final Map<String, SettingAccessor> settings;
+	private final Map<String, SettingAccessor> allSettings,
+			supportedSettings;
 	
 	public SettingValues(SettingsModel model, ClearThConnection owner, boolean includeNameSetting)
 	{
-		this.settings = Collections.unmodifiableMap(buildSettingsMap(model, owner, includeNameSetting));
+		Map<String, SettingAccessor> allSettingsMap = new LinkedHashMap<>(),
+				supportedSettingsMap = new LinkedHashMap<>();
+		buildSettingsMaps(model, owner, includeNameSetting, allSettingsMap, supportedSettingsMap);
+		
+		this.allSettings = Collections.unmodifiableMap(allSettingsMap);
+		this.supportedSettings = Collections.unmodifiableMap(supportedSettingsMap);
 	}
 	
 	
-	public Collection<SettingAccessor> getSettings()
+	public Collection<SettingAccessor> getAllSettings()
 	{
-		return settings.values();
+		return allSettings.values();
+	}
+	
+	public Collection<SettingAccessor> getSupportedSettings()
+	{
+		return supportedSettings.values();
 	}
 	
 	public SettingAccessor getSetting(String fieldName)
 	{
-		return settings.get(fieldName);
+		return allSettings.get(fieldName);
 	}
 	
 	
-	private Map<String, SettingAccessor> buildSettingsMap(SettingsModel model, ClearThConnection owner, boolean includeNameSetting)
+	private void buildSettingsMaps(SettingsModel model, ClearThConnection owner, boolean includeNameSetting,
+			Map<String, SettingAccessor> allSettings, Map<String, SettingAccessor> supportedSettings)
 	{
-		Map<String, SettingAccessor> result = new LinkedHashMap<>();
-		
 		FieldsModel fieldsModel = model.getFieldsModel();
 		
 		if (includeNameSetting)
 		{
 			SettingProperties nameProps = fieldsModel.getNameProps();
 			//Name is not member of settings but should be in the same list of accessors to be processed in one table in GUI
-			result.put(nameProps.getFieldName(), new SettingAccessor(nameProps, owner));
+			String fieldName = nameProps.getFieldName();
+			SettingAccessor setting = new SettingAccessor(nameProps, owner);
+			allSettings.put(fieldName, setting);
+			supportedSettings.put(fieldName, setting);
 		}
 		
 		ClearThConnectionSettings settings = owner.getSettings();
 		for (SettingProperties prop : fieldsModel.getSettingsProps())
 		{
-			SettingAccessor setting = prop.getValueClass() == ValueClass.ENUM
+			ValueType type = prop.getValueTypeInfo().getType();
+			SettingAccessor setting = type == ValueType.ENUM
 					? new EnumSettingAccessor((EnumSettingProperties)prop, settings)
 					: new SettingAccessor(prop, settings);
-			result.put(setting.getProperties().getFieldName(), setting);
+			
+			String fieldName = setting.getProperties().getFieldName();
+			allSettings.put(fieldName, setting);
+			if (type != ValueType.SPECIAL)
+				supportedSettings.put(fieldName, setting);
 		}
-		return result;
 	}
 }

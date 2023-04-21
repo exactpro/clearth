@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.connectivity.connections.settings;
 
+import java.util.List;
+
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnectionSettings;
 
 @ConnectionSettings(columns = {"host", "login", "mode"},
@@ -48,6 +50,9 @@ public class CorrectSettings implements ClearThConnectionSettings
 	
 	@ConnectionSetting
 	private boolean autoReconnect;
+	
+	@ConnectionSetting
+	private List<String> multiline;
 
 	@Override
 	public void copyFrom(ClearThConnectionSettings settingsFrom)
@@ -61,6 +66,7 @@ public class CorrectSettings implements ClearThConnectionSettings
 		this.mode = correctSettingsFrom.mode;
 		this.timeout = correctSettingsFrom.timeout;
 		this.autoReconnect = correctSettingsFrom.autoReconnect;
+		this.multiline = correctSettingsFrom.multiline;
 	}
 
 
@@ -150,5 +156,15 @@ public class CorrectSettings implements ClearThConnectionSettings
 	{
 		this.autoReconnect = autoReconnect;
 	}
-
+	
+	
+	public List<String> getMultiline()
+	{
+		return multiline;
+	}
+	
+	public void setMultiline(List<String> multiline)
+	{
+		this.multiline = multiline;
+	}
 }
