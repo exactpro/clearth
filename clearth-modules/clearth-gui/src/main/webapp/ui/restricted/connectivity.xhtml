@@ -16,7 +16,7 @@
 
 		<label class="pageTitle">Connectivity</label>
 		<h:form id="ConnectivityMenu" style="margin-bottom: 10px">
-			<p:selectOneButton id="selectedType" value="#{connectivityBean.selectedConnectionType}">
+			<p:selectOneButton id="selectedType" value="#{connectivityBean.selectedConnectionType}" unselectable="false">
 				<p:ajax update=":Connections :ConnectivityMenu" />
 				<f:selectItems value="#{connectivityBean.connectionTypes}" var="t"
 						itemValue="#{t}" itemLabel="#{t}"/>
@@ -42,7 +42,7 @@
 								  update=":Connections :Growl" styleClass="simple">
 					</p:fileUpload>
 					<h:outputText value="&#160;&#160;&#160;"/>
-					<p:commandButton value="Download connections" ajax="false" 
+					<p:commandButton value="Download connections" ajax="false"
 							icon="ui-icon-arrowthickstop-1-s" style="top: 1px;">
 						<p:fileDownload value="#{connectivityBean.downloadConnections()}" />
 					</p:commandButton>
