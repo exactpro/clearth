@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -31,9 +31,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by victor.klochkov on 5/5/17.
- */
 public class ReportTemplatesProcessor extends TemplatesProcessor
 {
 	protected static final Map<String, Object> PARAMETERS = new HashMap<String, Object>()
@@ -49,6 +46,7 @@ public class ReportTemplatesProcessor extends TemplatesProcessor
 		put("ContainerResult", ContainerResult.class);
 		put("MacroAction", MacroAction.class);
 		put("AttachedFilesResult", AttachedFilesResult.class);
+		put("CsvDetailedResult", CsvDetailedResult.class);
 	}};
 
 	public ReportTemplatesProcessor() throws IOException, TemplateModelException

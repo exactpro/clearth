@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -46,8 +46,8 @@ import java.util.stream.Stream;
 import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
 import static com.exactprosystems.clearth.ApplicationManager.waitForSchedulerToStop;
 import static java.lang.String.format;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(Parameterized.class)
@@ -57,13 +57,9 @@ public class SchedulerTest
 	private static final String REPORTS_DIR = USER_DIR.getParent().resolve(ApplicationManager.TEST_REPORT_DIR)
 			.resolve("automation").resolve("reports").toString();
 
-	private static final Map<String, Set<String>> REPLACED_PATH_PARAMS = Collections.unmodifiableMap(
-			new HashMap<String, Set<String>>()
-			{{
-				put("stepReports", new HashSet<String>(Collections.singletonList("stepName")));
-				put("actionReports", new HashSet<String>(Arrays.asList("actionId", "actionName")));
-			}}
-	);
+	private static final Set<String> IGNORED_EXPECTED_PARAMS =
+			new HashSet<String>(Arrays.asList("version", "userName", "matrixName", "host", "executionStart", "executionEnd", 
+					"executionTime", "started", "finished"));
 
 	private final String userName = "test", schedulerName = "Test";
 
@@ -208,7 +204,7 @@ public class SchedulerTest
 			File expectedReport = getExpectedReport(fileName);
 			try
 			{
-				new JsonAssert().setReplacedPathParams(REPLACED_PATH_PARAMS).assertEquals(expectedReport, actualReport);
+				new JsonAssert().setIgnoredValueNames(IGNORED_EXPECTED_PARAMS).assertEquals(expectedReport, actualReport);
 			}
 			catch (IOException e)
 			{

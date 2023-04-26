@@ -42,21 +42,19 @@ import java.util.Arrays;
 import static com.exactprosystems.clearth.automation.report.Result.DETAILS_DIR;
 import static org.testng.Assert.*;
 
-public class CsvContainerResultTest
+public class CsvDetailedResultTest
 {
 	private final static String SAME_VALUE = "same_value",
-			EXPECTED = "EXPECTED", ACTUAL = "ACTUAL",
 			EXPECTED_VALUE = "expected_value", ACTUAL_VALUE = "actual_value",
-			FAILED = "FAILED", PASSED = "PASSED",
 			PARAM_NAME = "param";
 	private final static String MAX_RECORDS_LIMIT_1 = "maxDisplayedRowsCount_1",
 			SHOULD_NOT_EXIST = "shouldNotExist",
 			WRITE_REPORT_ANYWAY = "writeReportAnyway";
 	protected static String EXTENSION = ".csv";
-	protected static Path testRootPath = Paths.get("testOutput").resolve(CsvContainerResultTest.class.getSimpleName());
+	protected static Path testRootPath = Paths.get("testOutput").resolve(CsvDetailedResultTest.class.getSimpleName());
 	private static ApplicationManager applicationManager;
 	
-	private static ContainerResult passedResultDetail, failedResultDetail;
+	private static DetailedResult passedResultDetail, failedResultDetail;
 	
 	@BeforeClass
 	public static void beforeClass() throws ClearThException
@@ -64,16 +62,8 @@ public class CsvContainerResultTest
 		applicationManager = new ApplicationManager();
 		FileUtils.deleteQuietly(testRootPath.toFile());
 		
-		passedResultDetail = createContainerResult(PARAM_NAME, SAME_VALUE, SAME_VALUE, true);
-		failedResultDetail = createContainerResult(PARAM_NAME, EXPECTED_VALUE, ACTUAL_VALUE, false);
-	}
-	
-	protected static ContainerResult createContainerResult(String paramName, String expectedValue, String actualValue,
-	                                                         boolean identical)
-	{
-		ContainerResult result = new ContainerResult(paramName, false);
-		result.addDetail(createDetailedResult(paramName, expectedValue, actualValue, identical));
-		return result;
+		passedResultDetail = createDetailedResult(PARAM_NAME, SAME_VALUE, SAME_VALUE, true);
+		failedResultDetail = createDetailedResult(PARAM_NAME, EXPECTED_VALUE, ACTUAL_VALUE, false);
 	}
 	
 	protected static DetailedResult createDetailedResult(String paramName, String expectedValue, String actualValue, 
@@ -100,18 +90,18 @@ public class CsvContainerResultTest
 		boolean[] comparisonRowResults = new boolean[]{ false, true };
 		
 		// Should create because there are passed results
-		CsvContainerResult containerResult = CsvContainerResult.createPlainResult();
-		containerResult.setOnlyFailedInHtml(true);
-		assertCreates(containerResult, testPath.resolve("base"), action, comparisonRowResults);
+		CsvDetailedResult csvResult = new CsvDetailedResult();
+		csvResult.setOnlyFailedInHtml(true);
+		assertCreates(csvResult, testPath.resolve("base"), action, comparisonRowResults);
 
-		containerResult = CsvContainerResult.createPlainResult();
-		containerResult.setOnlyFailedInHtml(true);
-		assertNotCreates(containerResult, testPath.resolve(SHOULD_NOT_EXIST), action, false, false);
+		csvResult = new CsvDetailedResult();
+		csvResult.setOnlyFailedInHtml(true);
+		assertNotCreates(csvResult, testPath.resolve(SHOULD_NOT_EXIST), action, false, false);
 
-		containerResult = CsvContainerResult.createPlainResult();
-		containerResult.setOnlyFailedInHtml(true);
-		containerResult.setMaxDisplayedRowsCount(1);
-		assertCreates(containerResult, testPath.resolve(MAX_RECORDS_LIMIT_1), action, false, false);
+		csvResult = new CsvDetailedResult();
+		csvResult.setOnlyFailedInHtml(true);
+		csvResult.setMaxDisplayedRowsCount(1);
+		assertCreates(csvResult, testPath.resolve(MAX_RECORDS_LIMIT_1), action, false, false);
 	}
 	
 	@Test
@@ -122,16 +112,16 @@ public class CsvContainerResultTest
 		Action action = new StubAction(testName);
 		boolean[] sourceResults = new boolean[]{ false, true, false, true, false };
 
-		CsvContainerResult containerResult = CsvContainerResult.createPlainResult();
-		containerResult.setOnlyFailedInCsv(true);
-		containerResult.setMaxDisplayedRowsCount(3);
+		CsvDetailedResult csvResult = new CsvDetailedResult();
+		csvResult.setOnlyFailedInCsv(true);
+		csvResult.setMaxDisplayedRowsCount(3);
 		//Should not exist because there should be added only 3 results and max displayed count is 3 too
-		assertNotCreates(containerResult, testPath.resolve(SHOULD_NOT_EXIST), action, sourceResults);
+		assertNotCreates(csvResult, testPath.resolve(SHOULD_NOT_EXIST), action, sourceResults);
 
-		containerResult = CsvContainerResult.createPlainResult();
-		containerResult.setOnlyFailedInCsv(true);
-		containerResult.setWriteCsvReportAnyway(true);
-		assertCreates(containerResult, testPath.resolve(WRITE_REPORT_ANYWAY), action, sourceResults);
+		csvResult = new CsvDetailedResult();
+		csvResult.setOnlyFailedInCsv(true);
+		csvResult.setWriteCsvReportAnyway(true);
+		assertCreates(csvResult, testPath.resolve(WRITE_REPORT_ANYWAY), action, sourceResults);
 	}
 	
 	@Test
@@ -140,9 +130,9 @@ public class CsvContainerResultTest
 		String testName = "testEmptyResult";
 		Path testPath = testRootPath.resolve(testName);
 		Action action = new StubAction(testName);
-		CsvContainerResult containerResult = CsvContainerResult.createPlainResult();
-		containerResult.setWriteCsvReportAnyway(true);
-		assertNotCreates(containerResult, testPath.resolve(SHOULD_NOT_EXIST), action);
+		CsvDetailedResult csvResult = new CsvDetailedResult();
+		csvResult.setWriteCsvReportAnyway(true);
+		assertNotCreates(csvResult, testPath.resolve(SHOULD_NOT_EXIST), action);
 	}
 
 	@Test
@@ -158,31 +148,31 @@ public class CsvContainerResultTest
 			defaultRowResults[i * 2 + 1] = false;
 		}
 
-		CsvContainerResult containerResult = CsvContainerResult.createPlainResult();
-		assertNotCreates(containerResult, testPath.resolve(SHOULD_NOT_EXIST), action, false, true);
+		CsvDetailedResult csvResult = new CsvDetailedResult();
+		assertNotCreates(csvResult, testPath.resolve(SHOULD_NOT_EXIST), action, false, true);
 		
-		containerResult = CsvContainerResult.createPlainResult();
-		assertCreates(containerResult, testPath.resolve("default"), action, defaultRowResults);
+		csvResult = new CsvDetailedResult();
+		assertCreates(csvResult, testPath.resolve("default"), action, defaultRowResults);
 	}
 
-	private void assertNotCreates(CsvContainerResult containerResult, Path reportPath, Action action,
+	private void assertNotCreates(CsvDetailedResult csvResult, Path reportPath, Action action,
 	                              boolean... results)
 	{
 		for (boolean identical : results)
-			containerResult.addDetail(identical ? passedResultDetail : failedResultDetail);
+			csvResult.addDetail(identical ? passedResultDetail : failedResultDetail);
 
-		containerResult.processDetails(reportPath.toFile(), action);
+		csvResult.processDetails(reportPath.toFile(), action);
 		
 		assertFalse(reportPath.toFile().exists());
 	}
 	
-	private void assertCreates(CsvContainerResult containerResult, Path reportPath, Action action,
+	private void assertCreates(CsvDetailedResult csvResult, Path reportPath, Action action,
 	                                    boolean... results)
 	{
 		for (boolean identical : results)
-			containerResult.addDetail(identical ? passedResultDetail : failedResultDetail);
+			csvResult.addDetail(identical ? passedResultDetail : failedResultDetail);
 
-		containerResult.processDetails(reportPath.toFile(), action);
+		csvResult.processDetails(reportPath.toFile(), action);
 
 		File[] reportFiles = reportPath.resolve(DETAILS_DIR).toFile().listFiles();
 		assertNotNull(reportFiles, "Report file was not created");

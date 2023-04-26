@@ -21,25 +21,29 @@ package com.exactprosystems.clearth.automation.report.results;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
-import com.exactprosystems.clearth.automation.report.comparisonwriters.ComparisonWriter;
 import com.exactprosystems.clearth.automation.report.comparisonwriters.CsvComparisonWriter;
-import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvContainerResultReader;
+import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvDetailedResultReader;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.collections4.list.UnmodifiableList;
 
 import java.io.File;
+import java.io.Serializable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
-public class CsvContainerResult extends ContainerResult implements AutoCloseable
+public class CsvDetailedResult extends Result implements AutoCloseable, Serializable
 {
-	private static final long serialVersionUID = 5699150687216722251L;
-	private static final Logger logger = LoggerFactory.getLogger(CsvContainerResult.class);
+	private static final long serialVersionUID = 5699150687216722252L;
+	private static final Logger logger = LoggerFactory.getLogger(CsvDetailedResult.class);
 	
 	public static final String COLUMN_COMPARISON_NAME = "Comparison name",
 			COLUMN_COMPARISON_RESULT = "Comparison result", COLUMN_ROW_KIND = "Row kind";
@@ -51,9 +55,12 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 			passedRowsCount = 0;
 	protected boolean writeCsvReportAnyway = false, onlyFailedInHtml = false, onlyFailedInCsv = false;
 	protected String name;
+	protected String header;
+	protected List<DetailedResult> details;
 	
 	@JsonIgnore
-	private ComparisonWriter<ContainerResult> comparisonWriter;
+	private CsvComparisonWriter comparisonWriter;
+	@JsonIgnore
 	@SuppressWarnings("rawtypes")
 	protected ValuesComparator valuesComparator;
 	@JsonIgnore
@@ -66,52 +73,18 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 			reportFile = null;
 	
 	// Empty constructor is required for JSON-reports
-	public CsvContainerResult()
+	public CsvDetailedResult() 
 	{
-		super();
+		this.details = new ArrayList<>();
 	}
 	
-	public CsvContainerResult(String name)
+	public CsvDetailedResult(String name)
 	{
-		super();
+		this.details = new ArrayList<>();
 		this.name = name;
 	}
 	
-	protected CsvContainerResult(String header, boolean isBlockView)
-	{
-		super(header, isBlockView);
-	}
-	
-	protected CsvContainerResult(String header, boolean isBlockView, String name)
-	{
-		super(header, isBlockView);
-		this.name = name;
-	}
-	
-	
-	public static CsvContainerResult createPlainResult()
-	{
-		return new CsvContainerResult();
-	}
-	
-	public static CsvContainerResult createPlainResult(String name)
-	{
-		return new CsvContainerResult(null, false, name);
-	}
-	
-	public static CsvContainerResult createBlockResult(String header)
-	{
-		return new CsvContainerResult(header, true);
-	}
-	
-	public static CsvContainerResult createBlockResult(String header, String name)
-	{
-		return new CsvContainerResult(header, true, name);
-	}
-	
-	
-	@Override
-	public void addDetail(Result detail)
+	public void addDetail(DetailedResult detail)
 	{
 		totalRowsCount++;
 		if (detail.isSuccess())
@@ -120,9 +93,10 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 				|| failReason.ordinal() > detail.getFailReason().ordinal())
 			failReason = detail.getFailReason();
 		
+		checkDetails();
 		if ((!onlyFailedInHtml && totalRowsCount <= maxDisplayedRowsCount)
 				|| (onlyFailedInHtml && !detail.isSuccess() && totalRowsCount - passedRowsCount <= maxDisplayedRowsCount))
-			super.addDetail(detail);
+			details.add(detail);
 		
 		if (shouldBeStored(detail))
 		{
@@ -140,7 +114,6 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		return !detail.isSuccess() || !onlyFailedInCsv;
 	}
 
-	@Override
 	protected boolean checkDetails()
 	{
 		return success = passedRowsCount == totalRowsCount;
@@ -151,7 +124,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		return failReason;
 	}
-
+	
 	@Override
 	public void processDetails(File reportDir, Action linkedAction)
 	{
@@ -179,11 +152,11 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		setHeader(headerMsg);
 	}
 
-	protected void addToWriter(Result detail)
+	protected void addToWriter(DetailedResult detail)
 	{
 		try
 		{
-			getComparisonWriter().addDetail((ContainerResult) detail);
+			getComparisonWriter().addDetail(detail, detail.getComment());
 		}
 		catch (IOException e)
 		{
@@ -192,6 +165,12 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 			else
 				getLogger().error("Error occurred while writing result detail to the report file", e);
 		}
+	}
+
+	@Override
+	public void clearDetails()
+	{
+		details.clear();
 	}
 	
 	/**
@@ -203,7 +182,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		Utils.closeResource(comparisonWriter);
 	}
 	
-	protected ComparisonWriter<ContainerResult> getComparisonWriter()
+	protected CsvComparisonWriter getComparisonWriter()
 	{
 		if (comparisonWriter == null)
 			comparisonWriter = createComparisonWriter();
@@ -211,7 +190,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		return comparisonWriter;
 	}
 	
-	protected ComparisonWriter<ContainerResult> createComparisonWriter()
+	protected CsvComparisonWriter createComparisonWriter()
 	{
 		int maxBufferSize = maxDisplayedRowsCount;
 		return new CsvComparisonWriter(maxBufferSize);
@@ -245,16 +224,15 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	
 	@JsonIgnore
 	@SuppressWarnings("unchecked")
-	public CsvContainerResultReader getReader() throws SettingsException, IOException
+	public CsvDetailedResultReader getReader() throws SettingsException, IOException
 	{
 		if (valuesComparator == null)
 			throw new SettingsException("Values comparator is required but not provided");
 		if (valueParser == null)
 			throw new SettingsException("Value parser is required but not provided");
 		
-		return new CsvContainerResultReader(reportFile, valuesComparator, valueParser);
+		return new CsvDetailedResultReader(reportFile, valuesComparator, valueParser);
 	}
-	
 	
 	public void setMaxDisplayedRowsCount(int maxDisplayedRowsCount)
 	{
@@ -305,8 +283,7 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 	{
 		return name;
 	}
-	
-	
+
 	public int getTotalRowsCount()
 	{
 		return totalRowsCount;
@@ -347,9 +324,34 @@ public class CsvContainerResult extends ContainerResult implements AutoCloseable
 		this.valuesComparator = valuesComparator;
 		this.valueParser = valueParser;
 	}
+	
+	public List<DetailedResult> getDetails()
+	{
+		return UnmodifiableList.unmodifiableList(details);  // This prevents changes in the list that will make details and containers not linked
+	}
+	
+	public void setHeader(String header)
+	{
+		this.header = header;
+	}
+	
+	public String getHeader()
+	{
+		return header;
+	}
 
 	protected Logger getLogger()
 	{
 		return logger;
+	}
+
+	@Override
+	public LineBuilder toLineBuilder(LineBuilder builder, String prefix)
+	{
+		super.toLineBuilder(builder, prefix);
+		builder.add(prefix).add("Total row count: ").add(Integer.toString(totalRowsCount)).eol().add("Details (Identical / Exp. / Act.)").eol();
+		for (Result detail : details)
+			detail.toLineBuilder(builder, prefix + " ");
+		return builder;
 	}
 }

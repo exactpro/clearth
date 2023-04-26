@@ -35,11 +35,11 @@ import java.io.InputStreamReader;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static com.exactprosystems.clearth.automation.report.results.CsvContainerResult.*;
+import static com.exactprosystems.clearth.automation.report.results.CsvDetailedResult.*;
 
-public class CsvContainerResultReader implements AutoCloseable
+public class CsvDetailedResultReader implements AutoCloseable
 {
-	private static final Logger logger = LoggerFactory.getLogger(CsvContainerResultReader.class);
+	private static final Logger logger = LoggerFactory.getLogger(CsvDetailedResultReader.class);
 	private ZipFile zipFile;
 	protected final CsvDataReader reader;
 	@SuppressWarnings("rawtypes")
@@ -47,7 +47,7 @@ public class CsvContainerResultReader implements AutoCloseable
 	@SuppressWarnings("rawtypes")
 	protected final ValueParser valueParser;
 
-	public<A, B> CsvContainerResultReader(File zipFile,
+	public<A, B> CsvDetailedResultReader(File zipFile,
 	ValuesComparator<A, B> valuesComparator, ValueParser<A ,B> valueParser)
 			throws IOException
 	{

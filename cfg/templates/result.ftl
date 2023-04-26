@@ -3,6 +3,7 @@
 <#import "multidetailedresult.ftl" as multiDetailedResult>
 <#import "richtextresult.ftl" as richTextResult>
 <#import "tableresult.ftl" as tableResult>
+<#import "csvdetailedresult.ftl" as csvDetailedResult>
 <#import "containerresult.ftl" as containerResult>
 <#import "attachedfilesresult.ftl" as attachedFilesResult>
 
@@ -28,6 +29,11 @@
 		/>
 	<#elseif instanceOf(result, MultiDetailedResult)>
 		<@multiDetailedResult.printComparisonTable
+			result = result
+			resultId = resultId
+		/>
+	<#elseif instanceOf(result, CsvDetailedResult)>
+		<@csvDetailedResult.printComparisonTable
 			result = result
 			resultId = resultId
 		/>

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -34,7 +34,6 @@ import java.util.Map;
 
 /**
  * Result which can include other results.
- * @author daria.plotnikova
  */
 public class ContainerResult extends Result implements Serializable
 {

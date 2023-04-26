@@ -20,10 +20,9 @@ package com.exactprosystems.clearth.automation.report.comparisonwriters;
 
 import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
-import com.exactprosystems.clearth.automation.report.results.ContainerResult;
+import com.exactprosystems.clearth.automation.report.results.CsvDetailedResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FilenameUtils;
@@ -35,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -47,7 +47,7 @@ import static com.exactprosystems.clearth.automation.report.Result.DETAILS_DIR;
  * Has an initial buffer: report will be made only when number of details (a.k.a. number of given row results) to store
  * exceeds {@link #maxBufferSize}.<br>
  */
-public class CsvComparisonWriter implements ComparisonWriter<ContainerResult>
+public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 {
 	public static final String TEMP_FILE_PREFIX = "csvcontainerresult_report_";
 	
@@ -60,19 +60,23 @@ public class CsvComparisonWriter implements ComparisonWriter<ContainerResult>
 	private File tempFile;
 	private CsvWriter csvWriter;
 	protected boolean headerWritten = false;
-	protected List<ContainerResult> noWriteBuffer = null;
+	protected List<DetailedResult> noWriteBuffer = null;
+	protected List<String> writeBufferHeaders = null;
 	protected final int maxBufferSize;
 
 	/**
 	 * @param maxBufferSize report will be created in {@link #finishReport(Path, String, String, boolean)}
-	 *                      only if number of details added through {@link #addDetail(ContainerResult)} exceeds this 
+	 *                      only if number of details added through {@link #addDetail(CsvDetailedResult)} exceeds this 
 	 *                      number or last param of method finishReport (forceWrite) is true
 	 */
 	public CsvComparisonWriter(int maxBufferSize)
 	{
 		this.maxBufferSize = maxBufferSize;
 		if (maxBufferSize > 0)
+		{
 			noWriteBuffer = new ArrayList<>();
+			writeBufferHeaders = new ArrayList<>();
+		}
 	}
 	
 	protected CsvWriter getCsvWriter() throws IOException
@@ -97,15 +101,23 @@ public class CsvComparisonWriter implements ComparisonWriter<ContainerResult>
 	}
 
 	@Override
-	public void addDetail(ContainerResult containerResult) throws IOException
+	public void addDetail(CsvDetailedResult containerResult) throws IOException
+	{
+		List<DetailedResult> mainContainerDetails = containerResult.getDetails();
+		for (DetailedResult result : mainContainerDetails)
+			addDetail(result, result.getComment());
+	}
+
+	public void addDetail(DetailedResult detailedResult, String header) throws IOException
 	{
 		if (noWriteBuffer == null)
 		{
-			writeDetail(containerResult);
+			writeDetail(detailedResult, header);
 			return;
 		}
 
-		noWriteBuffer.add(containerResult);
+		noWriteBuffer.add(detailedResult);
+		writeBufferHeaders.add(header);
 		if (noWriteBuffer.size() > maxBufferSize)
 		{
 			writeBuffer();
@@ -115,25 +127,21 @@ public class CsvComparisonWriter implements ComparisonWriter<ContainerResult>
 	
 	public void writeBuffer() throws IOException
 	{
-		for (ContainerResult result : noWriteBuffer)
-			writeDetail(result);
+		Iterator<String> iterator = writeBufferHeaders.iterator();
+		for (DetailedResult result : noWriteBuffer)
+			writeDetail(result, iterator.next());
 	}
 
-	public void writeDetail(ContainerResult containerResult) throws IOException
+	public void writeDetail(DetailedResult detailedResult, String header) throws IOException
 	{
-		List<Result> mainContainerDetails = containerResult.getDetails();
-		if (mainContainerDetails.isEmpty())
-			return;
-		DetailedResult detailedResult = (DetailedResult) mainContainerDetails.get(0);
-
 		CsvWriter csvWriter = getCsvWriter();
 		if (!headerWritten)
 		{
 			writeHeader(csvWriter, detailedResult);
 			headerWritten = true;
 		}
-		writeDetailRow(csvWriter, true, containerResult.getHeader(), detailedResult);
-		writeDetailRow(csvWriter, false, containerResult.getHeader(), detailedResult);
+		writeDetailRow(csvWriter, true, header, detailedResult);
+		writeDetailRow(csvWriter, false, header, detailedResult);
 	}
 
 	public void writeDetailRow(CsvWriter csvWriter, boolean forExpected, String header, DetailedResult detailedResult)

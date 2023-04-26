@@ -19,11 +19,10 @@
 package com.exactprosystems.clearth.automation.report.comparisonwriters;
 
 import com.exactprosystems.clearth.ApplicationManager;
-import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
-import com.exactprosystems.clearth.automation.report.results.ContainerResult;
+import com.exactprosystems.clearth.automation.report.results.CsvDetailedResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
-import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvContainerResultReader;
+import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvDetailedResultReader;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.Utils;
@@ -44,7 +43,8 @@ import static org.testng.Assert.*;
 public class CsvComparisonWriterTest
 {
 	private static final Path TEST_DIR = Paths.get("testOutput", CsvComparisonWriterTest.class.getSimpleName());
-	private static final String TEST_HEADER = "TestRow";
+	private static final String TEST_HEADER = "TestRow", 
+			NOT_TEST_HEADER = "Not" + TEST_HEADER;
 
 	private ApplicationManager applicationManager;
 	@BeforeClass
@@ -65,12 +65,12 @@ public class CsvComparisonWriterTest
 	private void defaultTest() throws Exception
 	{
 		CsvComparisonWriter writer = null;
-		CsvContainerResultReader reader = null;
+		CsvDetailedResultReader reader = null;
 		try
 		{
 			writer = new CsvComparisonWriter(0);
-			ContainerResult containerResult = createContainerResult();
-			writer.addDetail(containerResult);
+			CsvDetailedResult csvResult = createCsvResult();
+			writer.addDetail(csvResult);
 			writer.finishReport(TEST_DIR, "", "", false);
 
 			File[] reportFiles = TEST_DIR.resolve("details").toFile().listFiles();
@@ -78,13 +78,12 @@ public class CsvComparisonWriterTest
 			assertEquals(reportFiles.length, 1,
 					"Found more than one file by path " + reportFiles[0].getParent());
 			
-			reader = new CsvContainerResultReader(reportFiles[0],
+			reader = new CsvDetailedResultReader(reportFiles[0],
 					new StringValuesComparator(new ComparisonUtils()), new StringValueParser());
 			
-			for (Result result : containerResult.getDetails())
+			for (DetailedResult result : csvResult.getDetails())
 			{
-				DetailedResult detailedResult = (DetailedResult) result;
-				assertEquals(reader.readNext(), detailedResult);
+				assertEquals(reader.readNext(), result);
 			}
 			assertNull(reader.readNext());
 		}
@@ -95,11 +94,11 @@ public class CsvComparisonWriterTest
 		}
 	}
 	
-	private ContainerResult createContainerResult()
+	private CsvDetailedResult createCsvResult()
 	{
-		ContainerResult result = ContainerResult.createBlockResult(TEST_HEADER);
+		CsvDetailedResult result = new CsvDetailedResult(NOT_TEST_HEADER);
 		DetailedResult detailedResult = new DetailedResult();
-		detailedResult.setComment(TEST_HEADER); // result's header becomes comment in reader
+		detailedResult.setComment(TEST_HEADER); // row result's comment is header in written file
 		detailedResult.addResultDetail(new ResultDetail("Param1", "expected", "actual", false));
 		detailedResult.addResultDetail(new ResultDetail("Param2", "same", "same", true));
 		result.addDetail(detailedResult);

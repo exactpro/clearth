@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,8 +21,9 @@ package com.exactprosystems.clearth.utils.tabledata.comparison;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.CloseableContainerResult;
 import com.exactprosystems.clearth.automation.report.results.ContainerResult;
-import com.exactprosystems.clearth.automation.report.results.CsvContainerResult;
+import com.exactprosystems.clearth.automation.report.results.CsvDetailedResult;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import com.exactprosystems.clearth.utils.Utils;
@@ -42,6 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -61,6 +64,7 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	public static final int DEFAULT_MAX_STORED_ROWS_COUNT = -1;
 
 	private long lastAwaitedTimeout = 0;
+	private Map<String, CsvDetailedResult> comparisionResultDetails = new HashMap<>();
 	
 	private int maxPassedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
 	private int maxFailedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
@@ -129,7 +133,6 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 			logger.debug("Comparison finished in {} sec. Processed {} rows: {} passed / {} failed",
 					TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - comparisonStartTime), rowsCount,
 					passedRowsCount, rowsCount - passedRowsCount);
-			
 			return result;
 		}
 		catch (Exception e)
@@ -204,25 +207,25 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	{
 		ContainerResult result = CloseableContainerResult.createPlainResult(null);
 		// Creating containers firstly to have them in expected order
-		result.addWrappedContainer(CONTAINER_PASSED, createComparisonNestedResult(CONTAINER_PASSED,
-				getMaxPassedRowsToStore(), valuesComparator, valueParser), true);
-		result.addWrappedContainer(CONTAINER_FAILED, createComparisonNestedResult(CONTAINER_FAILED, getMaxFailedRowsToStore(),
-				valuesComparator, valueParser), true);
-		result.addWrappedContainer(CONTAINER_NOT_FOUND, createComparisonNestedResult(CONTAINER_NOT_FOUND, getMaxNotFoundRowsToStore(),
-				valuesComparator, valueParser), true);
-		result.addWrappedContainer(CONTAINER_EXTRA, createComparisonNestedResult(CONTAINER_EXTRA, getMaxExtraRowsToStore(),
-				valuesComparator, valueParser), true);
+		result.addDetail(createComparisonNestedResult(CONTAINER_PASSED,
+				getMaxPassedRowsToStore(), valuesComparator, valueParser));
+		result.addDetail(createComparisonNestedResult(CONTAINER_FAILED, getMaxFailedRowsToStore(),
+				valuesComparator, valueParser));
+		result.addDetail(createComparisonNestedResult(CONTAINER_NOT_FOUND, getMaxNotFoundRowsToStore(),
+				valuesComparator, valueParser));
+		result.addDetail(createComparisonNestedResult(CONTAINER_EXTRA, getMaxExtraRowsToStore(),
+				valuesComparator, valueParser));
 		return result;
 	}
 	
-	protected ContainerResult createComparisonNestedResult(String header, int maxStoredRowsCount,
+	protected CsvDetailedResult createComparisonNestedResult(String header, int maxStoredRowsCount,
 	                                                       ValuesComparator<A, B> valuesComparator,
 	                                                       ValueParser<A, B> valueParser)
 	{
-		CsvContainerResult result = CsvContainerResult.createPlainResult(header.toLowerCase().replace(" ", 
-			"_"));
+		CsvDetailedResult result = new CsvDetailedResult(header);
 		result.setMaxStoredRowsCount(maxStoredRowsCount);
 		result.setValueHandlers(valuesComparator, valueParser);
+		comparisionResultDetails.put(header, result);
 		return result;
 	}
 	
@@ -248,14 +251,14 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 			// Add current row to collector only if it's not a duplicated one
 			keyColumnsRowsCollector.addRow(currentRow, primaryKey, rowName);
 		}
-		addRowComparisonResult(result, createBlockResult(compData, rowName), compData.getResultType(),
+		addRowComparisonResult(result, createComparisonDetail(compData, rowName), compData.getResultType(),
 				valuesComparator, valueParser);
 	}
 	
 	protected void addDuplicatedRowResult(ContainerResult result, RowComparisonData<A, B> compData, String rowName, String originalRowName,
 	                                      ValuesComparator<A, B> valuesComparator, ValueParser<A, B> valueParser)
 	{
-		Result rowResult = createBlockResult(compData, rowName + " (duplicate of row named '" + originalRowName + "')");
+		DetailedResult rowResult = createComparisonDetail(compData, rowName + " (duplicate of row named '" + originalRowName + "')");
 		rowResult.setSuccess(false);
 		
 		RowComparisonResultType compResultType = compData.getResultType();
@@ -264,18 +267,17 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 		addRowComparisonResult(result, rowResult, compResultType, valuesComparator, valueParser);
 	}
 	
-	protected void addRowComparisonResult(ContainerResult result, Result rowResult,
+	protected void addRowComparisonResult(ContainerResult result, DetailedResult rowResult,
 	                                      RowComparisonResultType compResultType,
 	                                      ValuesComparator<A, B> valuesComparator,
 	                                      ValueParser<A, B> valueParser)
 	{
 		String nestedName = getResultTypeName(compResultType);
-		ContainerResult nestedResult = result.getContainer(nestedName);
+		CsvDetailedResult nestedResult = comparisionResultDetails.get(nestedName);
 		if (nestedResult == null)
 		{
-			nestedResult = createComparisonNestedResult(nestedName, DEFAULT_MAX_STORED_ROWS_COUNT,
-					valuesComparator, valueParser);
-			result.addWrappedContainer(nestedName, nestedResult, true);
+			result.addDetail(createComparisonNestedResult(nestedName, DEFAULT_MAX_STORED_ROWS_COUNT,
+					valuesComparator, valueParser));
 		}
 		nestedResult.addDetail(rowResult);
 	}
@@ -308,12 +310,11 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 		return "Row #" + rowsCount;
 	}
 	
-	protected Result createBlockResult(RowComparisonData<A, B> compData, String headerMessage)
+	protected DetailedResult createComparisonDetail(RowComparisonData<A, B> compData, String headerMessage)
 	{
-		ContainerResult blockResult = ContainerResult.createBlockResult(headerMessage);
-		blockResult.addDetail(compData.toDetailedResult());
-		blockResult.setUseFailReasonColor(true);
-		return blockResult;
+		DetailedResult result = compData.toDetailedResult();
+		result.setComment(headerMessage);
+		return result;
 	}
 	
 	protected String getResultTypeName(RowComparisonResultType result)

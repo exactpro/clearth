@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,8 +20,6 @@ package com.exactprosystems.clearth.helpers;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -32,7 +30,7 @@ import org.assertj.core.api.SoftAssertions;
 public class JsonAssert
 {
 	private String pathDelimiter = ">";
-	private Map<String, Set<String>> replacedPathParams;
+	private Set<String> ignoredValueNames;
 
 
 	public JsonAssert setCustomPathDelimiter(String delimiter)
@@ -41,9 +39,9 @@ public class JsonAssert
 		return this;
 	}
 
-	public JsonAssert setReplacedPathParams(Map<String, Set<String>> replacedPathParams)
+	public JsonAssert setIgnoredValueNames(Set<String> ignoredValueNames)
 	{
-		this.replacedPathParams = replacedPathParams;
+		this.ignoredValueNames = ignoredValueNames;
 		return this;
 	}
 
@@ -91,34 +89,12 @@ public class JsonAssert
 				assertions.fail("%s %s missed element <\"%s\">", getPath(path), pathDelimiter, fieldName);
 				return;
 			}
-			tryReplacePath(expectedNodes, path);
+			if (ignoredValueNames != null && ignoredValueNames.contains(fieldName))
+				return;
 			path.push(fieldName);
 			compareTrees(assertions, expected, actual, path);
 			path.pop();
 		});
-	}
-
-	private void tryReplacePath(JsonNode expectedNodes, Stack<String> path)
-	{
-		if (replacedPathParams == null)
-			return;
-
-		String currentPath = path.peek();
-		if (replacedPathParams.containsKey(currentPath))
-		{
-			Set<String> replacedPaths = replacedPathParams.get(currentPath);
-
-			Set<String> pathsValues = new LinkedHashSet<>(replacedPaths.size());
-			for (String replacedPath : replacedPaths)
-			{
-				JsonNode fullPath = expectedNodes.get(replacedPath);
-				pathsValues.add(MessageFormat.format("{0}={1}", replacedPath, fullPath.toString()));
-			}
-
-			path.pop();
-			String newPath = String.join(", ", pathsValues);
-			path.push(newPath);
-		}
 	}
 
 	private void compareArrayTree(SoftAssertions assertions, JsonNode expectedNodes, JsonNode actualNodes,
@@ -132,13 +108,10 @@ public class JsonAssert
 					.isEqualTo(expectedNodes.size());
 			return;
 		}
-		for (int i = 0; i < expectedNodes.size() && i < actualNodes.size(); i++)
+		for (int i = 0; i < expectedNodes.size(); i++)
 		{
-			if (replacedPathParams == null || !replacedPathParams.containsKey(currentPath))
-			{
-				path.pop();
-				path.push(MessageFormat.format("{0}[{1}]", currentPath, i));
-			}
+			path.pop();
+			path.push(MessageFormat.format("{0}[{1}]", currentPath, i));
 			compareTrees(assertions, expectedNodes.get(i), actualNodes.get(i), path);
 		}
 	}

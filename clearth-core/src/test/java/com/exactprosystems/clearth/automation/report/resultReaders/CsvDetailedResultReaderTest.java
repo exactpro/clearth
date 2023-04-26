@@ -21,10 +21,9 @@ package com.exactprosystems.clearth.automation.report.resultReaders;
 import com.exactprosystems.clearth.BasicTestNgTest;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
-import com.exactprosystems.clearth.automation.report.results.ContainerResult;
-import com.exactprosystems.clearth.automation.report.results.CsvContainerResult;
+import com.exactprosystems.clearth.automation.report.results.CsvDetailedResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
-import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvContainerResultReader;
+import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvDetailedResultReader;
 import com.exactprosystems.clearth.utils.BigDecimalValueTransformer;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.IValueTransformer;
@@ -44,15 +43,15 @@ import java.util.Map;
 import static org.mockito.Mockito.doReturn;
 import static org.testng.Assert.*;
 
-public class CsvContainerResultReaderTest extends BasicTestNgTest
+public class CsvDetailedResultReaderTest extends BasicTestNgTest
 {
 	private NumericStringValuesComparator numericValuesComparator;
 	private StringValuesComparator valuesComparator;
 	private StringValueParser valueParser;
 	
 	private static final Path zipFilesPath =
-			Paths.get("src/test/resources/").resolve(CsvContainerResultReaderTest.class.getSimpleName());
-	private static final Path testDir = Paths.get("testOutput").resolve(CsvContainerResultReaderTest.class.getSimpleName());
+			Paths.get("src", "test", "resources").resolve(CsvDetailedResultReaderTest.class.getSimpleName());
+	private static final Path testDir = Paths.get("testOutput").resolve(CsvDetailedResultReaderTest.class.getSimpleName());
 	
 	@Override
 	protected void mockOtherApplicationFields(ClearThCore application)
@@ -102,7 +101,7 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 				new ResultDetail("Column_2", "5.0", "5.0", true),
 				new ResultDetail("Column_3", "6", "6", true),
 				new ResultDetail("Column_4","2023-03-01", "2023-03-01", true));
-		try (CsvContainerResultReader reader = new CsvContainerResultReader(file, numericValuesComparator, valueParser))
+		try (CsvDetailedResultReader reader = new CsvDetailedResultReader(file, numericValuesComparator, valueParser))
 		{
 			assertEquals(reader.readNext(), expectedResult1);
 			assertEquals(reader.readNext(), expectedResult2);
@@ -121,7 +120,7 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 				new ResultDetail("Column_4","2023-03-02", "02032023", false));
 		
 		
-		try (CsvContainerResultReader reader = new CsvContainerResultReader(file, numericValuesComparator, valueParser))
+		try (CsvDetailedResultReader reader = new CsvDetailedResultReader(file, numericValuesComparator, valueParser))
 		{
 			assertEquals(reader.readNext(), expectedResult1);
 			assertNull(reader.readNext());
@@ -134,15 +133,14 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 		File file = new File(zipFilesPath.resolve("numericsPassedReport.zip").toUri());
 		DetailedResult expectedResult = generateDetailedResult("Row #12",
 				new ResultDetail("Column_1", "1", "1.1", true));
-		try (CsvContainerResultReader reader = new CsvContainerResultReader(file, numericValuesComparator, valueParser))
+		try (CsvDetailedResultReader reader = new CsvDetailedResultReader(file, numericValuesComparator, valueParser))
 		{
 			assertEquals(reader.readNext(), expectedResult);
 			assertNull(reader.readNext());
 		}
 
-		try (CsvContainerResultReader reader = new CsvContainerResultReader(file, valuesComparator, valueParser))
+		try (CsvDetailedResultReader reader = new CsvDetailedResultReader(file, valuesComparator, valueParser))
 		{
-			// wrong parse because of wrong values comparator
 			assertNotEquals(reader.readNext(), expectedResult);
 			assertNull(reader.readNext());
 		}
@@ -151,18 +149,18 @@ public class CsvContainerResultReaderTest extends BasicTestNgTest
 	@Test
 	private void testGetReader() throws Exception
 	{
-		CsvContainerResult result = CsvContainerResult.createPlainResult();
-		result.setValueHandlers(valuesComparator, valueParser);
-		result.setWriteCsvReportAnyway(true);
-
-		ContainerResult nestedResult = new ContainerResult();
-		DetailedResult expectedResult = generateDetailedResult("", new ResultDetail("field", "1", "1", true));
-		nestedResult.addDetail(expectedResult);
-
-		result.addDetail(nestedResult);
-		
-		result.processDetails(testDir.toFile(), null);
-		
-		assertEquals(result.getReader().readNext(), expectedResult);
+		try (CsvDetailedResult result = new CsvDetailedResult())
+		{
+			result.setValueHandlers(valuesComparator, valueParser);
+			result.setWriteCsvReportAnyway(true);
+	
+			DetailedResult expectedResult = generateDetailedResult("", new ResultDetail("field", "1", "1", true));
+	
+			result.addDetail(expectedResult);
+			
+			result.processDetails(testDir.toFile(), null);
+			
+			assertEquals(result.getReader().readNext(), expectedResult);
+		}
 	}
 }
