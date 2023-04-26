@@ -310,8 +310,23 @@ public class JsonCodec implements ICodec
 	{
 		String name = fieldDesc.isRepeat() ? ClearThJsonMessage.ARRAY_ITEM_NAME : getMsgFieldName(fieldDesc), value = "";
 		if (node != null)
-			value = node.isBigDecimal() ? node.decimalValue().toPlainString() : node.asText();
+			if (node.isArray())
+			{
+				StringJoiner strJoin = new StringJoiner(", ");
+				for (JsonNode jn : node)
+					strJoin.add(getSimpleNodeValue(jn));
+				
+				value = strJoin.toString();
+			}
+			else
+				value = getSimpleNodeValue(node);
+		
 		message.addField(name, new JsonTextField(value));
+	}
+	
+	private String getSimpleNodeValue(JsonNode jn)
+	{
+		return jn.isBigDecimal() ? jn.decimalValue().toPlainString() : jn.asText();
 	}
 	
 	protected String getMsgFieldName(JsonFieldDesc fd)

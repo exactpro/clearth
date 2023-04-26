@@ -4,6 +4,8 @@
   "price" : 250,
   "tradeTS" : "2023-03-27 15:30:24",
   "confirmed" : true,
+  "vars" : [ 1, 3 ],
+  "alternatives" : [ "alt1", "alt2" ],
   "linkedData" : [ {
     "name" : "LD1"
   }, {

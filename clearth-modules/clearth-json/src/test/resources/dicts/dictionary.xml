@@ -12,6 +12,8 @@
 		<fieldDesc source="price" name="Price" type="number" />
 		<fieldDesc source="tradeTS" name="Timestamp" type="timestamp" />
 		<fieldDesc source="confirmed" name="Confirmed" type="boolean" />
+		<fieldDesc source="vars" name="Variants" type="numberArray" />
+		<fieldDesc source="alternatives" name="Alternatives" type="textArray" />
 		<fieldDesc source="linkedData" name="Linked" repeat="true">
 			<fieldDesc source="name" name="name" />
 		</fieldDesc>

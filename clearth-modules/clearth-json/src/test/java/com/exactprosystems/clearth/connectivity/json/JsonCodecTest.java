@@ -18,7 +18,13 @@
 
 package com.exactprosystems.clearth.connectivity.json;
 
-import static com.exactprosystems.clearth.utils.CollectionUtils.map;
+import com.exactprosystems.clearth.connectivity.DecodeException;
+import com.exactprosystems.clearth.connectivity.EncodeException;
+import com.exactprosystems.clearth.utils.DictionaryLoadException;
+import org.apache.commons.io.FileUtils;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,14 +33,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import com.exactprosystems.clearth.connectivity.DecodeException;
-import com.exactprosystems.clearth.connectivity.EncodeException;
-import com.exactprosystems.clearth.utils.DictionaryLoadException;
+import static com.exactprosystems.clearth.utils.CollectionUtils.map;
 
 public class JsonCodecTest
 {
@@ -55,7 +54,9 @@ public class JsonCodecTest
 				"Name", "DummyName",
 				"Price", "250",
 				"Timestamp", "2023-03-27 15:30:24",
-				"Confirmed", "true"),
+				"Confirmed", "true",
+				"Variants", "1, 3",
+				"Alternatives", "alt1, alt2"),
 				message(map("SubMsgType", "Linked",
 						"name", "LD1")),
 				message(map("SubMsgType", "Linked",
@@ -76,7 +77,6 @@ public class JsonCodecTest
 		String encoded = codec.encode(messageObject);
 		Assert.assertEquals(encoded, messageText);
 	}
-	
 	
 	private ClearThJsonMessage message(Map<String, String> fields, ClearThJsonMessage... subMessages)
 	{
