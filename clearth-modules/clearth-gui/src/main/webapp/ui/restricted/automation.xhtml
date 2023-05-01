@@ -885,8 +885,6 @@
 					<p:selectOneMenu value="#{automationConfigBean.steps.oneSelectedStep.kind}" style="width: 176px;">
 						<p:ajax update="parameter" />
 						<f:selectItem itemLabel="Default" itemValue="Default" />
-						<f:selectItem itemLabel="Sleep" itemValue="Sleep" />
-						<f:selectItem itemLabel="Ask for continue" itemValue="Ask for continue" />
 					</p:selectOneMenu>
 
 					<p:selectBooleanCheckbox value="#{automationConfigBean.steps.stepProps.startAt}" rendered="#{!automationConfigBean.steps.oneStepSelected}" />

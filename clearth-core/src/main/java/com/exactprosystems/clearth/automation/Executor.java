@@ -26,9 +26,7 @@ import com.exactprosystems.clearth.automation.report.ReportException;
 import com.exactprosystems.clearth.automation.report.ReportsWriter;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.automation.steps.AskForContinue;
 import com.exactprosystems.clearth.automation.steps.Default;
-import com.exactprosystems.clearth.automation.steps.Sleep;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.ObjectWrapper;
@@ -686,14 +684,6 @@ public abstract class Executor extends Thread
 		{
 			case Default :
 				stepImpl = new Default();
-				break;
-			case Sleep :
-				stepImpl = new Sleep();
-				stepImpl.addParameter("sleep", step.getParameter());
-				break;
-			case AskForContinue :
-				stepImpl = new AskForContinue();
-				stepImpl.addParameter("suspended", suspension);
 				break;
 			default :
 				stepImpl = createStepImpl(step.getKind(), step.getParameter());

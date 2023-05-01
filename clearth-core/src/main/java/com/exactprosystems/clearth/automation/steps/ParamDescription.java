@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,9 +20,6 @@ package com.exactprosystems.clearth.automation.steps;
 
 import java.lang.annotation.*;
 
-/**
- * Created by alexander.magomedov on 5/5/17.
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited

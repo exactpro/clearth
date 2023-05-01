@@ -28,9 +28,7 @@ import com.exactprosystems.clearth.automation.matrix.linked.MatrixProviderHolder
 import com.exactprosystems.clearth.automation.persistence.ExecutorState;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.StepState;
-import com.exactprosystems.clearth.automation.steps.AskForContinue;
 import com.exactprosystems.clearth.automation.steps.Default;
-import com.exactprosystems.clearth.automation.steps.Sleep;
 import com.exactprosystems.clearth.data.DataHandlingException;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.utils.ClearThException;
@@ -1586,8 +1584,6 @@ public abstract class Scheduler
 	
 	public Class<? extends StepImpl> getStepImplClass(String label) {
 		switch (CoreStepKind.stepKindByLabel(label)) {
-			case Sleep: return Sleep.class;
-			case AskForContinue: return AskForContinue.class;
 			case Default: return Default.class;
 			default: return getStepImplClassEx(label);
 		}

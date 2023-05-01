@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,8 +21,6 @@ package com.exactprosystems.clearth.automation;
 public enum CoreStepKind
 {
 	Default("Default"),
-	Sleep("Sleep"),
-	AskForContinue("Ask for continue"),
 	InvalidStep("INVALID STEP");
 	
 	private final String label;
