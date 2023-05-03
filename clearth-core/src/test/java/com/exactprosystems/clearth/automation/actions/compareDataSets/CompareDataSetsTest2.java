@@ -109,13 +109,15 @@ public class CompareDataSetsTest2
 	{
 		return new Object[][]
 			{
-				{false},
-				{true}
+				{false, "Select * from expectedTbl", "Select * from actualTbl"},
+				{true, "Select * from expectedTbl", "Select * from actualTbl"},
+				{false, "Select * from expectedTbl123", "Select * from actualTbl456"},
+				{true, "Select * from expectedTbl123", "Select * from actualTbl456"}
 			};
 	}
 
 	@Test(dataProvider = "needCloseDbConnection")
-	public void testRunCompareDataSets(boolean needCloseDbConnection)
+	public void testRunCompareDataSets(boolean needCloseDbConnection, String selectQueryExp, String selectQueryActual)
 			throws FailoverException, SQLException, ConnectivityException, SettingsException
 	{
 		GlobalContext globalContext = TestActionUtils.createGlobalContext(ADMIN);
@@ -126,11 +128,11 @@ public class CompareDataSetsTest2
 			Assert.assertFalse(connection.isClosed());
 			Action action = new CompareDataSets_DB(needCloseDbConnection, supplier);
 			ActionSettings actionSettings = new ActionSettings();
-			actionSettings.setParams(createInputParams());
+			actionSettings.setParams(createInputParams(selectQueryExp, selectQueryActual));
 			action.init(actionSettings);
 			action.execute(new StepContext("Step1", new Date()),
 					new MatrixContext(), globalContext);
-
+			
 			if (!needCloseDbConnection)
 				Assert.assertFalse(connection.isClosed());
 			else
@@ -142,16 +144,16 @@ public class CompareDataSetsTest2
 		}
 	}
 
-	private Map<String, String> createInputParams()
+	private Map<String, String> createInputParams(String expQuery, String actQuery)
 	{
 		Map<String, String> inputParams = new HashMap<>();
 		inputParams.put("ID", "id1");
 		inputParams.put("Globalstep", "Step1");
 		inputParams.put("Action", "CompareDataSets");
 		inputParams.put("ExpectedFormat", "Query");
-		inputParams.put("ExpectedSource", "Select * from expectedTbl");
+		inputParams.put("ExpectedSource", expQuery);
 		inputParams.put("ActualFormat", "Query");
-		inputParams.put("ActualSource", "Select * from actualTbl");
+		inputParams.put("ActualSource", actQuery);
 		inputParams.put("ExpectedConnectionName", CON1);
 		inputParams.put("ActualConnectionName", CON2);
 		return inputParams;

@@ -37,6 +37,7 @@ import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
 
 import java.io.*;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -81,24 +82,48 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 	}
 
 	protected DbDataReader createDbDataReader(TableDataReaderSettings settings)
-			throws IOException, SQLException, ConnectivityException, SettingsException
+					throws IOException, SQLException, ConnectivityException, SettingsException
 	{
 		boolean forExpectedData = settings.isForExpectedData();
 		String connectionName = settings.getDbConName();
 		DbConnectionSupplier dbSupplier = settings.getDbConnectionSupplier();
-
 		String source = settings.getSourceData();
-		ParametrizedQuery query = settings.getSourceType().equalsIgnoreCase(DB_QUERY) ? SQLUtils.parseSQLTemplate(source, getQueryPreprocessor())
-				: SQLUtils.parseSQLTemplate(new File(ClearThCore.rootRelative(source)), getQueryPreprocessor());
-		PreparedStatement statement = query.createPreparedStatement(dbSupplier.getConnection(connectionName),
-				settings.getSqlQueryParams());
 		
+		Connection connection = null;
+		try
+		{
+			connection = dbSupplier.getConnection(connectionName);
+			ParametrizedQuery query = settings.getSourceType().equalsIgnoreCase(DB_QUERY) ? SQLUtils.parseSQLTemplate(source,
+				getQueryPreprocessor()) : SQLUtils.parseSQLTemplate(new File(ClearThCore.rootRelative(source)), getQueryPreprocessor());
+			PreparedStatement statement = query.createPreparedStatement(connection, settings.getSqlQueryParams());
+			
+			return createDbDataReader(settings, statement, forExpectedData);
+		}
+		catch (Exception e)
+		{
+			if (connection != null && settings.isNeedCloseDbConnection())
+			{
+				try
+				{
+					connection.close();
+				}
+				catch (SQLException ex)
+				{
+					e.addSuppressed(ex);
+				}
+			}
+			throw e;
+		}
+	}
+
+	protected  DbDataReader createDbDataReader(TableDataReaderSettings settings, PreparedStatement statement, boolean forExpectedData)
+	{
 		DbDataReader dbDataReader = new DbDataReader(statement, settings.isNeedCloseDbConnection());
 		dbDataReader.setQueryDescription("for " + (forExpectedData ? "expected" : "actual") + " data");
 		dbDataReader.setValueTransformer(getValueTransformer());
 		return dbDataReader;
 	}
-
+	
 	protected IValueTransformer getValueTransformer()
 	{
 		return null;
