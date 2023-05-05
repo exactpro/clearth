@@ -18,8 +18,6 @@
 
 package com.exactprosystems.clearth.connectivity.ibmmq;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.connections.ConnectionErrorInfo;
 import com.exactprosystems.clearth.connectivity.connections.clients.MessageReceiverThread;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.ibm.mq.MQException;
@@ -133,18 +131,13 @@ public abstract class BasicIbmMqMessageReceiverThread extends MessageReceiverThr
 	{
 		try
 		{
+			owner.addErrorInfo(errorMessage, reason, Instant.now());
 			owner.stop();
-			ClearThCore.connectionStorage().addStoppedConnectionError(createConnectionErrorInfo(errorMessage, reason));
 		}
 		catch (Exception e)
 		{
 			logger.warn("Error occurred while stopping connection from receiver thread", e);
 		}
-	}
-
-	protected ConnectionErrorInfo createConnectionErrorInfo(String error, Throwable reason)
-	{
-		return new ConnectionErrorInfo(owner.getName(), error, Instant.now());
 	}
 
 	protected EncodedClearThMessage createReceivedMessage(Object payload)

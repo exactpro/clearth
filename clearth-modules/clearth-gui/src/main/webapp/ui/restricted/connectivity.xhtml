@@ -88,9 +88,9 @@
 							<h:graphicImage value="/images/sendmessages.png" alt="Send msg" style="top: 2px"/>
 						</p:commandLink>
 						
-						<p:commandButton rendered="#{isRunnableConnection and !connectivityBean.stoppedErrors.isEmpty()}" update=":errorsDlg" 
-								title="Connections stopped due to errors: #{connectivityBean.stoppedErrors.size()}"
-								value="#{connectivityBean.stoppedErrors.size()}"
+						<p:commandButton rendered="#{isRunnableConnection and !connectivityBean.errors.isEmpty()}" update=":errorsDlg"
+								title="Errors occurred in connections: #{connectivityBean.errors.size()}"
+								value="#{connectivityBean.errors.size()}"
 								icon="ui-icon-alert" style="background-color: red; border-color: red; margin-left: 15px; top: -9px; left: 20px"
 								oncomplete="PF('errorsDialog').show();" />
 					</div>
@@ -405,7 +405,7 @@
 		<p:dialog header="Connections stopped due to errors" widgetVar="errorsDialog"
 				resizable="false" id="errorsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<p:dataTable id="errors" widgetVar="errorsTable"
-					value="#{connectivityBean.stoppedErrors}" var="errorInfo"
+					value="#{connectivityBean.errors}" var="errorInfo"
 					paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
 					emptyMessage="No errors">
 				<p:column headerText="Error occurred" style="width: 25%; #{width lt 200 ? 'white-space: nowrap;' : 'width: 200px'}">
@@ -419,6 +419,12 @@
 				<p:column headerText="Stop reason" style="width: 50%; #{width lt 400 ? 'white-space: nowrap;' : 'width: 400px'}">
 					<h:outputText value="#{errorInfo.errorText}"/>
 				</p:column>
+				<f:facet name="paginatorTopRight">
+					<p:commandButton value="Clean" title="Clean connection errors"
+									 rendered="#{isRunnableConnection and !connectivityBean.errors.isEmpty()}"
+									 action="#{connectivityBean.clearErrors}"
+									 update=":errorsDlg :Connections :Growl" />
+				</f:facet>
 			</p:dataTable>
 		</p:dialog>
 <!-- Restart connection confirm dialog -->

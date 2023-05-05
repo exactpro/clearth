@@ -91,7 +91,7 @@ public interface ClearThConnectionStorage
 
 	SettingsModel getSettingsModel(String type);
 
-	void addStoppedConnectionError(ConnectionErrorInfo errorInfo);
+	Collection<ConnectionErrorInfo> getConnectionErrors(String type);
 
-	Collection<ConnectionErrorInfo> getStoppedConnectionsErrors();
+	void clearConnectionErrors(String type);
 }

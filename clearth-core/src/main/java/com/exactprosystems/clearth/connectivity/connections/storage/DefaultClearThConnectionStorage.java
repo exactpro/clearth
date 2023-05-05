@@ -24,11 +24,7 @@ import com.exactprosystems.clearth.automation.SchedulerData;
 import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.FavoriteConnectionManager;
-import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
-import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
-import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConnection;
-import com.exactprosystems.clearth.connectivity.connections.ConnectionErrorInfo;
-import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
+import com.exactprosystems.clearth.connectivity.connections.*;
 import com.exactprosystems.clearth.connectivity.connections.settings.Processor;
 import com.exactprosystems.clearth.connectivity.connections.settings.SettingsModel;
 import com.exactprosystems.clearth.connectivity.validation.ConnectionStartValidator;
@@ -63,7 +59,6 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 	protected final List<ClearThConnection> connections = new CopyOnWriteArrayList<>();
 	protected final Map<String, ClearThConnection> connectionsByName = new ConcurrentHashMap<>();
 	protected final Map<String, List<ClearThConnection>> connectionsByType = new ConcurrentHashMap<>();
-	protected final List<ConnectionErrorInfo> stoppedConnectionsErrors = new CopyOnWriteArrayList<>();
 	protected final Map<String, SettingsModel> settingsModels = new HashMap<>();
 
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -451,7 +446,6 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 			
 			connectionsByName.remove(oldName);
 			connectionsByName.put(newName, connection);
-			removeStoppedConnectionErrors(oldName);
 			sort();
 
 			if (saveSettings)
@@ -585,7 +579,6 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 			connections.clear();
 			connectionsByName.clear();
 			connectionsByType.clear();
-			stoppedConnectionsErrors.clear();
 
 			loadConnections();
 			
@@ -623,7 +616,6 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 		ConnectionTypeInfo info = connection.getTypeInfo();
 		connections.remove(connection);
 		connectionsByName.remove(connection.getName());
-		removeStoppedConnectionErrors(connection.getName());
 
 		String type = info.getName();
 		List<ClearThConnection> byType = connectionsByType.get(type);
@@ -661,28 +653,27 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 	}
 
 	@Override
-	public void addStoppedConnectionError(ConnectionErrorInfo errorInfo)
+	public Collection<ConnectionErrorInfo> getConnectionErrors(String type)
 	{
-		stoppedConnectionsErrors.add(errorInfo);
-	}
-
-	public void removeStoppedConnectionErrors(String connectionName)
-	{
-		List<ConnectionErrorInfo> toRemove = new ArrayList<ConnectionErrorInfo>();
-		for (ConnectionErrorInfo cei : stoppedConnectionsErrors)
+		List<ConnectionErrorInfo> errorInfoListByType = new ArrayList<>();
+		for(ClearThConnection connection: getConnections(type))
 		{
-			if (cei.getConnectionName().equals(connectionName))
-				toRemove.add(cei);
+			if (connection instanceof ClearThRunnableConnection)
+			{
+				ClearThRunnableConnection rnConnection = (ClearThRunnableConnection) connection;
+				errorInfoListByType.addAll(rnConnection.getErrorInfo());
+			}
 		}
-		stoppedConnectionsErrors.removeAll(toRemove);
+		return errorInfoListByType;
 	}
 
 	@Override
-	public Collection<ConnectionErrorInfo> getStoppedConnectionsErrors()
+	public void clearConnectionErrors(String type)
 	{
-		return stoppedConnectionsErrors;
+		for(ClearThConnection connection: getConnections(type))
+			if (connection instanceof ClearThRunnableConnection)
+				((ClearThRunnableConnection) connection).clearErrorInfo();
 	}
-
 
 	/**
 	 * Modifies or removes (depending on second parameter) specified connection from all sets of ones for which failures should be ignored.

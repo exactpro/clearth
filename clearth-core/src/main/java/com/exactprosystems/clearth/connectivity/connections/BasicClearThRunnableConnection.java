@@ -23,7 +23,11 @@ import com.exactprosystems.clearth.utils.SettingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -36,6 +40,7 @@ public abstract class BasicClearThRunnableConnection extends BasicClearThConnect
 	protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 	protected final Lock writeLock = lock.writeLock();
+	protected final List<ConnectionErrorInfo> errorInfoList = new CopyOnWriteArrayList<>();
 
 	public BasicClearThRunnableConnection()
 	{
@@ -141,5 +146,23 @@ public abstract class BasicClearThRunnableConnection extends BasicClearThConnect
 	{
 		super.setName(name);
 		connectionState.setConnectionName(this.name);
+	}
+	
+	@Override
+	public List<ConnectionErrorInfo> getErrorInfo()
+	{
+		return Collections.unmodifiableList(errorInfoList);
+	}
+
+	@Override
+	public void addErrorInfo(String errorMessage, Throwable reason, Instant occurred)
+	{
+		errorInfoList.add(new ConnectionErrorInfo(getName(), errorMessage, reason, occurred));
+	}
+
+	@Override
+	public void clearErrorInfo()
+	{
+		errorInfoList.clear();
 	}
 }

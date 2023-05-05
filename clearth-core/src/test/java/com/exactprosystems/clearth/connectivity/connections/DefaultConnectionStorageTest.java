@@ -20,10 +20,10 @@ package com.exactprosystems.clearth.connectivity.connections;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.connectivity.connections.exceptions.ClassSetupException;
 import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.connections.storage.DefaultClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.connectivity.dummy.DummyMessageConnection;
 import com.exactprosystems.clearth.connectivity.dummy.DummyPlainConnection;
 import com.exactprosystems.clearth.connectivity.dummy.DummyRunnableConnection;
@@ -40,6 +40,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -366,7 +369,31 @@ public class DefaultConnectionStorageTest
 		assertFalse(((DummyMessageConnection) storage.getConnection(conWithoutAutostartName)).isRunning());
 	}
 	
-	
+	@Test
+	public void testGetConnectionErrors() throws ConnectivityException, SettingsException
+	{
+		ConnectionTypeInfo typeInfo = createDummyRunnableTypeInfo();
+		ClearThConnectionStorage conStorage = new DefaultClearThConnectionStorage(new DefaultDataHandlersFactory());
+		conStorage.registerType(typeInfo);
+
+		String type = typeInfo.getName(), errText = "connection error";
+
+		List<String> conErrorsMap = new ArrayList<>();
+		conErrorsMap.add("DummyRunnableConnection1");
+		conErrorsMap.add("DummyRunnableConnection2");
+		conErrorsMap.add("DummyRunnableConnection3");
+
+		for (String conName: conErrorsMap)
+		{
+			DummyRunnableConnection connection = (DummyRunnableConnection) createAndAddConnection(type, conName, conStorage);
+			connection.addErrorInfo(errText, new Throwable(), Instant.now());
+		}
+		assertEquals(3, conStorage.getConnectionErrors(type).size());
+
+		conStorage.clearConnectionErrors(type);
+		assertEquals(0, conStorage.getConnectionErrors(type).size());
+	}
+
 	private ClearThConnection createAndAddConnection(String type, String name, ClearThConnectionStorage storage) throws ConnectivityException, SettingsException
 	{
 		ClearThConnection result = storage.createConnection(type);

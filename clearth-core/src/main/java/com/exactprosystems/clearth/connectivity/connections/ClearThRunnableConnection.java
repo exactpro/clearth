@@ -21,7 +21,9 @@ package com.exactprosystems.clearth.connectivity.connections;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.utils.SettingsException;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ClearThRunnableConnection extends ClearThConnection
 {
@@ -33,5 +35,8 @@ public interface ClearThRunnableConnection extends ClearThConnection
 	LocalDateTime getStopped();
 
 	boolean isAutoConnect();
-
+	
+	List<ConnectionErrorInfo> getErrorInfo();
+	void addErrorInfo(String errorMessage, Throwable reason, Instant occurred);
+	void clearErrorInfo();
 }

@@ -24,6 +24,8 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnec
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessageDirection;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.data.MessageHandler;
+import com.exactprosystems.clearth.data.MessageHandlingUtils;
 import com.exactprosystems.clearth.messages.MessageFileReader;
 import com.exactprosystems.clearth.messages.MessageFileWriter;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -44,9 +46,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-
-import com.exactprosystems.clearth.data.MessageHandler;
-import com.exactprosystems.clearth.data.MessageHandlingUtils;
 
 public abstract class BasicClearThClient implements ClearThClient
 {
@@ -481,4 +480,5 @@ public abstract class BasicClearThClient implements ClearThClient
 		
 		return null;
 	}
+
 }

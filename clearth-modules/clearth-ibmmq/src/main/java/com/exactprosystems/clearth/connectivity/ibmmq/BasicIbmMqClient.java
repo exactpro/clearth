@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Hashtable;
 
 import static com.exactprosystems.clearth.connectivity.MQExceptionUtils.isConnectionBroken;
@@ -305,12 +306,17 @@ public abstract class BasicIbmMqClient extends BasicClearThClient
 				{
 					try
 					{
-						logger.error("Error while sending message.", ex);
+						String errMessage1 = "Error while sending message.";
+						owner.addErrorInfo(errMessage1, ex, Instant.now());
+						logger.error(errMessage1, ex);
 						owner.stop();
 					}
 					catch (Exception ex1)
 					{
-						logger.error(name+": error occurred while stopping connection after successful reconnect and failed attempt to re-send message", ex1);
+						String errMessage2 = name+": error occurred while stopping connection after successful " +
+								"reconnect and failed attempt to re-send message";
+						owner.addErrorInfo(errMessage2, ex1, Instant.now());
+						logger.error(errMessage2, ex1);
 					}
 					throw new ConnectionException("Could not send message, connection is broken, re-send attempt failed after reconnect");
 				}
@@ -333,7 +339,9 @@ public abstract class BasicIbmMqClient extends BasicClearThClient
 		{
 			try
 			{
-				logger.error("Error occured while sending message. Connection will be stopped.",error);
+				String errMessage = "Error occurred while sending message. Connection will be stopped.";
+				owner.addErrorInfo(errMessage, error, Instant.now());
+				logger.error(errMessage,error);
 				owner.stop();
 			}
 			catch (Exception ex)

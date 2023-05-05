@@ -30,16 +30,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import javax.jms.*;
+import java.lang.IllegalStateException;
 import java.net.ConnectException;
+import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 
 import static com.exactprosystems.clearth.utils.Utils.EOL;
@@ -244,17 +238,50 @@ public abstract class JmsClient extends BasicClearThClient
 		@Override
 		protected void getAndHandleMessage() throws Exception
 		{
-			Message message = consumer.receive(1000);
-			if (message == null)
-				return;
-			
-			if (message instanceof TextMessage)
+			try
 			{
-				String body = ((TextMessage) message).getText();
-				receivedMessageQueue.add(EncodedClearThMessage.newReceivedMessage(body));
+				Message message = consumer.receive(1000);
+				if (message == null)
+					return;
+				
+				if (message instanceof TextMessage)
+				{
+					String body = ((TextMessage) message).getText();
+					receivedMessageQueue.add(EncodedClearThMessage.newReceivedMessage(body));
+				}
+				else
+					logger.warn("Received non-text message, skipping it as not supported:{}{}", EOL, message);
 			}
-			else
-				logger.warn("Received non-text message, skipping it as not supported:{}{}", EOL, message);
+			catch (Exception e)
+			{
+				handleException(e);
+			}
+		}
+		
+		@Override
+		protected void handleException(Exception e)
+		{
+			if (!(e instanceof JMSException))
+			{
+				super.handleException(e);
+				return;
+			}
+			try
+			{
+				JMSException jmsException = (JMSException)e;
+				owner.addErrorInfo(jmsException.getErrorCode() != null ? "ErrorCode: " + jmsException.getErrorCode() : "", e, Instant.now());
+				logger.warn("Connection '{}' is broken, stopping connection", owner.getName());
+				owner.stop();
+			}
+			catch (ConnectivityException ex)
+			{
+				logger.warn("Error occurred while stopping connection '{}' ", owner.getName(), ex);
+			}
+			finally
+			{
+				terminate();
+			}
+
 		}
 	}
 }

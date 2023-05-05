@@ -25,11 +25,7 @@ import com.exactprosystems.clearth.connectivity.connections.settings.*;
 import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
-import com.exactprosystems.clearth.web.misc.ProcessedConnectionsCache;
-import com.exactprosystems.clearth.web.misc.FavoritesSortedCache;
-import com.exactprosystems.clearth.web.misc.MessageUtils;
-import com.exactprosystems.clearth.web.misc.UserInfoUtils;
-import com.exactprosystems.clearth.web.misc.WebUtils;
+import com.exactprosystems.clearth.web.misc.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.primefaces.event.FileUploadEvent;
@@ -469,12 +465,19 @@ public class ConnectivityBean extends ClearThBean
 			checkConnection(c);
 	}
 	
-	public Collection<ConnectionErrorInfo> getStoppedErrors()
+	public Collection<ConnectionErrorInfo> getErrors()
 	{
-		return storage.getStoppedConnectionsErrors();
+		return storage.getConnectionErrors(getSelectedConnectionType());
 	}
 	
-	
+	public void clearErrors()
+	{
+		String type = getSelectedConnectionType();
+		storage.clearConnectionErrors(type);
+		MessageUtils.addInfoMessage("", "Errors cleared");
+		getLogger().info("cleared connection errors for '{}'", type);
+	}
+
 	private List<ClearThConnection> getAllOrSelectedConnections()
 	{
 		return CollectionUtils.isEmpty(originalSelectedCons) ? getConnections() : originalSelectedCons;

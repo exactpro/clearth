@@ -27,10 +27,10 @@ public class ConnectionErrorInfo
 			errorText;
 	private final Instant occurred;
 
-	public ConnectionErrorInfo(String connectionName, String errorText, Instant occurred)
+	public ConnectionErrorInfo(String connectionName, String errorText, Throwable reason, Instant occurred)
 	{
 		this.connectionName = connectionName;
-		this.errorText = errorText;
+		this.errorText = (reason != null) ? String.format("%s \n %s", errorText, reason.getMessage()) : errorText;
 		this.occurred = occurred;
 	}
 	
