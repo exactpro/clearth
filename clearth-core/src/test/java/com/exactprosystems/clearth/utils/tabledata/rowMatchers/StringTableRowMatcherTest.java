@@ -21,13 +21,13 @@ package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
-import org.junit.Assert;
-import org.junit.Test;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
+import org.testng.annotations.Test;
 
 import java.util.*;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.*;
+import static org.testng.Assert.*;
 
 public class StringTableRowMatcherTest
 {
@@ -54,13 +54,13 @@ public class StringTableRowMatcherTest
 		Iterator<String> actual = matcher.keyColumns.iterator();
 		
 		while (expected.hasNext())
-			assertThat(expected.next()).isEqualTo(actual.next());
+			assertEquals(actual.next(), expected.next());
 		
-		assertThat(actual.hasNext()).isFalse();
+		assertFalse(actual.hasNext());
 	}
 	
 	@Test
-	public void testNull()
+	public void testEmpty() throws ParametersException
 	{
 		StringTableRowMatcher matcherABCD = new StringTableRowMatcher(new HashSet<>(Arrays.asList("A", "B", "C", "D")));
 		
@@ -75,24 +75,29 @@ public class StringTableRowMatcherTest
 		TableRow<String, String> thirdIsNullABCD = new TableRow<>(headerABCD, asList("", "", null, ""));
 		TableRow<String, String> testRowWithString = new TableRow<>(headerABCD, asList("val", "null", null, ""));
 
-		assertThatExceptionOfType(ParametersException.class).isThrownBy(() -> matcherABCD.checkHeader(headerAB));
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> matcherABCD.createPrimaryKey(firstIsNullAB));
-		assertThatCode(() -> matcherABCD.checkHeader(headerABCD)).doesNotThrowAnyException();
+		assertThrows(ParametersException.class, () -> matcherABCD.checkHeader(headerAB));
+		assertThrows(IllegalArgumentException.class, () -> matcherABCD.createPrimaryKey(firstIsNullAB));
 		
-		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isNotEqualTo(matcherABCD.createPrimaryKey(secondIsPseudoNullABCD));
-		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isEqualTo(matcherABCD.createPrimaryKey(secondIsNullABCDDuplicate));
-		assertThat(matcherABCD.createPrimaryKey(secondIsNullABCD)).isNotEqualTo(matcherABCD.createPrimaryKey(thirdIsNullABCD));
-		assertThat(matcherABCD.createPrimaryKey(testRowWithString)).isEqualTo("\"val\",\"null\",null,\"\"");
+		matcherABCD.checkHeader(headerABCD); // assert does not throw
+		
+		assertNotEquals(matcherABCD.createPrimaryKey(secondIsNullABCD), matcherABCD.createPrimaryKey(secondIsPseudoNullABCD));
+		assertEquals(matcherABCD.createPrimaryKey(secondIsNullABCD), matcherABCD.createPrimaryKey(secondIsNullABCDDuplicate));
+		assertNotEquals(matcherABCD.createPrimaryKey(secondIsNullABCD), matcherABCD.createPrimaryKey(thirdIsNullABCD));
+		
+		PrimaryKey rowPrimaryKey = matcherABCD.createPrimaryKey(testRowWithString);
+		String expectedStringValue = "\"val\",\"null\",null,\"\"";
+		
+		assertEquals(rowPrimaryKey.toString(), expectedStringValue);
 	}
 
 	@Test
 	public void testMatchTableRowAndCollection()
 	{
 		StringTableRowMatcher matcher = new StringTableRowMatcher(buildHeaderSet());
-		String keyCollection = matcher.createPrimaryKey(buildCollection());
-		String keyTableRow = matcher.createPrimaryKey(buildTableRow());
+		PrimaryKey keyCollection = matcher.createPrimaryKey(buildCollection());
+		PrimaryKey keyTableRow = matcher.createPrimaryKey(buildTableRow());
 
-		Assert.assertEquals(keyCollection, keyTableRow);
+		assertEquals(keyCollection, keyTableRow);
 	}
 
 	private Collection<String> buildCollection()

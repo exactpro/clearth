@@ -51,6 +51,7 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.NumericStringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.MappedTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
@@ -173,15 +174,15 @@ public class CompareDataSets extends Action
 	{
 		TableRowsComparator<String, String> rowsComparator = createTableRowsComparator();
 		return compConfig.getKeyColumns().isEmpty() ? new StringTableDataComparator(expectedReader, actualReader, rowsComparator)
-				: new IndexedStringTableDataComparator(expectedReader, actualReader, createTableRowMatcher(), rowsComparator);
+				: new IndexedStringTableDataComparator<>(expectedReader, actualReader, createTableRowMatcher(), rowsComparator);
 	}
 	
-	protected ComparisonProcessor<String, String, String> createComparisonProcessor()
+	protected ComparisonProcessor<String, String, PrimaryKey> createComparisonProcessor()
 	{
 		return new ComparisonProcessor<>(compConfig);
 	}
 	
-	protected KeyColumnsRowsCollector<String, String, String> createKeyColumnsRowsCollector() throws IOException
+	protected KeyColumnsRowsCollector<String, String, PrimaryKey> createKeyColumnsRowsCollector() throws IOException
 	{
 		return new StringKeyColumnsRowsCollector(compConfig.getKeyColumns());
 	}

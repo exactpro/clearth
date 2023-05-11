@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.utils.tabledata.readers;
 import com.exactprosystems.clearth.connectivity.flat.FlatMessageDesc;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.File;
@@ -28,7 +29,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
-public class IndexedFlatFileDataReader<C> extends AbstractFlatFileReader<IndexedTableData<String, String, C>>
+public class IndexedFlatFileDataReader<C extends PrimaryKey> extends AbstractFlatFileReader<IndexedTableData<String, String, C>>
 {
 	protected TableRowMatcher<String, String, C> rowMatcher;
 	

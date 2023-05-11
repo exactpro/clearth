@@ -21,6 +21,7 @@ import com.exactprosystems.clearth.utils.tabledata.IndexedStringTableData;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 import org.testng.annotations.DataProvider;
@@ -38,9 +39,9 @@ public class IndexedCsvDataReaderTest
 	private static final String TEST_CSV_FILE = "TableDataTest/testCsv.csv";
 
 	@Test (dataProvider = "matchers")
-	public void testReadAllData(TableRowMatcher<String, String, String> matcher) throws IOException
+	public void testReadAllData(TableRowMatcher<String, String, PrimaryKey> matcher) throws IOException
 	{
-		try(IndexedCsvDataReader<String> indexedCsvDataReader = new IndexedCsvDataReader<String>(
+		try(IndexedCsvDataReader<PrimaryKey> indexedCsvDataReader = new IndexedCsvDataReader<>(
 				Paths.get(resourceToAbsoluteFilePath(TEST_CSV_FILE)).toFile(), matcher))
 		{
 			assertThat(indexedCsvDataReader.readAllData())
@@ -63,16 +64,18 @@ public class IndexedCsvDataReaderTest
 				};
 	}
 
-	private IndexedTableData<String, String, String> getExpectedTableData(TableRowMatcher<String, String, String> matcher)
+	private IndexedTableData<String, String, PrimaryKey> getExpectedTableData(
+			TableRowMatcher<String, String, PrimaryKey> matcher)
 	{
 		TableHeader<String> header = buildHeader();
 		List<String> expectedValues = buildValues();
-		IndexedTableData<String, String, String> expectedTableData = new IndexedStringTableData(header, matcher);
+		IndexedTableData<String, String, PrimaryKey> expectedTableData =
+				new IndexedStringTableData(header, matcher);
 
-		expectedTableData.add(new TableRow<String, String>(header,expectedValues));
-		expectedTableData.add(new TableRow<String, String>(header,buildEmptyValues()));
-		expectedTableData.add(new TableRow<String, String>(header,expectedValues));
-		expectedTableData.add(new TableRow<String, String>(header,buildGapValues()));
+		expectedTableData.add(new TableRow<>(header,expectedValues));
+		expectedTableData.add(new TableRow<>(header,buildEmptyValues()));
+		expectedTableData.add(new TableRow<>(header,expectedValues));
+		expectedTableData.add(new TableRow<>(header,buildGapValues()));
 		return expectedTableData;
 	}
 

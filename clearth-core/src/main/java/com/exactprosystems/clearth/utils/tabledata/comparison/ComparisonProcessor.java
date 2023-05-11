@@ -34,6 +34,7 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparis
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.KeyColumnsRowsCollector;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ import java.util.concurrent.TimeUnit;
  * @param <B> class of values in table rows.
  * @param <C> class of primary key for indexed table data if used.
  */
-public class ComparisonProcessor<A, B, C>
+public class ComparisonProcessor<A, B, C extends PrimaryKey>
 {
 	private final static Logger logger = LoggerFactory.getLogger(ComparisonProcessor.class);
 	

@@ -18,20 +18,21 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
+import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Reader;
 import java.util.Set;
 
-import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
-import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
-import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
-
 /**
  * Reader of indexed table-like data from CSV data source
  * @author vladimir.panarin
  */
-public class IndexedCsvDataReader<C> extends AbstractStringCsvDataReader<IndexedTableData<String, String, C>>
+public class IndexedCsvDataReader<C extends PrimaryKey> extends AbstractStringCsvDataReader<IndexedTableData<String, String, C>>
 {
 	protected final TableRowMatcher<String, String, C> matcher;
 	

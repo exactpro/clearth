@@ -18,15 +18,16 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
-import java.io.IOException;
-import java.util.Set;
-
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
-public class IndexedClearThMessageReader<C> extends AbstractClearThMessageReader<IndexedTableData<String, String, C>>
+import java.io.IOException;
+import java.util.Set;
+
+public class IndexedClearThMessageReader<C extends PrimaryKey> extends AbstractClearThMessageReader<IndexedTableData<String, String, C>>
 {
 	protected final TableRowMatcher<String, String, C> matcher;
 
@@ -59,26 +60,26 @@ public class IndexedClearThMessageReader<C> extends AbstractClearThMessageReader
 	}
 
 	
-	public static <C> IndexedTableData<String, String, C> read(ClearThMessage<?> message, TableRowMatcher<String, String, C> matcher) throws IOException
+	public static <C extends PrimaryKey> IndexedTableData<String, String, C> read(ClearThMessage<?> message, TableRowMatcher<String, String, C> matcher) throws IOException
 	{
 		return read(message, null, null, matcher);
 	}
 
-	public static <C> IndexedTableData<String, String, C> read(ClearThMessage<?> message,
+	public static <C extends PrimaryKey> IndexedTableData<String, String, C> read(ClearThMessage<?> message,
 	                                                           SubMessageFilter filter,
 	                                                           TableRowMatcher<String, String, C> matcher) throws IOException
 	{
 		return read(message, filter, null, matcher);
 	}
 
-	public static <C> IndexedTableData<String, String, C> read(ClearThMessage<?> message,
+	public static <C extends PrimaryKey> IndexedTableData<String, String, C> read(ClearThMessage<?> message,
 	                                                           TableRowFilter<String, String> rowFilter,
 	                                                           TableRowMatcher<String, String, C> matcher) throws IOException
 	{
 		return read(message, null, rowFilter, matcher);
 	}
 
-	public static <C> IndexedTableData<String, String, C> read(ClearThMessage<?> message,
+	public static <C extends PrimaryKey> IndexedTableData<String, String, C> read(ClearThMessage<?> message,
 	                                                           SubMessageFilter filter,
 	                                                           TableRowFilter<String, String> rowFilter,
 	                                                           TableRowMatcher<String, String, C> matcher) throws IOException

@@ -18,16 +18,12 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.CollectionPrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
-import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.LinkedHashSet;
-import java.util.Arrays;
+import java.util.*;
 
 public class IndexedTableDataTest
 {
@@ -38,7 +34,8 @@ public class IndexedTableDataTest
 		TableHeader<String> th = new TableHeader<>(header);
 		TableRow<String, String> tr = new TableRow<>(th, buildCollectionValues());
 
-		IndexedTableData<String, String, String> strIndexedTableData = new IndexedTableData<>(th, new StringTableRowMatcher(header));
+		IndexedTableData<String, String, CollectionPrimaryKey<String>> strIndexedTableData = new IndexedTableData<>(th,
+				new StringTableRowMatcher(header));
 		strIndexedTableData.add(tr);
 
 		strIndexedTableData.findAll(buildNewCollection());
@@ -55,7 +52,7 @@ public class IndexedTableDataTest
 	@Test
 	public void testFindAllValuesWithCollections()
 	{
-		IndexedTableData<String, String, String> tableData = buildIndexedTableData();
+		IndexedTableData<String, String, CollectionPrimaryKey<String>> tableData = buildIndexedTableData();
 
 		Assert.assertEquals(1, tableData.findAll(buildCollectionValues()).size());
 		Assert.assertEquals(1, tableData.findAll(Arrays.asList("Two1", "Two2", "Two3")).size());
@@ -94,7 +91,7 @@ public class IndexedTableDataTest
 		return header;
 	}
 
-	private IndexedTableData<String, String, String> buildIndexedTableData()
+	private IndexedTableData<String, String, CollectionPrimaryKey<String>> buildIndexedTableData()
 	{
 		Collection<String> collValues1 = buildCollectionValues();
 		Collection<String> collValues2 = Arrays.asList("Two1", "Two2", "Two3");
@@ -103,12 +100,13 @@ public class IndexedTableDataTest
 		Set<String> header = buildHeaderSet();
 		TableHeader<String> th = new TableHeader<>(header);
 
-		TableRowMatcher<String, String, String> matcher =  new StringTableRowMatcher(header);
+		StringTableRowMatcher matcher =  new StringTableRowMatcher(header);
 		TableRow<String, String> tr1 = new TableRow<>(th, collValues1);
 		TableRow<String, String> tr2 = new TableRow<>(th, collValues2);
 		TableRow<String, String> tr3 = new TableRow<>(th, collValues3);
 
-		IndexedTableData<String, String, String> stringIndexedTableData = new IndexedTableData<>(th, matcher);
+		IndexedTableData<String, String, CollectionPrimaryKey<String>> stringIndexedTableData =
+				new IndexedTableData<>(th, matcher);
 		stringIndexedTableData.add(tr1);
 		stringIndexedTableData.add(tr2);
 		stringIndexedTableData.add(tr3);

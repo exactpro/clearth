@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 import org.apache.commons.collections4.list.UnmodifiableList;
 
@@ -37,7 +38,7 @@ import java.util.Collection;
  * @param <B> class of values in table rows
  * @param <C> class of primary key
  */
-public class IndexedTableData<A, B, C> extends BasicTableData<A, B> implements Iterable<C>
+public class IndexedTableData<A, B, C extends PrimaryKey> extends BasicTableData<A, B> implements Iterable<C>
 {
 	protected final Map<C, List<TableRow<A, B>>> rows;  //Must not provide direct access to this map else any row with any header can be added
 	protected final TableRowMatcher<A, B, C> matcher;

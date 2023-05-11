@@ -21,20 +21,13 @@ package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.CollectionPrimaryKey;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Collections;
+import java.util.*;
 
 
-public class StringTableRowMatcher implements TableRowMatcher<String, String, String>
+public class StringTableRowMatcher implements TableRowMatcher<String, String, CollectionPrimaryKey<String>>
 {
-	public static final String NULL_VALUE = "null";
-	public static final String KEY_VALUES_SEPARATOR = ",";
 	protected final Set<String> keyColumns;
 	
 	protected final Set<TableHeader<String>> checkedHeadersCache = new HashSet<>();
@@ -45,7 +38,7 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 	}
 
 	@Override
-	public String createPrimaryKey(TableRow<String, String> row)
+	public CollectionPrimaryKey<String> createPrimaryKey(TableRow<String, String> row)
 	{
 		if (row == null)
 			throw new IllegalArgumentException("Row must be not null");
@@ -67,23 +60,19 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 	}
 	
 	@Override
-	public String createPrimaryKey(Collection<String> rowValues)
+	public CollectionPrimaryKey<String> createPrimaryKey(Collection<String> rowValues)
 	{
 		if (rowValues.size() != keyColumns.size())
 			throw new IllegalStateException("Number of values ("+rowValues.size()+") doesn't match number of key columns ("+keyColumns.size()+")");
 
-		List<String> keyValues = new ArrayList<>();
-		for (String keyValue: rowValues)
-			addKeyValue(keyValue, keyValues);
-
-		return buildKey(keyValues);
+		return buildKey(rowValues);
 	}
 
 
 	protected void addColumnValue(List<String> keyValues, TableRow<String, String> row, String keyColumn)
 	{
 		String value = getValue(row, keyColumn);
-		addKeyValue(value, keyValues);
+		keyValues.add(value);
 	}
 
 	protected String getValue(TableRow<String, String> row, String column)
@@ -91,14 +80,9 @@ public class StringTableRowMatcher implements TableRowMatcher<String, String, St
 		return row.getValue(column);
 	}
 
-	protected void addKeyValue(String value, List<String> keyValues)
+	protected CollectionPrimaryKey<String> buildKey(Collection<String> keyValues)
 	{
-		keyValues.add(value == null ? NULL_VALUE : "\"" + value + "\"");
-	}
-
-	protected String buildKey(List<String> keyValues)
-	{
-		return String.join(KEY_VALUES_SEPARATOR, keyValues);
+		return new CollectionPrimaryKey<>(new ArrayList<>(keyValues));
 	}
 
 	@Override

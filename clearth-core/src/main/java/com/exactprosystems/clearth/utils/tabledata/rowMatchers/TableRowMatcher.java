@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.utils.tabledata.rowMatchers;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 
 import java.util.Collection;
 
@@ -34,7 +35,7 @@ import java.util.Collection;
  * @param <B> class of values in table rows
  * @param <C> class of primary key
  */
-public interface TableRowMatcher<A, B, C>
+public interface TableRowMatcher<A, B, C extends PrimaryKey>
 {
 	/**
 	 * Creates primary key to quickly match given row with another one by comparing primary keys

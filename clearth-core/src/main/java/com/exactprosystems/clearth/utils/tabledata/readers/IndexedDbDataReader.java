@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.utils.tabledata.readers;
 
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.sql.PreparedStatement;
@@ -29,7 +30,7 @@ import java.util.Set;
  * Reader of indexed table-like data from SQL query result set.
  * @author vladimir.panarin
  */
-public class IndexedDbDataReader<C> extends AbstractDbDataReader<IndexedTableData<String, String, C>>
+public class IndexedDbDataReader<C extends PrimaryKey> extends AbstractDbDataReader<IndexedTableData<String, String, C>>
 {
 	protected final TableRowMatcher<String, String, C> matcher;
 	

@@ -18,20 +18,20 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
+import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
+import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Set;
 
-import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
-import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
-
-public class IndexedXlsxDataReader<C> extends AbstractExcelDataReader<IndexedTableData<String, String, C>> {
+public class IndexedXlsxDataReader<C extends PrimaryKey> extends AbstractExcelDataReader<IndexedTableData<String, String, C>> {
 	
 	protected final TableRowMatcher<String, String, C> matcher;
 

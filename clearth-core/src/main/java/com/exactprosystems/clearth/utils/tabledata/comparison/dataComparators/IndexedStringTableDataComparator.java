@@ -20,13 +20,14 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators;
 
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
-import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.IndexedStringTableData;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsComparators.TableRowsComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.StringValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.StringValueParser;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
+import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.IOException;
@@ -34,35 +35,37 @@ import java.io.IOException;
 /**
  * Comparator for indexed data sets which works with columns and row values represented as strings.
  */
-public class IndexedStringTableDataComparator extends IndexedTableDataComparator<String, String, String>
+public class IndexedStringTableDataComparator<C extends PrimaryKey> extends IndexedTableDataComparator<String, String, C>
 {
 	public IndexedStringTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher,
+			BasicTableDataReader<String, String, ?> actualReader,
+			                                TableRowMatcher<String, String, C> rowMatcher,
 			TableRowsComparator<String, String> rowsComparator) throws IOException, ParametersException
 	{
 		super(expectedReader, actualReader, rowMatcher, rowsComparator, new StringValueParser());
 	}
 	
 	public IndexedStringTableDataComparator(BasicTableDataReader<String, String, ?> expectedReader,
-			BasicTableDataReader<String, String, ?> actualReader, TableRowMatcher<String, String, String> rowMatcher,
+			BasicTableDataReader<String, String, ?> actualReader,
+			                                TableRowMatcher<String, String, C> rowMatcher,
 			ComparisonUtils comparisonUtils) throws IOException, ParametersException
 	{
 		super(expectedReader, actualReader, rowMatcher,
-				new TableRowsComparator(new StringValuesComparator(comparisonUtils)), new StringValueParser());
+				new TableRowsComparator<>(new StringValuesComparator(comparisonUtils)), new StringValueParser());
 	}
 	
 	
 	@Override
-	protected IndexedTableData<String, String, String> createExpectedStorage(TableHeader<String> header,
-			TableRowMatcher<String, String, String> rowMatcher) throws IOException
+	protected IndexedTableData<String, String, C> createExpectedStorage(TableHeader<String> header,
+			TableRowMatcher<String, String, C> rowMatcher) throws IOException
 	{
-		return new IndexedStringTableData(header, rowMatcher);
+		return new IndexedStringTableData<>(header, rowMatcher);
 	}
 
 	@Override
-	protected IndexedTableData<String, String, String> createActualStorage(TableHeader<String> header,
-			TableRowMatcher<String, String, String> rowMatcher) throws IOException
+	protected IndexedTableData<String, String, C> createActualStorage(TableHeader<String> header,
+			TableRowMatcher<String, String, C> rowMatcher) throws IOException
 	{
-		return new IndexedStringTableData(header, rowMatcher);
+		return new IndexedStringTableData<>(header, rowMatcher);
 	}
 }

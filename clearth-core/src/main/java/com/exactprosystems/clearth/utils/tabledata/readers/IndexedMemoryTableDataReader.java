@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.utils.tabledata.TableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.IOException;
@@ -33,7 +34,7 @@ import java.util.Set;
 /**
  * Reader interface for in-memory table data, returning index
  */
-public class IndexedMemoryTableDataReader<A, B, C> extends AbstractMemoryTableDataReader<A, B, IndexedTableData<A, B, C>>
+public class IndexedMemoryTableDataReader<A, B, C extends PrimaryKey> extends AbstractMemoryTableDataReader<A, B, IndexedTableData<A, B, C>>
 {
 	protected final TableRowMatcher<A, B, C> matcher;
 

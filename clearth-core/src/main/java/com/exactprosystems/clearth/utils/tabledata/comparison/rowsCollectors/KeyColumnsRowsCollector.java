@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -35,7 +36,7 @@ import java.util.function.BiFunction;
  * @param <B> class of values in table rows.
  * @param <C> class of primary key.
  */
-public abstract class KeyColumnsRowsCollector<A, B, C> implements AutoCloseable
+public abstract class KeyColumnsRowsCollector<A, B, C extends PrimaryKey> implements AutoCloseable
 {
 	protected static final String KEY_ROW_DELIMITER = "=", COLUMN_VALUE_DELIMITER = ",";
 	
@@ -97,13 +98,19 @@ public abstract class KeyColumnsRowsCollector<A, B, C> implements AutoCloseable
 		}
 		
 		// If not found yet, search in written file
+		String primaryKeyStr = primaryKey == null ? null : primaryKey.toString();
 		try (BufferedReader buffReader = new BufferedReader(new FileReader(rowsFile)))
 		{
 			String line;
 			while ((line = buffReader.readLine()) != null)
 			{
 				int delimiter = line.indexOf(KEY_ROW_DELIMITER);
-				if (delimiter < 0 || !checkPrimaryKey(primaryKey, line.substring(0, delimiter)))
+				if (delimiter < 0)
+					continue;
+				
+				String possiblePrimaryKey = line.substring(0, delimiter);
+				if (!checkStringKeys(primaryKeyStr, possiblePrimaryKey) ||
+						!additionalKeysCheck(primaryKey, possiblePrimaryKey))
 					continue;
 				
 				TableRow<A, B> possibleRow = stringToTableRow(line.substring(delimiter + 1));
@@ -113,19 +120,27 @@ public abstract class KeyColumnsRowsCollector<A, B, C> implements AutoCloseable
 		}
 		return null;
 	}
-	
+
+	protected boolean checkStringKeys(String primaryKeyStr, String possiblePrimaryKey)
+	{
+		return Objects.equals(primaryKeyStr, possiblePrimaryKey);
+	}
+
+	protected boolean additionalKeysCheck(C primaryKeyToCheck, String possiblePrimaryKey)
+	{
+		return true;
+	}
+
 	@Override
 	public void close() throws IOException
 	{
 		Utils.closeResource(buffWriter);
 		FileUtils.deleteQuietly(rowsFile);
 	}
-	
-	
+
 	protected abstract String tableRowToString(TableRow<A, B> row, String rowName);
-	protected abstract TableRow<A, B> stringToTableRow(String rowString);
 	
-	protected abstract boolean checkPrimaryKey(C fromRowToCheck, String fromCachedFile);
+	protected abstract TableRow<A, B> stringToTableRow(String rowString);
 	protected abstract String getCachedRowName(TableRow<A, B> cachedRow);
 	
 	protected int getCacheSize()

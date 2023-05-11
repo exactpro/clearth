@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators;
 
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.IndexedTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
@@ -38,7 +39,7 @@ import java.io.IOException;
  * @param <B> class of values in table rows.
  * @param <C> class of primary key.
  */
-public abstract class IndexedTableDataComparator<A, B, C> extends TableDataComparator<A, B>
+public abstract class IndexedTableDataComparator<A, B, C extends PrimaryKey> extends TableDataComparator<A, B>
 {
 	protected IndexedTableData<A, B, C> expectedStorage, actualStorage;
 	protected TableRowMatcher<A, B, C> rowMatcher;

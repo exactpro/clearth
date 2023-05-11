@@ -21,15 +21,17 @@ package com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class StringKeyColumnsRowsCollector extends KeyColumnsRowsCollector<String, String, String>
+public class StringKeyColumnsRowsCollector extends KeyColumnsRowsCollector<String, String, PrimaryKey>
 {
 	protected static final String ROW_NAME_COLUMN = "## ROW_NAME ##";
 	
@@ -37,7 +39,12 @@ public class StringKeyColumnsRowsCollector extends KeyColumnsRowsCollector<Strin
 	{
 		super(keyColumns);
 	}
-	
+
+	public StringKeyColumnsRowsCollector(Set<String> keyColumns, int maxCacheSize, File rowsFile) throws IOException
+	{
+		super(keyColumns, maxCacheSize, rowsFile);
+	}
+
 	@Override
 	protected String tableRowToString(TableRow<String, String> row, String rowName)
 	{
@@ -74,11 +81,5 @@ public class StringKeyColumnsRowsCollector extends KeyColumnsRowsCollector<Strin
 	protected String getCachedRowName(TableRow<String, String> cachedRow)
 	{
 		return cachedRow.getValue(ROW_NAME_COLUMN);
-	}
-	
-	@Override
-	protected boolean checkPrimaryKey(String fromRowToCheck, String fromCachedFile)
-	{
-		return StringUtils.equals(fromRowToCheck, fromCachedFile);
 	}
 }

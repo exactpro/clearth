@@ -18,35 +18,36 @@
 
 package com.exactprosystems.clearth.utils.tabledata;
 
+import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.util.Set;
 
 /**
- * Indexed storage of table-like data where header and values are strings. Primary key to arrange rows is also a string
+ * Indexed storage of table-like data where header and values are strings.
  * @author vladimir.panarin
  */
-public class IndexedStringTableData extends IndexedTableData<String, String, String>
+public class IndexedStringTableData<C extends PrimaryKey> extends IndexedTableData<String, String, C>
 {
-	public IndexedStringTableData(Set<String> header, TableRowMatcher<String, String, String> matcher)
+	public IndexedStringTableData(Set<String> header, TableRowMatcher<String, String, C> matcher)
 	{
 		super(header, matcher);
 	}
 	
 	public IndexedStringTableData(Set<String> header, 
-	                              TableRowMatcher<String, String, String> matcher,
+	                              TableRowMatcher<String, String, C> matcher,
 	                              RowsListFactory<String, String> rowsListFactory)
 	{
 		super(header, matcher, rowsListFactory);
 	}
 
-	public IndexedStringTableData(TableHeader<String> header, TableRowMatcher<String, String, String> matcher)
+	public IndexedStringTableData(TableHeader<String> header, TableRowMatcher<String, String, C> matcher)
 	{
 		super(header, matcher);
 	}
 
 	public IndexedStringTableData(TableHeader<String> header,
-	                              TableRowMatcher<String, String, String> matcher, 
+	                              TableRowMatcher<String, String, C> matcher, 
 	                              RowsListFactory<String, String> rowsListFactory)
 	{
 		super(header, matcher, rowsListFactory);
