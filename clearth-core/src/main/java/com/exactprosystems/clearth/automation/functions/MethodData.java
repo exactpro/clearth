@@ -130,10 +130,11 @@ public class MethodData {
 		{
 			this.usage.add(usage);
 		}
-		String generatedUsage = createUsage(name, args, parameterTypes);
-		if(!generatedUsage.replaceAll(" ", "").equals(usage))
+		else
 		{
-			this.usage.add(generatedUsage);
+			String generatedUsage = createUsage(name, args, parameterTypes);
+			if(!generatedUsage.replaceAll(" ", "").equals(usage))
+				this.usage.add(generatedUsage);
 		}
 	}
 
