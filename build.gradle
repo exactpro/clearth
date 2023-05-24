@@ -263,22 +263,6 @@ task downloadJetty() {
 	}
 }
 
-task updateJettyXml(){
-	dependsOn 'downloadJetty'
-	dependsOn ':clearth-modules:clearth-gui:runJettyXmlUpdater'
- 	tasks.findByPath(':updateJettyXml').mustRunAfter(':downloadJetty')
-	
-	subprojects {
-		project ->
-			project.afterEvaluate {
-				if (project.name == 'clearth-gui') {
-					project.setProperty("pathToJettyXml", "${rootDir}/jetty/jetty-distribution-${jettyVersion}/etc/jetty.xml")
-					project.setProperty("contextPath", "/clearth/reports")
-				}
-			}
-	}
-}
-
 task zipTestReports(type: Zip, group: 'other', description: 'Creates archive with test reports'){
 	archiveBaseName = "TestReports"
 	archiveAppendix = new Date().format('ddMMyyyy-HH-mm-ss-SSS')
@@ -294,7 +278,7 @@ task zipTestReports(type: Zip, group: 'other', description: 'Creates archive wit
 task createProject(type: Copy, 
 		group: 'ClearTH', 
 		description: 'Creates directory with new ClearTH-based project', 
-		dependsOn: 'updateJettyXml') {
+		dependsOn: 'downloadJetty') {
 	
 	doFirst {
 		if (newProjectDir == undef) {
@@ -327,7 +311,6 @@ task createProject(type: Copy,
 	from ("${projectDir}/for_new_project") {
 		include "build.gradle"
 		include "gradle.properties"
-		include "jetty94.xml"
 		filter( org.apache.tools.ant.filters.ReplaceTokens, tokens: ["JETTY_VERSION": jettyVersion.toString(),
 																	 "CORE_SHARED_DIR": sharedDir.toString().replace('\\', '/'),
 																	 "CORE_VERSION": cth_version] )
@@ -351,11 +334,14 @@ task createProject(type: Copy,
 	from (new File("${projectDir}/docker")) {
 		include 'Dockerfile'
 		include 'clearth.cfg'
-		include 'jetty.xml'
 		include 'start.ini'
 		include 'log.properties'
 		into "docker"
 	}
+	from (new File("${newProjectDir}/jetty/etc/")) {
+		include 'jetty.xml'
+		rename('jetty.xml', 'jetty94.xml')
+	} 
 	into newProjectDir
 }
 

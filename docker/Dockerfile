@@ -13,7 +13,6 @@ COPY --chown=jetty cfg cfg/
 COPY --chown=jetty jetty/webapps jetty/webapps/
 COPY --chown=jetty docker/log.properties cfg/log.properties
 COPY --chown=jetty docker/clearth.cfg cfg/clearth.cfg
-COPY --chown=jetty docker/jetty.xml jetty/etc/jetty.xml
 COPY --chown=jetty docker/start.ini jetty/start.ini
 
 WORKDIR /usr/local/jetty
