@@ -10,7 +10,7 @@
 		<#list attachedFiles as item>
 			<tr>
 				<td>${item}</td>
-				<td><a href="details/${filesHolder.getPath(item).fileName}">${filesHolder.getPath(item).fileName}</a></td>
+				<td><a href="details/${filesHolder.getName(item)}">${filesHolder.getName(item)}</a></td>
 			</tr>
 		</#list>
 	</table>

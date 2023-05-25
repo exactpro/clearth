@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,8 @@ package com.exactprosystems.clearth.automation.report.results;
 
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,62 +29,75 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class AttachedFilesResult extends Result
 {
+	private static final long serialVersionUID = 5309370111339031607L;
 	private static final Logger logger = LoggerFactory.getLogger(AttachedFilesResult.class);
-
-	private final Map<String, String> storage = new LinkedHashMap<>();
-
-	public void attach(String id, String pathString)
-	{
-		storage.put(id, pathString);
-	}
-
+	
+	private final Map<String, Path> storage = new LinkedHashMap<>();
+	
 	public void attach(String id, Path path)
 	{
-		attach(id, path.toString());
+		storage.put(id, path);
 	}
-
-	public String detach(String id)
+	
+	public Path detach(String id)
 	{
 		return storage.remove(id);
 	}
-
+	
+	@JsonIgnore
 	public Set<String> getIds()
 	{
-		return storage.keySet();
+		return Collections.unmodifiableSet(storage.keySet());
 	}
-
-	public String getPathString(String id)
+	
+	public Path getPath(String id)
 	{
 		if (id == null)
 			return null;
-
+		
 		return storage.get(id);
 	}
-
+	
+	public String getName(String id)
+	{
+		Path path = getPath(id);
+		return path != null ? path.getFileName().toString() : null;
+	}
+	
 	@Override
 	public void processDetails(File reportDir, Action linkedAction)
 	{
-		Path source = null,
-				target = null;
-
-		for (String id : getIds())
+		Set<String> ids = getIds();
+		if (ids.isEmpty())
+			return;
+		
+		Path target = getDetailsPath(reportDir, linkedAction);
+		try
 		{
+			if (!Files.exists(target))
+				Files.createDirectories(target);
+		}
+		catch (Exception e)
+		{
+			logger.error("Error while creating target directory '{}'", target, e);
+			return;
+		}
+		
+		for (String id : ids)
+		{
+			Path source = getPath(id);
 			try
 			{
-				source = getPath(id);
-				target = getDetailsPath(reportDir, linkedAction);
-
-				if (!Files.exists(target))
-					Files.createDirectories(target);
-
-				Path newPath = Files.move(source, target.resolve(source.getFileName()));
+				Path newPath = target.resolve(source.getFileName());
+				newPath = Files.move(source, newPath, StandardCopyOption.REPLACE_EXISTING);
 				attach(id, newPath);
 			}
 			catch (IOException e)
@@ -91,16 +106,7 @@ public class AttachedFilesResult extends Result
 			}
 		}
 	}
-
-	public Path getPath(String id)
-	{
-		String pathString = getPathString(id);
-		if (pathString != null)
-			return Paths.get(pathString);
-
-		return null;
-	}
-
+	
 	@Override
 	public void clearDetails()
 	{
