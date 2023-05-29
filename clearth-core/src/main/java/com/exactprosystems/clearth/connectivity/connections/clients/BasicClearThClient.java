@@ -182,12 +182,18 @@ public abstract class BasicClearThClient implements ClearThClient
 		for (MessageListener listener : allListeners)
 			listener.start();
 	}
-
+	
+	/**
+	 * @return true if received messages are processed by this client and, thus, processor thread is needed
+	 */
 	protected boolean isNeedReceivedProcessorThread()
 	{
 		return true;
 	}
-
+	
+	/**
+	 * @return true if sent messages are processed by this client (i.e. if message handler and/or send listeners are active) and, thus, processor thread is needed
+	 */
 	protected boolean isNeedSentProcessorThread()
 	{
 		return messageHandler.isActive() || !isEmpty(sendListeners);
@@ -202,7 +208,17 @@ public abstract class BasicClearThClient implements ClearThClient
 	{
 		return new MessageProcessorThread(name+" (Sent processor thread)", sentMessageQueue, messageHandler, sendListeners);
 	}
-
+	
+	/**
+	 * @return true if send listeners should be notified right after sending a message. 
+	 * Else the client implementation can call {@link #notifySendListenersIndirectly(EncodedClearThMessage)} where needed.
+	 * This is the case when message sending is asynchronous, i.e. message being actually sent differs from message passed to {@link #sendMessage()}
+	 */
+	protected boolean isNeedNotifySendListeners()
+	{
+		return true;
+	}
+	
 	@Override
 	public void start(boolean startListeners) throws ConnectivityException
 	{
@@ -341,7 +357,7 @@ public abstract class BasicClearThClient implements ClearThClient
 		sent.incrementAndGet();
 		
 		EncodedClearThMessage result = createUpdatedMessage(message, null);
-		if (isNeedSentProcessorThread())
+		if (isNeedSentProcessorThread() && isNeedNotifySendListeners())
 			notifySendListenersIndirectly(result);
 		
 		return result;
@@ -354,7 +370,7 @@ public abstract class BasicClearThClient implements ClearThClient
 		sent.incrementAndGet();
 		
 		EncodedClearThMessage result = createUpdatedMessage(message.getPayload(), message.getMetadata());
-		if (isNeedSentProcessorThread())
+		if (isNeedSentProcessorThread() && isNeedNotifySendListeners())
 			notifySendListenersIndirectly(result);
 		
 		return result;
@@ -431,7 +447,13 @@ public abstract class BasicClearThClient implements ClearThClient
 		MessageHandlingUtils.setMessageId(newMetadata, messageHandler.createMessageId(newMetadata));
 		return new EncodedClearThMessage(payload, newMetadata);
 	}
-
+	
+	/**
+	 * Notifies send listeners about sent message by putting it into queue consumed by processor thread
+	 * @param message that was sent
+	 * @throws IOException if message writing failed
+	 * @throws ConnectivityException if send listeners cannot be notified due to client state
+	 */
 	protected final void notifySendListenersIndirectly(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
 		try
