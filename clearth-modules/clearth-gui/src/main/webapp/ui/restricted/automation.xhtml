@@ -642,21 +642,20 @@
 
 			<!-- Saved state -->
 			<p:outputPanel rendered="#{automationBean.activeTab==4&amp;&amp;automationStateBean.stateInfo!=null}">
-				<h:form id="SavedStateInfo">
-
-					<h:outputText value="Scheduler started by: #{automationStateBean.stateInfo.startedByUser}" />
-					&#160;&#160;
-					<h:outputText value="Execution started: " />
-					<h:outputText value="#{automationStateBean.stateInfo.started}">
-						<f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
-					</h:outputText>
-					<br />
-					<h:outputText value="Business day: " />
-					<h:outputText value="#{automationStateBean.stateInfo.businessDay}">
-						<f:convertDateTime pattern="dd.MM.yyyy"/>
-					</h:outputText>
-					<br />
-					<br />
+				<h:outputText value="Scheduler started by: #{automationStateBean.stateInfo.startedByUser}"/>
+				&#160;&#160;
+				<h:outputText value="Execution started: "/>
+				<h:outputText value="#{automationStateBean.stateInfo.started}">
+					<f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+				</h:outputText>
+				<br/>
+				<h:outputText value="Business day: "/>
+				<h:outputText value="#{automationStateBean.stateInfo.businessDay}">
+					<f:convertDateTime pattern="dd.MM.yyyy"/>
+				</h:outputText>
+				<br/>
+				<br/>
+				<h:form id="SavedStateControls">
 					<div class="upperContainer">
 						<div class="upperRightContainer">
 							<p:commandButton value="Remove saved state" title="Remove" oncomplete="PF('removeSavedStateDialog').show();" icon="ui-icon-trash"/>
@@ -665,12 +664,11 @@
 							<p:commandButton value="Reports" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" icon="ui-icon-note">
 								<f:setPropertyActionListener value="#{automationStateBean.stateInfo.reportsInfo}" target="#{automationReportsBean.selectedReportsInfo}" />
 							</p:commandButton>
-							<p:commandButton value="Matrices" update=":StateMatricesDialog" oncomplete="PF('stateMatricesDialog').show();">
-								<f:setPropertyActionListener value="#{automationStateBean.stateInfo.reportsInfo}" target="#{automationReportsBean.selectedReportsInfo}" />
-							</p:commandButton>
+							<p:commandButton value="Matrices" update=":StateMatricesDialog" oncomplete="PF('stateMatricesDialog').show();"/>
 						</div>
 					</div>
-
+				</h:form>
+				<h:form id="SavedStateInfo">
 					<div class="upperContainer">
 						<div class="upperRightContainer">
 							<p:outputPanel id="StepStateOperations" layout="inline">
