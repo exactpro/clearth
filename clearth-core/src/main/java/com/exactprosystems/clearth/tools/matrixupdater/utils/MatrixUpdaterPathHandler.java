@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,8 +23,6 @@ import com.exactprosystems.clearth.ClearThCore;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static com.exactprosystems.clearth.ClearThCore.rootRelative;
-
 public abstract class MatrixUpdaterPathHandler
 {
 	public static final String
@@ -32,11 +30,9 @@ public abstract class MatrixUpdaterPathHandler
 			INNER_FOLDER 	= "MatrixUpdaterConfig",
 			SETTINGS_NAME 	= "MatrixUpdaterConfig";
 
-	public static final String
-			TEMP_DIR 				= ClearThCore.tempPath() + TOOL_DIR + "/",
-			TEMP_DIR_TO_REDIRECT 	= ClearThCore.configFiles().getTempDir() + TOOL_DIR + "/",
-			UPLOADS_DIR_TO_REDIRECT = ClearThCore.configFiles().getUploadStorageDir() + TOOL_DIR,
-			UPLOADS_ABSOLUTE_DIR 	= rootRelative(UPLOADS_DIR_TO_REDIRECT);
+	public static final Path
+			TEMP_DIR				= Paths.get(ClearThCore.tempPath(), TOOL_DIR),
+			UPLOADS_ABSOLUTE_DIR	= Paths.get(ClearThCore.configFiles().getUploadStorageDir(), TOOL_DIR);
 
 	public static final String
 			EXT_ZIP = ".zip",
@@ -44,7 +40,7 @@ public abstract class MatrixUpdaterPathHandler
 
 	public static Path userConfigPath(String username)
 	{
-		return Paths.get(TEMP_DIR, username);
+		return TEMP_DIR.resolve(username);
 	}
 
 	public static Path userConfigInnerDirectory(String username)
@@ -54,7 +50,7 @@ public abstract class MatrixUpdaterPathHandler
 
 	public static Path userConfigXmlFile(String username)
 	{
-		return userConfigPath(username).resolve(Paths.get(INNER_FOLDER, SETTINGS_NAME + EXT_XML));
+		return userConfigPath(username).resolve(INNER_FOLDER).resolve(SETTINGS_NAME + EXT_XML);
 	}
 
 	public static Path userConfigZipFile(String username)
@@ -62,18 +58,8 @@ public abstract class MatrixUpdaterPathHandler
 		return userConfigPath(username).resolve(INNER_FOLDER + EXT_ZIP);
 	}
 
-	public static Path userConfigPathToRedirect(String username)
-	{
-		return Paths.get(TEMP_DIR_TO_REDIRECT, username);
-	}
-
-	public static Path userUploadsDirectoryToRedirect(String username)
-	{
-		return Paths.get(UPLOADS_DIR_TO_REDIRECT, username);
-	}
-
 	public static Path userUploadsAbsoluteDirectory(String username)
 	{
-		return Paths.get(UPLOADS_ABSOLUTE_DIR, username);
+		return UPLOADS_ABSOLUTE_DIR.resolve(username);
 	}
 }

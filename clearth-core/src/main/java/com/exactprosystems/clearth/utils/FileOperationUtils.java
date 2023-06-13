@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,8 +18,16 @@
 
 package com.exactprosystems.clearth.utils;
 
+import com.csvreader.CsvWriter;
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
+
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -27,14 +35,6 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-
-import com.csvreader.CsvWriter;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 
 import static com.exactprosystems.clearth.utils.Utils.closeResource;
 import static java.lang.String.format;
@@ -44,7 +44,8 @@ public class FileOperationUtils
 {
 	private static final String EXT_ZIP = "ZIP";
 
-	public static final String FILE_SEPARATOR = "/";
+	public static final String FILE_SEPARATOR = "/",
+								FILE_WINDOWS_SEPARATOR = "\\";
 
 	public static void writeToFile(String filePath, String text) throws IOException
 	{
@@ -207,20 +208,24 @@ public class FileOperationUtils
 			// ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
 			byte[] buffer = new byte[4096];
 			Enumeration<? extends ZipEntry> entries = zip.entries();
+			Path destPath = destFolder.toPath();
+
 			while (entries.hasMoreElements())
 			{
 				ZipEntry entry = entries.nextElement();
-				String entryName = entry.getName().replace(File.separator, FILE_SEPARATOR);
-				if (entryName.contains(FILE_SEPARATOR))
+				String entryName = entry.getName().replace(FILE_SEPARATOR, File.separator)
+						.replace(FILE_WINDOWS_SEPARATOR, File.separator);
+
+				if (entryName.contains(File.separator))
 				{
-					String parentPath = entryName.substring(0, entryName.lastIndexOf(FILE_SEPARATOR));
-					File parentDir = new File(destFolder, parentPath);
-					parentDir.mkdirs();
+					String parentPath = entryName.substring(0, entryName.lastIndexOf(File.separator));
+					Files.createDirectories(destPath.resolve(parentPath));
 				}
-				File f = new File(destFolder, entry.getName());
+
+				File f = new File(destFolder, entryName);
 				result.add(f);
 				if (entry.isDirectory())
-					f.mkdirs();
+					Files.createDirectories(f.toPath());
 				else
 				{
 					InputStream is = zip.getInputStream(entry);

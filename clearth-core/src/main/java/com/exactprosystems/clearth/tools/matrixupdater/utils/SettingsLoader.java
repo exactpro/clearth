@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,11 +33,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterPathHandler.*;
+import static com.exactprosystems.clearth.utils.FileOperationUtils.FILE_SEPARATOR;
+import static com.exactprosystems.clearth.utils.FileOperationUtils.FILE_WINDOWS_SEPARATOR;
 import static java.lang.String.format;
 
 public class SettingsLoader
 {
 	private static final String ERROR_MSG = "Invalid config : %s";
+	private static final String VALIDATE_FILE_NAME = INNER_FOLDER + File.separator  + SETTINGS_NAME + EXT_XML;
 
 	/**
 	 * Loads config for MatrixUpdater.
@@ -79,23 +82,20 @@ public class SettingsLoader
 
 		final Enumeration<? extends ZipEntry> entries = new ZipFile(config).entries();
 
-		boolean containCfgFolder = false;
 		boolean containCfgFile = false;
 
 		while (entries.hasMoreElements())
 		{
-			String name = entries.nextElement().getName();
-			if (name.contains(INNER_FOLDER + "/"))
-				containCfgFolder = true;
-
-			if (name.contains(SETTINGS_NAME + EXT_XML))
+			String name = entries.nextElement().getName().replace(FILE_SEPARATOR, File.separator)
+					.replace(FILE_WINDOWS_SEPARATOR, File.separator);
+			if (name.equals(VALIDATE_FILE_NAME))
+			{
 				containCfgFile = true;
+				break;
+			}
 		}
 
 		if (!containCfgFile)
-			throw new MatrixUpdaterException(format(ERROR_MSG, "it must contain " + SETTINGS_NAME + EXT_XML + " file"));
-
-		if (!containCfgFolder)
-			throw new MatrixUpdaterException(format(ERROR_MSG, "it must contain " + INNER_FOLDER + " folder"));
+			throw new MatrixUpdaterException(format(ERROR_MSG, "it must contain " + VALIDATE_FILE_NAME + " file"));
 	}
 }
