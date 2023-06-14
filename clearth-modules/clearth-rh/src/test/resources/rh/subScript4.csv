@@ -1,0 +1,3 @@
+// subScript4.csv
+#action,#wait,#locator,#matcher
+Click,3,xpath,%Path%

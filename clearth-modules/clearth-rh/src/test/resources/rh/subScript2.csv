@@ -1,0 +1,5 @@
+// subScript2.csv
+#action,#url
+Open,another_url
+#action,#seconds
+Wait,%Seconds%

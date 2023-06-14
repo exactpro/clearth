@@ -1,0 +1,42 @@
+dependencies {
+	api 'org.apache.httpcomponents:fluent-hc:4.5.14'
+	api 'org.apache.httpcomponents:httpclient:4.5.14'
+	api 'org.apache.httpcomponents:httpclient-cache:4.5.14'
+	api 'org.apache.httpcomponents:httpclient-win:4.5.14'
+	api 'org.apache.httpcomponents:httpcore:4.4.16'
+	api 'org.apache.httpcomponents:httpmime:4.5.14'
+	api 'io.netty:netty-all:4.1.86.Final'
+}
+
+publishing {
+	publications {
+		rh(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-rh'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications(publishing.publications.rh)
+}
+
+ext {
+	moduleName = 'RemoteHand'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-rh'
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+}
+
+task installModule {
+	doLast {
+		def type = new Tuple4("RemoteHand",
+					"com.exactprosystems.clearth.connectivity.remotehand.RhConnection",
+					"connections/remotehand",
+					[])
+		installConTypeModule(clearthDir, moduleName, moduleImpl, type)
+	}
+}

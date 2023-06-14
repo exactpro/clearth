@@ -1,0 +1,4 @@
+#action,#locator,#matcher,#text
+SendKeys,cssSelector,%textMatcher%,%text%
+#action,#locator,#matcher
+Click,cssSelector,%buttonMatcher%

@@ -84,14 +84,11 @@ subprojects {
 		all {
 			transitive = true
 			resolutionStrategy {
-				// fail eagerly on version conflict (includes transitive dependencies)
-				// e.g. multiple different versions of the same dependency (group and name are equal)
 				failOnVersionConflict()
 				
-				// prefer modules that are part of this build (multi-project or composite build) over external modules
-//				preferProjectModules()
-				
-				force   'commons-beanutils:commons-beanutils:1.9.4',
+				//common dependenices are written explicilty to force modules use correct and expected versions
+				force   'commons-codec:commons-codec:1.15',
+						'commons-beanutils:commons-beanutils:1.9.4',
 						'commons-io:commons-io:2.7',
 						'javax.xml.bind:jaxb-api:2.2',
 						'commons-codec:commons-compress:1.21',
@@ -103,9 +100,7 @@ subprojects {
 						'commons-logging:commons-logging:1.2',
 						'org.apache.logging.log4j:log4j-api:2.17.2',
 						'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
-				
-				
-				// don't cache changing modules at all
+						
 				cacheChangingModulesFor 0, 'seconds'
 			}
 			

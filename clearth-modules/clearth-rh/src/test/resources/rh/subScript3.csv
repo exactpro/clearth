@@ -1,0 +1,6 @@
+// subScript3.csv
+//%Comment%
+#action,#wait,#locator,#matcher
+Click,%Seconds%,xpath,%Matcher%
+
+#include file='subScript4.csv'

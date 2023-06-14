@@ -1,0 +1,26 @@
+// subScript1.csv
+#action,#url
+Open,dummy_url
+#action,#seconds
+Wait,1
+
+// subScript2.csv
+#action,#url
+Open,another_url
+#action,#seconds
+Wait,5
+
+// subScript3.csv
+//Saisie opération
+#action,#wait,#locator,#matcher
+Click,3,xpath,%Matcher%
+
+// subScript4.csv
+#action,#wait,#locator,#matcher
+Click,3,xpath,%Path%
+//Test comment
+#action,#wait,#locator,#matcher
+Click,%Seconds%,xpath,%Matcher%
+
+#action,#seconds
+Wait,1

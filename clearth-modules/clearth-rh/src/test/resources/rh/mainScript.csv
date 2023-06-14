@@ -1,0 +1,11 @@
+#include file=subScript1.csv
+
+#include file=subScript2.csv, Seconds=5
+
+#include file=subScript3.csv, Seconds=3, Comment='Saisie opération'
+//Test comment
+#action,#wait,#locator,#matcher
+Click,%Seconds%,xpath,%Matcher%
+
+#action,#seconds
+Wait,1

@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.Utils;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -33,6 +34,7 @@ public class GlobalContext
 	public static final String TEST_MODE = "TestMode";
 
 	private final Map<String, Object> loadedContext;
+	private final Map<String, AutoCloseable> closeableContext;
 	private final Calendar currentDate;
 	private final boolean weekendHoliday;
 	private final Map<String, Boolean> holidays;
@@ -47,7 +49,8 @@ public class GlobalContext
 	public GlobalContext(Date currentDate, boolean weekendHoliday, Map<String, Boolean> holidays, MatrixFunctions matrixFunctions, String startedByUser,
 			TestExecutionHandler executionHandler)
 	{
-		this.loadedContext = new HashMap<String, Object>();
+		this.loadedContext = new HashMap<>();
+		this.closeableContext = new HashMap<>();
 		
 		if (currentDate!=null)
 		{
@@ -84,10 +87,28 @@ public class GlobalContext
 			throw new ResultException(e);
 		}
 	}
+
+	public <T> T getCloseableContext(String key)
+	{
+		try
+		{
+			//noinspection unchecked
+			return (T) closeableContext.get(key);
+		}
+		catch (ClassCastException e)
+		{
+			throw new ResultException(e);
+		}
+	}
 	
 	public void setLoadedContext(String key, Object value)
 	{
 		loadedContext.put(key, value);
+	}
+
+	public void setCloseableContext(String key, AutoCloseable value)
+	{
+		closeableContext.put(key, value);
 	}
 	
 	public Date getCurrentDate()
@@ -180,12 +201,21 @@ public class GlobalContext
 		loadedContext.clear();
 		attemptedConnections.clear();
 		holidays.clear();
-		statements.clear();
+		clearCloseableContext();
 	}
 
 	public Connection getDbConnection(String conName) throws ConnectivityException, SettingsException
 	{
 		return openedDbConnections.getConnection(conName);
 	}
-
+	
+	
+	protected void clearCloseableContext()
+	{
+		for (AutoCloseable entry : closeableContext.values())
+		{
+			Utils.closeResource(entry);
+		}
+		closeableContext.clear();
+	}
 }

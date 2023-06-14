@@ -1,0 +1,11 @@
+#action,#url
+Open,dummy_url
+#action,#locator,#matcher,#text
+SendKeys,cssSelector,#searchField,Dummy text
+#action,#locator,#matcher
+Click,cssSelector,#searchButton
+
+#action,#url
+Open,another_url
+#action,#seconds,#locator,#matcher
+WaitForElement,15,cssSelector,#results

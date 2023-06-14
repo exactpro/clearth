@@ -1,0 +1,2 @@
+#action,#seconds,#locator,#matcher
+WaitForElement,%seconds%,cssSelector,%elementMatcher%

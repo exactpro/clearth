@@ -1,0 +1,9 @@
+#action,#url
+Open,dummy_url
+#action,#textMatcher,#text,#buttonMatcher
+searcher,#searchField,Dummy text,#searchButton
+
+#action,#url
+Open,another_url
+#action,#elementMatcher,#seconds
+awaiter,#results,15
