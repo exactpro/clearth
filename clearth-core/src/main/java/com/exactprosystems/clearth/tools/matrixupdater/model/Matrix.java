@@ -18,16 +18,17 @@
 
 package com.exactprosystems.clearth.tools.matrixupdater.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Matrix
 {
+	protected final Map<Integer, List<String>> blockDuplicatedFields;
 	protected List<Block> blocks;
 
 	public Matrix()
 	{
 		blocks = new ArrayList<>();
+		blockDuplicatedFields = new LinkedHashMap<>();
 	}
 
 	public void addBlock(Block block)
@@ -42,11 +43,22 @@ public class Matrix
 
 	public void clear()
 	{
+		blockDuplicatedFields.clear();
 		blocks.clear();
 	}
 
 	public List<Block> getBlocks()
 	{
 		return blocks;
+	}
+
+	public Map<Integer, List<String>> getBlockDuplicatedFields()
+	{
+		return Collections.unmodifiableMap(blockDuplicatedFields);
+	}
+
+	public void addDuplicatedFields(Integer rowIndex, List<String> duplicatedFields)
+	{
+		blockDuplicatedFields.put(rowIndex, duplicatedFields);
 	}
 }

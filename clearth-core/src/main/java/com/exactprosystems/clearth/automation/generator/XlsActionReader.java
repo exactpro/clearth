@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -40,7 +40,7 @@ public class XlsActionReader extends ActionReader
 	private final Iterator<Row> rowIterator;
 	private Row row;
 	private String firstCellValue;
-	
+
 	public XlsActionReader(String source, boolean trimValues) throws IOException
 	{
 		super(source, trimValues);
@@ -159,5 +159,10 @@ public class XlsActionReader extends ActionReader
 			return data.trim();
 		else
 			return data;
+	}
+
+	public int getRowIndex()
+	{
+		return row.getRowNum() + 1;
 	}
 }

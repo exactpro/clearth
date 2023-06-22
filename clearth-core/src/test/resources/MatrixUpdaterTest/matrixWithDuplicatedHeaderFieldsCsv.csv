@@ -1,0 +1,7 @@
+#ID,#GlobalStep,#Action,#Timeout,#Instrument,#Timeout,#Currency,#Quantity,#Instrument
+id1,Step1,SetStatic,0,AAD,500,BBQ,100,BDD
+id2,Step1,SetStatic,1000,xxx,555,yyy,100,zzz
+
+#ID,#GlobalStep,#Action,#Timeout,#Instrument,#Timeout,#Currency,#Quantity
+id3,Step1,SetStatic,0,AAD,500,BBQ,100
+id4,Step1,SetStatic,1000,xxx,555,yyy,100

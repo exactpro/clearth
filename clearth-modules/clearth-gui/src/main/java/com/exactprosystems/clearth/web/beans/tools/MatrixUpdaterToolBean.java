@@ -430,6 +430,11 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		return updateThread == null ? "" : updateThread.getError();
 	}
+
+	public List<String> getWarning()
+	{
+		return updateThread == null ? null : updateThread.getWarning();
+	}
 	
 	/** SETTER */
 	public void setColumn(String column) { this.column = column; }
@@ -469,6 +474,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		private File result;
 		private String error;
 		private File matrices;
+		private List<String> warning;
 		
 		public UpdaterThread(File matrices)
 		{
@@ -481,6 +487,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 			try
 			{
 				matrixUpdater.update(matrices);
+				warning = matrixUpdater.getDuplicatedHeaderFields();
 				getLogger().info("Matrix update completed");
 			}
 			catch (Exception e)
@@ -499,5 +506,11 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		{
 			return error;
 		}
+
+		public List<String> getWarning()
+		{
+			return warning;
+		}
+
 	}
 }

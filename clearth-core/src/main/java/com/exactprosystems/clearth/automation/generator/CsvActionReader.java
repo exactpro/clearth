@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,25 +18,29 @@
 
 package com.exactprosystems.clearth.automation.generator;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.automation.ActionGenerator;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.input.BOMInputStream;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CsvActionReader extends ActionReader
 {
 	private final CsvReader reader;
 	private String[] values;
 	private String rawLine;
-	
+	private int rowIndex;
+
 	public CsvActionReader(String fileName, boolean trimValues) throws IOException
 	{
 		super(fileName, trimValues);
 		reader = createReader(fileName);
+		rowIndex = 0;
 	}
 	
 	@Override
@@ -50,7 +54,8 @@ public class CsvActionReader extends ActionReader
 	{
 		if (!reader.readRecord())
 			return false;
-		
+
+		rowIndex++;
 		values = reader.getValues();
 		rawLine = reader.getRawRecord();
 		return true;
@@ -126,5 +131,10 @@ public class CsvActionReader extends ActionReader
 	public void setValues(String[] values)
 	{
 		this.values = values;
+	}
+
+	public int getRowIndex()
+	{
+		return rowIndex;
 	}
 }

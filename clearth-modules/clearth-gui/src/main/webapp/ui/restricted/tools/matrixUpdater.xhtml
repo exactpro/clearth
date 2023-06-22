@@ -441,6 +441,9 @@
 			</p:panelGrid>
 			<p:outputPanel style="width:100%">
 				<h:outputText value="#{matrixUpdaterToolBean.error}" style="color: red;" />
+				<p:dataList var="line" value="#{matrixUpdaterToolBean.warning}" itemType="none" emptyMessage="">
+					<h:outputText value="#{line}" style="color: orange;" />
+				</p:dataList>
 			</p:outputPanel>
 		</h:form>
 	</p:dialog>

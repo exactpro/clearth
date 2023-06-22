@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,25 +19,22 @@
 package com.exactprosystems.clearth.tools.matrixupdater.matrixReader;
 
 import com.exactprosystems.clearth.automation.generator.CsvActionReader;
-import com.exactprosystems.clearth.tools.matrixupdater.MatrixUpdater;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Block;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Matrix;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Row;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
-public class CsvMatrixReader implements MatrixReader
+public class CsvMatrixReader extends MatrixFileReader
 {
 	private static Logger logger = LoggerFactory.getLogger(CsvMatrixReader.class);
-	private boolean hasNextLine = true; 
+	private boolean hasNextLine = true;
 	
 	@Override
 	public Matrix readMatrix(File matrixFile) throws IOException
@@ -49,6 +46,7 @@ public class CsvMatrixReader implements MatrixReader
 			if (!reader.readNextLine()) return matrix;
 
 			String[] header = isHeader(reader.getRawLine()) ? reader.getValues() : null;
+			Map<Integer, String> duplicatedFields = new LinkedHashMap<>();
 
 			if (header == null)
 			{
@@ -61,11 +59,23 @@ public class CsvMatrixReader implements MatrixReader
 			}
 
 			Block block;
+			Set<String> headerSet = removeDuplicateFieldsHeader(header, duplicatedFields);
 
-			while ((block = readBlock(reader, header)) != null)
+			if (!duplicatedFields.isEmpty())
+				matrix.addDuplicatedFields(reader.getRowIndex(), new ArrayList<>(duplicatedFields.values()));
+
+			while ((block = readBlock(reader, headerSet, duplicatedFields)) != null)
 			{
-				matrix.addBlock(block);
-				header = reader.getValues();
+				if (!block.getActions().isEmpty())
+					matrix.addBlock(block);
+
+				if (isHeader(reader.getRawLine()))
+					headerSet = removeDuplicateFieldsHeader(reader.getValues(), duplicatedFields);
+				else if (reader.isEmptyLine() || reader.isCommentLine())
+					headerSet.clear();
+
+				if (!duplicatedFields.isEmpty())
+					matrix.addDuplicatedFields(reader.getRowIndex(), new ArrayList<>(duplicatedFields.values()));
 			}
 		}
 
@@ -76,17 +86,17 @@ public class CsvMatrixReader implements MatrixReader
 	{
 		Block block = new Block(new TableHeader<>(new HashSet<>()));
 
-		block.addAction(createRow(null, reader.getValues()));
+		block.addAction(createRow(null, Arrays.asList(reader.getValues())));
 
 		while (reader.readNextLine() && !isHeader(reader.getRawLine()))
 		{
-			block.addAction(createRow(null, reader.getValues()));
+			block.addAction(createRow(null, Arrays.asList(reader.getValues())));
 		}
 
 		return block;
 	}
 
-	protected Block readBlock(CsvActionReader reader, String[] header) throws IOException
+	protected Block readBlock(CsvActionReader reader, Set<String> header, Map<Integer, String> duplicatedFields) throws IOException
 	{
 		/** empty lines or comments */
 		if (reader.isEmptyLine() || reader.isCommentLine())
@@ -95,21 +105,23 @@ public class CsvMatrixReader implements MatrixReader
 
 			while (hasNextLine && (reader.isCommentLine() || reader.isEmptyLine()))
 			{
-				block.addAction(createRow(null, reader.getValues()));
+				block.addAction(createRow(null, Arrays.asList(reader.getValues())));
 				hasNextLine = reader.readNextLine();
 			}
 
 			return block.getActions().isEmpty() ? null : block;
 		}
 
-		Block block = new Block(new TableHeader<>(new LinkedHashSet<>(Arrays.asList(header))));
+		Block block = new Block(new TableHeader<>(header));
 
 		/** the other blocks */
 		while (reader.readNextLine() && !(reader.isEmptyLine() || reader.isCommentLine() || isHeader(reader.getRawLine())))
 		{
-			block.addAction(createRow(block.getHeader(), reader.getValues()));
+			List<String> values = removeDuplicatedFieldsValues(Arrays.asList(reader.getValues()), duplicatedFields);
+			block.addAction(createRow(block.getHeader(), values));
 		}
 
+		duplicatedFields.clear();
 		return block.getActions().isEmpty() ? null : block;
 	}
 
@@ -140,10 +152,8 @@ public class CsvMatrixReader implements MatrixReader
 		return value.matches("(#)(\\w+)(.*)");
 	}
 
-	protected Row createRow(TableHeader<String> header, String[] values)
+	protected Row createRow(TableHeader<String> header, List<String> valueList)
 	{
-		List<String> valueList = Arrays.stream(values).collect(Collectors.toCollection(ArrayList::new));
-
 		return header == null
 				? new Row(valueList)
 				: new Row(header, valueList);

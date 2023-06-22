@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class XlsMatrixReader implements MatrixReader
+public class XlsMatrixReader extends MatrixFileReader
 {
 	@Override
 	public Matrix readMatrix(File matrixFile) throws IOException
@@ -37,9 +37,9 @@ public class XlsMatrixReader implements MatrixReader
 		try (XlsActionReader reader = new XlsActionReader(matrixFile.getAbsolutePath(), true))
 		{
 			Matrix matrix = new XlsMatrix(reader.getSheet().getSheetName());
-
 			String[] header = null;
 			Block block = emptyBlock();
+			Map<Integer, String> duplicatedFields = new LinkedHashMap<>();
 
 			while (reader.readNextLine())
 			{
@@ -56,12 +56,16 @@ public class XlsMatrixReader implements MatrixReader
 
 				if (reader.isHeaderLine())
 				{
+					duplicatedFields.clear();
 					header = reader.parseLine(false).toArray(new String[0]);
 
 					if (!block.getActions().isEmpty())
 						matrix.addBlock(block);
 
-					block = new Block(new TableHeader<>(new LinkedHashSet<>(Arrays.asList(header))));
+					block = new Block(new TableHeader<>(removeDuplicateFieldsHeader(header, duplicatedFields)));
+					if (!duplicatedFields.isEmpty())
+						matrix.addDuplicatedFields(reader.getRowIndex(), new ArrayList<>(duplicatedFields.values()));
+
 					continue;
 				}
 
@@ -70,7 +74,8 @@ public class XlsMatrixReader implements MatrixReader
 
 				if (header != null)
 				{
-					block.addAction(new Row(block.getHeader(), reader.parseLine(false)));
+					List<String> listValues = removeDuplicatedFieldsValues(reader.parseLine(false), duplicatedFields);
+					block.addAction(new Row(block.getHeader(), listValues));
 				}
 			}
 

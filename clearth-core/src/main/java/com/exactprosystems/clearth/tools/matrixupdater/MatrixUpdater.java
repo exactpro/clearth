@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.tools.matrixupdater;
 
 import com.exactprosystems.clearth.tools.matrixupdater.matrixModifier.MatrixModifier;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixReader.CsvMatrixReader;
+import com.exactprosystems.clearth.tools.matrixupdater.matrixReader.MatrixReader;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixReader.XlsMatrixReader;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixWriter.CsvMatrixWriter;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixWriter.XlsMatrixWriter;
@@ -39,8 +40,7 @@ import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterPathHandler.UPLOADS_ABSOLUTE_DIR;
 import static com.exactprosystems.clearth.utils.FileOperationUtils.unzipFile;
@@ -69,12 +69,13 @@ public class MatrixUpdater
 	
 	private final String username;
 	private final Path configDir;
+	private Map<Integer, List<String>> duplicatedHeaderFields = Collections.emptyMap();
 
 	public MatrixUpdater(String username, Path configDir)
 	{
 		this.username = username;
 		this.configDir = configDir.resolve(username);
-		
+
 		createDirectory(this.configDir);
 
 		matrixModifierFactory = createModifierFactory();
@@ -182,11 +183,19 @@ public class MatrixUpdater
 
 	protected Matrix readMatrix(File matrixFile) throws IOException
 	{
+		MatrixReader fileReader = null;
 		switch (parseExt(matrixFile.getName()))
 		{
-			case CSV: return new CsvMatrixReader().readMatrix(matrixFile);
+			case CSV: fileReader = new CsvMatrixReader(); break;
 			case XLSX:
-			case XLS: return new XlsMatrixReader().readMatrix(matrixFile);
+			case XLS: fileReader = new XlsMatrixReader(); break;
+		}
+
+		if (fileReader != null)
+		{
+			Matrix matrix = fileReader.readMatrix(matrixFile);
+			duplicatedHeaderFields = matrix.getBlockDuplicatedFields();
+			return matrix;
 		}
 
 		throw new IllegalArgumentException("'" + matrixFile.getName() + "' matrix file has an inappropriate extension");
@@ -339,6 +348,20 @@ public class MatrixUpdater
 	public void reset()
 	{
 		config = new MatrixUpdaterConfig();
+	}
+
+	public List<String> getDuplicatedHeaderFields()
+	{
+		if (duplicatedHeaderFields.isEmpty())
+			return null;
+
+		List<String> message = new ArrayList<>(duplicatedHeaderFields.size() + 1);
+		message.add("Matrix has duplicate fields in headers:");
+
+		for (Map.Entry<Integer, List<String>> entry : duplicatedHeaderFields.entrySet())
+			message.add("row " + entry.getKey() + ", field names: " + entry.getValue().toString());
+
+		return message;
 	}
 
 	public enum Extension

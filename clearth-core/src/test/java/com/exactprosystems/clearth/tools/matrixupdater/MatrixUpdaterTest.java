@@ -27,15 +27,13 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -112,6 +110,41 @@ public class MatrixUpdaterTest
 		Matrix actualMatrix = matrixUpdater.readMatrix(matrixCopy);
 		Matrix expectedMatrix = matrixUpdater.readMatrix(updateMatrix.resolve("exp_matrix.csv").toFile());
 		Assertions.assertThat(actualMatrix).usingRecursiveComparison().isEqualTo(expectedMatrix);
+	}
+
+	@DataProvider(name = "duplicatedFields")
+	public Object[][] duplicatedFields()
+	{
+		return new Object[][]
+				{
+						{"matrixWithDuplicatedHeaderFieldsCsv.csv"},
+						{"matrixWithDuplicatedHeaderFieldsXls.xls"}
+				};
+	}
+
+	@Test(dataProvider = "duplicatedFields")
+	public void testDuplicatedFields(String fileName) throws Exception
+	{
+		File fileDir = resDir.resolve(fileName).toFile(),
+			copiedFile = testOutput.resolve("copy_" + fileName).toFile();
+
+		if (!copiedFile.exists())
+			Files.createDirectories(testOutput);
+		else
+			FileUtils.cleanDirectory(testOutput.toFile());
+
+		FileUtils.copyFile(fileDir, copiedFile);
+
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN);
+		matrixUpdater.update(copiedFile);
+
+		List<String> warnMessage = matrixUpdater.getDuplicatedHeaderFields();
+		List<String> expectedMessage = new ArrayList<>();
+		expectedMessage.add("Matrix has duplicate fields in headers:");
+		expectedMessage.add("row 1, field names: [#Timeout, #Instrument]");
+		expectedMessage.add("row 5, field names: [#Timeout]");
+
+		Assert.assertEquals(warnMessage, expectedMessage);
 	}
 
 	@Test (expectedExceptions = MatrixUpdaterException.class)
