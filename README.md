@@ -44,6 +44,8 @@ Here are the links to the tutorial videos introducing you to the main features o
 
 ## How to build
 
+JDK 11 is required.
+
 Build and publish ClearTH Core and modules to a local repository, i.e. "shared" directory in the repository root by executing the following command from the repository root:
 ```
 $ ./gradlew clean build publish
@@ -58,6 +60,8 @@ The new project will be created in the directory adjacent to the repository root
 
 
 ## Starting ClearTH
+
+JDK 11 is required on ClearTH host.
 
 Navigate to the directory with your new project and execute the following command to start ClearTH within the Jetty server:
 ```
