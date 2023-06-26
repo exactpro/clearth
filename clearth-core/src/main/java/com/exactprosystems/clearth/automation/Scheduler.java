@@ -911,6 +911,11 @@ public abstract class Scheduler
 			status.add(e.getMessage());
 			throw e;
 		}
+		catch (DataHandlingException e)
+		{
+			status.add(e.getMessage());
+			throw new AutomationException("Could not start scheduler", e);
+		}
 		catch (Exception e)
 		{
 			final String msg = "Unknown error while starting scheduler";

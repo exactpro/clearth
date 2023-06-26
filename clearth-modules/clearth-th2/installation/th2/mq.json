@@ -1,0 +1,26 @@
+{
+	"queues" : {
+		"estore-pin" : {
+			"attributes" : [
+				"publish",
+				"event"
+			],
+			"exchange" : "",
+			"filters" : [],
+			"name" : "",
+			"queue" : ""
+		},
+		"msg_raw" : {
+			"attributes" : [
+				"to_mstore",
+				"publish",
+				"raw",
+				"store"
+			],
+			"exchange" : "",
+			"filters" : [],
+			"name" : "",
+			"queue" : ""
+		}
+	}
+}

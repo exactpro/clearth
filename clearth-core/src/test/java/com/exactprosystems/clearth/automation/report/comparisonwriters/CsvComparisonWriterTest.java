@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation.report.comparisonwriters;
 
 import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.CsvDetailedResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
@@ -68,7 +69,7 @@ public class CsvComparisonWriterTest
 		CsvDetailedResultReader reader = null;
 		try
 		{
-			writer = new CsvComparisonWriter(0);
+			writer = new CsvComparisonWriter(0, new File(ClearThCore.tempPath()));
 			CsvDetailedResult csvResult = createCsvResult();
 			writer.addDetail(csvResult);
 			writer.finishReport(TEST_DIR, "", "", false);

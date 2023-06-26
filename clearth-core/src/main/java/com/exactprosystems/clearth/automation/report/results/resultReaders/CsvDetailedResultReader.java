@@ -48,7 +48,7 @@ public class CsvDetailedResultReader implements AutoCloseable
 	protected final ValueParser valueParser;
 
 	public<A, B> CsvDetailedResultReader(File zipFile,
-	ValuesComparator<A, B> valuesComparator, ValueParser<A ,B> valueParser)
+			ValuesComparator<A, B> valuesComparator, ValueParser<A ,B> valueParser)
 			throws IOException
 	{
 		this.valuesComparator = valuesComparator;
@@ -111,11 +111,12 @@ public class CsvDetailedResultReader implements AutoCloseable
 	@SuppressWarnings("unchecked")
 	protected ResultDetail createResultDetail(String header, String expectedValue, String actualValue) throws Exception
 	{
-		ComparisonResult compResult = valuesComparator.compareValues(valueParser.parseValue(expectedValue),
+		Object parsedExpected = valueParser.parseValue(expectedValue);
+		ComparisonResult compResult = valuesComparator.compareValues(parsedExpected,
 				valueParser.parseValue(actualValue),
 				valueParser.parseHeader(header));
 		
-		return new ResultDetail(header, expectedValue, actualValue, compResult);
+		return new ResultDetail(header, expectedValue, actualValue, compResult, valuesComparator.isForCompareValues(parsedExpected));
 	}
 
 	@Override

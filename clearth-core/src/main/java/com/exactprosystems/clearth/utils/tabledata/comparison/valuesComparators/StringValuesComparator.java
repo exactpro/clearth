@@ -35,4 +35,10 @@ public class StringValuesComparator implements ValuesComparator<String, String>
 	{
 		return ComparisonResult.from(comparisonUtils.compareValues(expectedValue, actualValue));
 	}
+	
+	@Override
+	public boolean isForCompareValues(String value)
+	{
+		return comparisonUtils.isForCompareValues(value);
+	}
 }

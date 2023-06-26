@@ -1,0 +1,84 @@
+repositories {
+	maven {
+		name 'Sonatype'
+		url 'https://s01.oss.sonatype.org/content/repositories/releases/'
+	}
+}
+
+dependencies {
+	api ('com.exactpro.th2:common:5.2.0') {
+		//Core decides what logging implementation to use. So, excluding dependencies of th2-common
+		exclude (group: 'org.apache.logging.log4j')
+		exclude (group: 'org.slf4j')
+	}
+	
+	def log4jVersion = '2.17.2'
+	testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+	testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+	testImplementation "org.apache.logging.log4j:log4j-jcl:${log4jVersion}"
+}
+
+publishing {
+	publications {
+		th2(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-th2'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications(publishing.publications.th2)
+}
+
+ext {
+	moduleName = 'th2'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-th2'
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+	installationDir = "${projectDir}/installation"
+	clearthCfgDir = "${clearthDir}/cfg/"
+}
+
+task installModule {
+	doLast {
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+					{ putDataHandlersFactory(clearthDir, 'com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory') },
+					{ putFile("th2/storage.json", installationDir, clearthCfgDir) },
+					{ putFile("th2/mq.json", installationDir, clearthCfgDir) },
+					{ putFile("th2/rabbitMQ.json", installationDir, clearthCfgDir) }
+				]
+		)
+		println("Please complete setup by updating files in ${clearthCfgDir}/th2/")
+	}
+}
+
+def putDataHandlersFactory(clearthDir, factoryToAdd) {
+	File cfg = getClearThCfg(clearthDir)
+	Node rootNode = getClearThRootNode(cfg)
+	Node updatedRootNode = putDataHandlersFactory(rootNode, factoryToAdd)
+	updateClearThCfg(cfg, updatedRootNode)
+	
+	println("- DataHandlersFactory '${factoryToAdd}' put to clearth.cfg")
+}
+
+static Node putDataHandlersFactory(Node rootNode, factoryToAdd) {
+	String dataNodeName = 'data'
+	String factoryNodeName = 'dataHandlersFactory'
+	Node dataNode = rootNode.get(dataNodeName)?.getAt(0)
+	if (!dataNode) {
+		dataNode = rootNode.appendNode(dataNodeName)
+	}
+	else {
+		Node factoryNode = dataNode.get(factoryNodeName)?.getAt(0)
+		if (factoryNode) {
+			dataNode.remove(factoryNode)
+		}
+	}
+	dataNode.appendNode(factoryNodeName, factoryToAdd)
+	return rootNode
+}

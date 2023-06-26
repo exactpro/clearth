@@ -1,4 +1,4 @@
-/*******************************************************************************
+/******************************************************************************
  * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
@@ -16,24 +16,45 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
+package com.exactprosystems.clearth.data.th2;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.Objects;
+import com.exactpro.th2.common.grpc.EventID;
 
-public class SimpleValuesComparator<A, B> implements ValuesComparator<A, B>
+public class MatrixExecutionInfo
 {
-	@Override
-	public ComparisonResult compareValues(B expectedValue, B actualValue, A columnName) throws Exception
+	private final String name;
+	private final EventID eventId;
+	private final Map<String, EventID> stepEvents = new HashMap<>();
+	
+	public MatrixExecutionInfo(String name, EventID eventId)
 	{
-		return ComparisonResult.from(Objects.equals(expectedValue, actualValue));
+		this.name = name;
+		this.eventId = eventId;
 	}
 	
-	@Override
-	public boolean isForCompareValues(B value)
+	
+	public String getName()
 	{
-		return ClearThCore.comparisonUtils().isForCompareValues(value == null ? null : value.toString());
+		return name;
+	}
+	
+	
+	public EventID getEventId()
+	{
+		return eventId;
+	}
+	
+	
+	public EventID getStepEventId(String name)
+	{
+		return stepEvents.get(name);
+	}
+	
+	public void setStepEventId(String name, EventID id)
+	{
+		stepEvents.put(name, id);
 	}
 }

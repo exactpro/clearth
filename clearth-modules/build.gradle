@@ -62,6 +62,48 @@ def putImplementation(moduleImpl, clearthDir) {
     }
     println("- Module dependency added to project's 'build.gradle' file: ${moduleImpl}")
 }
+
+def putFile(fileName, source, destination) {
+    def copiedFile = "${destination}/${fileName}"
+    if (file(copiedFile).exists()) {
+        println("- File already exists in project: ${copiedFile}")
+    } else {
+        def destDir = new File(copiedFile).getParentFile()
+        destDir.mkdirs()
+        copy {
+            from ("${source}/${fileName}")
+            into destDir
+        }
+        println("- File copied to project: ${copiedFile}")
+    }
+}
+
+def getClearThCfg(clearthDir) {
+    File cfg = new File("${clearthDir}/cfg/clearth.cfg")
+    if (!cfg.exists())
+        throw new GradleException("File clearth.cfg doesn't exist in ${clearthDir}/cfg")
+    return cfg
+}
+
+def getClearThRootNode(File clearThCfg) {
+    Node rootNode
+    try {
+        rootNode = new XmlParser().parse(clearThCfg)
+    }
+    catch (SAXParseException | IOException e) { // is thrown when clearth.cfg is not valid XML file or cannot be read
+        throw new GradleException("Error occurred while reading clearth.cfg file as XML: " + e.getMessage(), e)
+    }
+    if (rootNode.name() != 'ClearThConfiguration')
+        throw new GradleException("Root tag 'ClearThConfiguration' not found in clearth.cfg (found '${rootNode.name()}' instead)")
+    return rootNode
+}
+
+def updateClearThCfg(File clearThCfg, Node updatedRootNode) {
+    XmlNodePrinter printer = new XmlNodePrinter(new IndentPrinter(new FileWriter(clearThCfg), '\t'))
+    printer.setPreserveWhitespace(true)
+    printer.print(updatedRootNode)
+}
+
 /**
  * adds type to clearth.cfg under &lt;connectivity> - &lt;types> (and creates/expands them if necessary). For example, this:
  * <pre>
@@ -82,28 +124,13 @@ def putImplementation(moduleImpl, clearthDir) {
  * if array list is not specified then &lt;validationRules> tag won't be created.
  * @param typeToAdd type that should be added: first - name, second - connectionClass, third - directory
  * @param clearthDir directory with clearTh Project where type will be added (searched in cfg/clearth.cfg)
- * @throws GradleException if tag &lt;ClearThConfiguration> not found in clearth.cfg or file has incorrect xml structure
+ * @throws GradleException if tag &lt;ClearThConfiguration> doesn't exist in clearth.cfg or file has incorrect xml structure
  */
 def addConnectionTypeToCfg(Tuple4 typeToAdd, clearthDir) {
-    File clearThCfg = new File("${clearthDir}/cfg/clearth.cfg")
-    if (!clearThCfg.exists())
-        throw new GradleException("File clearth.cfg not found in ${clearthDir}/cfg")
-    
-    Node clearThRootNode
-    try {
-        clearThRootNode = new XmlParser().parse(clearThCfg)
-    }
-    catch (SAXParseException | IOException e) { // is thrown when clearth.cfg is not valid XML file or cannot be read
-        throw new GradleException("Error occurred while reading clearth.cfg file as XML: " + e.getMessage(), e)
-    }
-    if (clearThRootNode.name() != 'ClearThConfiguration')
-        throw new GradleException("Root tag 'ClearThConfiguration' not found in clearth.cfg (found '${clearThRootNode.name()}' instead)")
-    
-    Node clearThRootNodeRenewed = addConnectionTypeInfo(clearThRootNode, typeToAdd)
-    
-    XmlNodePrinter clearThCfgPrinter = new XmlNodePrinter(new IndentPrinter(new FileWriter(clearThCfg), '\t'))
-    clearThCfgPrinter.setPreserveWhitespace(true)
-    clearThCfgPrinter.print(clearThRootNodeRenewed)
+    File cfg = getClearThCfg(clearthDir)
+    Node rootNode = getClearThRootNode(cfg)
+    Node updatedRootNode = addConnectionTypeInfo(rootNode, typeToAdd)
+    updateClearThCfg(cfg, updatedRootNode)
     
     println("- Type '${typeToAdd.getFirst()}' added to clearth.cfg")
 }

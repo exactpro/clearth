@@ -1,4 +1,4 @@
-/*******************************************************************************
+/******************************************************************************
  * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
@@ -16,24 +16,31 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
+package com.exactprosystems.clearth.data.th2.messages;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
+import com.exactpro.th2.common.grpc.MessageID;
+import com.exactprosystems.clearth.data.HandledMessageId;
+import com.exactprosystems.clearth.data.th2.serialization.MessageIDSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import java.util.Objects;
-
-public class SimpleValuesComparator<A, B> implements ValuesComparator<A, B>
+public class Th2MessageId implements HandledMessageId
 {
-	@Override
-	public ComparisonResult compareValues(B expectedValue, B actualValue, A columnName) throws Exception
+	@JsonSerialize(using = MessageIDSerializer.class)  //This is used when saving message and metadata (including id) with MessageFileWriter 
+	private final MessageID id;
+	
+	public Th2MessageId(MessageID id)
 	{
-		return ComparisonResult.from(Objects.equals(expectedValue, actualValue));
+		this.id = id;
 	}
 	
 	@Override
-	public boolean isForCompareValues(B value)
+	public String toString()
 	{
-		return ClearThCore.comparisonUtils().isForCompareValues(value == null ? null : value.toString());
+		return id.toString();
+	}
+	
+	public MessageID getId()
+	{
+		return id;
 	}
 }

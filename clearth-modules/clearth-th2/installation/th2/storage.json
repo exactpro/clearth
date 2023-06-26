@@ -1,0 +1,7 @@
+{
+	"book" : "",
+	"events" : {
+		"scope" : "default",
+		"maxBatchSize" : 100
+	}
+}

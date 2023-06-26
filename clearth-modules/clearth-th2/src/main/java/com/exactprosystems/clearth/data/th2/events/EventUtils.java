@@ -1,4 +1,4 @@
-/*******************************************************************************
+/******************************************************************************
  * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
@@ -16,24 +16,33 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
+package com.exactprosystems.clearth.data.th2.events;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
+import java.time.Instant;
 
-import java.util.Objects;
+import com.exactpro.th2.common.event.Event.Status;
+import com.exactpro.th2.common.grpc.Event;
+import com.exactpro.th2.common.grpc.EventBatch;
+import com.google.protobuf.Timestamp;
 
-public class SimpleValuesComparator<A, B> implements ValuesComparator<A, B>
+public class EventUtils
 {
-	@Override
-	public ComparisonResult compareValues(B expectedValue, B actualValue, A columnName) throws Exception
+	private EventUtils()
 	{
-		return ComparisonResult.from(Objects.equals(expectedValue, actualValue));
 	}
 	
-	@Override
-	public boolean isForCompareValues(B value)
+	public static EventBatch wrap(Event event)
 	{
-		return ClearThCore.comparisonUtils().isForCompareValues(value == null ? null : value.toString());
+		return EventBatch.newBuilder().addEvents(event).build();
+	}
+	
+	public static Status getStatus(boolean status)
+	{
+		return status ? Status.PASSED : Status.FAILED;
+	}
+	
+	public static Instant getTimestamp(Timestamp timestamp)
+	{
+		return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
 	}
 }

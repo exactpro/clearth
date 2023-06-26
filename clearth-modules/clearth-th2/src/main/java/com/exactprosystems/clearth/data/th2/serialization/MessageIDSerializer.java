@@ -1,14 +1,14 @@
-/*******************************************************************************
+/******************************************************************************
  * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +16,20 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators;
+package com.exactprosystems.clearth.data.th2.serialization;
 
-import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
+import java.io.IOException;
 
-public interface ValuesComparator<A, B>
+import com.exactpro.th2.common.grpc.MessageID;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+
+public class MessageIDSerializer extends JsonSerializer<MessageID>
 {
-	ComparisonResult compareValues(B expectedValue, B actualValue, A columnName) throws Exception;
-	boolean isForCompareValues(B value);
+	@Override
+	public void serialize(MessageID value, JsonGenerator gen, SerializerProvider serializers) throws IOException
+	{
+		gen.writeString(value.toString());
+	}
 }

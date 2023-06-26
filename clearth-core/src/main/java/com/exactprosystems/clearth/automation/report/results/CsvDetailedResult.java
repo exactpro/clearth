@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report.results;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
@@ -69,20 +70,28 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 	
 	
 	@JsonIgnore
-	protected File tempReportFile = null,
+	protected File csvPath,
+			tempReportFile = null,
 			reportFile = null;
 	
-	// Empty constructor is required for JSON-reports
+	// Empty constructor is required for JSON reports
 	public CsvDetailedResult() 
 	{
-		this.details = new ArrayList<>();
+		this(null);
 	}
 	
 	public CsvDetailedResult(String name)
 	{
+		this(name, new File(ClearThCore.tempPath()));
+	}
+	
+	public CsvDetailedResult(String name, File csvPath)
+	{
 		this.details = new ArrayList<>();
 		this.name = name;
+		this.csvPath = csvPath;
 	}
+	
 	
 	public void addDetail(DetailedResult detail)
 	{
@@ -193,7 +202,7 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 	protected CsvComparisonWriter createComparisonWriter()
 	{
 		int maxBufferSize = maxDisplayedRowsCount;
-		return new CsvComparisonWriter(maxBufferSize);
+		return new CsvComparisonWriter(maxBufferSize, csvPath);
 	}
 	
 	protected String buildHeader()

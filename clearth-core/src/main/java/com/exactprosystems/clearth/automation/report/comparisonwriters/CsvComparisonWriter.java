@@ -57,6 +57,7 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 			COLUMN_COMPARISON_RESULT = "Comparison result",
 			COLUMN_ROW_KIND = "Row kind";
 
+	private final File tempPath;
 	private File tempFile;
 	private CsvWriter csvWriter;
 	protected boolean headerWritten = false;
@@ -68,10 +69,12 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 	 * @param maxBufferSize report will be created in {@link #finishReport(Path, String, String, boolean)}
 	 *                      only if number of details added through {@link #addDetail(CsvDetailedResult)} exceeds this 
 	 *                      number or last param of method finishReport (forceWrite) is true
+	 * @param reportPath path to directory where to store written file
 	 */
-	public CsvComparisonWriter(int maxBufferSize)
+	public CsvComparisonWriter(int maxBufferSize, File reportPath)
 	{
 		this.maxBufferSize = maxBufferSize;
+		this.tempPath = reportPath;
 		if (maxBufferSize > 0)
 		{
 			noWriteBuffer = new ArrayList<>();
@@ -95,9 +98,14 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		return tempFile;
 	}
 	
+	protected File getTempPath()
+	{
+		return tempPath;
+	}
+	
 	protected File createTempFile() throws IOException
 	{
-		return File.createTempFile(TEMP_FILE_PREFIX, ZIP_EXT, new File(ClearThCore.tempPath()));
+		return File.createTempFile(TEMP_FILE_PREFIX, ZIP_EXT, getTempPath());
 	}
 
 	@Override

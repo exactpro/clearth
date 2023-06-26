@@ -47,12 +47,31 @@ public class ResultDetail implements Serializable
 		this.identical = identical;
 		this.info = false;
 	}
-
+	
+	public ResultDetail(String param, String expected, String actual, boolean identical, boolean expectedIsForCompareValue)
+	{
+		this.param = param;
+		this.expected = expected;
+		this.forCompareValue = expectedIsForCompareValue;
+		this.actual = actual;
+		this.identical = identical;
+		this.info = false;
+	}
+	
 	public ResultDetail(String param, String expected, String actual, ComparisonResult compResult)
 	{
-
 		this.param = param;
 		setExpected(expected);
+		this.actual = actual;
+		this.identical = compResult.isIdentical();
+		this.info = compResult.isInfo();
+	}
+	
+	public ResultDetail(String param, String expected, String actual, ComparisonResult compResult, boolean expectedIsForCompareValue)
+	{
+		this.param = param;
+		this.expected = expected;
+		this.forCompareValue = expectedIsForCompareValue;
 		this.actual = actual;
 		this.identical = compResult.isIdentical();
 		this.info = compResult.isInfo();
