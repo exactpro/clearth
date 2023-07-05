@@ -32,7 +32,6 @@ import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
-
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
@@ -45,7 +44,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
 import java.util.List;
 
@@ -147,6 +145,11 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		return FileOperationUtils.storeToFile(file.getInputStream(), destFile.toFile());
 	}
 
+	private Cell createCell(String column, String value, boolean useExpression)
+	{
+		return new Cell(column, value, useExpression);
+	}
+
 	private Cell createCell(String column, String value)
 	{
 		return new Cell(column, value);
@@ -197,9 +200,10 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		String column = newConditionCell.getColumn();
 		String value = newConditionCell.getValue();
+		boolean useExpression = newConditionCell.isUseExpression();
 
 		if (isNotBlank(column) && isNotBlank(value) && currentCondition != null)
-			currentCondition.addCell(createCell(column, value));
+			currentCondition.addCell(createCell(column, value, useExpression));
 
 		newConditionCell = new Cell();
 		currentCondition = null;
@@ -435,7 +439,8 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		return updateThread == null ? null : updateThread.getWarning();
 	}
-	
+
+
 	/** SETTER */
 	public void setColumn(String column) { this.column = column; }
 
@@ -467,7 +472,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		if (needToUploadChanges && currentUpdate != null)
 			currentUpdate.getSettings().getChange().setUpdateIDs(updateIDs);
 	}
-	
+
 	/** Internal class **/
 	class UpdaterThread extends Thread
 	{
@@ -475,7 +480,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		private String error;
 		private File matrices;
 		private List<String> warning;
-		
+
 		public UpdaterThread(File matrices)
 		{
 			this.matrices = matrices;

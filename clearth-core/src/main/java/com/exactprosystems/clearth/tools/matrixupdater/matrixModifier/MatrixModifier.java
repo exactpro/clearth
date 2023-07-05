@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -111,15 +111,11 @@ public abstract class MatrixModifier
 				String actualValue = record.getValues().get(index);
 				String expectedValue = cell.getValue();
 
-				if (comparisonUtils.compareValues(expectedValue, actualValue, false))
-				{
-					isEqual = true;
-				}
-				else
-				{
-					isEqual = false;
+				isEqual = (!cell.isUseExpression()) ? actualValue.equals(expectedValue) :
+						comparisonUtils.compareValues(expectedValue, actualValue, false);
+
+				if(!isEqual)
 					break;
-				}
 			}
 
 			if (isEqual) break;

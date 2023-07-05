@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Change")
@@ -121,22 +120,4 @@ public class Change
 		parseAddition(addition);
 	}
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		Change change = (Change) o;
-		return Objects.equals(before, change.before) &&
-			Objects.equals(addition, change.addition) &&
-			Objects.equals(updateIDs, change.updateIDs) &&
-			Objects.equals(cells, change.cells);
-	}
-
-	@Override
-	public int hashCode()
-	{
-		return Objects.hash(before, addition, updateIDs, cells);
-	}
 }

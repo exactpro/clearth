@@ -283,6 +283,16 @@
 												<f:facet name="input"><p:inputText value="#{keyfield.value}" style="width:100%"/></f:facet>
 											</p:cellEditor>
 										</p:column>
+										<p:column>
+											<p:cellEditor>
+												<f:facet name="output">
+													<h:outputText value="#{keyfield.useExpression ? 'Use expression' : 'Plain comparison'}" />
+												</f:facet>
+												<f:facet name="input">
+													<p:selectBooleanCheckbox value="#{keyfield.useExpression}" style="width:100%" itemLabel="Use expression"/>
+												</f:facet>
+											</p:cellEditor>
+										</p:column>
 										<p:column style="width:26px">
 											<p:commandLink title="Remove key field" action="#{matrixUpdaterToolBean.removeConditionCell(condition, keyfield)}"
 													update="matrixUpdaterTool:conditionsList">
@@ -455,11 +465,14 @@
 		<h:form id="KeyFieldDialog">
 			<label class="pageSubTitle">New key field</label>
 			<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-				<h:panelGrid columns="3">
+				<h:panelGrid columns="4">
 					<p:inputText id="keyFieldName" value="#{matrixUpdaterToolBean.newConditionCell.column}"
 							title="Field Name" placeholder="Field Name"/>
 					<p:inputText id="keyFieldValue" value="#{matrixUpdaterToolBean.newConditionCell.value}"
 							title="Field Value" placeholder="Field Value"/>
+					<p:selectBooleanCheckbox id="keyFieldUseExpression" value="#{matrixUpdaterToolBean.newConditionCell.useExpression}"
+											 itemLabel="Use expression">
+					</p:selectBooleanCheckbox>
 					<p:commandButton value="Add key field" icon="ui-icon-plusthick"
 							update=":KeyFieldDialog :matrixUpdaterTool:conditionsList"
 							actionListener="#{matrixUpdaterToolBean.addConditionCell}"

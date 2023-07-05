@@ -18,10 +18,12 @@
 
 package com.exactprosystems.clearth.tools.matrixupdater.settings;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Settings")
@@ -79,21 +81,4 @@ public class Settings
 		this.change = change;
 	}
 
-
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		Settings settings = (Settings) o;
-		return Objects.equals(conditions, settings.conditions) &&
-			Objects.equals(change, settings.change);
-	}
-
-	@Override
-	public int hashCode()
-	{
-		return Objects.hash(conditions, change);
-	}
 }

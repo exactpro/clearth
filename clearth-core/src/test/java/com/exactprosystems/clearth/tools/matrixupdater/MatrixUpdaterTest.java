@@ -24,14 +24,17 @@ import com.exactprosystems.clearth.tools.matrixupdater.model.Matrix;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.*;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,11 +49,15 @@ public class MatrixUpdaterTest
 	private static final String ADMIN = "admin", USER = "user";
 
 	@BeforeClass
-	public void init() throws ClearThException, FileNotFoundException
+	public void init() throws ClearThException, IOException
 	{
 		manager = new ApplicationManager();
 		resDir = Paths.get(FileOperationUtils.resourceToAbsoluteFilePath(MatrixUpdaterTest.class.getSimpleName()));
 		testOutput = Paths.get("testOutput").resolve(MatrixUpdaterTest.class.getSimpleName());
+		if (testOutput.toFile().exists())
+			FileUtils.cleanDirectory(testOutput.toFile());
+		else
+			Files.createDirectory(testOutput);
 	}
 
 	@AfterClass
@@ -63,17 +70,15 @@ public class MatrixUpdaterTest
 	@Test
 	public void testConfigChangeAction() throws Exception
 	{
-		Path changeDir = resDir.resolve("Changes");
+		Path changeDir = resDir.resolve("Changes"),
+			tempDir = testOutput.resolve("Changes");
 		File matrixChangeFile = changeDir.resolve("action_matrix.csv").toFile(),
 					matrixFile = changeDir.resolve("matrix.csv").toFile(),
 					matrixCopy = changeDir.resolve("upd_matrix1.csv").toFile(),
 					matrixCopy2 = changeDir.resolve("upd_matrix2.csv").toFile();
 
-		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, testOutput),
-					matrixUpdater2 = new MatrixUpdater(USER, testOutput);
-
-		FileUtils.cleanDirectory(matrixUpdater.getConfigDir().toFile());
-		FileUtils.cleanDirectory(matrixUpdater2.getConfigDir().toFile());
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir),
+					matrixUpdater2 = new MatrixUpdater(USER, tempDir);
 
 		File copyChangeFile = matrixUpdater.getConfigDir().resolve("new_action_matrix.csv").toFile();
 		FileUtils.copyFile(matrixChangeFile, copyChangeFile);
@@ -88,7 +93,8 @@ public class MatrixUpdaterTest
 		FileUtils.copyFile(matrixFile, matrixCopy2);
 		matrixUpdater2.update(matrixCopy2);
 
-		Assert.assertEquals(matrixUpdater2.getConfig(), matrixUpdater.getConfig());
+		Assertions.assertThat(matrixUpdater2.getConfig()).usingRecursiveComparison()
+				.isEqualTo(matrixUpdater.getConfig());
 		Assertions.assertThat(matrixUpdater.readMatrix(matrixCopy))
 				.usingRecursiveComparison().isEqualTo(matrixUpdater2.readMatrix(matrixCopy2));
 	}
@@ -96,14 +102,13 @@ public class MatrixUpdaterTest
 	@Test
 	public void testUpdateMatrixAfterSetConfigAddActions() throws Exception
 	{
-		Path updateMatrix = resDir.resolve("UpdateMatrix");
+		Path updateMatrix = resDir.resolve("UpdateMatrix"),
+				tempDir = testOutput.resolve("UpdateMatrix");
 		File cfgZip = updateMatrix.resolve("MatrixUpdaterConfig.zip").toFile(),
 			matrixCopy = updateMatrix.resolve("upd_matrix.csv").toFile();
 		FileUtils.copyFile(updateMatrix.resolve("matrix.csv").toFile(), matrixCopy);
 
-		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, testOutput);
-		FileUtils.cleanDirectory(matrixUpdater.getConfigDir().toFile());
-
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir);
 		matrixUpdater.setConfig(cfgZip);
 		matrixUpdater.update(matrixCopy);
 
@@ -125,17 +130,14 @@ public class MatrixUpdaterTest
 	@Test(dataProvider = "duplicatedFields")
 	public void testDuplicatedFields(String fileName) throws Exception
 	{
-		File fileDir = resDir.resolve(fileName).toFile(),
-			copiedFile = testOutput.resolve("copy_" + fileName).toFile();
-
-		if (!copiedFile.exists())
-			Files.createDirectories(testOutput);
-		else
-			FileUtils.cleanDirectory(testOutput.toFile());
+		Path duplicatesDir = resDir.resolve("Duplicates"),
+			tempDir = testOutput.resolve("Duplicates");
+		File fileDir = duplicatesDir.resolve(fileName).toFile(),
+			copiedFile = tempDir.resolve("copy_" + fileName).toFile();
 
 		FileUtils.copyFile(fileDir, copiedFile);
 
-		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN);
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir);
 		matrixUpdater.update(copiedFile);
 
 		List<String> warnMessage = matrixUpdater.getDuplicatedHeaderFields();
@@ -147,18 +149,46 @@ public class MatrixUpdaterTest
 		Assert.assertEquals(warnMessage, expectedMessage);
 	}
 
+	@Test
+	public void testUpdateMatrixWithoutExpressionEvaluation() throws Exception {
+		Path exprCfgDir = resDir.resolve("ExpressionEvaluation"),
+			tempDir = testOutput.resolve("ExpressionEvaluation");
+
+		File configFile = exprCfgDir.resolve("config.zip").toFile(),
+			matrixFile = exprCfgDir.resolve("matrix.csv").toFile(),
+			copiedFile = exprCfgDir.resolve("copy_matrix.csv").toFile();
+
+		FileUtils.copyFile(matrixFile, copiedFile);
+
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir);
+		matrixUpdater.setConfig(configFile);
+		MatrixUpdaterConfig config = matrixUpdater.getConfig();
+
+		String actualData = FileUtils.readFileToString(matrixUpdater.update(copiedFile), Utils.UTF8);
+		String expectedData = "#ID,#GlobalStep,#Action,#Expected,#Actual\n" +
+							"id1,Step1,Compare2Values,123,123\n" +
+							"id2,Step1,Compare2Values,990,234\n" +
+							"id3,Step1,Compare2Values,@{isNotEmpty},456\n";
+
+		Assert.assertFalse(config.getUpdate("Modification").getSettings().getConditions().get(0).getCells().get(0).isUseExpression());
+		Assert.assertEquals(actualData, expectedData);
+	}
+
 	@Test (expectedExceptions = MatrixUpdaterException.class)
 	public void testSetIrrelevantArchiveToConfig() throws IOException, JAXBException, MatrixUpdaterException
 	{
-		File file = resDir.resolve("IrrelevantArchive.zip").toFile();
-		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, testOutput);
+		Path cfgDir = resDir.resolve("SetAndSaveConfig"),
+			tempDir = testOutput.resolve("SetAndSaveConfig");
+		File file = cfgDir.resolve("IrrelevantArchive.zip").toFile();
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir);
 		matrixUpdater.setConfig(file);
 	}
 
 	@Test
 	public void testSaveConfig() throws JAXBException, IOException
 	{
-		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, testOutput);
+		Path tempDir = testOutput.resolve("SetAndSaveConfig");
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir);
 		File file = matrixUpdater.saveConfig().toFile();
 		Assert.assertTrue(file.exists());
 	}
@@ -176,9 +206,10 @@ public class MatrixUpdaterTest
 	@Test (dataProvider = "zipFile")
 	public void testSetConfig(String fileName) throws MatrixUpdaterException, JAXBException, IOException
 	{
-		File file = resDir.resolve(fileName).toFile();
-		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, testOutput);
-		FileUtils.cleanDirectory(matrixUpdater.getConfigDir().toFile());
+		Path cfgDir = resDir.resolve("SetAndSaveConfig"),
+			tempDir = testOutput.resolve("SetAndSaveConfig");
+		File file = cfgDir.resolve(fileName).toFile();
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir);
 
 		matrixUpdater.setConfig(file);
 		assertMatrixUpdaterConfig(matrixUpdater.getConfig().getUpdates());

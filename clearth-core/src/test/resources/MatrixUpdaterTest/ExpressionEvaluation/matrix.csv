@@ -1,0 +1,4 @@
+#ID,#GlobalStep,#Action,#Expected,#Actual
+id1,Step1,Compare2Values,123,123
+id2,Step1,Compare2Values,@{isNotEmpty()},234
+id3,Step1,Compare2Values,@{isNotEmpty},456

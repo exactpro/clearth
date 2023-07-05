@@ -23,7 +23,6 @@ import com.exactprosystems.clearth.tools.matrixupdater.model.Cell;
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Condition")
@@ -77,20 +76,4 @@ public class Condition
 		this.name = name;
 	}
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		Condition condition = (Condition) o;
-		return Objects.equals(name, condition.name) &&
-			Objects.equals(cells, condition.cells);
-	}
-
-	@Override
-	public int hashCode()
-	{
-		return Objects.hash(name, cells);
-	}
 }

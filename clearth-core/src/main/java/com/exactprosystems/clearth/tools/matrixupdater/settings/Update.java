@@ -19,7 +19,6 @@
 package com.exactprosystems.clearth.tools.matrixupdater.settings;
 
 import javax.xml.bind.annotation.*;
-import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Update")
@@ -86,20 +85,4 @@ public class Update
 		this.name = name;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		Update update = (Update) o;
-		return Objects.equals(name, update.name) &&
-			Objects.equals(process, update.process) &&
-			Objects.equals(settings, update.settings);
-	}
-
-	@Override
-	public int hashCode()
-	{
-		return Objects.hash(name, process, settings);
-	}
 }

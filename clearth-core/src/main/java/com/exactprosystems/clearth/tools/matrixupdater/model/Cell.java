@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
-import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Cell")
@@ -32,6 +31,8 @@ public class Cell
 	private String column;
 	@XmlAttribute
 	private String value;
+	@XmlAttribute
+	private boolean useExpression = true;
 
 	public Cell() {}
 
@@ -39,6 +40,13 @@ public class Cell
 	{
 		setColumn(column);
 		this.value = value;
+	}
+
+	public Cell(String column, String value, boolean useExpression)
+	{
+		setColumn(column);
+		this.value = value;
+		this.useExpression = useExpression;
 	}
 
 	public String getColumn()
@@ -49,6 +57,11 @@ public class Cell
 	public String getValue()
 	{
 		return value;
+	}
+
+	public boolean isUseExpression()
+	{
+		return useExpression;
 	}
 
 	public void setColumn(String column)
@@ -64,20 +77,10 @@ public class Cell
 		this.value = value;
 	}
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
 
-		Cell cell = (Cell) o;
-		return Objects.equals(column, cell.column) &&
-			Objects.equals(value, cell.value);
+	public void setUseExpression(boolean useExpression)
+	{
+		this.useExpression = useExpression;
 	}
 
-	@Override
-	public int hashCode()
-	{
-		return Objects.hash(column, value);
-	}
 }
