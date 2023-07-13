@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
+import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Cell")
@@ -61,5 +62,22 @@ public class Cell
 	public void setValue(String value)
 	{
 		this.value = value;
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Cell cell = (Cell) o;
+		return Objects.equals(column, cell.column) &&
+			Objects.equals(value, cell.value);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(column, value);
 	}
 }

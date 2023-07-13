@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,13 +18,13 @@
 
 package com.exactprosystems.clearth.web.beans.tools;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.tools.matrixupdater.MatrixUpdater;
 import com.exactprosystems.clearth.tools.matrixupdater.MatrixUpdaterException;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Cell;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.Condition;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.Update;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.UpdateType;
-import com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterPathHandler;
 import com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterUtils;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
@@ -32,6 +32,8 @@ import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
+
+import org.apache.commons.compress.utils.FileNameUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
@@ -40,8 +42,10 @@ import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
-import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,20 +54,20 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class MatrixUpdaterToolBean extends ClearThBean
 {
+	private final Path uploadsStorage = Paths.get(ClearThCore.uploadStoragePath());
 	private MatrixUpdater matrixUpdater;
 	private UpdaterThread updateThread;
 
-	private boolean needToUploadChanges = false;
-	private boolean updateTableEditMode = false;
+	private boolean needToUploadChanges = false,
+			updateTableEditMode = false;
 
 	private UploadedFile matrixFile = null;
 
-	private String
-			column 			= null,
-			value 			= null,
-			updateName		= null,
-			conditionName 	= null;
-
+	private String column = null,
+			value = null,
+			updateName = null,
+			conditionName = null;
+	
 	private Update currentUpdate;
 	private Condition currentCondition;
 	private UpdateType updateType;
@@ -100,7 +104,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 
 		try
 		{
-			matrices = storeFile(matrixFile);
+			matrices = storeFile(matrixFile, matrixUpdater.getConfigDir().resolve(matrixFile.getFileName()));
 		}
 		catch (IOException e)
 		{
@@ -122,8 +126,7 @@ public class MatrixUpdaterToolBean extends ClearThBean
 	{
 		try
 		{
-			File f = MatrixUpdaterPathHandler.userUploadsAbsoluteDirectory(UserInfoUtils.getUserName())
-					.resolve(URLEncoder.encode(matrixUpdater.getResult().getName(), "UTF-8")).toFile();
+			File f = matrixUpdater.getResult();
 			return WebUtils.downloadFile(f);
 		}
 		catch (Exception e)
@@ -133,15 +136,15 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		}
 	}
 
-	private File storeFile(UploadedFile file) throws IOException
+	private File storeFile(UploadedFile file, Path destFile) throws IOException
 	{
-		Path toStore = MatrixUpdaterPathHandler.userUploadsAbsoluteDirectory(UserInfoUtils.getUserName());
-
-		toStore.toFile().mkdirs();
-		File created = toStore.resolve(file.getFileName()).toFile();
-		created.createNewFile();
-
-		return FileOperationUtils.storeToFile(file.getInputStream(), created);
+		if (!Files.exists(destFile))
+		{
+			Files.createDirectories(destFile.getParent());
+			Files.createFile(destFile);
+		}
+		
+		return FileOperationUtils.storeToFile(file.getInputStream(), destFile.toFile());
 	}
 
 	private Cell createCell(String column, String value)
@@ -212,7 +215,8 @@ public class MatrixUpdaterToolBean extends ClearThBean
 
 		try
 		{
-			currentUpdate.getSettings().getChange().setAdditionFile(storeFile(file));
+			File additionFile = storeFile(file, matrixUpdater.getConfigDir().resolve(file.getFileName()));
+			currentUpdate.getSettings().getChange().setAddition(additionFile.getName());
 		}
 		catch (IOException e)
 		{
@@ -297,7 +301,12 @@ public class MatrixUpdaterToolBean extends ClearThBean
 		
 		try
 		{
-			matrixUpdater.setConfig(storeFile(file));
+			String fileName = file.getFileName();
+			Path storedConfigPath = Files.createTempFile(uploadsStorage, 
+					FileNameUtils.getBaseName(fileName)+"_", 
+					"."+FileNameUtils.getExtension(fileName));
+			File storedConfig = storeFile(file, storedConfigPath);
+			matrixUpdater.setConfig(storedConfig);
 		}
 		catch (MatrixUpdaterException | IOException | JAXBException e)
 		{
@@ -409,11 +418,11 @@ public class MatrixUpdaterToolBean extends ClearThBean
 
 	public String getAdditionFile()
 	{
-		if (currentUpdate!=null && currentUpdate.getSettings()!=null && currentUpdate.getSettings().getChange()!=null 
-				&& currentUpdate.getSettings().getChange().getAdditionFile()!=null)
+		if (currentUpdate != null && currentUpdate.getSettings() !=null && currentUpdate.getSettings().getChange() !=null
+				&& currentUpdate.getSettings().getChange().getAddition() != null)
 		{
-			return currentUpdate.getSettings().getChange().getAdditionFile().getName();
-		}	
+			return currentUpdate.getSettings().getChange().getAddition();
+		}
 		return null;
 	}
 

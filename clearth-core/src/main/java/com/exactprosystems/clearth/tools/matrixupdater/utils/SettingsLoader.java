@@ -25,10 +25,13 @@ import com.exactprosystems.clearth.utils.XmlUtils;
 import org.apache.commons.io.FileUtils;
 
 import javax.xml.bind.JAXBException;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -48,26 +51,33 @@ public class SettingsLoader
 	 * Extracts archive into temp directory and then uses JAXB Unmarshaller to load settings.
 	 * @see MatrixUpdaterPathHandler#userConfigPath()
 	 *
-	 * @param config Uploaded archive made in the tool.
+	 * @param config Uploaded ZIP archive made in the tool.
+	 * @param username Name of ClearTH user.
+	 * @param pathToFiles Path to configuration files.
+	 * @return MatrixUpdater configuration.
 	 */
-	public static MatrixUpdaterConfig loadSettings(File config, String username) throws MatrixUpdaterException, IOException, JAXBException
+	public static MatrixUpdaterConfig loadSettings(File config, String username, Path pathToFiles) throws MatrixUpdaterException, IOException, JAXBException
 	{
 		validateConfig(config);
 
-		Path currentCfgDir = userConfigPath(username);
+		Path tempDir = userConfigPath(username);
 
-		File currentCfg = currentCfgDir.toFile();
+		createOrCleanDir(tempDir);
 
-		if (currentCfg.exists())
-			FileUtils.cleanDirectory(currentCfg);
-		else
-			Files.createDirectories(currentCfgDir);
-
-		FileOperationUtils.unzipFile(config, currentCfg);
+		List<File>  unzippedFiles = FileOperationUtils.unzipFile(config, tempDir.toFile());
 
 		File xmlCfg = userConfigXmlFile(username).toFile();
+		MatrixUpdaterConfig updaterConfig = XmlUtils.unmarshalObject(MatrixUpdaterConfig.class, new FileInputStream(xmlCfg));
 
-		return XmlUtils.unmarshalObject(MatrixUpdaterConfig.class, new FileInputStream(xmlCfg));
+		createOrCleanDir(pathToFiles);
+
+		//Now we have validated archive and ensured that updaterConfig has correct format.
+		//We can safely move files from archive to updater directory.
+
+		for (File f : unzippedFiles)
+			FileUtils.moveFile(f, pathToFiles.resolve(f.getName()).toFile());
+
+		return updaterConfig;
 	}
 
 	/**
@@ -97,5 +107,15 @@ public class SettingsLoader
 
 		if (!containCfgFile)
 			throw new MatrixUpdaterException(format(ERROR_MSG, "it must contain " + VALIDATE_FILE_NAME + " file"));
+	}
+
+	private static void createOrCleanDir(Path path) throws IOException
+	{
+		File pathCfg = path.toFile();
+
+		if (pathCfg.exists())
+			FileUtils.cleanDirectory(pathCfg);
+		else
+			Files.createDirectories(path);
 	}
 }

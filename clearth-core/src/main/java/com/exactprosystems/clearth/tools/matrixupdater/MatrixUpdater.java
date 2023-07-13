@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,29 +18,31 @@
 
 package com.exactprosystems.clearth.tools.matrixupdater;
 
+import com.exactprosystems.clearth.tools.matrixupdater.matrixModifier.MatrixModifier;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixReader.CsvMatrixReader;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixReader.XlsMatrixReader;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixWriter.CsvMatrixWriter;
 import com.exactprosystems.clearth.tools.matrixupdater.matrixWriter.XlsMatrixWriter;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Matrix;
+import com.exactprosystems.clearth.tools.matrixupdater.settings.MatrixUpdaterConfig;
+import com.exactprosystems.clearth.tools.matrixupdater.settings.Update;
 import com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterPathHandler;
 import com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterUtils;
+import com.exactprosystems.clearth.tools.matrixupdater.utils.SettingsLoader;
+import com.exactprosystems.clearth.tools.matrixupdater.utils.SettingsSaver;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
-import com.exactprosystems.clearth.tools.matrixupdater.matrixModifier.MatrixModifier;
-import com.exactprosystems.clearth.tools.matrixupdater.settings.MatrixUpdaterConfig;
-import com.exactprosystems.clearth.tools.matrixupdater.settings.Update;
-import com.exactprosystems.clearth.tools.matrixupdater.utils.SettingsLoader;
-import com.exactprosystems.clearth.tools.matrixupdater.utils.SettingsSaver;
-
+import static com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterPathHandler.UPLOADS_ABSOLUTE_DIR;
 import static com.exactprosystems.clearth.utils.FileOperationUtils.unzipFile;
 import static com.exactprosystems.clearth.utils.FileOperationUtils.zipDirectories;
 import static org.apache.commons.io.FilenameUtils.getExtension;
@@ -66,17 +68,24 @@ public class MatrixUpdater
 	private volatile boolean canceled = false;
 	
 	private final String username;
+	private final Path configDir;
 
-	public MatrixUpdater(String username)
+	public MatrixUpdater(String username, Path configDir)
 	{
 		this.username = username;
+		this.configDir = configDir.resolve(username);
 		
-		createDirectory();		
+		createDirectory(this.configDir);
 
 		matrixModifierFactory = createModifierFactory();
 		config = new MatrixUpdaterConfig();
 	}
-	
+
+	public MatrixUpdater(String username)
+	{
+		this(username, UPLOADS_ABSOLUTE_DIR);
+	}
+
 	protected MatrixModifierFactory createModifierFactory()
 	{
 		return new MatrixModifierFactory();
@@ -86,7 +95,7 @@ public class MatrixUpdater
 	{
 		switch (update.getProcess())
 		{
-			case ADD_ACTIONS: 	return matrixModifierFactory.initActionsAppender(update);
+			case ADD_ACTIONS: 	return matrixModifierFactory.initActionsAppender(update, configDir);
 			case ADD_CELLS: 	return matrixModifierFactory.initActionCellAppender(update);
 			case MODIFY_CELLS: 	return matrixModifierFactory.initActionCellModifier(update);
 			case REMOVE_ACTIONS:return matrixModifierFactory.initActionRemover(update);
@@ -216,9 +225,9 @@ public class MatrixUpdater
 		return Extension.valueOf(getExtension(fileName).toUpperCase());
 	}
 
-	private void createDirectory()
+	private void createDirectory(Path uploadPath)
 	{
-		File path = MatrixUpdaterPathHandler.userUploadsAbsoluteDirectory(this.username).toFile();
+		File path = uploadPath.toFile();
 		File temp = MatrixUpdaterPathHandler.userConfigPath(this.username).toFile();
 		try
 		{
@@ -282,7 +291,7 @@ public class MatrixUpdater
 
 	public Path saveConfig() throws IOException, JAXBException
 	{
-		return SettingsSaver.saveSettings(config, this.username);
+		return SettingsSaver.saveSettings(config, this.username, configDir);
 	}
 
 	private int countMatrices(File matricesFile) throws IOException
@@ -324,7 +333,7 @@ public class MatrixUpdater
 
 	public void setConfig(File settingsFile) throws MatrixUpdaterException, IOException, JAXBException
 	{
-		config = SettingsLoader.loadSettings(settingsFile, this.username);
+		config = SettingsLoader.loadSettings(settingsFile, this.username, configDir);
 	}
 
 	public void reset()
@@ -357,5 +366,10 @@ public class MatrixUpdater
 	public void cancel()
 	{
 		this.canceled = true;
+	}
+
+	public Path getConfigDir()
+	{
+		return configDir;
 	}
 }

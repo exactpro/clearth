@@ -32,7 +32,7 @@ public abstract class MatrixUpdaterPathHandler
 
 	public static final Path
 			TEMP_DIR				= Paths.get(ClearThCore.tempPath(), TOOL_DIR),
-			UPLOADS_ABSOLUTE_DIR	= Paths.get(ClearThCore.configFiles().getUploadStorageDir(), TOOL_DIR);
+			UPLOADS_ABSOLUTE_DIR	= Paths.get(ClearThCore.uploadStoragePath(), TOOL_DIR);
 
 	public static final String
 			EXT_ZIP = ".zip",
@@ -56,10 +56,5 @@ public abstract class MatrixUpdaterPathHandler
 	public static Path userConfigZipFile(String username)
 	{
 		return userConfigPath(username).resolve(INNER_FOLDER + EXT_ZIP);
-	}
-
-	public static Path userUploadsAbsoluteDirectory(String username)
-	{
-		return UPLOADS_ABSOLUTE_DIR.resolve(username);
 	}
 }

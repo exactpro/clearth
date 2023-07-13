@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,30 +29,32 @@ import com.exactprosystems.clearth.tools.matrixupdater.settings.Update;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import org.apache.commons.lang.StringUtils;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
 
 public class ActionsAppender extends MatrixModifier
 {
 	protected Addition addition;
+	protected Path additionFile;
 
 	protected static int prefix = 0;
 	protected static final String ID_MARKER_TEMP = "_%du";
 
-	public ActionsAppender(Update update) throws MatrixUpdaterException
+	public ActionsAppender(Update update, Path pathToFiles) throws MatrixUpdaterException
 	{
 		super(update);
 
 		Change change = update.getSettings().getChange();
-		this.addition = new Addition(change.getAddition(), change.isBefore());
+		this.additionFile = pathToFiles.resolve(change.getAddition());
+		this.addition = new Addition(this.additionFile.toString(), change.isBefore());
 	}
 
 	@Override
 	protected void validateChanges(Update update) throws MatrixUpdaterException
 	{
-		File addition = update.getSettings().getChange().getAdditionFile();
+		String addition = update.getSettings().getChange().getAddition();
 
-		if (addition == null || addition.length() == 0L)
+		if (StringUtils.isBlank(addition))
 			throw new MatrixUpdaterException("Invalid addition file in '" + update.getName() + "' update");
 	}
 

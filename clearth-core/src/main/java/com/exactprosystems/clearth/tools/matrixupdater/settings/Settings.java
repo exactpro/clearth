@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.tools.matrixupdater.settings;
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Settings")
@@ -76,5 +77,23 @@ public class Settings
 	public void setChange(Change change)
 	{
 		this.change = change;
+	}
+
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Settings settings = (Settings) o;
+		return Objects.equals(conditions, settings.conditions) &&
+			Objects.equals(change, settings.change);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(conditions, change);
 	}
 }

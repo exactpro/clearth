@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,15 +21,12 @@ package com.exactprosystems.clearth.tools.matrixupdater.settings;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Cell;
 import org.apache.commons.lang.StringUtils;
 
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Change")
@@ -55,7 +52,7 @@ public class Change
 	public Change(Boolean before, String addition, Boolean updateIDs, List<Cell> cells)
 	{
 		this.before = before;
-		this.addition = addition;
+		setAddition(addition);
 		this.updateIDs = updateIDs;
 		this.cells = cells;
 	}
@@ -87,18 +84,7 @@ public class Change
 		return addition;
 	}
 
-	public File getAdditionFile()
-	{
-		return (StringUtils.isNotEmpty(this.addition)) ? new File(this.addition) : null; 
-	}
-
-	public void setAdditionFile(File file)
-	{
-		this.addition = file.getAbsolutePath();
-	}
-
 	/** SETTER */
-
 	public void setBefore(Boolean before)
 	{
 		this.before = before;
@@ -109,13 +95,48 @@ public class Change
 		this.updateIDs = updateIDs;
 	}
 
-	public void setAddition(String addition) throws IOException
+	public void setAddition(String addition)
 	{
-		this.addition = addition;
+		parseAddition(addition);
 	}
 
 	public void setCells(List<Cell> cells)
 	{
 		this.cells = cells;
+	}
+
+	private void parseAddition(String addition)
+	{
+		if (StringUtils.isNotBlank(addition) && (addition.contains("/") || addition.contains("\\")))
+		{
+			File file = new File(addition);
+			this.addition = file.getName();
+		}
+		else
+			this.addition = addition;
+	}
+
+	private void afterUnmarshal(Unmarshaller unmarshaller, Object parent)
+	{
+		parseAddition(addition);
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Change change = (Change) o;
+		return Objects.equals(before, change.before) &&
+			Objects.equals(addition, change.addition) &&
+			Objects.equals(updateIDs, change.updateIDs) &&
+			Objects.equals(cells, change.cells);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(before, addition, updateIDs, cells);
 	}
 }

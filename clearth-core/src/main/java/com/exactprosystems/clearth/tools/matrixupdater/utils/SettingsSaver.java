@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -37,22 +37,24 @@ import java.util.Collections;
 public class SettingsSaver
 {
 	
-	public static void copyAdditionFiles(MatrixUpdaterConfig config, String username) throws IOException {
-		File toDir = MatrixUpdaterPathHandler.userConfigInnerDirectory(username).toFile();
+	public static void copyAdditionFiles(MatrixUpdaterConfig config, String username, Path pathToFiles) throws IOException {
+		Path toDir = MatrixUpdaterPathHandler.userConfigInnerDirectory(username);
 
-		for (Update update : config.getUpdates()) {
+		for (Update update : config.getUpdates())
+		{
 			Settings settings;
 			Change change;
-			File file;
+			String fileName;
 			if ((settings = update.getSettings()) != null &&
 					(change = settings.getChange()) != null &&
-					(file = change.getAdditionFile()) != null) {
-				String filename = file.getName();
-				File dstFile = new File(toDir, filename);
-				if (!StringUtils.equals(file.getAbsolutePath(), dstFile.getAbsolutePath())) {
+					(fileName = change.getAddition()) != null)
+			{
+				File dstFile = toDir.resolve(fileName).toFile(),
+					file = pathToFiles.resolve(fileName).toFile();
+				if (!StringUtils.equals(file.getAbsolutePath(), dstFile.getAbsolutePath()))
+				{
 					dstFile.delete();
-					FileUtils.moveFile(file, dstFile);
-					change.setAdditionFile(dstFile);					
+					FileUtils.copyFile(file, dstFile);
 				}
 			}
 		}
@@ -60,11 +62,14 @@ public class SettingsSaver
 	
 	/**
 	 * Uses JAXB Marshaller to save config as xml file and additions
-	 * and then compresses config directory to zip archive.
+	 * and then compresses config directory to ZIP archive.
 	 *
 	 * @param config Config for MatrixUpdater
+	 * @param username Name of ClearTH user
+	 * @param pathToFiles Path to configuration files for MatrixUpdater
+	 * @return Path to ZIP archive with MatrixUpdater configuration.
 	 */
-	public static Path saveSettings(MatrixUpdaterConfig config, String username) throws JAXBException, IOException
+	public static Path saveSettings(MatrixUpdaterConfig config, String username, Path pathToFiles) throws JAXBException, IOException
 	{
 		File dir = MatrixUpdaterPathHandler.userConfigPath(username).toFile();
 
@@ -81,7 +86,7 @@ public class SettingsSaver
 		if (!xmlCfg.exists())
 			xmlCfg.createNewFile();
 
-		copyAdditionFiles(config, username);
+		copyAdditionFiles(config, username, pathToFiles);
 
 		XmlUtils.marshalObject(config, new FileOutputStream(xmlCfg));
 

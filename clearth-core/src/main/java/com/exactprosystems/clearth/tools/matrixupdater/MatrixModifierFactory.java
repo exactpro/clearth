@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,11 +25,14 @@ import com.exactprosystems.clearth.tools.matrixupdater.matrixModifier.implementa
 import com.exactprosystems.clearth.tools.matrixupdater.matrixModifier.implementations.ActionsAppender;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.Update;
 
+import java.nio.file.Path;
+
 class MatrixModifierFactory
 {
-	MatrixModifier initActionsAppender(Update update) throws MatrixUpdaterException
+
+	MatrixModifier initActionsAppender(Update update, Path pathToFiles) throws MatrixUpdaterException
 	{
-		return new ActionsAppender(update);
+		return new ActionsAppender(update, pathToFiles);
 	}
 
 	MatrixModifier initActionCellAppender(Update update) throws MatrixUpdaterException
