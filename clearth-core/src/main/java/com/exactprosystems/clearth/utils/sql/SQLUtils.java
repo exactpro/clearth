@@ -378,6 +378,7 @@ public class SQLUtils
 	 * @deprecated
 	 * this method used only for parsing SQL templates, use SQLTemplateParser instead
 	 */
+	@Deprecated
 	public static String[] getKeysFromQuery(String query)
 	{
 		List<String> result = new ArrayList<String>();
@@ -555,6 +556,7 @@ public class SQLUtils
 	 * @deprecated
 	 * this method is too complex, use SQLTemplateParser, ParametrizedQuery, ConversionSettings and TransformerUtils instead
 	 */
+	@Deprecated
 	public static PreparedStatement prepareQuery(String query, String[] keys,
 			Map<String, String> params, Connection con, IValueTransformer transformer, List<DBFieldMapping> mapping) throws SQLException
 	{
@@ -567,6 +569,7 @@ public class SQLUtils
 	 * @deprecated
 	 * this method should be called from  {@link ConversionSettings}
 	 */
+	@Deprecated
 	public static List<DBFieldMapping> loadVerificationMapping(String fileName) throws IOException, NumberFormatException
 	{
 		return new DBFieldMappingReader().readEntities(new File(ClearThCore.rootRelative(fileName)));
@@ -585,6 +588,7 @@ public class SQLUtils
 	 * @deprecated
 	 * this method is too complex, there is more assumable implementation of table structure. Use DbDataReader, StringTableData, ConversionSettings and TransformerUtils instead
 	 */
+	@Deprecated
 	public static List<Map<String, String>> resultSetToTable(ResultSet rs, List<DBFieldMapping> mapping,
 	                                                         IValueTransformer transformer) throws SQLException, IOException
 	{
@@ -603,6 +607,7 @@ public class SQLUtils
 	 * @deprecated
 	 * this is a part of deprecated method
 	 */
+	@Deprecated
 	public static Map<String, String> getResultSetRow(ResultSet rs, List<DBFieldMapping> mapping, IValueTransformer transformer,
 													  List<String> rsColumnNames) throws SQLException, IOException
 	{
@@ -621,6 +626,7 @@ public class SQLUtils
 	/**
 	 * @deprecated use ConversionSettings instead
 	 */
+	@Deprecated
 	private static String getResultFieldName(String resultSetColumnName, List<DBFieldMapping> mapping)
 	{
 		return mapping == null ? resultSetColumnName : getMatrixFieldName(resultSetColumnName, mapping);
@@ -629,6 +635,7 @@ public class SQLUtils
 	/**
 	 * @deprecated use ConversionSettings instead
 	 */
+	@Deprecated
 	private static String getValue(ResultSet rs, String rsColumnName, List<DBFieldMapping> mapping,
 	                               IValueTransformer transformer) throws SQLException, IOException
 	{
@@ -665,6 +672,7 @@ public class SQLUtils
 	 * @return "Matrix Filed" from mapping. If conversion doesn't exist, returns dbColumnName
 	 * @deprecated use ConversionSettings instead
 	 */
+	@Deprecated
 	public static String getMatrixFieldName(String dbColumnName, List<DBFieldMapping> mapping)
 	{
 		for (DBFieldMapping fieldMapping : mapping)
@@ -683,6 +691,7 @@ public class SQLUtils
 	 * @return
 	 * @deprecated use ConversionSettings instead
 	 */
+	@Deprecated
 	public static String convertDbValue(String dbColumnName, String dbValue, List<DBFieldMapping> mapping)
 	{
 		return mapping != null ? new ConversionSettings(mapping).getConvertedDBValue(dbColumnName, dbValue) : dbValue;
