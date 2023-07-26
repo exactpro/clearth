@@ -159,7 +159,7 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		csvWriter.write(ComparisonResult.from(detailedResult).name());
 		csvWriter.write(forExpected ? EXPECTED : ACTUAL);
 		for (ResultDetail detail : detailedResult.getResultDetails())
-			csvWriter.write(forExpected ? detail.getExpected() : detail.getActual());
+			csvWriter.write(forExpected ? detail.getExpected() : detail.getActual(), true);
 		csvWriter.endRecord();
 	}
 

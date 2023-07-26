@@ -102,6 +102,8 @@ public class CsvComparisonWriterTest
 		detailedResult.setComment(TEST_HEADER); // row result's comment is header in written file
 		detailedResult.addResultDetail(new ResultDetail("Param1", "expected", "actual", false));
 		detailedResult.addResultDetail(new ResultDetail("Param2", "same", "same", true));
+		detailedResult.addResultDetail(new ResultDetail("Param3", "  space-prefix", "space-prefix", false));
+		detailedResult.addResultDetail(new ResultDetail("Param4", "space-postfix", "space-postfix ", false));
 		result.addDetail(detailedResult);
 		
 		return result;
