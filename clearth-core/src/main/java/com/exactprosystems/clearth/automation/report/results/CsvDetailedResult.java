@@ -50,6 +50,7 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 			COLUMN_COMPARISON_RESULT = "Comparison result", COLUMN_ROW_KIND = "Row kind";
 	public static final String PASSED = "PASSED", FAILED = "FAILED", EXPECTED = "EXPECTED", ACTUAL = "ACTUAL";
 	protected int maxDisplayedRowsCount = 50,
+			minStoredRowsCount = -1,
 			maxStoredRowsCount = -1,
 			storedRowsCount = 0,
 			totalRowsCount = 0,
@@ -201,7 +202,11 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 	
 	protected CsvComparisonWriter createComparisonWriter()
 	{
-		int maxBufferSize = maxDisplayedRowsCount;
+		//minStoredRowsCount < 0 is considered as minStoredRowsCount is not set
+		//If minStoredRowsCount >= 0, passing minStoredRowsCount-1 as max buffer size for CsvComparisonWriter,
+		//e.g. if minStoredRowsCount = 3 and buffer size becomes 2 (i.e. max buffer size), CSV report is not written.
+		//When buffer size becomes 3, CSV report is written and buffer is dropped.
+		int maxBufferSize = minStoredRowsCount < 0 ? maxDisplayedRowsCount : minStoredRowsCount-1;
 		return new CsvComparisonWriter(maxBufferSize, csvPath);
 	}
 	
@@ -307,16 +312,29 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 	{
 		return storedRowsCount;
 	}
-
+	
+	
+	public int getMinStoredRowsCount()
+	{
+		return minStoredRowsCount;
+	}
+	
+	public void setMinStoredRowsCount(int minStoredRowsCount)
+	{
+		this.minStoredRowsCount = minStoredRowsCount;
+	}
+	
+	
 	public int getMaxStoredRowsCount()
 	{
 		return maxStoredRowsCount;
 	}
-
+	
 	public void setMaxStoredRowsCount(int maxStoredRowsCount)
 	{
 		this.maxStoredRowsCount = maxStoredRowsCount;
 	}
+	
 	
 	public File getTempReportFile()
 	{

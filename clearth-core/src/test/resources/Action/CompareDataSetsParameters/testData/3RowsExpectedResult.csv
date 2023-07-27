@@ -1,0 +1,7 @@
+Comparison name,Comparison result,Row kind,Column1,Column2
+Row #1,PASSED,EXPECTED,1,2
+Row #1,PASSED,ACTUAL,1,2
+Row #2,PASSED,EXPECTED,2,3
+Row #2,PASSED,ACTUAL,2,3
+Row #3,PASSED,EXPECTED,3,4
+Row #3,PASSED,ACTUAL,3,4

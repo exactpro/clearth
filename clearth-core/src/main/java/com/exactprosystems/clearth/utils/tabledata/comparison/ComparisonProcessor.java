@@ -61,23 +61,38 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	// Names of results containers
 	public static final String CONTAINER_PASSED = "Passed rows", CONTAINER_FAILED = "Failed rows",
 			CONTAINER_NOT_FOUND = "Not found rows", CONTAINER_EXTRA = "Extra rows";
-	public static final int DEFAULT_MAX_STORED_ROWS_COUNT = -1;
-
+	public static final int DEFAULT_MIN_STORED_ROWS_COUNT = -1,
+			DEFAULT_MAX_STORED_ROWS_COUNT = -1;
+	
 	private long lastAwaitedTimeout = 0;
 	private Map<String, CsvDetailedResult> comparisionResultDetails = new HashMap<>();
 	
-	private int maxPassedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
-	private int maxFailedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
-	private int maxNotFoundRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
-	private int maxExtraRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
+	private int minPassedRowsToStore = DEFAULT_MIN_STORED_ROWS_COUNT,
+			maxPassedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT,
+			
+			minFailedRowsToStore = DEFAULT_MIN_STORED_ROWS_COUNT,
+			maxFailedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT,
+			
+			minNotFoundRowsToStore = DEFAULT_MIN_STORED_ROWS_COUNT,
+			maxNotFoundRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT,
+			
+			minExtraRowsToStore = DEFAULT_MIN_STORED_ROWS_COUNT,
+			maxExtraRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT;
 	
 	public ComparisonProcessor() {}
 	
 	public ComparisonProcessor(ComparisonConfiguration compConfig)
 	{
+		setMinPassedRowsToStore(compConfig.getMinPassedRowsToStore());
 		setMaxPassedRowsToStore(compConfig.getMaxPassedRowsToStore());
+		
+		setMinFailedRowsToStore(compConfig.getMinFailedRowsToStore());
 		setMaxFailedRowsToStore(compConfig.getMaxFailedRowsToStore());
+		
+		setMinNotFoundRowsToStore(compConfig.getMinNotFoundRowsToStore());
 		setMaxNotFoundRowsToStore(compConfig.getMaxNotFoundRowsToStore());
+		
+		setMinExtraRowsToStore(compConfig.getMinExtraRowsToStore());
 		setMaxExtraRowsToStore(compConfig.getMaxExtraRowsToStore());
 	}
 	
@@ -208,21 +223,26 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 		ContainerResult result = CloseableContainerResult.createPlainResult(null);
 		// Creating containers firstly to have them in expected order
 		result.addDetail(createComparisonNestedResult(CONTAINER_PASSED,
-				getMaxPassedRowsToStore(), valuesComparator, valueParser));
-		result.addDetail(createComparisonNestedResult(CONTAINER_FAILED, getMaxFailedRowsToStore(),
+				getMinPassedRowsToStore(), getMaxPassedRowsToStore(), 
 				valuesComparator, valueParser));
-		result.addDetail(createComparisonNestedResult(CONTAINER_NOT_FOUND, getMaxNotFoundRowsToStore(),
+		result.addDetail(createComparisonNestedResult(CONTAINER_FAILED, 
+				getMinFailedRowsToStore(), getMaxFailedRowsToStore(),
 				valuesComparator, valueParser));
-		result.addDetail(createComparisonNestedResult(CONTAINER_EXTRA, getMaxExtraRowsToStore(),
+		result.addDetail(createComparisonNestedResult(CONTAINER_NOT_FOUND, 
+				getMinNotFoundRowsToStore(), getMaxNotFoundRowsToStore(),
+				valuesComparator, valueParser));
+		result.addDetail(createComparisonNestedResult(CONTAINER_EXTRA, 
+				getMinExtraRowsToStore(), getMaxExtraRowsToStore(),
 				valuesComparator, valueParser));
 		return result;
 	}
 	
-	protected CsvDetailedResult createComparisonNestedResult(String header, int maxStoredRowsCount,
+	protected CsvDetailedResult createComparisonNestedResult(String header, int minStoredRowsCount, int maxStoredRowsCount,
 	                                                       ValuesComparator<A, B> valuesComparator,
 	                                                       ValueParser<A, B> valueParser)
 	{
 		CsvDetailedResult result = new CsvDetailedResult(header);
+		result.setMinStoredRowsCount(minStoredRowsCount);
 		result.setMaxStoredRowsCount(maxStoredRowsCount);
 		result.setValueHandlers(valuesComparator, valueParser);
 		comparisionResultDetails.put(header, result);
@@ -276,7 +296,8 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 		CsvDetailedResult nestedResult = comparisionResultDetails.get(nestedName);
 		if (nestedResult == null)
 		{
-			result.addDetail(createComparisonNestedResult(nestedName, DEFAULT_MAX_STORED_ROWS_COUNT,
+			result.addDetail(createComparisonNestedResult(nestedName, 
+					DEFAULT_MIN_STORED_ROWS_COUNT, DEFAULT_MAX_STORED_ROWS_COUNT,
 					valuesComparator, valueParser));
 		}
 		nestedResult.addDetail(rowResult);
@@ -333,42 +354,90 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 				return null;
 		}
 	}
-
+	
+	
+	public int getMinPassedRowsToStore()
+	{
+		return minPassedRowsToStore;
+	}
+	
+	public void setMinPassedRowsToStore(int minPassedRowsToStore)
+	{
+		this.minPassedRowsToStore = minPassedRowsToStore;
+	}
+	
+	
 	public int getMaxPassedRowsToStore()
 	{
 		return maxPassedRowsToStore;
 	}
-
+	
 	public void setMaxPassedRowsToStore(int maxPassedRowsToStore)
 	{
 		this.maxPassedRowsToStore = maxPassedRowsToStore;
 	}
-
+	
+	
+	public int getMinFailedRowsToStore()
+	{
+		return minFailedRowsToStore;
+	}
+	
+	public void setMinFailedRowsToStore(int minFailedRowsToStore)
+	{
+		this.minFailedRowsToStore = minFailedRowsToStore;
+	}
+	
+	
 	public int getMaxFailedRowsToStore()
 	{
 		return maxFailedRowsToStore;
 	}
-
+	
 	public void setMaxFailedRowsToStore(int maxFailedRowsToStore)
 	{
 		this.maxFailedRowsToStore = maxFailedRowsToStore;
 	}
-
+	
+	
+	public int getMinNotFoundRowsToStore()
+	{
+		return minNotFoundRowsToStore;
+	}
+	
+	public void setMinNotFoundRowsToStore(int minNotFoundRowsToStore)
+	{
+		this.minNotFoundRowsToStore = minNotFoundRowsToStore;
+	}
+	
+	
 	public int getMaxNotFoundRowsToStore()
 	{
 		return maxNotFoundRowsToStore;
 	}
-
+	
 	public void setMaxNotFoundRowsToStore(int maxNotFoundRowsToStore)
 	{
 		this.maxNotFoundRowsToStore = maxNotFoundRowsToStore;
 	}
-
+	
+	
+	public int getMinExtraRowsToStore()
+	{
+		return minExtraRowsToStore;
+	}
+	
+	public void setMinExtraRowsToStore(int minExtraRowsToStore)
+	{
+		this.minExtraRowsToStore = minExtraRowsToStore;
+	}
+	
+	
 	public int getMaxExtraRowsToStore()
 	{
 		return maxExtraRowsToStore;
 	}
-
+	
 	public void setMaxExtraRowsToStore(int maxExtraRowsToStore)
 	{
 		this.maxExtraRowsToStore = maxExtraRowsToStore;
