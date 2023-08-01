@@ -55,7 +55,10 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 			storedRowsCount = 0,
 			totalRowsCount = 0,
 			passedRowsCount = 0;
-	protected boolean writeCsvReportAnyway = false, onlyFailedInHtml = false, onlyFailedInCsv = false;
+	protected boolean writeCsvReportAnyway = false, 
+			onlyFailedInHtml = false, 
+			onlyFailedInCsv = false,
+			listFailedColumns = false;
 	protected String name;
 	protected String header;
 	protected List<DetailedResult> details;
@@ -207,7 +210,7 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 		//e.g. if minStoredRowsCount = 3 and buffer size becomes 2 (i.e. max buffer size), CSV report is not written.
 		//When buffer size becomes 3, CSV report is written and buffer is dropped.
 		int maxBufferSize = minStoredRowsCount < 0 ? maxDisplayedRowsCount : minStoredRowsCount-1;
-		return new CsvComparisonWriter(maxBufferSize, csvPath);
+		return new CsvComparisonWriter(maxBufferSize, listFailedColumns, csvPath);
 	}
 	
 	protected String buildHeader()
@@ -287,6 +290,18 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 	{
 		return onlyFailedInCsv;
 	}
+	
+	
+	public boolean isListFailedColumns()
+	{
+		return listFailedColumns;
+	}
+	
+	public void setListFailedColumns(boolean listFailedColumns)
+	{
+		this.listFailedColumns = listFailedColumns;
+	}
+	
 	
 	public void setName(String name)
 	{

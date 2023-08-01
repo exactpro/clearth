@@ -69,11 +69,11 @@ public class CsvComparisonWriterTest
 		CsvDetailedResultReader reader = null;
 		try
 		{
-			writer = new CsvComparisonWriter(0, new File(ClearThCore.tempPath()));
+			writer = new CsvComparisonWriter(0, false, new File(ClearThCore.tempPath()));
 			CsvDetailedResult csvResult = createCsvResult();
 			writer.addDetail(csvResult);
 			writer.finishReport(TEST_DIR, "", "", false);
-
+			
 			File[] reportFiles = TEST_DIR.resolve("details").toFile().listFiles();
 			assertNotNull(reportFiles, "Report was not created");
 			assertEquals(reportFiles.length, 1,

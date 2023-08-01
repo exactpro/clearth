@@ -36,6 +36,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -55,7 +56,8 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 	
 	public static final String COLUMN_COMPARISON_NAME = "Comparison name",
 			COLUMN_COMPARISON_RESULT = "Comparison result",
-			COLUMN_ROW_KIND = "Row kind";
+			COLUMN_ROW_KIND = "Row kind",
+			COLUMN_FAILED_COLUMNS = "Failed columns";
 
 	private final File tempPath;
 	private File tempFile;
@@ -64,16 +66,19 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 	protected List<DetailedResult> noWriteBuffer = null;
 	protected List<String> writeBufferHeaders = null;
 	protected final int maxBufferSize;
+	protected final boolean listFailedColumns;
 
 	/**
 	 * @param maxBufferSize report will be created in {@link #finishReport(Path, String, String, boolean)}
 	 *                      only if number of details added through {@link #addDetail(CsvDetailedResult)} exceeds this 
 	 *                      number or last param of method finishReport (forceWrite) is true
+	 * @param listFailedColumns if true, columns with unexpected values in actual row will be enumerated in separate report column
 	 * @param reportPath path to directory where to store written file
 	 */
-	public CsvComparisonWriter(int maxBufferSize, File reportPath)
+	public CsvComparisonWriter(int maxBufferSize, boolean listFailedColumns, File reportPath)
 	{
 		this.maxBufferSize = maxBufferSize;
+		this.listFailedColumns = listFailedColumns;
 		this.tempPath = reportPath;
 		if (maxBufferSize > 0)
 		{
@@ -158,6 +163,14 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		csvWriter.write(header);
 		csvWriter.write(ComparisonResult.from(detailedResult).name());
 		csvWriter.write(forExpected ? EXPECTED : ACTUAL);
+		if (listFailedColumns)
+		{
+			if (forExpected)
+				csvWriter.write("");
+			else
+				csvWriter.write(collectFailedColumns(detailedResult), true);
+		}
+		
 		for (ResultDetail detail : detailedResult.getResultDetails())
 			csvWriter.write(forExpected ? detail.getExpected() : detail.getActual(), true);
 		csvWriter.endRecord();
@@ -168,8 +181,11 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		csvWriter.write(COLUMN_COMPARISON_NAME);
 		csvWriter.write(COLUMN_COMPARISON_RESULT);
 		csvWriter.write(COLUMN_ROW_KIND);
+		if (listFailedColumns)
+			csvWriter.write(COLUMN_FAILED_COLUMNS);
+		
 		for (ResultDetail rd : detailedResult.getResultDetails())
-			csvWriter.write(rd.getParam());
+			csvWriter.write(rd.getParam(), true);
 		csvWriter.endRecord();
 	}
 	
@@ -215,5 +231,19 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		ZipOutputStream zipFile = new ZipOutputStream(Files.newOutputStream(getTempFile().toPath()));
 		zipFile.putNextEntry(entry);
 		return new CsvWriter(new OutputStreamWriter(zipFile), ',');
+	}
+	
+	protected String collectFailedColumns(DetailedResult result)
+	{
+		if (result.isSuccess())
+			return "";
+		
+		StringJoiner joiner = new StringJoiner(",");
+		for (ResultDetail rd : result.getResultDetails())
+		{
+			if (!rd.isIdentical())
+				joiner.add(rd.getParam());
+		}
+		return joiner.toString();
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2021 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,6 +45,7 @@ public class ComparisonConfiguration
 			NUMERIC_COLUMNS = "NumericColumns",
 			MAPPING_FILE_NAME = "MappingFileName",
 			CHECK_DUPLICATES = "CheckDuplicates",
+			LIST_FAILED_COLUMNS = "ListFailedColumnsInReport",
 			PASSED = "Passed",
 			FAILED = "Failed",
 			NOT_FOUND = "NotFound",
@@ -67,7 +68,8 @@ public class ComparisonConfiguration
 	protected Map<String, BigDecimal> numericColumns;
 	protected DataMapping<String> dataMapping;
 	
-	protected boolean checkDuplicates;
+	protected boolean checkDuplicates,
+			listFailedColumns;
 	
 	protected int minPassedRowsToStore,
 			maxPassedRowsToStore,
@@ -107,6 +109,8 @@ public class ComparisonConfiguration
 		}
 
 		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
+		listFailedColumns = handler.getBoolean(LIST_FAILED_COLUMNS, false);
+		
 		minPassedRowsToStore = handler.getInteger(MIN_PASSED_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT);
 		maxPassedRowsToStore = handler.getInteger(MAX_PASSED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
 		
@@ -181,6 +185,11 @@ public class ComparisonConfiguration
 	public boolean isCheckDuplicates()
 	{
 		return checkDuplicates;
+	}
+	
+	public boolean isListFailedColumns()
+	{
+		return listFailedColumns;
 	}
 	
 	public int getMinPassedRowsToStore()

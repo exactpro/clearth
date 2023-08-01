@@ -66,6 +66,7 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	
 	private long lastAwaitedTimeout = 0;
 	private Map<String, CsvDetailedResult> comparisionResultDetails = new HashMap<>();
+	private boolean listFailedColumns = false;
 	
 	private int minPassedRowsToStore = DEFAULT_MIN_STORED_ROWS_COUNT,
 			maxPassedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT,
@@ -83,6 +84,8 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	
 	public ComparisonProcessor(ComparisonConfiguration compConfig)
 	{
+		setListFailedColumns(compConfig.isListFailedColumns());
+		
 		setMinPassedRowsToStore(compConfig.getMinPassedRowsToStore());
 		setMaxPassedRowsToStore(compConfig.getMaxPassedRowsToStore());
 		
@@ -225,13 +228,17 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 		result.addDetail(createComparisonNestedResult(CONTAINER_PASSED,
 				getMinPassedRowsToStore(), getMaxPassedRowsToStore(), 
 				valuesComparator, valueParser));
-		result.addDetail(createComparisonNestedResult(CONTAINER_FAILED, 
+		
+		CsvDetailedResult failedResult = createComparisonNestedResult(CONTAINER_FAILED,
 				getMinFailedRowsToStore(), getMaxFailedRowsToStore(),
-				valuesComparator, valueParser));
-		result.addDetail(createComparisonNestedResult(CONTAINER_NOT_FOUND, 
+				valuesComparator, valueParser);
+		failedResult.setListFailedColumns(isListFailedColumns());
+		result.addDetail(failedResult);
+		
+		result.addDetail(createComparisonNestedResult(CONTAINER_NOT_FOUND,
 				getMinNotFoundRowsToStore(), getMaxNotFoundRowsToStore(),
 				valuesComparator, valueParser));
-		result.addDetail(createComparisonNestedResult(CONTAINER_EXTRA, 
+		result.addDetail(createComparisonNestedResult(CONTAINER_EXTRA,
 				getMinExtraRowsToStore(), getMaxExtraRowsToStore(),
 				valuesComparator, valueParser));
 		return result;
@@ -353,6 +360,17 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 			default:
 				return null;
 		}
+	}
+	
+	
+	public boolean isListFailedColumns()
+	{
+		return listFailedColumns;
+	}
+	
+	public void setListFailedColumns(boolean listFailedColumns)
+	{
+		this.listFailedColumns = listFailedColumns;
 	}
 	
 	
