@@ -2,9 +2,9 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 	<suppress until="2023-09-01">
 		<notes><![CDATA[
-		False positive in dependency of clearth-th2, file name: task-utils-0.1.0.jar
+		False positive in dependency of clearth-th2, file name: task-utils-0.1.2.jar
 		]]></notes>
-		<sha1>5aa93ad544d50962363b971fec2bb37dd62e4801</sha1>
+		<sha1>0ee31ed3b6eee60897facb43d74bc150da9a67cf</sha1>
 		<cve>CVE-2023-2972</cve>
 		<cve>CVE-2021-4277</cve>
 	</suppress>

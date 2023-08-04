@@ -23,8 +23,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.exactpro.th2.common.grpc.EventBatch;
+import com.exactpro.th2.common.grpc.RawMessageBatch;
 import com.exactpro.th2.common.schema.factory.CommonFactory;
 import com.exactpro.th2.common.schema.message.MessageRouter;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.GroupBatch;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.data.DataHandlingException;
@@ -77,7 +79,7 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	{
 		try
 		{
-			return new Th2MessageHandler(connectionName, factory.getMessageRouterRawBatch(), storageConfig);
+			return new Th2MessageHandler(connectionName, createRawMessageBatchRouter(), storageConfig);
 		}
 		catch (Exception e)
 		{
@@ -90,7 +92,7 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	{
 		try
 		{
-			MessageRouter<EventBatch> eventRouter = factory.getEventBatchRouter();
+			MessageRouter<EventBatch> eventRouter = createEventBatchRouter();
 			ResultSaver resultSaver = createResultSaver(eventRouter, storageConfig);
 			return new Th2TestExecutionHandler(schedulerName, eventRouter, eventFactory, resultSaver);
 		}
@@ -102,6 +104,27 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 		{
 			throw new DataHandlingException("Error while creating test execution handler. Check th2 configuration files and whether th2 components are available", e);
 		}
+	}
+	
+	public MessageRouter<RawMessageBatch> createRawMessageBatchRouter()
+	{
+		return factory.getMessageRouterRawBatch();
+	}
+	
+	public MessageRouter<EventBatch> createEventBatchRouter()
+	{
+		return factory.getEventBatchRouter();
+	}
+	
+	public MessageRouter<GroupBatch> createGroupBatchRouter()
+	{
+		return factory.getTransportGroupBatchRouter();
+	}
+	
+	
+	public String getBook()
+	{
+		return storageConfig.getBook();
 	}
 	
 	
