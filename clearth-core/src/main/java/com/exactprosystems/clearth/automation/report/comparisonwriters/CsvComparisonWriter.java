@@ -18,13 +18,14 @@
 
 package com.exactprosystems.clearth.automation.report.comparisonwriters;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.automation.report.results.CsvDetailedResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.writers.ClearThCsvWriterConfig;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -61,7 +62,7 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 
 	private final File tempPath;
 	private File tempFile;
-	private CsvWriter csvWriter;
+	private ClearThCsvWriter csvWriter;
 	protected boolean headerWritten = false;
 	protected List<DetailedResult> noWriteBuffer = null;
 	protected List<String> writeBufferHeaders = null;
@@ -87,7 +88,7 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		}
 	}
 	
-	protected CsvWriter getCsvWriter() throws IOException
+	protected ClearThCsvWriter getCsvWriter() throws IOException
 	{
 		if (csvWriter == null)
 			csvWriter = createCsvWriter();
@@ -147,7 +148,7 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 
 	public void writeDetail(DetailedResult detailedResult, String header) throws IOException
 	{
-		CsvWriter csvWriter = getCsvWriter();
+		ClearThCsvWriter csvWriter = getCsvWriter();
 		if (!headerWritten)
 		{
 			writeHeader(csvWriter, detailedResult);
@@ -157,7 +158,7 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		writeDetailRow(csvWriter, false, header, detailedResult);
 	}
 
-	public void writeDetailRow(CsvWriter csvWriter, boolean forExpected, String header, DetailedResult detailedResult)
+	public void writeDetailRow(ClearThCsvWriter csvWriter, boolean forExpected, String header, DetailedResult detailedResult)
 			throws IOException
 	{
 		csvWriter.write(header);
@@ -168,15 +169,15 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 			if (forExpected)
 				csvWriter.write("");
 			else
-				csvWriter.write(collectFailedColumns(detailedResult), true);
+				csvWriter.write(collectFailedColumns(detailedResult));
 		}
 		
 		for (ResultDetail detail : detailedResult.getResultDetails())
-			csvWriter.write(forExpected ? detail.getExpected() : detail.getActual(), true);
+			csvWriter.write(forExpected ? detail.getExpected() : detail.getActual());
 		csvWriter.endRecord();
 	}
 
-	public void writeHeader(CsvWriter csvWriter, DetailedResult detailedResult) throws IOException
+	public void writeHeader(ClearThCsvWriter csvWriter, DetailedResult detailedResult) throws IOException
 	{
 		csvWriter.write(COLUMN_COMPARISON_NAME);
 		csvWriter.write(COLUMN_COMPARISON_RESULT);
@@ -185,7 +186,7 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 			csvWriter.write(COLUMN_FAILED_COLUMNS);
 		
 		for (ResultDetail rd : detailedResult.getResultDetails())
-			csvWriter.write(rd.getParam(), true);
+			csvWriter.write(rd.getParam());
 		csvWriter.endRecord();
 	}
 	
@@ -225,14 +226,19 @@ public class CsvComparisonWriter implements ComparisonWriter<CsvDetailedResult>
 		return Files.createTempFile(detailsDirectory, fileNamePrefix, fileNameSuffix + ZIP_EXT);
 	}
 
-	protected CsvWriter createCsvWriter() throws IOException
+	protected ClearThCsvWriter createCsvWriter() throws IOException
 	{
 		ZipEntry entry = new ZipEntry(FilenameUtils.removeExtension(getTempFile().getName()) + CSV_EXT);
 		ZipOutputStream zipFile = new ZipOutputStream(Files.newOutputStream(getTempFile().toPath()));
 		zipFile.putNextEntry(entry);
-		return new CsvWriter(new OutputStreamWriter(zipFile), ',');
+		return new ClearThCsvWriter(new OutputStreamWriter(zipFile), createCsvWriterConfig());
 	}
-	
+
+	protected ClearThCsvWriterConfig createCsvWriterConfig()
+	{
+		return new ClearThCsvWriterConfig();
+	}
+
 	protected String collectFailedColumns(DetailedResult result)
 	{
 		if (result.isSuccess())

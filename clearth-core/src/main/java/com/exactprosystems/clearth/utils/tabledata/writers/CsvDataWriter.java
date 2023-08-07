@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,9 +18,10 @@
 
 package com.exactprosystems.clearth.utils.tabledata.writers;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.*;
+import com.exactprosystems.clearth.utils.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.writers.ClearThCsvWriterConfig;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -35,7 +36,7 @@ import java.util.Collection;
  */
 public class CsvDataWriter extends TableDataWriter<String, String> implements TableHeaderWriter
 {
-	protected final CsvWriter writer;
+	protected final ClearThCsvWriter writer;
 	protected boolean needHeader;
 	protected int rowIndex = -1;
 	
@@ -46,7 +47,7 @@ public class CsvDataWriter extends TableDataWriter<String, String> implements Ta
 		this.needHeader = needHeader;
 	}
 	
-	public CsvDataWriter(TableHeader<String> header, Writer writer, boolean needHeader)
+	public CsvDataWriter(TableHeader<String> header, Writer writer, boolean needHeader) throws IOException
 	{
 		super(header);
 		this.writer = createWriter(writer);
@@ -133,16 +134,22 @@ public class CsvDataWriter extends TableDataWriter<String, String> implements Ta
 		return rowIndex;
 	}
 
-	protected CsvWriter createWriter(File f, boolean append) throws IOException
+	protected ClearThCsvWriter createWriter(File f, boolean append) throws IOException
 	{
-		return new CsvWriter(new FileWriter(f, append), ',');
-	}
-	
-	protected CsvWriter createWriter(Writer writer)
-	{
-		return new CsvWriter(writer, ',');
+		return new ClearThCsvWriter(new FileWriter(f, append), createCsvWriterConfig());
 	}
 
+	protected ClearThCsvWriter createWriter(Writer writer) throws IOException
+	{
+		return new ClearThCsvWriter(writer, createCsvWriterConfig());
+	}
+
+	protected ClearThCsvWriterConfig createCsvWriterConfig()
+	{
+		ClearThCsvWriterConfig writerConfig = new ClearThCsvWriterConfig();
+		writerConfig.setWithTrim(true); // keeping legacy behavior
+		return writerConfig;
+	}
 
 	protected void writeHeaderRow() throws IOException
 	{

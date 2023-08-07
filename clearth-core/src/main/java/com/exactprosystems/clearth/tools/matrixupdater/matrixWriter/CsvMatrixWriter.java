@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,67 +18,81 @@
 
 package com.exactprosystems.clearth.tools.matrixupdater.matrixWriter;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Block;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Matrix;
 import com.exactprosystems.clearth.tools.matrixupdater.model.Row;
 import com.exactprosystems.clearth.utils.StringOperationUtils;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import org.apache.commons.io.FileUtils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
-
-import static com.exactprosystems.clearth.tools.matrixupdater.utils.MatrixUpdaterUtils.headerToArray;
+import java.util.StringJoiner;
 
 public class CsvMatrixWriter implements MatrixWriter
 {
+	private static final String DELIMITER = ",", 
+			SEPARATOR = System.lineSeparator();
+
 	@Override
 	public File writeMatrix(File file, Matrix matrix) throws IOException
 	{
 		FileUtils.deleteQuietly(file.getCanonicalFile());
-
-		CsvWriter writer = null;
 		File result = new File(file.getCanonicalPath());
 
-		try
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(result)))
 		{
-			writer = new CsvWriter(result.getCanonicalPath());
-			writer.setUseTextQualifier(false);
-
 			for (Block block : matrix.getBlocks())
 			{
 				List<Row> records = block.getActions();
+				if (records == null || records.isEmpty())
+					continue;
 
-				if (records == null || records.isEmpty()) continue;
-
-				writer.writeRecord(headerToArray(block.getHeader()));
+				TableHeader<String> header = block.getHeader();
+				writer.write(headerToLine(header));
 
 				for (Row record : records)
 				{
-					if (block.getHeader().size() < 1) {
-						for (String value : record.getValues())
-							writer.write(StringOperationUtils.quote(value));
-						writer.endRecord();
+					if (header.size() < 1)
+					{
+						writer.write(valuesToLineForEmptyHeader(record.getValues()));
 						continue;
 					}
-					Iterator<String> iterator = block.getHeader().iterator();
-					while (iterator.hasNext()) {
-						String value = record.getValues().get(block.getHeader().columnIndex(iterator.next()));
-						writer.write(StringOperationUtils.quote(value));
-					}
-					
-					writer.endRecord();
+					writer.write(valuesToLine(header, record));
 				}
 			}
 		}
-		finally
-		{
-			Utils.closeResource(writer);
-		}
-
 		return result;
+	}
+
+	private String valuesToLine(TableHeader<String> header, Row record)
+	{
+		List<String> values = record.getValues();
+		StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (String s : header)
+			joiner.add(StringOperationUtils.quote(values.get(header.columnIndex(s))));
+
+		return joiner.toString() + SEPARATOR;
+	}
+
+	private String valuesToLineForEmptyHeader(List<String> records)
+	{
+		StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (String s : records)
+			joiner.add(StringOperationUtils.quote(s));
+
+		return joiner.toString() + SEPARATOR;
+	}
+
+	private String headerToLine(TableHeader<String> header)
+	{
+		StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (String s : header)
+			joiner.add(StringOperationUtils.quote(s));
+
+		return joiner.toString() + SEPARATOR;
 	}
 }

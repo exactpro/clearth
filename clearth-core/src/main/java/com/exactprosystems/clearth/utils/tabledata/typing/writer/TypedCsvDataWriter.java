@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,20 +18,24 @@
 
 package com.exactprosystems.clearth.utils.tabledata.typing.writer;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableDataWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableHeaderWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeaderItem;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableRow;
+import com.exactprosystems.clearth.utils.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.writers.ClearThCsvWriterConfig;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Collection;
 
 public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Object> implements TableHeaderWriter
 {
-	protected final CsvWriter writer;
+	protected final ClearThCsvWriter writer;
 	protected boolean needHeader;
 	protected int rowIndex = -1;
 
@@ -42,7 +46,7 @@ public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Ob
 		this.needHeader = needHeader;
 	}
 
-	public TypedCsvDataWriter(TableHeader<TypedTableHeaderItem> header, Writer writer, boolean needHeader)
+	public TypedCsvDataWriter(TableHeader<TypedTableHeaderItem> header, Writer writer, boolean needHeader) throws IOException
 	{
 		super(header);
 		this.writer = createWriter(writer);
@@ -86,14 +90,14 @@ public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Ob
 	}
 
 
-	protected CsvWriter createWriter(File f, boolean append) throws IOException
+	protected ClearThCsvWriter createWriter(File f, boolean append) throws IOException
 	{
-		return new CsvWriter(new FileWriter(f, append), ',');
+		return new ClearThCsvWriter(new FileWriter(f, append), createCsvWriterConfig());
 	}
 
-	protected CsvWriter createWriter(Writer writer)
+	protected ClearThCsvWriter createWriter(Writer writer) throws IOException
 	{
-		return new CsvWriter(writer, ',');
+		return new ClearThCsvWriter(writer, createCsvWriterConfig());
 	}
 
 	protected void writeHeaderRow() throws IOException
@@ -119,5 +123,10 @@ public class TypedCsvDataWriter extends TableDataWriter<TypedTableHeaderItem, Ob
 			writer.write(((TypedTableRow)row).getString(item.getName()));
 		}
 		writer.endRecord();
+	}
+
+	protected ClearThCsvWriterConfig createCsvWriterConfig()
+	{
+		return new ClearThCsvWriterConfig();
 	}
 }
