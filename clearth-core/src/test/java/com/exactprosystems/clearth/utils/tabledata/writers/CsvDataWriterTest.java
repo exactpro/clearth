@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,13 +21,15 @@ import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.Assertions;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,197 +38,151 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
 import static org.testng.Assert.assertEquals;
 
 public class CsvDataWriterTest
 {
-	private static final Path OUTPUT_PATH = Paths.get("testOutput"),
-			EXPECTED_FILES_PATH = Paths.get("TableDataTest");
-	private static final File EXPECTED_CSV_FILE = EXPECTED_FILES_PATH.resolve("expectedCsv.csv").toFile(),
-			EXPECTED_CSV_HEADER_FILE = EXPECTED_FILES_PATH.resolve("expectedHeaderCsv.csv").toFile();
-	private TableHeader<String> header;
-	private File outputHeaderFile, expectedHeaderCsv, outputCsvFile, expectedCsvFile;
-	private List<String> buildValues, buildGapValues, buildEmptyValues;
-	private List<TableRow<String, String>> buildRows;
-	private StringTableData buildDataForWriting;
+	private static final Path OUTPUT_PATH = Paths.get("testOutput").resolve(CsvDataWriterTest.class.getSimpleName());
+	private static final String LN_SEPARATOR = System.lineSeparator(),
+								EXPECTED_HEADER = "Param1,Param2,,Param4" + LN_SEPARATOR,
+								EXPECTED_TABLE_DATA = "Param1,Param2,,Param4" + LN_SEPARATOR + "Value1,,Value3,Value4" + LN_SEPARATOR + "\"\",,," + LN_SEPARATOR +
+										"Value1,,Value3,Value4" + LN_SEPARATOR + "Val ue1,,Value3,Value4" + LN_SEPARATOR;
 
 	@BeforeClass
 	public void init() throws IOException
 	{
-		createDir(OUTPUT_PATH);
-
-		header = buildHeader();
-		buildValues = buildValues();
-		buildGapValues = buildGapValues();
-		buildEmptyValues = buildEmptyValues();
-		buildRows = buildRows(header);
-		buildDataForWriting = buildDataForWriting();
-		
-		outputCsvFile = OUTPUT_PATH.resolve("outputCsv.csv").toFile();
-		outputHeaderFile = OUTPUT_PATH.resolve("outputHeaderCsv.csv").toFile();
-		expectedHeaderCsv = new File(resourceToAbsoluteFilePath(EXPECTED_CSV_HEADER_FILE.getPath()));
-		expectedCsvFile = new File(resourceToAbsoluteFilePath(EXPECTED_CSV_FILE.getPath()));
+		FileUtils.deleteDirectory(OUTPUT_PATH.toFile());
+		Files.createDirectories(OUTPUT_PATH);
 	}
 
-	private void createDir(Path dir) throws IOException
+	@Test (expectedExceptions = IllegalStateException.class)
+	public void testWriteRowAndHeader() throws IOException
 	{
-		if (!dir.toFile().exists())
-			Files.createDirectories(dir);
-	}
-
-	private void forWriteHeaderTests() throws IOException
-	{
-		try
+		TableHeader<String> header = buildHeader();
+		try (CsvDataWriter writer = new CsvDataWriter(header, new StringWriter(), true))
 		{
-			String actualTableData = FileUtils.readFileToString(outputHeaderFile, Utils.UTF8);
-			String expectedTableData = FileUtils.readFileToString(expectedHeaderCsv, Utils.UTF8);
-			assertEquals(actualTableData, expectedTableData);
-		}
-		finally
-		{
-			outputHeaderFile.delete();
-		}
-	}
-
-	private void forWriterTests() throws IOException
-	{
-		try
-		{
-			String actualTableData = FileUtils.readFileToString(outputCsvFile, Utils.UTF8);
-			String expectedTableData = FileUtils.readFileToString(expectedCsvFile, Utils.UTF8);
-			
-			assertEquals(actualTableData, expectedTableData);
-		}
-		finally
-		{
-			outputCsvFile.delete();
+			writer.write(buildRows(header));
+			writer.writeHeader();
 		}
 	}
 
 	@Test (expectedExceptions = IllegalStateException.class)
-	public void testWriteRowAndHeaderToFile() throws IOException
+	public void testWriteTwoHeaders() throws IOException
 	{
-		try (CsvDataWriter writer = new CsvDataWriter(header, new FileWriter(outputCsvFile), true))
-		{
-			writer.write(buildRows);
-			writer.writeHeader();
-		}
-		finally
-		{
-			outputCsvFile.delete();
-		}
-	}
-
-	@Test (expectedExceptions = IllegalStateException.class)
-	public void testWriteTwoHeadersToFile() throws IOException
-	{
-		try(CsvDataWriter writer = new CsvDataWriter(header, new FileWriter(outputHeaderFile), true))
+		TableHeader<String> header = buildHeader();
+		try(CsvDataWriter writer = new CsvDataWriter(header, new StringWriter(), true))
 		{
 			writer.writeHeader();
 			writer.writeHeader();
-		}
-		finally
-		{
-			outputHeaderFile.delete();
 		}
 	}
 
 	@Test
 	public void testWriteHeaderFile() throws IOException
 	{
-		try(CsvDataWriter writer = new CsvDataWriter(header, outputHeaderFile, true, true))
+		File outputFile = OUTPUT_PATH.resolve("testWriteHeaderFile.csv").toFile();
+		TableHeader<String> header = buildHeader();
+
+		try(CsvDataWriter writer = new CsvDataWriter(header, outputFile, true, false))
 		{
 			writer.writeHeader();
 		}
-		forWriteHeaderTests();
-	}
-
-	@Test
-	public void testWriteHeaderWriter() throws IOException
-	{
-		try (CsvDataWriter writer = new CsvDataWriter(header, new FileWriter(outputHeaderFile), true))
-		{
-			writer.writeHeader();
-		}
-		forWriteHeaderTests();
-	}
-
-	@Test
-	public void testWrite() throws IOException
-	{
-		CsvDataWriter.write(buildDataForWriting, new FileWriter(outputCsvFile), true);
-		forWriterTests();
-	}
-
-	@Test
-	public void testWrite1() throws IOException
-	{
-		CsvDataWriter.write(buildDataForWriting, outputCsvFile, true, false);
-		forWriterTests();
-	}
-
-	@Test
-	public void testWriteRow() throws IOException
-	{
-		try (CsvDataWriter writer = new CsvDataWriter(header, new FileWriter(outputCsvFile), true))
-		{
-			for (TableRow<String, String> row : buildRows)
-			{
-				writer.writeRow(row);
-			}
-		}
-		forWriterTests();
-	}
-
-	@Test
-	public void testWriteRows() throws IOException
-	{
-		try (CsvDataWriter writer = new CsvDataWriter(header, new FileWriter(outputCsvFile), true))
-		{
-			writer.writeRows(buildRows);
-		}
-		forWriterTests();
+		assertEquals(FileUtils.readFileToString(outputFile, Utils.UTF8), EXPECTED_HEADER);
 	}
 
 	@Test
 	public void testWriteHeader() throws IOException
 	{
-		try (CsvDataWriter writer = new CsvDataWriter(header, new FileWriter(outputCsvFile), true))
+		StringWriter stringWriter = new StringWriter();
+		TableHeader<String> header = buildHeader();
+
+		try (CsvDataWriter writer = new CsvDataWriter(header, stringWriter, true))
 		{
 			writer.writeHeader();
 		}
-		
-		try
+		assertEquals(stringWriter.toString(), EXPECTED_HEADER);
+	}
+
+	@Test
+	public void testWrite() throws IOException
+	{
+		TableHeader<String> header = buildHeader();
+		StringWriter stringWriter = new StringWriter();
+		CsvDataWriter.write(buildDataForWriting(header, buildRows(header)), stringWriter, true);
+		assertEquals(stringWriter.toString(), EXPECTED_TABLE_DATA);
+	}
+
+	@Test
+	public void testWrite1() throws IOException
+	{
+		TableHeader<String> header = buildHeader();
+		File outputFile = OUTPUT_PATH.resolve("testWrite1.csv").toFile();
+		CsvDataWriter.write(buildDataForWriting(header, buildRows(header)), outputFile, true, false);
+		assertEquals(FileUtils.readFileToString(outputFile, Utils.UTF8), EXPECTED_TABLE_DATA);
+	}
+
+	@Test
+	public void testWriteRow() throws IOException
+	{
+		StringWriter stringWriter = new StringWriter();
+		TableHeader<String> header = buildHeader();
+
+		try (CsvDataWriter writer = new CsvDataWriter(header, stringWriter, true))
 		{
-			String actualTableData = FileUtils.readFileToString(outputCsvFile, Utils.UTF8);
-			String expectedTableData = FileUtils.readFileToString(expectedHeaderCsv, Utils.UTF8);
-			
-			assertEquals(actualTableData, expectedTableData);
+			for (TableRow<String, String> row : buildRows(header))
+			{
+				writer.writeRow(row);
+			}
 		}
-		finally
+		assertEquals(stringWriter.toString(), EXPECTED_TABLE_DATA);
+	}
+
+	@Test
+	public void testWriteRows() throws IOException
+	{
+		StringWriter stringWriter = new StringWriter();
+		TableHeader<String> header = buildHeader();
+
+		try (CsvDataWriter writer = new CsvDataWriter(header, stringWriter, true))
 		{
-			outputCsvFile.delete();
+			writer.writeRows(buildRows(header));
+		}
+		assertEquals(stringWriter.toString(), EXPECTED_TABLE_DATA);
+	}
+
+	@Test
+	public void testWriteAndReadFile() throws IOException
+	{
+		File outputFile = OUTPUT_PATH.resolve("testWriteAndReadFile.csv").toFile();
+		TableHeader<String> header = buildHeader();
+		List<TableRow<String, String>> rows = buildExpectedRows(header);
+
+		try(CsvDataWriter writer = new CsvDataWriter(header, outputFile, true, false))
+		{
+			writer.writeRows(buildRows(header));
+		}
+		try(CsvDataReader reader = new CsvDataReader(outputFile))
+		{
+			Assertions.assertThat(reader.readAllData()).usingRecursiveComparison()
+					.isEqualTo(buildDataForWriting(header, rows));
 		}
 	}
 
 
-	public static TableHeader<String> buildHeader()
+	private TableHeader<String> buildHeader()
 	{
 		return new TableHeader<>(buildHeaderSet());
 	}
 
-	public StringTableData buildDataForWriting()
+	private StringTableData buildDataForWriting(TableHeader<String> header, List<TableRow<String, String>> rows)
 	{
 		StringTableData tableData = new StringTableData(header);
-		tableData.add(new TableRow<String, String>(header, buildValues));
-		tableData.add(new TableRow<String, String>(header, buildEmptyValues));
-		tableData.add(new TableRow<String, String>(header, buildValues));
-		tableData.add(new TableRow<String, String>(header, buildGapValues));
+		for (TableRow<String, String> row : rows)
+			tableData.add(row);
 		return tableData;
 	}
 
-	public static Set<String> buildHeaderSet()
+	private Set<String> buildHeaderSet()
 	{
 		Set<String> headerSet = new LinkedHashSet<>();
 		headerSet.add("Param1");
@@ -239,10 +195,20 @@ public class CsvDataWriterTest
 	private List<TableRow<String, String>> buildRows(TableHeader<String> header)
 	{
 		List<TableRow<String, String>> rowList = new ArrayList<>();
-		rowList.add(new TableRow<>(header, buildValues));
+		rowList.add(new TableRow<>(header, buildValues()));
 		rowList.add(new TableRow<>(header, null));
-		rowList.add(new TableRow<>(header, buildValues));
-		rowList.add(new TableRow<>(header, buildGapValues));
+		rowList.add(new TableRow<>(header, buildValues()));
+		rowList.add(new TableRow<>(header, buildGapValues()));
+		return rowList;
+	}
+
+	private List<TableRow<String, String>> buildExpectedRows(TableHeader<String> header)
+	{
+		List<TableRow<String, String>> rowList = new ArrayList<>();
+		rowList.add(new TableRow<>(header, buildValues()));
+		rowList.add(new TableRow<>(header, buildEmptyValues()));
+		rowList.add(new TableRow<>(header, buildValues()));
+		rowList.add(new TableRow<>(header, buildExpectedValues()));
 		return rowList;
 	}
 
@@ -272,6 +238,16 @@ public class CsvDataWriterTest
 		expectedValues.add("Val ue1");
 		expectedValues.add(" ");
 		expectedValues.add(" Value3 ");
+		expectedValues.add("Value4");
+		return expectedValues;
+	}
+
+	private List<String> buildExpectedValues()
+	{
+		List<String> expectedValues = new ArrayList<>();
+		expectedValues.add("Val ue1");
+		expectedValues.add("");
+		expectedValues.add("Value3");
 		expectedValues.add("Value4");
 		return expectedValues;
 	}

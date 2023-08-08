@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,38 +18,42 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
-import com.csvreader.CsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 
 public abstract class AbstractCsvDataReader<A, B, C extends BasicTableData<A, B>> extends BasicTableDataReader<A, B, C>
 {
-	protected final CsvReader reader;
+	protected final ClearThCsvReader reader;
 	protected CsvRowFilter csvRowFilter;
-	
-	public AbstractCsvDataReader(File f) throws FileNotFoundException
+
+	public AbstractCsvDataReader(File f) throws IOException
 	{
-		reader = createReader(f);
+		reader = createReader(f, createCsvReaderConfig());
 	}
-	
-	public AbstractCsvDataReader(Reader reader)
+
+	public AbstractCsvDataReader(Reader reader) throws IOException
 	{
-		this.reader = createReader(reader);
+		this.reader = createReader(reader, createCsvReaderConfig());
 	}
-	
-	
+
+	public AbstractCsvDataReader(File f, ClearThCsvReaderConfig config) throws IOException
+	{
+		reader = createReader(f, config);
+	}
+
+	public AbstractCsvDataReader(Reader reader, ClearThCsvReaderConfig config) throws IOException
+	{
+		this.reader = createReader(reader, config);
+	}
+
 	public void setCsvRowFilter(CsvRowFilter csvRowFilter)
 	{
 		this.csvRowFilter = csvRowFilter;
-	}
-	
-	public void setDelimiter(char delimiter)
-	{
-		this.reader.setDelimiter(delimiter);
 	}
 	
 	@Override
@@ -61,24 +65,37 @@ public abstract class AbstractCsvDataReader<A, B, C extends BasicTableData<A, B>
 	@Override
 	public boolean hasMoreData() throws IOException
 	{
-		return reader.readRecord();
+		return reader.hasNext();
 	}
 	
-	
+
 	@Override
 	public boolean filter() throws IOException
 	{
-		return (csvRowFilter == null) || csvRowFilter.filter(reader);
+		return (csvRowFilter == null) || csvRowFilter.filter(reader.getRecord());
 	}
-	
-	
-	protected CsvReader createReader(File f) throws FileNotFoundException
+
+	protected ClearThCsvReader createReader(File f, ClearThCsvReaderConfig config) throws IOException
 	{
-		return new CsvReader(f.getAbsolutePath());
+		return new ClearThCsvReader(f.getAbsolutePath(), config);
 	}
-	
-	protected CsvReader createReader(Reader reader)
+
+	protected ClearThCsvReader createReader(Reader reader, ClearThCsvReaderConfig config) throws IOException
 	{
-		return new CsvReader(reader);
+		return new ClearThCsvReader(reader, config);
+	}
+
+	protected ClearThCsvReaderConfig createCsvReaderConfig()
+	{
+		return defaultCsvReaderConfig();
+	}
+
+	public static ClearThCsvReaderConfig defaultCsvReaderConfig()
+	{
+		ClearThCsvReaderConfig config = new ClearThCsvReaderConfig();
+		config.setSkipEmptyRecords(true);
+		config.setFirstLineAsHeader(true);
+		config.setIgnoreSurroundingSpaces(true);
+		return config;
 	}
 }

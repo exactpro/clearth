@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,7 +26,6 @@ import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableData;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeaderItem;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.LinkedHashSet;
@@ -35,27 +34,27 @@ import java.util.Set;
 public class TypedCsvDataReader extends AbstractCsvDataReader<TypedTableHeaderItem, Object, TypedTableData>
 {
 
-	public TypedCsvDataReader(File f) throws FileNotFoundException
+	public TypedCsvDataReader(File f) throws IOException
 	{
 		super(f);
 	}
 
-	public TypedCsvDataReader(Reader reader)
+	public TypedCsvDataReader(Reader reader) throws IOException
 	{
 		super(reader);
 	}
 
-	
+
 	@Override
 	protected Set<TypedTableHeaderItem> readHeader() throws IOException
 	{
-		if (!reader.readHeaders())
+		if (!reader.readHeader())
 			throw new IOException("Could not read CSV header");
-		
+
 		LinkedHashSet<TypedTableHeaderItem> result = new LinkedHashSet<>();
-		for (String h :	reader.getHeaders())
+		for (String h : reader.getHeader())
 			result.add(new TypedTableHeaderItem(h, TableDataType.STRING));
-		
+
 		return result;
 	}
 

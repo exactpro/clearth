@@ -24,8 +24,8 @@ import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.automation.report.results.CsvDetailedResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.utils.writers.ClearThCsvWriter;
-import com.exactprosystems.clearth.utils.writers.ClearThCsvWriterConfig;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriterConfig;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;

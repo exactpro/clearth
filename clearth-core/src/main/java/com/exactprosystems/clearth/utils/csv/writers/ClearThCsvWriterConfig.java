@@ -16,18 +16,21 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.tabledata.readers;
+package com.exactprosystems.clearth.utils.csv.writers;
 
-import java.io.IOException;
-import java.util.Map;
+import com.exactprosystems.clearth.utils.csv.ClearThCsvConfig;
 
-public interface CsvRowFilter
+public class ClearThCsvWriterConfig extends ClearThCsvConfig
 {
-	/**
-	 * Filter rows to add to TableData
-	 * @param record
-	 * @return true if row should be added to TableData
-	 * @throws IOException
-	 */
-	boolean filter(Map<String, String> record) throws IOException;
+	private String nullString = "";
+
+	public String getNullString()
+	{
+		return nullString;
+	}
+
+	public void setNullString(String nullString)
+	{
+		this.nullString = nullString;
+	}
 }

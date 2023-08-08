@@ -24,7 +24,7 @@ import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
@@ -36,13 +36,13 @@ public class IndexedCsvDataReader<C extends PrimaryKey> extends AbstractStringCs
 {
 	protected final TableRowMatcher<String, String, C> matcher;
 	
-	public IndexedCsvDataReader(File f, TableRowMatcher<String, String, C> matcher) throws FileNotFoundException
+	public IndexedCsvDataReader(File f, TableRowMatcher<String, String, C> matcher) throws IOException
 	{
 		super(f);
 		this.matcher = matcher;
 	}
 	
-	public IndexedCsvDataReader(Reader reader, TableRowMatcher<String, String, C> matcher) throws FileNotFoundException
+	public IndexedCsvDataReader(Reader reader, TableRowMatcher<String, String, C> matcher) throws IOException
 	{
 		super(reader);
 		this.matcher = matcher;

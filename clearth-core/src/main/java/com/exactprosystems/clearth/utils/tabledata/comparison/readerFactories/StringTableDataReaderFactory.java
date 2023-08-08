@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.utils.IValueTransformer;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.scripts.ScriptResult;
 import com.exactprosystems.clearth.utils.scripts.ScriptUtils;
 import com.exactprosystems.clearth.utils.sql.DbConnectionSupplier;
@@ -32,6 +33,7 @@ import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import com.exactprosystems.clearth.utils.tabledata.TableDataException;
 import com.exactprosystems.clearth.utils.tabledata.comparison.TableDataReaderSettings;
+import com.exactprosystems.clearth.utils.tabledata.readers.AbstractCsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
@@ -131,8 +133,8 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 
 	protected CsvDataReader createCsvDataReader(TableDataReaderSettings settings) throws IOException
 	{
-		CsvDataReader csvDataReader = new CsvDataReader(new BufferedReader(new FileReader(ClearThCore.rootRelative(settings.getSourceData()))));
-		csvDataReader.setDelimiter(settings.getCsvDelimiter());
+		CsvDataReader csvDataReader = new CsvDataReader(new BufferedReader(new FileReader(ClearThCore
+				.rootRelative(settings.getSourceData()))), createCsvReaderConfig(settings));
 		return csvDataReader;
 	}
 	
@@ -143,11 +145,16 @@ public class StringTableDataReaderFactory implements TableDataReaderFactory<Stri
 				executeScriptFile(ClearThCore.rootRelative(source), settings.getScriptFileParams(), forExpectedData)
 				: executeScriptCommands(source, settings.getShellName(), settings.getShellOption(), forExpectedData);
 		
-		CsvDataReader scriptResultReader = new CsvDataReader(new StringReader(scriptResult));
-		scriptResultReader.setDelimiter(settings.getCsvDelimiter());
+		CsvDataReader scriptResultReader = new CsvDataReader(new StringReader(scriptResult), createCsvReaderConfig(settings));
 		return scriptResultReader;
 	}
-	
+
+	protected ClearThCsvReaderConfig createCsvReaderConfig(TableDataReaderSettings settings)
+	{
+		ClearThCsvReaderConfig config = AbstractCsvDataReader.defaultCsvReaderConfig();
+		config.setDelimiter(settings.getCsvDelimiter());
+		return config;
+	}
 	
 	protected String executeScriptFile(String scriptPath, String args, boolean forExpectedData) throws IOException
 	{

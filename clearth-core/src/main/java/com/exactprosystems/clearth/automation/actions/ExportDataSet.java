@@ -32,7 +32,10 @@ import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.sql.ParametrizedQuery;
 import com.exactprosystems.clearth.utils.sql.QueryTextProcessor;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
-import com.exactprosystems.clearth.utils.tabledata.*;
+import com.exactprosystems.clearth.utils.tabledata.DataExporter;
+import com.exactprosystems.clearth.utils.tabledata.TableDataWriter;
+import com.exactprosystems.clearth.utils.tabledata.TableHeader;
+import com.exactprosystems.clearth.utils.tabledata.TableRowConverter;
 import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.typing.*;
 import com.exactprosystems.clearth.utils.tabledata.typing.converter.DbTypesConverter;
@@ -45,7 +48,6 @@ import com.exactprosystems.clearth.utils.tabledata.typing.writer.TypedDbDataWrit
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -328,7 +330,7 @@ public abstract class ExportDataSet extends Action
 		{
 			return new TypedCsvDataReader(srcFile);
 		}
-		catch (FileNotFoundException e)
+		catch (IOException e)
 		{
 			throw new ResultException(format("Cannot read from file '%s': file not found", source), e);
 		}

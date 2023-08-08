@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,11 +18,11 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
@@ -33,17 +33,26 @@ import java.util.Set;
  */
 public class CsvDataReader extends AbstractStringCsvDataReader<StringTableData>
 {
-	public CsvDataReader(File f) throws FileNotFoundException
+	public CsvDataReader(File f) throws IOException
 	{
 		super(f);
 	}
-	
-	public CsvDataReader(Reader reader) throws FileNotFoundException
+
+	public CsvDataReader(Reader reader) throws IOException
 	{
 		super(reader);
 	}
+
+	public CsvDataReader(File f, ClearThCsvReaderConfig config) throws IOException
+	{
+		super(f, config);
+	}
 	
-	
+	public CsvDataReader(Reader reader, ClearThCsvReaderConfig config) throws IOException
+	{
+		super(reader, config);
+	}
+
 	/**
 	 * Reads whole CSV file, closing reader after that
 	 * @param f CSV file to read data from
@@ -52,16 +61,21 @@ public class CsvDataReader extends AbstractStringCsvDataReader<StringTableData>
 	 */
 	public static StringTableData read(File f) throws IOException
 	{
-		CsvDataReader reader = null;
-		try
+		return read(f, defaultCsvReaderConfig());
+	}
+
+	/**
+	 * Reads whole CSV file, closing reader after that
+	 * @param f CSV file to read data from
+	 * @param config {@link ClearThCsvReaderConfig} object to configure the reader
+	 * @return TableData object with header that corresponds to CSV file and rows that contain all data
+	 * @throws IOException if error occurs while reading data
+	 */
+	public static StringTableData read(File f, ClearThCsvReaderConfig config) throws IOException
+	{
+		try (CsvDataReader reader = new CsvDataReader(f, config))
 		{
-			reader = new CsvDataReader(f);
 			return reader.readAllData();
-		}
-		finally
-		{
-			if (reader != null)
-				reader.close();
 		}
 	}
 	
@@ -73,16 +87,21 @@ public class CsvDataReader extends AbstractStringCsvDataReader<StringTableData>
 	 */
 	public static StringTableData read(Reader dataReader) throws IOException
 	{
-		CsvDataReader reader = null;
-		try
+		return read(dataReader, defaultCsvReaderConfig());
+	}
+
+	/**
+	 * Reads CSV data by using given dataReader
+	 * @param dataReader CSV data reader to read data from
+	 * @param config {@link ClearThCsvReaderConfig} object to configure the reader
+	 * @return TableData object with header that corresponds to CSV and rows that contain all data
+	 * @throws IOException if error occurs while reading data
+	 */
+	public static StringTableData read(Reader dataReader, ClearThCsvReaderConfig config) throws IOException
+	{
+		try (CsvDataReader reader = new CsvDataReader(dataReader, config))
 		{
-			reader = new CsvDataReader(dataReader);
 			return reader.readAllData();
-		}
-		finally
-		{
-			if (reader != null)
-				reader.close();
 		}
 	}
 	

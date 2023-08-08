@@ -19,121 +19,127 @@
 package com.exactprosystems.clearth.utils.tabledata.typing.writer;
 
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
+import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableData;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeader;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeaderItem;
-import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableRow;
+import com.exactprosystems.clearth.utils.tabledata.typing.reader.TypedCsvDataReader;
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import static com.exactprosystems.clearth.utils.FileOperationUtils.resourceToAbsoluteFilePath;
-import static com.exactprosystems.clearth.utils.tabledata.typing.TableDataType.*;
+import static com.exactprosystems.clearth.utils.tabledata.typing.TypedCsvTableDataUtils.*;
 import static org.testng.Assert.assertEquals;
 
 public class TypedCsvDataWriterTest
 {
-	private static final Path OUTPUT_PATH = Paths.get("testOutput"),
-			EXPECTED_FILES_PATH = Paths.get("TableDataTest");
-	private File outputFile = OUTPUT_PATH.resolve("outputFileTypedCsv.csv").toFile(),
-			expectedFile = EXPECTED_FILES_PATH.resolve("expectedTypedFile.csv").toFile();
-	private static TypedTableRow row;
-	private static TypedTableHeader typedHeader;
+	private static final Path OUTPUT_PATH = Paths.get("testOutput").resolve(TypedCsvDataWriterTest.class.getSimpleName());
 	
 	@BeforeClass
 	public static void init() throws IOException
 	{
-		createDir(OUTPUT_PATH);
-		
-		Set<TypedTableHeaderItem> headerSetItems = new LinkedHashSet<>();
-		headerSetItems.add(new TypedTableHeaderItem("name1", STRING));
-		headerSetItems.add(new TypedTableHeaderItem("name2", INTEGER));
-		headerSetItems.add(new TypedTableHeaderItem("name3", BOOLEAN));
-
-		List<Object> listValues = new ArrayList<>();
-		listValues.add("1");
-		listValues.add("2");
-		listValues.add("3");
-
-		typedHeader = new TypedTableHeader(headerSetItems);
-		row = new TypedTableRow(typedHeader, listValues);
-	}
-
-	private static void createDir(Path dir) throws IOException
-	{
-		if (!dir.toFile().exists())
-			Files.createDirectories(dir);
-	}
-
-	private void forTestsWriteHeader() throws IOException
-	{
-		try
-		{
-			String actualTableData = FileUtils.readFileToString(outputFile, Utils.UTF8);
-			String expectedTableData = FileUtils.readFileToString(new File(resourceToAbsoluteFilePath(expectedFile.getPath())), Utils.UTF8);
-			assertEquals(actualTableData, expectedTableData);
-		}
-		finally
-		{
-			outputFile.delete();
-		}
+		FileUtils.deleteDirectory(OUTPUT_PATH.toFile());
+		Files.createDirectories(OUTPUT_PATH);
 	}
 
 	@Test(expected = IllegalStateException.class)
 	public void testWriteRowAndHeaderToFile() throws IOException
 	{
-		try (TypedCsvDataWriter writer = new TypedCsvDataWriter(typedHeader, outputFile, true, true))
+		TypedTableHeader header = createHeader();
+		try (TypedCsvDataWriter writer = new TypedCsvDataWriter(header, new StringWriter(), true))
 		{
-			writer.write(row);
+			writer.write(createRow(header, " ", " ", " "));
 			writer.writeHeader();
-		}
-		finally
-		{
-			outputFile.delete();
 		}
 	}
 
 	@Test(expected = IllegalStateException.class)
 	public void testWriteTwoHeadersToFile() throws IOException
 	{
-		try(TypedCsvDataWriter writer = new TypedCsvDataWriter(typedHeader, new FileWriter(outputFile), true))
+		TypedTableHeader header = createHeader();
+		try(TypedCsvDataWriter writer = new TypedCsvDataWriter(header, new StringWriter(), true))
 		{
 			writer.writeHeader();
 			writer.writeHeader();
-		}
-		finally
-		{
-			outputFile.delete();
 		}
 	}
 
 	@Test
 	public void testWriteHeaderFile() throws IOException
 	{
-		try(TypedCsvDataWriter writer = new TypedCsvDataWriter(typedHeader, outputFile, true, true))
+		File outputFile = OUTPUT_PATH.resolve("testWriteHeaderFile.csv").toFile();
+		TypedTableHeader header = createHeader();
+
+		try(TypedCsvDataWriter writer = new TypedCsvDataWriter(header, outputFile, true, false))
 		{
 			writer.writeHeader();
 		}
-		forTestsWriteHeader();
+		assertEquals(FileUtils.readFileToString(outputFile, Utils.UTF8), EXPECTED_HEADER);
 	}
 
 	@Test
 	public void testWriteHeaderWriter() throws IOException
 	{
-		try(TypedCsvDataWriter writer = new TypedCsvDataWriter(typedHeader, new FileWriter(outputFile), true))
+		StringWriter stringWriter = new StringWriter();
+		TypedTableHeader header = createHeader();
+		try(TypedCsvDataWriter writer = new TypedCsvDataWriter(header, stringWriter, true))
 		{
 			writer.writeHeader();
 		}
-		forTestsWriteHeader();
+		assertEquals(stringWriter.toString(), EXPECTED_HEADER);
+	}
+
+	@Test
+	public void testWriteAndReadFile() throws IOException
+	{
+		File outputFile = OUTPUT_PATH.resolve("testWriteAndReadFile.csv").toFile();
+		TypedTableHeader header = createHeader();
+		List<TableRow<TypedTableHeaderItem, Object>> rows = createRows(header);
+
+		try (TypedCsvDataWriter writer = new TypedCsvDataWriter(header, outputFile, true, false))
+		{
+			writer.writeRows(rows);
+		}
+
+		TypedTableData expectedTableData = createTypedTableData(header, rows);
+
+		try (TypedCsvDataReader reader = new TypedCsvDataReader(outputFile))
+		{
+			assertTypedTableData(reader.readAllData(), expectedTableData);
+		}
+	}
+
+	@Test
+	public void testWriteRow() throws IOException
+	{
+		StringWriter stringWriter = new StringWriter();
+		TypedTableHeader header = createHeader();
+
+		try (TypedCsvDataWriter writer = new TypedCsvDataWriter(header, stringWriter, true))
+		{
+			writer.writeRow(createRow(header, "1", "2", "3"));
+		}
+		assertEquals(stringWriter.toString(), EXPECTED_ROW);
+	}
+
+	@Test
+	public void testWriteRows() throws IOException
+	{
+		StringWriter stringWriter = new StringWriter();
+		TypedTableHeader header = createHeader();
+
+		try (TypedCsvDataWriter writer = new TypedCsvDataWriter(header, stringWriter, true))
+		{
+			writer.writeRows(createRows(header));
+		}
+		assertEquals(stringWriter.toString(), EXPECTED_ROWS);
 	}
 }

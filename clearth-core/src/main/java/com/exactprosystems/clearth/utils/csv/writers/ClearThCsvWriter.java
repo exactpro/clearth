@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.writers;
+package com.exactprosystems.clearth.utils.csv.writers;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -72,7 +72,7 @@ public class ClearThCsvWriter implements AutoCloseable
 
 	public void writeRecord(String[] rowLine) throws IOException
 	{
-		csvPrinter.printRecord(rowLine);
+		csvPrinter.printRecord((Object[]) rowLine);
 	}
 
 	@Override

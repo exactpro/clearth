@@ -24,8 +24,8 @@ import com.exactprosystems.clearth.utils.tabledata.TableHeaderWriter;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableHeaderItem;
 import com.exactprosystems.clearth.utils.tabledata.typing.TypedTableRow;
-import com.exactprosystems.clearth.utils.writers.ClearThCsvWriter;
-import com.exactprosystems.clearth.utils.writers.ClearThCsvWriterConfig;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriterConfig;
 
 import java.io.File;
 import java.io.FileWriter;

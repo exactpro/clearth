@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -17,6 +17,7 @@
  ******************************************************************************/
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
@@ -27,6 +28,7 @@ import org.testng.annotations.Test;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -44,10 +46,8 @@ public class CsvDataReaderTest
 	public void testReadAllDataWithFile(Path filePath, char delimiter) throws IOException
 	{
 		StringTableData expectedTableData = getExpectedTableData();
-		try (CsvDataReader csvDataReader =
-				     new CsvDataReader(filePath.toFile()))
+		try (CsvDataReader csvDataReader = new CsvDataReader(filePath.toFile(), createCsvReaderConfig(delimiter)))
 		{
-			csvDataReader.setDelimiter(delimiter);
 			StringTableData actualTableData = csvDataReader.readAllData();
 			assertThat(actualTableData)
 					.usingRecursiveComparison()
@@ -58,10 +58,9 @@ public class CsvDataReaderTest
 	@Test(dataProvider = "pathsAndDelimiters")
 	public void testReadAllDataWithReader(Path filePath, char delimiter) throws IOException
 	{
-		try (CsvDataReader csvDataReader =
-				     new CsvDataReader(new FileReader(filePath.toFile())))
+		try (CsvDataReader csvDataReader = new CsvDataReader(new FileReader(filePath.toFile()),
+				createCsvReaderConfig(delimiter)))
 		{
-			csvDataReader.setDelimiter(delimiter);
 			assertThat(csvDataReader.readAllData())
 					.usingRecursiveComparison()
 					.isEqualTo(getExpectedTableData());
@@ -99,6 +98,13 @@ public class CsvDataReaderTest
 								Paths.get(resourceToAbsoluteFilePath(TEST_WITH_DOTS_CSV_FLE)), ';'
 						}
 				};
+	}
+
+	private ClearThCsvReaderConfig createCsvReaderConfig(char delimiter)
+	{
+		ClearThCsvReaderConfig config = AbstractCsvDataReader.defaultCsvReaderConfig();
+		config.setDelimiter(delimiter);
+		return config;
 	}
 
 	public StringTableData getExpectedTableData()
@@ -143,7 +149,7 @@ public class CsvDataReaderTest
 		expectedValues.add("Val ue1");
 		expectedValues.add("");
 		expectedValues.add("Value3");
-		expectedValues.add("Value4");
+		expectedValues.add(" Value4 ");
 		return  expectedValues;
 	}
 
@@ -183,5 +189,16 @@ public class CsvDataReaderTest
 		keys.add("Fourth");
 
 		return keys;
+	}
+
+	@Test (expectedExceptions = IOException.class,
+			expectedExceptionsMessageRegExp = "Could not read CSV header")
+	public void testReadEmptyFile() throws IOException
+	{
+		StringReader stringReader = new StringReader("");
+		try (CsvDataReader reader = new CsvDataReader(stringReader))
+		{
+			reader.readAllData();
+		}
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,27 +18,35 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 public abstract class AbstractStringCsvDataReader<C extends BasicTableData<String, String>> extends AbstractCsvDataReader<String, String, C>
 {
-	public AbstractStringCsvDataReader(File f) throws FileNotFoundException
+	public AbstractStringCsvDataReader(File f) throws IOException
 	{
 		super(f);
 	}
 
-	public AbstractStringCsvDataReader(Reader reader)
+	public AbstractStringCsvDataReader(Reader reader) throws IOException
 	{
 		super(reader);
+	}
+
+	public AbstractStringCsvDataReader(File f, ClearThCsvReaderConfig config) throws IOException
+	{
+		super(f, config);
+	}
+
+	public AbstractStringCsvDataReader(Reader reader, ClearThCsvReaderConfig config) throws IOException
+	{
+		super(reader, config);
 	}
 
 	@Override
@@ -51,10 +59,9 @@ public abstract class AbstractStringCsvDataReader<C extends BasicTableData<Strin
 	@Override
 	protected Set<String> readHeader() throws IOException
 	{
-		if (!reader.readHeaders())
+		if (!reader.readHeader())
 			throw new IOException("Could not read CSV header");
-		String[] header = reader.getHeaders();
-		
-		return new LinkedHashSet<String>(Arrays.asList(header));
+
+		return reader.getHeader();
 	}
 }

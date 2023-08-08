@@ -18,9 +18,10 @@
 
 package com.exactprosystems.clearth.automation.generator;
 
-import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.automation.ActionGenerator;
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import org.apache.commons.io.input.BOMInputStream;
 
 import java.io.FileInputStream;
@@ -31,7 +32,7 @@ import java.util.List;
 
 public class CsvActionReader extends ActionReader
 {
-	private final CsvReader reader;
+	private final ClearThCsvReader reader;
 	private String[] values;
 	private String rawLine;
 	private int rowIndex;
@@ -52,7 +53,7 @@ public class CsvActionReader extends ActionReader
 	@Override
 	public boolean readNextLine() throws IOException
 	{
-		if (!reader.readRecord())
+		if (!reader.hasNext())
 			return false;
 
 		rowIndex++;
@@ -105,19 +106,25 @@ public class CsvActionReader extends ActionReader
 		return rawLine;
 	}
 	
-	protected CsvReader createReader(String fileName) throws IOException
+	protected ClearThCsvReader createReader(String fileName) throws IOException
 	{
-		CsvReader result = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(fileName))));
-		result.setSafetySwitch(false);
-		result.setDelimiter(ActionGenerator.DELIMITER);
-		result.setTextQualifier(ActionGenerator.TEXT_QUALIFIER);
-		result.setSkipEmptyRecords(false);
-		result.setTrimWhitespace(isTrimValues());
+		ClearThCsvReader result = new ClearThCsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(fileName))),
+														createConfig());
 		return result;
 	}
 	
-	
-	public CsvReader getReader()
+	protected ClearThCsvReaderConfig createConfig()
+	{
+		ClearThCsvReaderConfig config = new ClearThCsvReaderConfig();
+		config.setDelimiter(ActionGenerator.DELIMITER);
+		config.setUseTextQualifier(true);
+		config.setTextQualifier(ActionGenerator.TEXT_QUALIFIER);
+		config.setSkipEmptyRecords(false);
+		config.setWithTrim(isTrimValues());
+		return config;
+	}
+
+	public ClearThCsvReader getReader()
 	{
 		return reader;
 	}

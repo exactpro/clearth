@@ -16,16 +16,15 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.utils.writers;
+package com.exactprosystems.clearth.utils.csv;
 
-public class ClearThCsvWriterConfig
+public class ClearThCsvConfig
 {
 	private char delimiter = ',';
 	private boolean useTextQualifier = true;
 	private char textQualifier = '"';
 	private String lineSeparator = System.lineSeparator();
 	private boolean withTrim = false;
-	private String nullString = "";
 
 	public char getDelimiter()
 	{
@@ -76,14 +75,5 @@ public class ClearThCsvWriterConfig
 	{
 		this.lineSeparator = lineSeparator;
 	}
-
-	public String getNullString()
-	{
-		return nullString;
-	}
-
-	public void setNullString(String nullString)
-	{
-		this.nullString = nullString;
-	}
 }
+

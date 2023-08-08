@@ -20,8 +20,8 @@ package com.exactprosystems.clearth.utils.tabledata.writers;
 
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.*;
-import com.exactprosystems.clearth.utils.writers.ClearThCsvWriter;
-import com.exactprosystems.clearth.utils.writers.ClearThCsvWriterConfig;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriterConfig;
 
 import java.io.File;
 import java.io.FileWriter;

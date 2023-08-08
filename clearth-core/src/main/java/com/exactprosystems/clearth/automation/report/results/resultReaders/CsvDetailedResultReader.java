@@ -22,9 +22,11 @@ import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.ComparisonResult;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
+import com.exactprosystems.clearth.utils.tabledata.readers.AbstractCsvDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,24 +49,29 @@ public class CsvDetailedResultReader implements AutoCloseable
 	@SuppressWarnings("rawtypes")
 	protected final ValueParser valueParser;
 
-	public<A, B> CsvDetailedResultReader(File zipFile,
-			ValuesComparator<A, B> valuesComparator, ValueParser<A ,B> valueParser)
-			throws IOException
+	public<A, B> CsvDetailedResultReader(File zipFile, ValuesComparator<A, B> valuesComparator,
+										 ValueParser<A ,B> valueParser) throws IOException
+	{
+		this(zipFile, valuesComparator, valueParser, AbstractCsvDataReader.defaultCsvReaderConfig());
+	}
+
+	public<A, B> CsvDetailedResultReader(File zipFile, ValuesComparator<A, B> valuesComparator,
+										 ValueParser<A ,B> valueParser, ClearThCsvReaderConfig config) throws IOException
 	{
 		this.valuesComparator = valuesComparator;
 		this.valueParser = valueParser;
-		
-		reader = createCsvDataReader(zipFile);
+
+		reader = createCsvDataReader(zipFile, config);
 		logger.trace("Created reader for {}", zipFile.getCanonicalPath());
 		reader.start();
 	}
 
-	protected CsvDataReader createCsvDataReader(File zipFile1)
+	protected CsvDataReader createCsvDataReader(File zipFile1, ClearThCsvReaderConfig config)
 			throws IOException
 	{
 		zipFile = new ZipFile(zipFile1);
 		ZipEntry entry = zipFile.entries().nextElement();
-		return new CsvDataReader(new InputStreamReader(zipFile.getInputStream(entry)));
+		return new CsvDataReader(new InputStreamReader(zipFile.getInputStream(entry)), config);
 	}
 
 	public DetailedResult readNext() throws Exception
