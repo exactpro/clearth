@@ -24,63 +24,71 @@ import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.utils.SettingsException;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-/**
- * Minimal {@link BasicClearThClient} implementation to check its behavior
- */
-public class TestClearThClient extends BasicClearThClient
+//This is example of client that returns EncodedClearThMessage as sending outcome.
+//BasicClearThClient must use this EncodedClearThMessage as sending result, not generate another one, with different HandledMessageId.
+public class IndirectNotifyingClient extends BasicClearThClient
 {
-	public TestClearThClient(TestMessageConnection owner) throws ConnectivityException, SettingsException
+	public IndirectNotifyingClient(IndirectNotifyingConnection owner) throws ConnectivityException, SettingsException
 	{
 		super(owner);
 	}
 	
 	@Override
-	protected void connect() throws ConnectionException, SettingsException
+	protected Path createUnhandledMessagesFilePath(String name)
 	{
-	}
-	
-	private TestConnectionSettings getStoredSettings()
-	{
-		return (TestConnectionSettings) storedSettings;
-	}
-
-
-
-	@Override
-	protected boolean isNeedReceivedProcessorThread()
-	{
-		return ((TestConnectionSettings) storedSettings).isProcessReceived();
+		return Paths.get("never-existing file");  //It doesn't use rootRelative() and thus doesn't require ClearThCore to be initialized
 	}
 	
 	@Override
-	protected void closeConnections() throws ConnectionException
+	protected void connect() throws ConnectivityException, SettingsException
 	{
 	}
 	
 	@Override
-	protected boolean isNeedReceiverThread()
+	protected void closeConnections() throws ConnectivityException
 	{
-		return true;
 	}
 	
 	@Override
 	protected MessageReceiverThread createReceiverThread()
 	{
-		return new TestReceiverThread(name, getStoredSettings().getSource(), receivedMessageQueue);
+		return null;
+	}
+	
+	@Override
+	protected boolean isNeedReceiverThread()
+	{
+		return false;
+	}
+	
+	@Override
+	protected boolean isNeedReceivedProcessorThread()
+	{
+		return false;
+	}
+	
+	@Override
+	protected boolean isNeedNotifySendListeners()
+	{
+		return false;  //This client will notify send listeners on its own, BasicClearThClient will not do this
 	}
 	
 	@Override
 	protected EncodedClearThMessage doSendMessage(Object message) throws IOException, ConnectivityException
 	{
-		getStoredSettings().getTarget().add(message.toString());
-		return null;
+		EncodedClearThMessage result = createUpdatedMessage(message, null);
+		notifySendListenersIndirectly(result);
+		return result;
 	}
 	
 	@Override
 	protected EncodedClearThMessage doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
-		getStoredSettings().getTarget().add(message.getPayload().toString());
-		return null;
+		EncodedClearThMessage result = createUpdatedMessage(message.getPayload(), message.getMetadata());
+		notifySendListenersIndirectly(result);
+		return result;
 	}
 }

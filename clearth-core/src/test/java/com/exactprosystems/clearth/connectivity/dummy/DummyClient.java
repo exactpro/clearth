@@ -104,7 +104,7 @@ public class DummyClient extends BasicClearThClient
 	}
 
 	@Override
-	protected Object doSendMessage(Object message) throws IOException, ConnectivityException
+	protected EncodedClearThMessage doSendMessage(Object message) throws IOException, ConnectivityException
 	{
 		messagesToReceive.add(message);
 		sentMessagesHistory.add(message);
@@ -112,7 +112,7 @@ public class DummyClient extends BasicClearThClient
 	}
 
 	@Override
-	protected Object doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	protected EncodedClearThMessage doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
 		return doSendMessage(message.getPayload());
 	}

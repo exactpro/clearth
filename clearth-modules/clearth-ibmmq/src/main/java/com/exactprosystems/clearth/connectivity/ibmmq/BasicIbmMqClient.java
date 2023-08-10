@@ -245,18 +245,18 @@ public abstract class BasicIbmMqClient extends BasicClearThClient
 	/* Methods to override */
 
 	@Override
-	protected Object doSendMessage(Object message) throws IOException, ConnectivityException
+	protected EncodedClearThMessage doSendMessage(Object message) throws IOException, ConnectivityException
 	{
 		return doSendMessage(message, null);
 	}
 
 	@Override
-	protected Object doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
+	protected EncodedClearThMessage doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
 		return doSendMessage(message.getPayload(), message.getMetadata());
 	}
 
-	protected Object doSendMessage(Object payload, ClearThMessageMetadata metadata) throws IOException, ConnectivityException
+	protected EncodedClearThMessage doSendMessage(Object payload, ClearThMessageMetadata metadata) throws IOException, ConnectivityException
 	{
 		synchronized (sendMonitor)
 		{
@@ -282,7 +282,7 @@ public abstract class BasicIbmMqClient extends BasicClearThClient
 				handleSendError(e, payload);
 			}
 
-			return payload;
+			return null;
 		}
 	}
 

@@ -124,18 +124,18 @@ public abstract class JmsClient extends BasicClearThClient
 	}
 	
 	@Override
-	protected Object doSendMessage(Object message) throws ConnectivityException
+	protected EncodedClearThMessage doSendMessage(Object message) throws ConnectivityException
 	{
 		return doSendMessage(message, null);
 	}
 	
 	@Override
-	protected Object doSendMessage(EncodedClearThMessage message) throws ConnectivityException
+	protected EncodedClearThMessage doSendMessage(EncodedClearThMessage message) throws ConnectivityException
 	{
 		return doSendMessage(message.getPayload(), message.getMetadata());
 	}
 	
-	protected Object doSendMessage(Object payload, ClearThMessageMetadata metadata) throws ConnectivityException
+	protected EncodedClearThMessage doSendMessage(Object payload, ClearThMessageMetadata metadata) throws ConnectivityException
 	{
 
 		if (producer == null)
@@ -151,7 +151,7 @@ public abstract class JmsClient extends BasicClearThClient
 				
 				producer.send(msg);
 				logger.debug("JMS client '{}' sent message", name);
-				return msg.toString();
+				return createUpdatedMessage(msg, metadata);
 			}
 			catch (JMSException e)
 			{

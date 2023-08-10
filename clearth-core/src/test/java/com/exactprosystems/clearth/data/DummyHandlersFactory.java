@@ -23,6 +23,7 @@ import java.util.Map;
 
 public class DummyHandlersFactory implements DataHandlersFactory
 {
+	private final Map<String, DummyMessageHandler> messageHandlersByConName = new HashMap<>();
 	private final Map<String, DummyTestExecutionHandler> testHandlersByScheduler = new HashMap<>();
 	private boolean createActiveHandlers = true;
 	
@@ -34,7 +35,9 @@ public class DummyHandlersFactory implements DataHandlersFactory
 	@Override
 	public MessageHandler createMessageHandler(String connectionName) throws DataHandlingException
 	{
-		return new DummyMessageHandler(createActiveHandlers);
+		DummyMessageHandler result = new DummyMessageHandler(createActiveHandlers);
+		messageHandlersByConName.put(connectionName, result);
+		return result;
 	}
 	
 	@Override
@@ -45,6 +48,11 @@ public class DummyHandlersFactory implements DataHandlersFactory
 		return result;
 	}
 	
+	
+	public DummyMessageHandler getMessageHandler(String connectionName)
+	{
+		return messageHandlersByConName.get(connectionName);
+	}
 	
 	public DummyTestExecutionHandler getTestExecutionHandler(String schedulerName)
 	{

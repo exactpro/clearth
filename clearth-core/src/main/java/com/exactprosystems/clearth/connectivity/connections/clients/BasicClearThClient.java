@@ -121,8 +121,8 @@ public abstract class BasicClearThClient implements ClearThClient
 	protected abstract boolean isNeedReceiverThread();
 	protected abstract MessageReceiverThread createReceiverThread();
 
-	protected abstract Object doSendMessage(Object message) throws IOException, ConnectivityException;
-	protected abstract Object doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException;
+	protected abstract EncodedClearThMessage doSendMessage(Object message) throws IOException, ConnectivityException;
+	protected abstract EncodedClearThMessage doSendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException;
 
 
 	protected void loadUnhandledMessages()
@@ -352,23 +352,29 @@ public abstract class BasicClearThClient implements ClearThClient
 	@Override
 	public final EncodedClearThMessage sendMessage(Object message) throws IOException, ConnectivityException
 	{
-		doSendMessage(message);
-		sent.incrementAndGet();
-		
-		EncodedClearThMessage result = createUpdatedMessage(message, null);
-		if (isNeedSentProcessorThread() && isNeedNotifySendListeners())
-			notifySendListenersIndirectly(result);
-		
-		return result;
+		EncodedClearThMessage outcome = doSendMessage(message);
+		return afterSendMessage(message, null, outcome);
 	}
 
 	@Override
 	public final EncodedClearThMessage sendMessage(EncodedClearThMessage message) throws IOException, ConnectivityException
 	{
-		doSendMessage(message);
+		EncodedClearThMessage outcome = doSendMessage(message);
+		return afterSendMessage(message.getPayload(), message.getMetadata(), outcome);
+	}
+	
+	
+	protected EncodedClearThMessage afterSendMessage(Object payload, ClearThMessageMetadata metadata, EncodedClearThMessage sendingOutcome)
+			throws ConnectivityException, IOException
+	{
 		sent.incrementAndGet();
 		
-		EncodedClearThMessage result = createUpdatedMessage(message.getPayload(), message.getMetadata());
+		EncodedClearThMessage result;
+		if (sendingOutcome != null)
+			result = sendingOutcome;
+		else
+			result = createUpdatedMessage(payload, metadata);
+		
 		if (isNeedSentProcessorThread() && isNeedNotifySendListeners())
 			notifySendListenersIndirectly(result);
 		
