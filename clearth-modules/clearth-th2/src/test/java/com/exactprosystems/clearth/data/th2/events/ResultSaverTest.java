@@ -62,7 +62,7 @@ public class ResultSaverTest
 {
 	private CollectingRouter<EventBatch> router;
 	private ResultSaver saver;
-	private Event parent;
+	private Th2EventMetadata parentMetadata;
 	
 	@BeforeClass
 	public void init()
@@ -86,10 +86,7 @@ public class ResultSaverTest
 				.setId("RootEventID")
 				.build();
 		
-		parent = Event.newBuilder()
-				.setId(parentId)
-				.setName("Root")
-				.build();
+		parentMetadata = new Th2EventMetadata(parentId, now, null);
 	}
 	
 	@BeforeMethod
@@ -125,7 +122,7 @@ public class ResultSaverTest
 				comment,
 				errorClass, errorMessage);
 		
-		saver.storeResult(r, name, parent);
+		saver.storeResult(r, name, parentMetadata);
 		
 		EventBatch batch = router.getSent().get(0);
 		Event event = batch.getEvents(0);
@@ -163,7 +160,7 @@ public class ResultSaverTest
 		r.addResultDetail(info);
 		r.addResultDetail(error);
 		
-		saver.storeResult(r, parent);
+		saver.storeResult(r, parentMetadata);
 		
 		String body = getFirstEventBody(router.getSent().get(0));
 		Assert.assertEquals(body, expectedBody);
@@ -193,7 +190,7 @@ public class ResultSaverTest
 		r.addDetail(passed);
 		r.addDetail(failed);
 		
-		saver.storeResult(r, parent);
+		saver.storeResult(r, parentMetadata);
 		
 		String body = getFirstEventBody(router.getSent().get(0));
 		Assert.assertEquals(body, expectedBody);
@@ -214,7 +211,7 @@ public class ResultSaverTest
 		r.startNewBlock(block2Name);
 		r.addResultDetail(failed);
 		
-		saver.storeResult(r, parent);
+		saver.storeResult(r, parentMetadata);
 		
 		EventBatch batch = router.getSent().get(0);
 		Assert.assertEquals(batch.getEventsCount(), 3, "Event count");
@@ -250,7 +247,7 @@ public class ResultSaverTest
 		r.attach(dataFileName, dataFile);
 		r.attach(keyValueFileName, keyValueFile);
 		
-		saver.storeResult(r, parent);
+		saver.storeResult(r, parentMetadata);
 		
 		EventBatch batch = router.getSent().get(0);
 		Assert.assertEquals(batch.getEventsCount(), 3, "Event count");
@@ -303,7 +300,7 @@ public class ResultSaverTest
 		r.addDetail(extraRow);
 		r.processDetails(tempPath.toFile(), null);
 		
-		saver.storeResult(r, parent);
+		saver.storeResult(r, parentMetadata);
 		
 		//Due to ResultSaver configuration, 3 DetailedResults will be split into 2 batches
 		List<EventBatch> allBatches = router.getSent();
@@ -362,7 +359,7 @@ public class ResultSaverTest
 		container.addDetail(topResult);
 		container.addDetail(subContainer);
 		
-		saver.storeResult(container, name, parent);
+		saver.storeResult(container, name, parentMetadata);
 		
 		List<EventBatch> allBatches = router.getSent();
 		Assert.assertEquals(allBatches.size(), 5, "Batch count");
@@ -375,7 +372,7 @@ public class ResultSaverTest
 		
 		Assert.assertEquals(resultBatch.getEventsCount(), 1, "Event count in result batch");
 		Event resultEvent = resultBatch.getEvents(0);
-		assertEvent(resultEvent, "result event", parent.getId(), name, containerType, emptyBody);
+		assertEvent(resultEvent, "result event", parentMetadata.getId(), name, containerType, emptyBody);
 		
 		
 		EventID resultId = resultEvent.getId();

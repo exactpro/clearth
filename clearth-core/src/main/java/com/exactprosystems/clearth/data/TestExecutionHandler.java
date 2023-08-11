@@ -34,8 +34,8 @@ public interface TestExecutionHandler extends AutoCloseable
 	void onTestEnd() throws TestExecutionHandlingException;
 	void onGlobalStepStart(StepMetadata stepData) throws TestExecutionHandlingException;
 	void onGlobalStepEnd() throws TestExecutionHandlingException;
-	void onAction(Action action) throws TestExecutionHandlingException;
-	void storeIntermediateResult(Result result, Action action) throws TestExecutionHandlingException;
+	HandledTestExecutionId onAction(Action action) throws TestExecutionHandlingException;
+	void onActionResult(Result result, Action action) throws TestExecutionHandlingException;
 	
 	boolean isActive();
 }

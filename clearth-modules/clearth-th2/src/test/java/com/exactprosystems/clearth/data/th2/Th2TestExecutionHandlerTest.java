@@ -50,8 +50,10 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessageDirection;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.data.MessageHandlingUtils;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
+import com.exactprosystems.clearth.data.TestExecutionHandlingException;
 import com.exactprosystems.clearth.data.th2.config.EventsConfig;
 import com.exactprosystems.clearth.data.th2.config.StorageConfig;
 import com.exactprosystems.clearth.data.th2.events.EventFactory;
@@ -116,14 +118,15 @@ public class Th2TestExecutionHandlerTest
 			
 			stepStart = Instant.now();
 			handler.onGlobalStepStart(new StepMetadata(stepName, stepStart));
-			handler.onAction(createSetStatic(actionId, createMatrix(matrixName), createStep(stepName), new EncodedClearThMessage("Test message", msgMetadata)));
+			onAction(createSetStatic(actionId, createMatrix(matrixName), createStep(stepName), new EncodedClearThMessage("Test message", msgMetadata)),
+					handler);
 			handler.onGlobalStepEnd();
 			handler.onTestEnd();
 		}
 		
 		List<EventBatch> stored = router.getSent();
-		//5 events = scheduler start + matrix + step + action + action parameters
-		assertEquals(stored.size(), 5, "Number of stored events");
+		//6 events = scheduler start + matrix + step + action + action parameters + action status
+		assertEquals(stored.size(), 6, "Number of stored events");
 		
 		Iterator<EventBatch> it = stored.iterator();
 		
@@ -151,11 +154,14 @@ public class Th2TestExecutionHandlerTest
 		assertEquals(actionEvent.getName(), 
 				String.format("%s - SetStatic", actionId), 
 				"Action event name");
-		assertEquals(actionEvent.getAttachedMessageIdsCount(), 1, "Number of attached messages");
-		assertEquals(actionEvent.getAttachedMessageIds(0), msgId, "Attached message ID");
 		
 		Event actionParamsEvent = getFirstEvent(it.next());
 		assertEquals(actionParamsEvent.getName(), "Input parameters", "Action parameters event name");
+		
+		Event actionStatusEvent = getFirstEvent(it.next());
+		assertEquals(actionStatusEvent.getName(), "Action status", "Action status event name");
+		assertEquals(actionStatusEvent.getAttachedMessageIdsCount(), 1, "Number of attached messages");
+		assertEquals(actionStatusEvent.getAttachedMessageIds(0), msgId, "Attached message ID");
 	}
 	
 	@Test
@@ -184,24 +190,24 @@ public class Th2TestExecutionHandlerTest
 			
 			Instant step1Start = Instant.now();
 			handler.onGlobalStepStart(new StepMetadata(step1Name, step1Start));
-			handler.onAction(createSetStatic("id1", testMatrix, step1, null));
-			handler.onAction(createSetStatic("id2", anotherMatrix, step1, null));
+			onAction(createSetStatic("id1", testMatrix, step1, null), handler);
+			onAction(createSetStatic("id2", anotherMatrix, step1, null), handler);
 			handler.onGlobalStepEnd();
 			
 			Instant step2Start = Instant.now();
 			handler.onGlobalStepStart(new StepMetadata(step2Name, step2Start));
-			handler.onAction(createSetStatic("id2", anotherMatrix, step2, null));
-			handler.onAction(createSetStatic("id5", testMatrix, step2, null));
+			onAction(createSetStatic("id2", anotherMatrix, step2, null), handler);
+			onAction(createSetStatic("id5", testMatrix, step2, null), handler);
 			handler.onGlobalStepEnd();
 			
 			handler.onTestEnd();
 		}
 		
 		List<EventBatch> stored = router.getSent();
-		//15 events = scheduler start + 2 matrices 
-		//  + step for each matrix + 2 actions + parameters of each action 
-		//  + step for each matrix + 2 actions + parameters of each action
-		assertEquals(stored.size(), 15, "Number of stored events");
+		//19 events = scheduler start + 2 matrices 
+		//  + step for each matrix + 2 actions + parameters of each action + status of each action
+		//  + step for each matrix + 2 actions + parameters of each action + status of each action
+		assertEquals(stored.size(), 19, "Number of stored events");
 		
 		Iterator<EventBatch> it = stored.iterator();
 		
@@ -217,12 +223,17 @@ public class Th2TestExecutionHandlerTest
 		assertEquals(anotherMatrixStep1Event.getParentId(), anotherMatrixEvent.getId(), "Parent of "+step1Name+" from "+anotherMatrixName);
 		
 		Event testMatrixAction1Event = getFirstEvent(it.next()),
-				testMatrixAction1ResultEvent = getFirstEvent(it.next()),
-				anotherMatrixAction1Event = getFirstEvent(it.next()),
-				anotherMatrixAction1ResultEvent = getFirstEvent(it.next());
+				testMatrixAction1StatusEvent = getFirstEvent(it.next()),
+				testMatrixAction1ResultEvent = getFirstEvent(it.next());
 		assertEquals(testMatrixAction1Event.getParentId(), testMatrixStep1Event.getId(), "Parent of first action from "+testMatrixName);
+		assertEquals(testMatrixAction1StatusEvent.getParentId(), testMatrixAction1Event.getId(), "Parent of status of first action from "+testMatrixName);
 		assertEquals(testMatrixAction1ResultEvent.getParentId(), testMatrixAction1Event.getId(), "Parent of result of first action from "+testMatrixName);
+		
+		Event anotherMatrixAction1Event = getFirstEvent(it.next()),
+				anotherMatrixAction1StatusEvent = getFirstEvent(it.next()),
+				anotherMatrixAction1ResultEvent = getFirstEvent(it.next());
 		assertEquals(anotherMatrixAction1Event.getParentId(), anotherMatrixStep1Event.getId(), "Parent of first action from "+anotherMatrixName);
+		assertEquals(anotherMatrixAction1StatusEvent.getParentId(), anotherMatrixAction1Event.getId(), "Parent of status of first action from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction1ResultEvent.getParentId(), anotherMatrixAction1Event.getId(), "Parent of result of first action from "+anotherMatrixName);
 		
 		Event testMatrixStep2Event = getFirstEvent(it.next()),
@@ -231,12 +242,17 @@ public class Th2TestExecutionHandlerTest
 		assertEquals(anotherMatrixStep2Event.getParentId(), anotherMatrixEvent.getId(), "Parent of "+step2Name+" from "+anotherMatrixName);
 		
 		Event anotherMatrixAction2Event = getFirstEvent(it.next()),
-				anotherMatrixAction2ResultEvent = getFirstEvent(it.next()),
-				testMatrixAction2Event = getFirstEvent(it.next()),
-				testMatrixAction2ResultEvent = getFirstEvent(it.next());
+				anotherMatrixAction2StatusEvent = getFirstEvent(it.next()),
+				anotherMatrixAction2ResultEvent = getFirstEvent(it.next());
 		assertEquals(anotherMatrixAction2Event.getParentId(), anotherMatrixStep2Event.getId(), "Parent of second action from "+anotherMatrixName);
+		assertEquals(anotherMatrixAction2StatusEvent.getParentId(), anotherMatrixAction2Event.getId(), "Parent of status of second action from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction2ResultEvent.getParentId(), anotherMatrixAction2Event.getId(), "Parent of result of second action from "+anotherMatrixName);
+		
+		Event testMatrixAction2Event = getFirstEvent(it.next()),
+				testMatrixAction2StatusEvent = getFirstEvent(it.next()),
+				testMatrixAction2ResultEvent = getFirstEvent(it.next());
 		assertEquals(testMatrixAction2Event.getParentId(), testMatrixStep2Event.getId(), "Parent of second action from "+testMatrixName);
+		assertEquals(testMatrixAction2StatusEvent.getParentId(), testMatrixAction2Event.getId(), "Parent of status of second action from "+testMatrixName);
 		assertEquals(testMatrixAction2ResultEvent.getParentId(), testMatrixAction2Event.getId(), "Parent of result of second action from "+testMatrixName);
 	}
 	
@@ -280,6 +296,14 @@ public class Th2TestExecutionHandlerTest
 			result.setResult(actionResult);
 		}
 		return result;
+	}
+	
+	private void onAction(Action action, TestExecutionHandler handler) throws TestExecutionHandlingException
+	{
+		HandledTestExecutionId execId = handler.onAction(action);
+		action.setTestExecutionId(execId);
+		
+		handler.onActionResult(action.getResult(), action);
 	}
 	
 	private Event getFirstEvent(EventBatch batch)

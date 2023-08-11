@@ -74,63 +74,63 @@ public class ResultSaver
 		this.maxBatchSize = config.getMaxBatchSize();
 	}
 	
-	public void storeResult(Result result, String name, com.exactpro.th2.common.grpc.Event parent) throws UnsupportedResultException, TestExecutionHandlingException
+	public void storeResult(Result result, String name, Th2EventMetadata parentMetadata) throws UnsupportedResultException, TestExecutionHandlingException
 	{
-		if (storeCustom(result, name, parent))
+		if (storeCustom(result, name, parentMetadata))
 			return;
 		
 		if (result instanceof DefaultResult)  //This is needed in case when DefaultResult is part of ContainerResult. DefaultResult of Action is saved as part of Action event
 		{
-			store((DefaultResult)result, name, parent);
+			store((DefaultResult)result, name, parentMetadata);
 			return;
 		}
 		
 		if (result instanceof DetailedResult)
 		{
-			store((DetailedResult)result, name, parent);
+			store((DetailedResult)result, name, parentMetadata);
 			return;
 		}
 		
 		if (result instanceof TableResult)
 		{
-			store((TableResult)result, name, parent);
+			store((TableResult)result, name, parentMetadata);
 			return;
 		}
 		
 		if (result instanceof MultiDetailedResult)
 		{
-			store((MultiDetailedResult)result, name, parent);
+			store((MultiDetailedResult)result, name, parentMetadata);
 			return;
 		}
 		
 		if (result instanceof AttachedFilesResult)
 		{
-			store((AttachedFilesResult)result, name, parent);
+			store((AttachedFilesResult)result, name, parentMetadata);
 			return;
 		}
 		
 		if (result instanceof CsvDetailedResult)
 		{
-			store((CsvDetailedResult)result, parent);
+			store((CsvDetailedResult)result, parentMetadata);
 			return;
 		}
 		
 		if (result instanceof ContainerResult)
 		{
-			store((ContainerResult)result, name, parent);
+			store((ContainerResult)result, name, parentMetadata);
 			return;
 		}
 		
 		throw new UnsupportedResultException("Result of class "+result.getClass().getCanonicalName()+" is not supported");
 	}
 	
-	public void storeResult(Result result, com.exactpro.th2.common.grpc.Event parent) throws UnsupportedResultException, TestExecutionHandlingException
+	public void storeResult(Result result, Th2EventMetadata parentMetadata) throws UnsupportedResultException, TestExecutionHandlingException
 	{
-		storeResult(result, NAME_RESULT, parent);
+		storeResult(result, NAME_RESULT, parentMetadata);
 	}
 	
 	
-	protected boolean storeCustom(Result result, String name, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected boolean storeCustom(Result result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
 		return false;
 	}
@@ -190,31 +190,31 @@ public class ResultSaver
 	}
 	
 	
-	protected void store(DefaultResult result, String name, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected void store(DefaultResult result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
-		Event event = createEvent(result, name, TYPE_COMPARISON, parent);
-		storeEvent(event, parent.getId());
+		Event event = createEvent(result, name, TYPE_COMPARISON, parentMetadata);
+		storeEvent(event, parentMetadata.getId());
 	}
 	
-	protected void store(DetailedResult result, String name, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected void store(DetailedResult result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
-		Event event = createEvent(result, name, TYPE_COMPARISON, parent)
+		Event event = createEvent(result, name, TYPE_COMPARISON, parentMetadata)
 				.bodyData(createComparisonTable(result.getResultDetails()));
 		
-		storeEvent(event, parent.getId());
+		storeEvent(event, parentMetadata.getId());
 	}
 	
-	protected void store(TableResult result, String name, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected void store(TableResult result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
-		Event event = createEvent(result, name, TYPE_COMPARISON, parent)
+		Event event = createEvent(result, name, TYPE_COMPARISON, parentMetadata)
 				.bodyData(createTable(result.getColumns(), result.getDetails(), result.isHasStatus()));
 		
-		storeEvent(event, parent.getId());
+		storeEvent(event, parentMetadata.getId());
 	}
 	
-	protected void store(MultiDetailedResult result, String name, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected void store(MultiDetailedResult result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
-		Event event = createEvent(result, name, TYPE_CONTAINER, parent);
+		Event event = createEvent(result, name, TYPE_CONTAINER, parentMetadata);
 		int i = 0;
 		for (DetailsBlock block : result.getDetails())
 		{
@@ -230,12 +230,12 @@ public class ResultSaver
 					.bodyData(createComparisonTable(block.getDetails()));
 		}
 		
-		storeBatch(event, parent.getId());
+		storeBatch(event, parentMetadata.getId());
 	}
 	
-	protected void store(AttachedFilesResult result, String name, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected void store(AttachedFilesResult result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
-		Event event = createEvent(result, name, TYPE_CONTAINER, parent);
+		Event event = createEvent(result, name, TYPE_CONTAINER, parentMetadata);
 		for (String id : result.getIds())
 		{
 			Path file = result.getPath(id);
@@ -258,13 +258,16 @@ public class ResultSaver
 					.bodyData(resultText);
 		}
 		
-		storeBatch(event, parent.getId());
+		storeBatch(event, parentMetadata.getId());
 	}
 	
-	protected void store(CsvDetailedResult result, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected void store(CsvDetailedResult result, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
-		Event container = createEvent(result, result.getName()+" ("+result.getTotalRowsCount()+")", TYPE_CONTAINER, parent);
-		com.exactpro.th2.common.grpc.Event storedContainer = storeEvent(container, parent.getId());
+		Event container = createEvent(result, 
+				result.getName()+" ("+result.getTotalRowsCount()+")", 
+				TYPE_CONTAINER, 
+				parentMetadata);
+		com.exactpro.th2.common.grpc.Event storedContainer = storeEvent(container, parentMetadata.getId());
 		
 		if (result.getMaxStoredRowsCount() == 0 || result.getReportFile() == null)
 		{
@@ -275,10 +278,11 @@ public class ResultSaver
 		storeDetailsFromFile(result, storedContainer);
 	}
 	
-	protected void store(ContainerResult result, String name, com.exactpro.th2.common.grpc.Event parent) throws TestExecutionHandlingException
+	protected void store(ContainerResult result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
 	{
-		Event event = createEvent(result, name, TYPE_CONTAINER, parent);
-		com.exactpro.th2.common.grpc.Event stored = storeEvent(event, parent.getId());
+		Event event = createEvent(result, name, TYPE_CONTAINER, parentMetadata);
+		com.exactpro.th2.common.grpc.Event stored = storeEvent(event, parentMetadata.getId());
+		Th2EventMetadata storedMetadata = new Th2EventMetadata(stored.getId(), event.getStartTimestamp(), event.getEndTimestamp());
 		
 		for (Result sub : result.getDetails())
 		{
@@ -294,25 +298,23 @@ public class ResultSaver
 					Result sd = subDetails.get(0);
 					if (!(sd instanceof ContainerResult) || (((ContainerResult)sd).getHeader() == null))
 					{
-						storeResult(sd, subContainer.getHeader(), stored);  //Flattening simple container
+						storeResult(sd, subContainer.getHeader(), storedMetadata);  //Flattening simple container
 						continue;
 					}
 				}
 				
-				store(subContainer, subContainer.getHeader(), stored);
+				store(subContainer, subContainer.getHeader(), storedMetadata);
 			}
 			else
-				storeResult(sub, stored);
+				storeResult(sub, storedMetadata);
 		}
 	}
 	
 	
-	protected Event createEvent(Result result, String name, String type, com.exactpro.th2.common.grpc.Event parent)
+	protected Event createEvent(Result result, String name, String type, Th2EventMetadata metadata)
 	{
-		Instant startTimestamp = EventUtils.getTimestamp(parent.getId().getStartTimestamp()),
-				endTimestamp = EventUtils.getTimestamp(parent.getEndTimestamp());
 		Throwable error = result.getError();
-		Event event = ClearThEvent.fromTo(startTimestamp, endTimestamp)
+		Event event = ClearThEvent.fromTo(metadata.getStartTimestamp(), metadata.getEndTimestamp())
 				.name(name)
 				.type(type)
 				.description(result.getComment())

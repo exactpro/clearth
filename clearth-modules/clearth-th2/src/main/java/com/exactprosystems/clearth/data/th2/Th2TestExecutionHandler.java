@@ -33,6 +33,9 @@ import com.exactprosystems.clearth.data.TestExecutionHandlingException;
 import com.exactprosystems.clearth.data.th2.events.EventFactory;
 import com.exactprosystems.clearth.data.th2.events.EventUtils;
 import com.exactprosystems.clearth.data.th2.events.ResultSaver;
+import com.exactprosystems.clearth.data.th2.events.Th2EventId;
+import com.exactprosystems.clearth.data.th2.events.Th2EventMetadata;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public class Th2TestExecutionHandler implements TestExecutionHandler
@@ -87,10 +90,10 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 	}
 	
 	@Override
-	public void onAction(Action action) throws TestExecutionHandlingException
+	public HandledTestExecutionId onAction(Action action) throws TestExecutionHandlingException
 	{
 		if (action.isSubaction())
-			return;
+			return null;
 		
 		Event actionEvent = eventFactory.createActionEvent(action, executionInfo);
 		storeEvent(actionEvent);
@@ -98,15 +101,29 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		EventBatch subEvents = eventFactory.createActionSubEvents(action, actionEvent);
 		storeBatch(subEvents);
 		
-		Result result = action.getResult();
-		if (result != null && !(result instanceof DefaultResult))  //Details of DefaultResult are saved in action event
-			resultSaver.storeResult(result, actionEvent);
+		return new Th2EventId(actionEvent.getId());
 	}
 	
 	@Override
-	public void storeIntermediateResult(Result result, Action action) throws TestExecutionHandlingException
+	public void onActionResult(Result result, Action action) throws TestExecutionHandlingException
 	{
-		throw new TestExecutionHandlingException("Not implemented");
+		if (action.isSubaction())
+			return;
+		
+		EventID eventId = getEventId(action);
+		Th2EventMetadata metadata = new Th2EventMetadata(eventId, 
+				EventUtils.getActionStartTimestamp(action), 
+				EventUtils.getActionEndTimestamp(action));
+		
+		Event outputParams = eventFactory.createOutputParamsEvent(action, metadata);
+		if (outputParams != null)
+			storeEvent(outputParams);
+		
+		Event status = eventFactory.createActionStatusEvent(action, result, metadata);
+		storeEvent(status);
+		
+		if (result != null && !(result instanceof DefaultResult))  //Details of DefaultResult are saved in action status event
+			resultSaver.storeResult(result, metadata);
 	}
 	
 	@Override
@@ -162,5 +179,15 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		{
 			throw new TestExecutionHandlingException(e);
 		}
+	}
+	
+	private EventID getEventId(Action action) throws TestExecutionHandlingException
+	{
+		HandledTestExecutionId id = action.getTestExecutionId();
+		if (id == null)
+			throw new TestExecutionHandlingException("Action doesn't contain handled test execution ID");
+		if (!(id instanceof Th2EventId))
+			throw new TestExecutionHandlingException("Handled test execution ID must be of class "+Th2EventId.class.getCanonicalName()+", but it is "+id.getClass().getCanonicalName());
+		return ((Th2EventId)id).getId();
 	}
 }

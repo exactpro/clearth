@@ -23,6 +23,7 @@ import java.time.Instant;
 import com.exactpro.th2.common.event.Event.Status;
 import com.exactpro.th2.common.grpc.Event;
 import com.exactpro.th2.common.grpc.EventBatch;
+import com.exactprosystems.clearth.automation.Action;
 import com.google.protobuf.Timestamp;
 
 public class EventUtils
@@ -44,5 +45,15 @@ public class EventUtils
 	public static Instant getTimestamp(Timestamp timestamp)
 	{
 		return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
+	}
+	
+	public static Instant getActionStartTimestamp(Action action)
+	{
+		return action.getStarted() != null ? Instant.ofEpochMilli(action.getStarted().getTime()) : Instant.now();
+	}
+	
+	public static Instant getActionEndTimestamp(Action action)
+	{
+		return action.getFinished() != null ? Instant.ofEpochMilli(action.getFinished().getTime()) : null;
 	}
 }

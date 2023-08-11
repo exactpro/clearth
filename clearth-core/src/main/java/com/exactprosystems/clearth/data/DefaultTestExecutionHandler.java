@@ -56,12 +56,13 @@ public class DefaultTestExecutionHandler implements TestExecutionHandler
 	
 	
 	@Override
-	public void onAction(Action action) throws TestExecutionHandlingException
+	public HandledTestExecutionId onAction(Action action) throws TestExecutionHandlingException
 	{
+		return new UuidTestExecutionId();
 	}
 	
 	@Override
-	public void storeIntermediateResult(Result result, Action action) throws TestExecutionHandlingException
+	public void onActionResult(Result result, Action action) throws TestExecutionHandlingException
 	{
 	}
 	

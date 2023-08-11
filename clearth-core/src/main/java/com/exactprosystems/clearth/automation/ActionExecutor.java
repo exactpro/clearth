@@ -26,6 +26,7 @@ import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -329,7 +330,7 @@ public class ActionExecutor implements Closeable
 		applyStepSuccess(action);
 		
 		reportWriter.updateReports(action, actionsReportsDir, action.getStep().getSafeName());
-		handleAction(action);  //TODO: handle previously saved action?
+		handleActionResult(action);
 		processActionResult(action);
 		
 		// If asynchronous action is finished and failed, need to decrement number of successful actions for certain step
@@ -403,7 +404,7 @@ public class ActionExecutor implements Closeable
 		matrix.addStepStatusComment(stepName, "One or more actions CRASHED");
 		
 		reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
-		handleAction(action);
+		handleActionResult(action);
 	}
 	
 	
@@ -692,6 +693,7 @@ public class ActionExecutor implements Closeable
 					prepareToAction(action, stepContext, matrixContext);  //Creating connections according to action type, if needed
 					action.setStarted(new Date());
 					handleTimeout(action);
+					handleAction(action);  //Handling actual action start
 					if (isAsyncAction(action))
 						callActionAsync(action, stepContext, matrixContext);
 					else
@@ -745,7 +747,7 @@ public class ActionExecutor implements Closeable
 				reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
 		}
 		
-		handleAction(action);
+		handleActionResult(action);
 		
 		processActionResult(action);
 		applyStepSuccess(action);
@@ -760,22 +762,44 @@ public class ActionExecutor implements Closeable
 		return true;
 	}
 	
-	private void handleAction(Action action)
+	private boolean handleAction(Action action)
 	{
 		if (!executionHandler.isActive())
 		{
-			logger.trace("Skipped handling execution of action '%s' (%s)", action.getIdInMatrix(), action.getName());
-			return;
+			logger.trace("Skipped handling execution of action '{}' ({})", action.getIdInMatrix(), action.getName());
+			return false;
 		}
 		
 		try
 		{
-			logger.trace("Handling execution of action '%s' (%s)", action.getIdInMatrix(), action.getName());
-			executionHandler.onAction(action);
+			logger.trace("Handling execution of action '{}' ({})", action.getIdInMatrix(), action.getName());
+			HandledTestExecutionId executionId = executionHandler.onAction(action);
+			action.setTestExecutionId(executionId);
 		}
 		catch (Exception e)
 		{
 			logger.warn(String.format("Error occurred while handling execution of action '%s' (%s)", action.getIdInMatrix(), action.getName()), e);
+		}
+		return true;
+	}
+	
+	private void handleActionResult(Action action)
+	{
+		//If action start wasn't handled for some reason, handle it now else action result cannot be handled properly
+		if (action.getTestExecutionId() == null)
+		{
+			if (!handleAction(action))
+				return;
+		}
+		
+		try
+		{
+			logger.trace("Handling result of action '{}' ({})", action.getIdInMatrix(), action.getName());
+			executionHandler.onActionResult(action.getResult(), action);
+		}
+		catch (Exception e)
+		{
+			logger.warn(String.format("Error occurred while handling result of action '%s' (%s)", action.getIdInMatrix(), action.getName()), e);
 		}
 	}
 	
@@ -792,7 +816,7 @@ public class ActionExecutor implements Closeable
 			variables.saveOutputParams(action);
 			
 			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
-			handleAction(action);
+			handleActionResult(action);
 		}
 		variables.cleanAfterAction(action);
 	}

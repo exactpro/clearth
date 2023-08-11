@@ -66,10 +66,12 @@ public class EventFactory
 			TYPE_PARAMETERS = "Parameters",
 			TYPE_ACTION = "Action",
 			TYPE_SUB_ACTION = "Sub-action",
+			TYPE_STATUS = "Status",
 			
 			NAME_INPUT_PARAMETERS = "Input parameters",
 			NAME_SPECIAL_PARAMETERS = "Special parameters",
 			NAME_OUTPUT_PARAMETERS = "Output parameters",
+			NAME_ACTION_STATUS = "Action status",
 			COMPARISON_NAME = "Comparison name", COMPARISON_RESULT = "Comparison result",
 			ROW_KIND = "Row kind";
 	
@@ -154,7 +156,6 @@ public class EventFactory
 			Event inputParams = createInputParams(action, start, end, parentId),
 					specialParams = createSpecialParams(action, start, end, parentId);
 			Collection<Event> subActions = createSubActions(action, start, end, parentId);
-			Event outputParams = createOutputParams(action, start, end, parentId);
 			
 			EventBatch.Builder builder = EventBatch.newBuilder()
 					.setParentEventId(parentId)
@@ -162,8 +163,6 @@ public class EventFactory
 			if (specialParams != null)
 				builder.addEvents(specialParams);
 			builder.addAllEvents(subActions);
-			if (outputParams != null)
-				builder.addEvents(outputParams);
 			
 			return builder.build();
 		}
@@ -173,41 +172,73 @@ public class EventFactory
 		}
 	}
 	
+	public Event createOutputParamsEvent(Action action, Th2EventMetadata metadata) throws EventCreationException
+	{
+		Map<String, String> outputs = action.getOutputParams();
+		if (MapUtils.isEmpty(outputs))
+			return null;
+		
+		try
+		{
+			return ClearThEvent.fromTo(metadata.getStartTimestamp(), metadata.getEndTimestamp())
+					.name(NAME_OUTPUT_PARAMETERS)
+					.type(TYPE_PARAMETERS)
+					.bodyData(createKeyValueTable(outputs))
+					.toProto(metadata.getId());
+		}
+		catch (Exception e)
+		{
+			throw new EventCreationException("Error while creating action output parameters event", e);
+		}
+	}
+	
+	public Event createActionStatusEvent(Action action, Result result, Th2EventMetadata metadata)
+			throws EventCreationException
+	{
+		try
+		{
+			com.exactpro.th2.common.event.Event event = ClearThEvent.fromTo(metadata.getStartTimestamp(), metadata.getEndTimestamp())
+					.name(NAME_ACTION_STATUS)
+					.type(TYPE_STATUS);
+			
+			if (result == null)
+			{
+				//In ClearTH non-executable action is gray and failed, not affecting the whole report
+				//In th2 we don't have such option, so making it green and passed + adding a comment about action skip (see buildActionDescription())
+				event.status(action.isExecutable() ? EventUtils.getStatus(action.isPassed()) : Status.PASSED);
+			}
+			else
+			{
+				event.status(EventUtils.getStatus(result.isSuccess()));
+				Throwable error = result.getError();
+				if (error != null)
+					event.exception(error, true);
+				addLinkedMessages(result, action.getIdInMatrix(), event);
+			}
+			
+			Table body = createStatusTable(action, result);
+			if (body != null)
+				event.bodyData(body);
+			
+			return event.toProto(metadata.getId());
+		}
+		catch (Exception e)
+		{
+			throw new EventCreationException("Error while creating action status event", e);
+		}
+	}
+	
 	
 	protected Event createActionEvent(Action action, EventID parentId) throws JsonProcessingException
 	{
-		Instant startTimestamp = action.getStarted() != null ? Instant.ofEpochMilli(action.getStarted().getTime()) : Instant.now(),
-				endTimestamp = action.getFinished() != null ? Instant.ofEpochMilli(action.getFinished().getTime()) : null;
+		Instant startTimestamp = EventUtils.getActionStartTimestamp(action),
+				endTimestamp = EventUtils.getActionEndTimestamp(action);
 		
 		com.exactpro.th2.common.event.Event event = ClearThEvent.fromTo(startTimestamp, endTimestamp)
 				.name(buildActionName(action.getIdInMatrix(), action.getName()))
 				.type(TYPE_ACTION)
 				.description(buildActionDescription(action));
-		addActionStatus(action, event);
 		return event.toProto(parentId);
-	}
-	
-	protected void addActionStatus(Action action, com.exactpro.th2.common.event.Event event)
-	{
-		Result result = action.getResult();
-		if (result == null)
-		{
-			//In ClearTH non-executable action is gray and failed, not affecting the whole report
-			//In th2 we don't have such option, so making it green and passed + adding a comment about action skip (see buildActionDescription())
-			event.status(action.isExecutable() ? EventUtils.getStatus(action.isPassed()) : Status.PASSED);
-		}
-		else
-		{
-			event.status(EventUtils.getStatus(result.isSuccess()));
-			Throwable error = result.getError();
-			if (error != null)
-				event.exception(error, true);
-			addLinkedMessages(result, action.getIdInMatrix(), event);
-		}
-		
-		Table body = createStatusTable(action);
-		if (body != null)
-			event.bodyData(body);
 	}
 	
 	protected Event createInputParams(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws JsonProcessingException
@@ -253,19 +284,6 @@ public class EventFactory
 		return result;
 	}
 	
-	protected Event createOutputParams(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws JsonProcessingException
-	{
-		Map<String, String> outputs = action.getOutputParams();
-		if (MapUtils.isEmpty(outputs))
-			return null;
-		
-		return ClearThEvent.fromTo(startTimestamp, endTimestamp)
-				.name(NAME_OUTPUT_PARAMETERS)
-				.type(TYPE_PARAMETERS)
-				.bodyData(createKeyValueTable(outputs))
-				.toProto(parentId);
-	}
-	
 	
 	protected final Table createParamsTable(Map<String, ReportParamValue> params, Set<String> orderedNames)
 	{
@@ -290,7 +308,7 @@ public class EventFactory
 		return builder.build();
 	}
 	
-	protected final Table createStatusTable(Action action)
+	protected final Table createStatusTable(Action action, Result result)
 	{
 		long actualTimeout = 0,
 				waitBeforeAction = 0;
@@ -304,8 +322,6 @@ public class EventFactory
 		}
 		else
 			waitBeforeAction = action.getTimeOut();
-		
-		Result result = action.getResult();
 		
 		if (actualTimeout == 0 && waitBeforeAction == 0 && result == null)
 			return null;

@@ -82,17 +82,18 @@ public class DummyTestExecutionHandler implements TestExecutionHandler
 	}
 	
 	@Override
-	public void onAction(Action action) throws TestExecutionHandlingException
+	public HandledTestExecutionId onAction(Action action) throws TestExecutionHandlingException
 	{
 		if (actionResults == null)
 			actionResults = new LinkedHashMap<>();
-		actionResults.put(createActionKey(action.getMatrix().getName(), action.getStepName(), action.getIdInMatrix()), 
-				copyResultData(action.getResult()));
+		actionResults.put(createActionKey(action), null);
+		return new UuidTestExecutionId();
 	}
 	
 	@Override
-	public void storeIntermediateResult(Result result, Action action) throws TestExecutionHandlingException
+	public void onActionResult(Result result, Action action) throws TestExecutionHandlingException
 	{
+		actionResults.put(createActionKey(action), copyResultData(result));
 	}
 	
 	@Override
@@ -135,6 +136,11 @@ public class DummyTestExecutionHandler implements TestExecutionHandler
 				: null;
 	}
 	
+	
+	private String createActionKey(Action action)
+	{
+		return createActionKey(action.getMatrix().getName(), action.getStepName(), action.getIdInMatrix());
+	}
 	
 	private String createActionKey(String matrixName, String stepName, String actionId)
 	{

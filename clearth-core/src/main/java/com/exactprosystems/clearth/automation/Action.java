@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,6 +30,7 @@ import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Pair;
 
@@ -82,6 +83,7 @@ public abstract class Action
 	protected Logger logger = null;
 	
 	protected final String uniqueId = UUID.randomUUID().toString();
+	private HandledTestExecutionId testExecutionId;
 
 	public Action()
 	{
@@ -152,6 +154,7 @@ public abstract class Action
 		duplicateParams = null;
 		formulas = null;
 		specialParamsFormulas = null;
+		testExecutionId = null;
 	}
 	
 	
@@ -738,5 +741,16 @@ public abstract class Action
 	public void setPayloadFinished(boolean payloadFinished)
 	{
 		this.payloadFinished = payloadFinished;
+	}
+	
+	
+	public HandledTestExecutionId getTestExecutionId()
+	{
+		return testExecutionId;
+	}
+	
+	public void setTestExecutionId(HandledTestExecutionId testExecutionId)
+	{
+		this.testExecutionId = testExecutionId;
 	}
 }
