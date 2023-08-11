@@ -383,6 +383,8 @@ dependencyCheck {
 		'grettyRunnerJetty9', 'grettyRunnerTomcat85', 'grettyRunnerTomcat7', 'grettyRunnerTomcat8', 'grettyRunnerJetty7', 'grettyRunnerTomcat9', 
 		'grettyNoSpringBoot', 'gretty']
 	format = 'ALL'
+	failBuildOnCVSS = 7.6
+	suppressionFile = "${projectDir}/dependency-check/suppressions.xml"
 }
 
 wrapper {
