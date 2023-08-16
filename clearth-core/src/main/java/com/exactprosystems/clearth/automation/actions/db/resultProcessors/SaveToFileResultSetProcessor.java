@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,10 +18,12 @@
 
 package com.exactprosystems.clearth.automation.actions.db.resultProcessors;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.automation.actions.db.checkers.RecordChecker;
 import com.exactprosystems.clearth.automation.actions.db.resultProcessors.settings.SaveToFileRSProcessorSettings;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.csv.ClearThQuoteMode;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriterConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -38,7 +40,7 @@ import static com.exactprosystems.clearth.automation.actions.db.SQLAction.OUT_QU
 public class SaveToFileResultSetProcessor extends ResultSetProcessor
 {
 	protected final boolean compressResult;
-	protected final CsvWriter csvWriter;
+	protected final ClearThCsvWriter csvWriter;
 	protected final File outputFile;
 	protected final File fileToWrite;
 	protected final RecordChecker recordChecker;
@@ -50,15 +52,23 @@ public class SaveToFileResultSetProcessor extends ResultSetProcessor
 		this.fileToWrite = createFileToWrite(Validate.notNull(settings.getFileDir(), "File dir can't be null"), settings.getFileName());
 		this.compressResult = settings.isCompressResult();
 		this.outputFile = compressResult ? new File(fileToWrite + ".zip") : fileToWrite;
-		this.csvWriter = createCsvWriter(fileToWrite, settings.getDelimiter(), settings.isAppend(), settings.isUseQuotes());
+		this.csvWriter = createCsvWriter(fileToWrite, settings);
 		outputParams.put(OUT_QUERY_RESULT_PATH, outputFile.toString());
 	}
 
-	protected CsvWriter createCsvWriter(File outputFile, char delimiter, boolean append, boolean useQuotes) throws IOException
+	protected ClearThCsvWriter createCsvWriter(File outputFile, SaveToFileRSProcessorSettings settings) throws IOException
 	{
-		CsvWriter writer = new CsvWriter(new FileWriter(outputFile, append), delimiter);
-		writer.setForceQualifier(useQuotes);
-		return writer;
+		return new ClearThCsvWriter(new FileWriter(outputFile, settings.isAppend()), createCsvWriterConfig(settings));
+	}
+
+	protected ClearThCsvWriterConfig createCsvWriterConfig(SaveToFileRSProcessorSettings settings)
+	{
+		ClearThCsvWriterConfig config = new ClearThCsvWriterConfig();
+		config.setDelimiter(settings.getDelimiter());
+		config.setUseTextQualifier(settings.isUseQuotes());
+		if (settings.isUseQuotes())
+			config.setQuoteMode(ClearThQuoteMode.ALL);
+		return config;
 	}
 
 	protected File createFileToWrite(File directory, String fileName) throws IOException

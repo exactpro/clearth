@@ -1,0 +1,3 @@
+#ID,#Globalstep,#Action,#FileName,#AppendData,#AddHeader,#AddAccordingToHeader,#Paparam1,#Paparam2,#Paparam3
+id1,Step1,AddRecordToCsvFile,clearth-core/testOutput/AddRecordToCsvFileTest/file.csv,TRUE,TRUE,TRUE, Va ,"l u"," e s "
+id2,Step1,AddRecordToCsvFile,clearth-core/testOutput/AddRecordToCsvFileTest/file.csv,TRUE,FALSE,TRUE, Va lu es,"lu es"," e es "

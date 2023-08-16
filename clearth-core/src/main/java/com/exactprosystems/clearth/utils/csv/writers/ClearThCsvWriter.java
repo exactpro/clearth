@@ -18,8 +18,10 @@
 
 package com.exactprosystems.clearth.utils.csv.writers;
 
+import com.exactprosystems.clearth.utils.csv.ClearThQuoteMode;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.QuoteMode;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -75,6 +77,11 @@ public class ClearThCsvWriter implements AutoCloseable
 		csvPrinter.printRecord((Object[]) rowLine);
 	}
 
+	public void flush() throws IOException
+	{
+		csvPrinter.flush();
+	}
+
 	@Override
 	public void close() throws IOException
 	{
@@ -86,7 +93,11 @@ public class ClearThCsvWriter implements AutoCloseable
 		CSVFormat csvFormat = CSVFormat.newFormat(config.getDelimiter())
 				.withRecordSeparator(config.getLineSeparator())
 				.withTrim(config.isWithTrim())
-				.withNullString(config.getNullString());
+				.withNullString(config.getNullString())
+				.withQuoteMode(QuoteMode.valueOf(config.getQuoteModeString()));
+
+		if (config.getQuoteMode() == ClearThQuoteMode.NONE)
+			csvFormat = csvFormat.withEscape(config.getEscapeCharacter());
 
 		if (config.isUseTextQualifier())
 			csvFormat = csvFormat.withQuote(config.getTextQualifier());

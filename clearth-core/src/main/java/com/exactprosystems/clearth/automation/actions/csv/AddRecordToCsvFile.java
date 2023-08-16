@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,18 @@
 
 package com.exactprosystems.clearth.automation.actions.csv;
 
-import static com.exactprosystems.clearth.automation.actions.MessageAction.FILENAME;
+import com.exactprosystems.clearth.automation.Action;
+import com.exactprosystems.clearth.automation.GlobalContext;
+import com.exactprosystems.clearth.automation.MatrixContext;
+import com.exactprosystems.clearth.automation.StepContext;
+import com.exactprosystems.clearth.automation.exceptions.FailoverException;
+import com.exactprosystems.clearth.automation.exceptions.ResultException;
+import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 
 import java.io.File;
 import java.io.FileReader;
@@ -29,19 +40,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
-
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.StepContext;
-import com.exactprosystems.clearth.automation.exceptions.FailoverException;
-import com.exactprosystems.clearth.automation.exceptions.ResultException;
-import com.exactprosystems.clearth.automation.report.Result;
-import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.Utils;
-import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
+import static com.exactprosystems.clearth.automation.actions.MessageAction.FILENAME;
 
 public class AddRecordToCsvFile extends Action {
 
@@ -71,75 +70,68 @@ public class AddRecordToCsvFile extends Action {
 			handler.check();
 		}
 
-		if(f.isFile() && (f.length() != 0) && append && addHeader)
+		if (f.isFile() && (f.length() != 0) && append && addHeader)
 			return DefaultResult.failed("Inconsistent parameters - unable to add header to existing non-empty file.");
 
-		if((!append || !f.isFile() || (f.isFile() && f.length() == 0)) && !addHeader && addAccordingToHeader)
+		if ((!append || !f.isFile() || (f.isFile() && f.length() == 0)) && !addHeader && addAccordingToHeader)
 			return DefaultResult.failed("Inconsistent parameters - unable to add data according to header without header in file.");
 
-		CsvWriter csvWriter = null;
+		try (ClearThCsvWriter csvWriter = new ClearThCsvWriter(new FileWriter(f, append)))
 		{
-			try
+			if (addHeader)
 			{
-				FileWriter fileWriter = new FileWriter(f, append);
-				csvWriter = new CsvWriter(fileWriter, ',');
-
-				if(addHeader)
+				for (String param : inputParams.keySet())
 				{
-					for (String param : inputParams.keySet())
-					{
-						if(!SERVICE_PARAMETERS.contains(param))
-							csvWriter.write(param);
-					}
-					csvWriter.endRecord();
-					csvWriter.flush();
+					if (!SERVICE_PARAMETERS.contains(param))
+						csvWriter.write(param);
 				}
-
-				Set<String> inputWithoutServiceParams = new LinkedHashSet<>(inputParams.keySet());
-				inputWithoutServiceParams.removeAll(SERVICE_PARAMETERS);
-
-				if(addAccordingToHeader)
-				{
-					String[] header;
-					CsvReader csvReader = null;
-					try
-					{
-						csvReader = new CsvReader(new FileReader(f));
-						csvReader.readHeaders();
-						header = csvReader.getHeaders();
-					} catch (Exception e)
-					{
-						return DefaultResult.failed("Could not load header from file.", e);
-					}
-					finally
-					{
-						Utils.closeResource(csvReader);
-					}
-
-					if(!(Arrays.asList(header)).containsAll(inputWithoutServiceParams))
-						return DefaultResult.failed("Input parameters do not match the header in file.");
-
-					for(String param : header)
-						csvWriter.write(inputParams.get(param));
-				}
-				else
-				{
-					for (String param : inputWithoutServiceParams)
-						csvWriter.write(inputParams.get(param));
-				}
-
 				csvWriter.endRecord();
+				csvWriter.flush();
+			}
 
-			} catch (IOException e)
+			Set<String> inputWithoutServiceParams = new LinkedHashSet<>(inputParams.keySet());
+			inputWithoutServiceParams.removeAll(SERVICE_PARAMETERS);
+
+			if (addAccordingToHeader)
 			{
-				return DefaultResult.failed("Error while writing data", e);
+				Set<String> header = readHeaderFromFile(f);
+
+				if (!header.containsAll(inputWithoutServiceParams))
+					return DefaultResult.failed("Input parameters do not match the header in file.");
+
+				for (String param : header)
+					csvWriter.write(inputParams.get(param));
 			}
-			finally
+			else
 			{
-				Utils.closeResource(csvWriter);
+				for (String param : inputWithoutServiceParams)
+					csvWriter.write(inputParams.get(param));
 			}
+			csvWriter.endRecord();
+		}
+		catch (IOException e)
+		{
+			return DefaultResult.failed("Error while writing data", e);
 		}
 
 		return null;
+	}
+
+	protected Set<String> readHeaderFromFile(File f) throws IOException
+	{
+		try (ClearThCsvReader csvReader = new ClearThCsvReader(new FileReader(f), createCsvReaderConfig()))
+		{
+			if (!csvReader.readHeader())
+				throw new ResultException("Could not read header.");
+
+			return csvReader.getHeader();
+		}
+	}
+
+	protected ClearThCsvReaderConfig createCsvReaderConfig()
+	{
+		ClearThCsvReaderConfig config = new ClearThCsvReaderConfig();
+		config.setFirstLineAsHeader(true);
+		return config;
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation.actions;
 
-import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.MatrixContext;
@@ -26,13 +25,16 @@ import com.exactprosystems.clearth.automation.StepContext;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import org.apache.commons.lang.StringUtils;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static com.exactprosystems.clearth.ClearThCore.rootRelative;
 
@@ -40,11 +42,11 @@ public class GetCsvLine extends Action
 {
 	private final String FILE_NAME = "FileName";
 
-	private String[] removeInvalidSymbols(String[] header)
+	private Set<String> removeInvalidSymbols(Set<String> header)
 	{
-		String[] clearHeader = new String[header.length];
-		for (int i = 0; i < header.length; i++)
-			clearHeader [i] = header[i].replaceAll("[^\\w$]", "");
+		Set<String> clearHeader = new LinkedHashSet<>();
+		for (String s :header)
+			clearHeader.add(s.replaceAll("[^\\w$]", ""));
 
 		return clearHeader;
 	}
@@ -65,26 +67,24 @@ public class GetCsvLine extends Action
 		int foundLinesCount = 0;
 		LinkedHashMap<String, String> foundLine = new LinkedHashMap<String, String>();
 
-		CsvReader reader = null;
-		try
+		try (ClearThCsvReader reader = new ClearThCsvReader(rootRelative(fileName), createCsvReaderConfig()))
 		{
-			reader = new CsvReader(new FileReader(rootRelative(fileName)));
-			reader.setSkipEmptyRecords(false);
-			reader.setTrimWhitespace(true);
+			if (!reader.readHeader())
+				throw new IOException("File does not have header");
 
-			reader.readHeaders();
-			String[] header = reader.getHeaders(),
-					headerForMatrix = removeInvalidSymbols(header);
+			Set<String> header = reader.getHeader(),
+					cleanedHeader = removeInvalidSymbols(header);
 
-			while (reader.readRecord())
+			while (reader.hasNext())
 			{
 				boolean isFound = false;
 				LinkedHashMap<String, String> currentRecord = new LinkedHashMap<String, String>();
+				Iterator<String> headerForMatrix = cleanedHeader.iterator();
 
-				for (int i = 0; i < header.length; i++)
+				for (String fieldName : header)
 				{
-					String paramValue = reader.get(header[i]),
-							headerParamForOutput = headerForMatrix[i],
+					String paramValue = reader.get(fieldName),
+							headerParamForOutput = headerForMatrix.next(),
 							keyValue = paramsHandler.getString(headerParamForOutput);
 					currentRecord.put(headerParamForOutput, paramValue);
 
@@ -112,10 +112,6 @@ public class GetCsvLine extends Action
 		{
 			return DefaultResult.failed("Error while reading file", e);
 		}
-		finally
-		{
-			Utils.closeResource(reader);
-		}
 
 		Result result;
 
@@ -133,5 +129,14 @@ public class GetCsvLine extends Action
 		}
 
 		return result;
+	}
+
+	private ClearThCsvReaderConfig createCsvReaderConfig()
+	{
+		ClearThCsvReaderConfig config = new ClearThCsvReaderConfig();
+		config.setSkipEmptyRecords(false);
+		config.setIgnoreSurroundingSpaces(true);
+		config.setFirstLineAsHeader(true);
+		return config;
 	}
 }

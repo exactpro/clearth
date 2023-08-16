@@ -1,0 +1,97 @@
+{
+  "result" : true,
+  "stepReports" : [
+    {
+      "stepName" : "Step1",
+      "stepKind" : "Default",
+      "status" :
+      {
+        "passed" : true
+      },
+      "actionReports" : [
+      {
+        "actionId" : "id1",
+        "actionName" : "GetCsvLine",
+        "status" :
+        {
+          "passed" : true
+        },
+        "inputParams" :
+        {
+          "FileName" : {
+            "value" : "clearth-core/src/test/resources/Action/GetCsvLineTest/file.csv"
+          },
+          "Param3" : {
+            "value" : "Value4"
+          },
+          "Param2" : {
+            "value" : "Value1"
+          },
+          "Param1" : {
+            "value" : "TestRow"
+          }
+        },
+        "outputParams" :
+        {
+          "Param1" : "TestRow",
+          "Param2" : "Value1",
+          "Param3" : "Value4"
+        },
+        "result" :
+        {
+          "@c" : ".results.DefaultResult",
+          "success" : true,
+          "crashed" : false,
+          "inverted" : false,
+          "message" : null,
+          "comment" : "Line found",
+          "linkedMessages" : [ ],
+          "failReason" : "FAILED",
+          "failoverData" : null
+        },
+        "subActions" : [ ]
+      },
+      {
+        "actionId" : "id2",
+        "actionName" : "GetCsvLine",
+        "status" :
+        {
+          "passed" : true
+        },
+        "inputParams" :
+        {
+          "FileName" : {
+            "value" : "clearth-core/src/test/resources/Action/GetCsvLineTest/file.csv"
+          },
+          "Param3" : {
+            "value" : "333"
+          },
+          "Param2" : {
+            "value" : "222"
+          },
+          "Param1" : {
+            "value" : "111"
+          }
+        },
+        "outputParams" :
+        {
+          "Param1" : "111",
+          "Param2" : "222",
+          "Param3" : "333"
+        },
+        "result" :
+        {
+          "@c" : ".results.DefaultResult",
+          "success" : true,
+          "crashed" : false,
+          "inverted" : false,
+          "message" : null,
+          "comment" : "Line found",
+          "linkedMessages" : [ ],
+          "failReason" : "FAILED",
+          "failoverData" : null
+        },
+        "subActions" : [ ]
+      } ]
+  } ]
+}

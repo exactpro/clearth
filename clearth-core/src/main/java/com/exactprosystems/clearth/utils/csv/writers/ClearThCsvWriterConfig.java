@@ -19,10 +19,13 @@
 package com.exactprosystems.clearth.utils.csv.writers;
 
 import com.exactprosystems.clearth.utils.csv.ClearThCsvConfig;
+import com.exactprosystems.clearth.utils.csv.ClearThQuoteMode;
 
 public class ClearThCsvWriterConfig extends ClearThCsvConfig
 {
 	private String nullString = "";
+	private ClearThQuoteMode quoteMode = ClearThQuoteMode.MINIMAL;
+	private Character escapeCharacter;
 
 	public String getNullString()
 	{
@@ -32,5 +35,30 @@ public class ClearThCsvWriterConfig extends ClearThCsvConfig
 	public void setNullString(String nullString)
 	{
 		this.nullString = nullString;
+	}
+
+	public String getQuoteModeString()
+	{
+		return quoteMode != null ? quoteMode.toString() : ClearThQuoteMode.MINIMAL.toString();
+	}
+
+	public ClearThQuoteMode getQuoteMode()
+	{
+		return quoteMode;
+	}
+
+	public void setQuoteMode(ClearThQuoteMode cthQuoteMode)
+	{
+		this.quoteMode = cthQuoteMode;
+	}
+
+	public Character getEscapeCharacter()
+	{
+		return escapeCharacter;
+	}
+
+	public void setEscapeCharacter(Character escapeCharacter)
+	{
+		this.escapeCharacter = escapeCharacter;
 	}
 }
