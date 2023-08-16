@@ -87,9 +87,9 @@ subprojects {
 				failOnVersionConflict()
 				
 				def kotlinVersion = '1.6.21'
-				def jacksonVersion = '2.13.4'
+				def jacksonVersion = '2.15.2'
 				def cassandraVersion = '4.15.0'
-				def nettyVersion = '4.1.89.Final'
+				def nettyVersion = '4.1.94.Final'
 				
 				//common dependenices are written explicilty to force modules use correct and expected versions
 				force   'commons-codec:commons-codec:1.15',
@@ -105,7 +105,7 @@ subprojects {
 						'commons-logging:commons-logging:1.2',
 						'org.apache.logging.log4j:log4j-core:2.17.2',
 						'org.apache.logging.log4j:log4j-api:2.17.2',
-						'com.fasterxml.jackson.core:jackson-databind:2.13.4.2',
+						"com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
 						"com.fasterxml.jackson:jackson-bom:${jacksonVersion}",
 						"com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}",
 						"com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
@@ -125,18 +125,24 @@ subprojects {
 						'com.google.protobuf:protobuf-java-util:3.21.7',
 						'com.datastax.oss:java-driver-core:4.15.0',
 						'com.exactpro.th2:grpc-service-generator:3.3.1',
-						'io.netty:netty-all:4.1.89.Final',
 						'io.dropwizard.metrics:metrics-core:4.1.18',
 						'com.google.protobuf:protobuf-java:3.21.12',
 						'com.google.code.gson:gson:2.9.0',
 						"com.datastax.oss:java-driver-query-builder:${cassandraVersion}",
 						"com.datastax.oss:java-driver-mapper-processor:${cassandraVersion}",
 						"com.datastax.oss:java-driver-mapper-runtime:${cassandraVersion}",
+						"io.netty:netty-all:${nettyVersion}",
 						"io.netty:netty-handler:${nettyVersion}",
 						"io.netty:netty-codec-http2:${nettyVersion}",
 						"io.netty:netty-handler-proxy:${nettyVersion}",
 						"io.netty:netty-transport-native-unix-common:${nettyVersion}",
-						"io.netty:netty-codec-http:${nettyVersion}"
+						"io.netty:netty-codec-http:${nettyVersion}",
+						"io.netty:netty-common:${nettyVersion}",
+						"io.netty:netty-resolver:${nettyVersion}",
+						"io.netty:netty-buffer:${nettyVersion}",
+						"io.netty:netty-transport:${nettyVersion}",
+						"io.netty:netty-codec:${nettyVersion}",
+						"io.netty:netty-codec-socks:${nettyVersion}"
 						
 						
 				cacheChangingModulesFor 0, 'seconds'
