@@ -143,7 +143,7 @@ static Node addConnectionTypeInfo(Node rootNode, Tuple4<String, String, String, 
     typeNode.appendNode('name', connectionTypeInfo.first)
     typeNode.appendNode('connectionClass', connectionTypeInfo.second)
     typeNode.appendNode('directory', connectionTypeInfo.third)
-    if (connectionTypeInfo && !connectionTypeInfo.isEmpty()) {
+    if (connectionTypeInfo.fourth && !connectionTypeInfo.fourth.isEmpty()) {
         Node rulesNode = typeNode.appendNode('validationRules')
         connectionTypeInfo.fourth.forEach {rulesNode.appendNode('ruleClass', it)}
     }

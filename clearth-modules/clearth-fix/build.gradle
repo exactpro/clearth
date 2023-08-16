@@ -1,0 +1,50 @@
+dependencies {
+	implementation 'org.quickfixj:quickfixj-core:2.3.1'
+}
+
+publishing {
+	publications {
+		fix(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-fix'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications(publishing.publications.fix)
+}
+
+ext {
+	moduleName = 'FIX'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-fix'
+	
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+}
+
+task installModule {
+	doLast {
+		def installationDir = "${projectDir}/installation"
+		def codec = file("${installationDir}/codec.xml").text
+		def actions = file("${installationDir}/actions.cfg").text
+		def clearthCfgDir = "${clearthDir}/cfg/"
+		
+		def type = new Tuple4("FIX",
+				"com.exactprosystems.clearth.connectivity.fix.FixConnection",
+				"connections/fix",
+				null)
+		
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+						{ addConnectionTypeToCfg(type, clearthDir) },
+						{ putCodec(codec, moduleName, clearthDir) },
+						{ putFile("fixsettings.cfg", installationDir, clearthCfgDir) },
+						{ putActions(clearthDir, actions) }
+				]
+		)
+	}
+}

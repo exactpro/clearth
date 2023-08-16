@@ -1,0 +1,10 @@
+    <CodecConfig>
+        <Name>FIX</Name>
+        <AltName>fix</AltName>
+        <DictionaryFile>FIX50.xml</DictionaryFile>
+        <Dictionary>com.exactprosystems.clearth.connectivity.fix.FixDictionary</Dictionary>
+        <DictionaryParameters>
+            <Parameter name="TransportDictionary" value="FIXT11.xml" />
+        </DictionaryParameters>
+        <Codec>com.exactprosystems.clearth.connectivity.fix.FixCodec</Codec>
+    </CodecConfig>

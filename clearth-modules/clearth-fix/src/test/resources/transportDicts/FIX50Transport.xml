@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fix minor="0" major="5">
+	<header/>
+	<trailer/>
+	<messages>
+		<message name="CustomMessage" msgtype="CU" msgcat="app">
+			<field name="Text" required="N"/>
+			<field name="Number" required="N"/>
+			<field name="AnotherText" required="N"/>
+			<component name="Cmp" required="N"/>
+		</message>
+	</messages>
+	<components>
+		<component name="Cmp">
+			<group name="Grp" required="Y">
+				<field name="GrpField1" required="N"/>
+				<field name="GrpField2" required="N"/>
+				<component name="Cmp2" />
+			</group>
+		</component>
+		<component name="Cmp2">
+			<group name="Grp2" required="Y">
+				<field name="GrpField1" required="N"/>
+				<field name="GrpField3" required="N"/>
+			</group>
+		</component>
+	</components>
+	<fields>
+		<field number="1" name="Text" type="STRING"/>
+		<field number="2" name="Number" type="STRING"/>
+		<field number="3" name="Value" type="STRING"/>
+		<field number="4" name="Grp" type="STRING"/>
+		<field number="5" name="GrpField1" type="STRING"/>
+		<field number="6" name="GrpField2" type="STRING"/>
+		<field number="7" name="GrpField3" type="STRING"/>
+		<field number="8" name="BeginString" type="STRING"/>
+		<field number="9" name="BodyLength" type="LENGTH"/>
+		<field number="10" name="CheckSum" type="STRING"/>
+		<field number="35" name="MsgType" type="STRING" />
+		<field number="50" name="Grp2" type="STRING"/>
+		<field number="60" name="AnotherText" type="STRING"/>
+	</fields>
+</fix>

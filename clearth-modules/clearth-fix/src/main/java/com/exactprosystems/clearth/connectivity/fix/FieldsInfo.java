@@ -1,0 +1,74 @@
+/******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
+ * https://www.exactpro.com
+ * Build Software to Test Software
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.exactprosystems.clearth.connectivity.fix;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+/**
+ * Storage for information about FIX message fields
+ */
+public class FieldsInfo
+{
+	private final Set<Integer> fields;
+	
+	public FieldsInfo()
+	{
+		fields = createFieldsSet();
+	}
+	
+	public FieldsInfo(Set<Integer> orderedFields)
+	{
+		fields = createFieldsSet();
+		fields.addAll(orderedFields);
+	}
+	
+	
+	protected Set<Integer> createFieldsSet()
+	{
+		return new LinkedHashSet<Integer>();
+	}
+
+	
+	/**
+	 * @return Set of FIX message fields in expected order
+	 */
+	public Set<Integer> getFields()
+	{
+		return fields;
+	}
+	
+	/**
+	 * @return array of FIX message fields in expected order
+	 */
+	public int[] getFieldsArray()
+	{
+		return fields.stream().mapToInt(i -> i).toArray();
+	}
+	
+	
+	/**
+	 * Adds all information from method parameter to this instance
+	 * @param toAdd data to add
+	 */
+	public void add(FieldsInfo toAdd)
+	{
+		fields.addAll(toAdd.getFields());
+	}
+}

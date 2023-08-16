@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fix type="FIXT" major="1" minor="1">
+	<header>
+		<field name="BeginString" required="Y"/>
+		<field name="BodyLength" required="Y"/>
+		<field name="MsgType" required="Y"/>
+		<field name="ApplVerID" required="N"/>
+		<field name="SenderCompID" required="Y"/>
+		<field name="TargetCompID" required="Y"/>
+		<field name="MsgSeqNum" required="Y"/>
+		<field name="SendingTime" required="Y"/>
+	</header>
+	<trailer>
+		<field name="SignatureLength" required="N"/>
+		<field name="Signature" required="N"/>
+		<field name="CheckSum" required="Y"/>
+	</trailer>
+	<messages>
+		<message name="AdminMessage" msgtype="AM" msgcat="admin">
+			<field name="AdminField" required="N"/>
+		</message>
+	</messages>
+	<fields>
+		<field number="8" name="BeginString" type="STRING"/>
+		<field number="9" name="BodyLength" type="LENGTH"/>
+		<field number="10" name="CheckSum" type="STRING"/>
+		<field number="34" name="MsgSeqNum" type="SEQNUM"/>
+		<field number="35" name="MsgType" type="STRING" />
+		<field number="49" name="SenderCompID" type="STRING"/>
+		<field number="52" name="SendingTime" type="UTCTIMESTAMP"/>
+		<field number="56" name="TargetCompID" type="STRING"/>
+		<field number="89" name="Signature" type="DATA"/>
+		<field number="93" name="SignatureLength" type="LENGTH"/>
+		<field number="1128" name="ApplVerID" type="STRING">
+			<value enum="0" description="FIX27"/>
+			<value enum="1" description="FIX30"/>
+			<value enum="2" description="FIX40"/>
+			<value enum="3" description="FIX41"/>
+			<value enum="4" description="FIX42"/>
+			<value enum="5" description="FIX43"/>
+			<value enum="6" description="FIX44"/>
+			<value enum="7" description="FIX50"/>
+			<value enum="8" description="FIX50SP1"/>
+			<value enum="9" description="FIX50SP2"/>
+		</field>
+		
+		<field number="90" name="AdminField" type="STRING"/>
+	</fields>
+</fix>
