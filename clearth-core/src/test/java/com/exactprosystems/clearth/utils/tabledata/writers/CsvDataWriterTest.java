@@ -24,12 +24,11 @@ import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -166,6 +165,32 @@ public class CsvDataWriterTest
 			Assertions.assertThat(reader.readAllData()).usingRecursiveComparison()
 					.isEqualTo(buildDataForWriting(header, rows));
 		}
+	}
+
+	@Test
+	public void testCheckChangesAfterReadingAndWritingToFile() throws IOException
+	{
+		StringReader stringReader = new StringReader("Param1,Param2,Param3,Param4" + LN_SEPARATOR +
+				"Value1,\"\"\" Value 2\"\"\", Value3 ,\" Value4 \"" + LN_SEPARATOR);
+
+		//Enclosing spaces will be lost when CsvDataWriter writes data. This is due to its legacy behavior.
+		String expectedData = "Param1,Param2,Param3,Param4" + LN_SEPARATOR +
+				"Value1,\"\"\" Value 2\"\"\",Value3,Value4" + LN_SEPARATOR;
+
+		StringTableData stringTableData = null;
+		try (CsvDataReader reader = new CsvDataReader(stringReader))
+		{
+			stringTableData = reader.readAllData();
+		}
+
+		StringWriter stringWriter = new StringWriter();
+		try (CsvDataWriter writer = new CsvDataWriter(stringTableData.getHeader(), stringWriter, true))
+		{
+			writer.writeRows(stringTableData.getRows());
+		}
+
+		Assert.assertEquals(stringWriter.toString(), expectedData);
+
 	}
 
 
