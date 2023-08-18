@@ -128,6 +128,7 @@ subprojects {
 						'io.dropwizard.metrics:metrics-core:4.1.18',
 						'com.google.protobuf:protobuf-java:3.21.12',
 						'com.google.code.gson:gson:2.9.0',
+						'com.squareup.okio:okio:3.5.0',
 						"com.datastax.oss:java-driver-query-builder:${cassandraVersion}",
 						"com.datastax.oss:java-driver-mapper-processor:${cassandraVersion}",
 						"com.datastax.oss:java-driver-mapper-runtime:${cassandraVersion}",

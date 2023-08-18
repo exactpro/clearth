@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.data.th2.events;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,7 +56,6 @@ import com.exactprosystems.clearth.data.th2.config.StorageConfig;
 import com.exactprosystems.clearth.data.th2.messages.Th2MessageId;
 import com.exactprosystems.clearth.data.th2.tables.KeyValueRow;
 import com.exactprosystems.clearth.data.th2.tables.ParamRow;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class EventFactory
 {
@@ -72,7 +72,8 @@ public class EventFactory
 			NAME_SPECIAL_PARAMETERS = "Special parameters",
 			NAME_OUTPUT_PARAMETERS = "Output parameters",
 			NAME_ACTION_STATUS = "Action status",
-			COMPARISON_NAME = "Comparison name", COMPARISON_RESULT = "Comparison result",
+			COMPARISON_NAME = "Comparison name", 
+			COMPARISON_RESULT = "Comparison result",
 			ROW_KIND = "Row kind";
 	
 	private final String bookName,
@@ -229,7 +230,7 @@ public class EventFactory
 	}
 	
 	
-	protected Event createActionEvent(Action action, EventID parentId) throws JsonProcessingException
+	protected Event createActionEvent(Action action, EventID parentId) throws IOException
 	{
 		Instant startTimestamp = EventUtils.getActionStartTimestamp(action),
 				endTimestamp = EventUtils.getActionEndTimestamp(action);
@@ -241,7 +242,7 @@ public class EventFactory
 		return event.toProto(parentId);
 	}
 	
-	protected Event createInputParams(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws JsonProcessingException
+	protected Event createInputParams(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws IOException
 	{
 		return ClearThEvent.fromTo(startTimestamp, endTimestamp)
 				.name(NAME_INPUT_PARAMETERS)
@@ -250,7 +251,7 @@ public class EventFactory
 				.toProto(parentId);
 	}
 	
-	protected Event createSpecialParams(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws JsonProcessingException
+	protected Event createSpecialParams(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws IOException
 	{
 		Set<String> specials = action.getSpecialParamsNames();
 		if (CollectionUtils.isEmpty(specials))
@@ -263,7 +264,7 @@ public class EventFactory
 				.toProto(parentId);
 	}
 	
-	protected Collection<Event> createSubActions(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws JsonProcessingException
+	protected Collection<Event> createSubActions(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws IOException
 	{
 		Map<String, SubActionData> subActions = action.getSubActionData();
 		if (MapUtils.isEmpty(subActions))

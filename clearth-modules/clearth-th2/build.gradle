@@ -6,11 +6,15 @@ repositories {
 }
 
 dependencies {
-	api ('com.exactpro.th2:common:5.2.0') {
+	api ('com.exactpro.th2:common:5.4.0-dev') {
 		//Core decides what logging implementation to use. So, excluding dependencies of th2-common
 		exclude (group: 'org.apache.logging.log4j')
 		exclude (group: 'org.slf4j')
 	}
+	
+	api 'org.apache.httpcomponents:fluent-hc:4.5.13'
+	api 'org.apache.httpcomponents:httpclient:4.5.13'
+	api 'org.apache.httpcomponents:httpcore:4.4.13'
 	
 	def log4jVersion = '2.17.2'
 	testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
@@ -45,12 +49,15 @@ ext {
 
 task installModule {
 	doLast {
+		def actions = file("${projectDir}/installation/actions.cfg").text
+		
 		installModule(clearthDir, moduleName, moduleImpl,
 				[
 					{ putDataHandlersFactory(clearthDir, 'com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory') },
 					{ putFile("th2/storage.json", installationDir, clearthCfgDir) },
 					{ putFile("th2/mq.json", installationDir, clearthCfgDir) },
-					{ putFile("th2/rabbitMQ.json", installationDir, clearthCfgDir) }
+					{ putFile("th2/rabbitMQ.json", installationDir, clearthCfgDir) },
+					{ putActions(clearthDir, actions) }
 				]
 		)
 		println("Please complete setup by updating files in ${clearthCfgDir}/th2/")
