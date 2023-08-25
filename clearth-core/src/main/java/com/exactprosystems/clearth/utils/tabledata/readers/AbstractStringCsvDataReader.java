@@ -59,7 +59,7 @@ public abstract class AbstractStringCsvDataReader<C extends BasicTableData<Strin
 	@Override
 	protected Set<String> readHeader() throws IOException
 	{
-		if (!reader.readHeader())
+		if (!reader.hasHeader())
 			throw new IOException("Could not read CSV header");
 
 		return reader.getHeader();

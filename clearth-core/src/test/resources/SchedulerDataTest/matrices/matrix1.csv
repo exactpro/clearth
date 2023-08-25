@@ -1,0 +1,3 @@
+#Id,#GlobalStep,#Action,#Execute
+id1,Step1,NewTestAction,true
+id2,Step1,NewTestAction,true

@@ -33,6 +33,7 @@ public class ClearThCsvReader implements AutoCloseable
 	protected CSVFormat format;
 	protected Iterator<CSVRecord> records;
 	protected CSVRecord record;
+	protected Set<String> header;
 
 	public ClearThCsvReader(String fileName) throws IOException
 	{
@@ -54,6 +55,7 @@ public class ClearThCsvReader implements AutoCloseable
 		format = createCsvFormat(config);
 		this.parser = new CSVParser(reader, format);
 		this.records = parser.iterator();
+		setHeader();
 	}
 
 	public boolean hasNext() throws IOException
@@ -103,17 +105,30 @@ public class ClearThCsvReader implements AutoCloseable
 
 	public String get(String s) throws IOException
 	{
+		if (header == null || header.isEmpty() || !header.contains(s))
+			return null;
+
 		return record.get(s);
 	}
 
 	public Set<String> getHeader() throws IOException
 	{
-		return (parser.getHeaderMap() != null) ? parser.getHeaderMap().keySet() : null;
+		return header;
 	}
 
-	public boolean readHeader() throws IOException
+	protected void setHeader()
 	{
-		 return parser.getHeaderMap() != null && !parser.getHeaderMap().isEmpty();
+		header = (parser.getHeaderMap() != null) ? parser.getHeaderMap().keySet() : null;
+	}
+
+	public boolean hasHeader() throws IOException
+	{
+		return header != null && !header.isEmpty();
+	}
+
+	public boolean contains(String s)
+	{
+		return header.contains(s);
 	}
 
 	@Override

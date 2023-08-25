@@ -1,0 +1,4 @@
+Name,Matrix,Execute,TrimSpaces
+matrix1,matrix1.csv,true,false
+matrix2,matrix2.csv,true,false
+matrix3,matrix3.csv,true,false

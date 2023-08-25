@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,14 @@
 
 package com.exactprosystems.clearth.automation;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.DateTimeUtils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,15 +34,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.DateTimeUtils;
-import com.exactprosystems.clearth.utils.Utils;
 
 public class ExecutedMatricesData
 {
@@ -67,14 +66,14 @@ public class ExecutedMatricesData
 		if (!f.isFile())
 			return null;
 
-		CsvReader reader = null;
 		MatrixDataFactory matrixDataFactory = ClearThCore.getInstance().getMatrixDataFactory();
-		try
+		try (ClearThCsvReader reader = new ClearThCsvReader(executedMatricesListPath.toString(),
+				ClearThCsvReaderConfig.withFirstLineAsHeader()))
 		{
-			reader = new CsvReader(executedMatricesListPath.toString());
-			reader.setSafetySwitch(false);
-			reader.readHeaders();
-			while (reader.readRecord())
+			if (!reader.hasHeader())
+				return executedMatrices;
+
+			while (reader.hasNext())
 			{
 				String originalFileName = reader.get(SchedulerData.NAME);
 				if (originalFileName == null || originalFileName.isEmpty())
@@ -87,7 +86,7 @@ public class ExecutedMatricesData
 				File matrixFile = executedMatricesPath.resolve(fileName).toFile();
 				if (!matrixFile.exists())
 				{
-					logger.error(MessageFormat.format("Executed matrix '{0}' doesn't exist", matrixFile.getName()));
+					logger.error(MessageFormat.format("Executed matrix ''{0}'' does not exist", matrixFile.getName()));
 					continue;
 				}
 
@@ -110,10 +109,6 @@ public class ExecutedMatricesData
 						false);
 				executedMatrices.add(matrixData);
 			}
-		}
-		finally
-		{
-			Utils.closeResource(reader);
 		}
 
 		return executedMatrices;
@@ -145,10 +140,8 @@ public class ExecutedMatricesData
 
 	private void saveExecutedMatricesList(Path fileName, List<MatrixData> matrices) throws IOException
 	{
-		CsvWriter writer = null;
-		try
+		try (ClearThCsvWriter writer = new ClearThCsvWriter(fileName.toString()))
 		{
-			writer = new CsvWriter(fileName.toString());
 			writeExecutedMatricesTableHeaders(writer);
 			for (MatrixData matrixData : matrices)
 			{
@@ -156,13 +149,9 @@ public class ExecutedMatricesData
 			}
 			writer.flush();
 		}
-		finally
-		{
-			Utils.closeResource(writer);
-		}
 	}
 
-	private void writeExecutedMatricesTableHeaders(CsvWriter writer) throws IOException
+	private void writeExecutedMatricesTableHeaders(ClearThCsvWriter writer) throws IOException
 	{
 		writer.write(SchedulerData.NAME);
 		writer.write(SchedulerData.MATRIX);
@@ -172,7 +161,7 @@ public class ExecutedMatricesData
 		writer.endRecord();
 	}
 
-	private void writeExecutedMatrixData(CsvWriter writer, MatrixData md) throws IOException
+	private void writeExecutedMatrixData(ClearThCsvWriter writer, MatrixData md) throws IOException
 	{
 		writer.write(md.getName());
 		writer.write(md.getFile().getName());

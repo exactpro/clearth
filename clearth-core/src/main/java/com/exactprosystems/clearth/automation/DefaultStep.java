@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +39,9 @@ public class DefaultStep extends Step
 		super(name, kind, startAt, startAtType, waitNextDay, parameter, askForContinue, askIfFailed, execute, comment);
 	}
 
-	public DefaultStep(CsvReader reader) throws IOException
+	public DefaultStep(Map<String, String> record) throws IOException
 	{
-		super(reader);
+		super(record);
 	}
 
 	protected Logger getLogger()

@@ -1,0 +1,3 @@
+#Id,#GlobalStep,#Action,#Param
+id1,Step1,NewTestAction,Value123
+id2,Step1,NewTestAction,Value456

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,14 +18,13 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.IOException;
-import java.util.Date;
-
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
-
 import com.exactprosystems.clearth.utils.BinaryConverter;
 import com.exactprosystems.clearth.utils.DateTimeUtils;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
 
 public class StepData implements CsvDataManager
 {
@@ -39,9 +38,9 @@ public class StepData implements CsvDataManager
 	{
 	}
 
-	public StepData(CsvReader reader) throws IOException
+	public StepData(Map<String, String> record) throws IOException
 	{
-		assignFields(reader);
+		assignFields(record);
 	}
 
 
@@ -141,39 +140,39 @@ public class StepData implements CsvDataManager
 	}
 
 	@Override
-	public void save(CsvWriter writer) throws IOException
+	public void save(ClearThCsvWriter writer) throws IOException
 	{
-		writer.write(name, true);
-		writer.write(kind, true);
-		writer.write(startAt, true);
-		writer.write(BinaryConverter.getBinaryStringFromBoolean(askForContinue), true);
-		writer.write(BinaryConverter.getBinaryStringFromBoolean(askIfFailed), true);
-		writer.write(BinaryConverter.getBinaryStringFromBoolean(execute), true);
-		writer.write(DateTimeUtils.getMillisecondsFromDate(started), true);
-		writer.write(executionProgress.toString(), true);
-		writer.write(DateTimeUtils.getMillisecondsFromDate(finished), true);
+		writer.write(name);
+		writer.write(kind);
+		writer.write(startAt);
+		writer.write(BinaryConverter.getBinaryStringFromBoolean(askForContinue));
+		writer.write(BinaryConverter.getBinaryStringFromBoolean(askIfFailed));
+		writer.write(BinaryConverter.getBinaryStringFromBoolean(execute));
+		writer.write(DateTimeUtils.getMillisecondsFromDate(started));
+		writer.write(executionProgress.toString());
+		writer.write(DateTimeUtils.getMillisecondsFromDate(finished));
 	}
 
 	@Override
-	public void assignFields(CsvReader reader) throws IOException
+	public void assignFields(Map<String, String> record) throws IOException
 	{
-		assignBasicFields(reader);
-		setStarted(DateTimeUtils.getDateFromTimestampOrNull(reader.get(Step.StepParams.STARTED.getValue())));
-		setExecutionProgress(reader.get(Step.StepParams.ACTIONS_SUCCESSFUL.getValue()));
-		setFinished(DateTimeUtils.getDateFromTimestampOrNull(reader.get(Step.StepParams.FINISHED.getValue())));
+		assignBasicFields(record);
+		setStarted(DateTimeUtils.getDateFromTimestampOrNull(record.get(Step.StepParams.STARTED.getValue())));
+		setExecutionProgress(record.get(Step.StepParams.ACTIONS_SUCCESSFUL.getValue()));
+		setFinished(DateTimeUtils.getDateFromTimestampOrNull(record.get(Step.StepParams.FINISHED.getValue())));
 	}
 
-	public void assignBasicFields(CsvReader reader) throws IOException
+	public void assignBasicFields(Map<String, String> record) throws IOException
 	{
-		setKind(reader.get(Step.StepParams.STEP_KIND.getValue()));
-		setStartAt(reader.get(Step.StepParams.START_AT.getValue()));
-		String stepName = reader.get(Step.StepParams.GLOBAL_STEP.getValue());
+		setKind(record.get(Step.StepParams.STEP_KIND.getValue()));
+		setStartAt(record.get(Step.StepParams.START_AT.getValue()));
+		String stepName = record.get(Step.StepParams.GLOBAL_STEP.getValue());
 		setName(stepName);
-		String askForCont = reader.get(Step.StepParams.ASK_FOR_CONTINUE.getValue());
+		String askForCont = record.get(Step.StepParams.ASK_FOR_CONTINUE.getValue());
 		setAskForContinue(BinaryConverter.getBooleanFromString(askForCont));
-		String askIfFld	= reader.get(Step.StepParams.ASK_IF_FAILED.getValue());
+		String askIfFld	= record.get(Step.StepParams.ASK_IF_FAILED.getValue());
 		setAskIfFailed(BinaryConverter.getBooleanFromString(askIfFld));
-		String exec	= reader.get(Step.StepParams.EXECUTE.getValue());
+		String exec = record.get(Step.StepParams.EXECUTE.getValue());
 		setExecute(BinaryConverter.getBooleanFromString(exec));
 	}
 

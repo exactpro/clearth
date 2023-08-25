@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,13 +18,15 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.DateTimeUtils;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.XmlUtils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriterConfig;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
 import org.apache.commons.io.FileUtils;
@@ -227,17 +229,15 @@ public abstract class SchedulerData
 		if (!f.isFile())
 			return;
 		
-		CsvReader reader = null;
-		try
+		try (ClearThCsvReader reader = new ClearThCsvReader(configCSV, createCsvReaderConfig()))
 		{
-			reader = new CsvReader(configCSV);
-			reader.setSafetySwitch(false);
-			reader.readHeaders();
+			if (!reader.hasHeader())
+				return;
 			
 			NEXT_RECORD:
-			while (reader.readRecord())
+			while (reader.hasNext())
 			{
-				Step newStep = stepFactory.createStep(reader);
+				Step newStep = stepFactory.createStep(reader.getRecord());
 				if (StringUtils.isEmpty(newStep.getName()))
 					continue;
 				for (Step addedStep : stepsContainer)
@@ -261,11 +261,6 @@ public abstract class SchedulerData
 				stepsContainer.add(newStep);
 			}
 		}
-		finally
-		{
-			if (reader!=null)
-				reader.close();
-		}
 	}
 	
 	public static List<Step> loadSteps(String configCSV, StepFactory stepFactory, List<String> warnings) throws IOException
@@ -287,11 +282,9 @@ public abstract class SchedulerData
 
 	private static <T extends CsvDataManager> void saveSchedulerData(File file, String[] configHeader, List<T> schedulerData) throws IOException
 	{
-		CsvWriter writer = null;
-		try
+		try (ClearThCsvWriter writer = new ClearThCsvWriter(new FileWriter(file), createCsvWriterConfig()))
 		{
-			writer = new CsvWriter(new FileWriter(file), ',');
-			writer.writeRecord(configHeader, true);
+			writer.writeRecord(configHeader);
 			for (T data : schedulerData)
 			{
 				data.save(writer);
@@ -299,11 +292,14 @@ public abstract class SchedulerData
 			}
 			writer.flush();
 		}
-		finally
-		{
-			if (writer != null)
-				writer.close();
-		}
+	}
+
+	private static ClearThCsvWriterConfig createCsvWriterConfig()
+	{
+		ClearThCsvWriterConfig config = new ClearThCsvWriterConfig();
+		config.setDelimiter(',');
+		config.setWithTrim(false);
+		return config;
 	}
 
 	public List<Step> loadSteps(List<String> warnings) throws IOException
@@ -325,23 +321,22 @@ public abstract class SchedulerData
 		if (!executedStepsDataFile.isFile())
 			return;
 
-		CsvReader reader = null;
-		try
+		try (ClearThCsvReader reader = new ClearThCsvReader(new FileReader(executedStepsDataFile), createCsvReaderConfig()))
 		{
-			reader = new CsvReader(new FileReader(executedStepsDataFile));
-			reader.setSafetySwitch(false);
-			reader.readHeaders();
-			while (reader.readRecord())
+			if (!reader.hasHeader())
+				return;
+
+			while (reader.hasNext())
 			{
-				StepData stepData = new StepData(reader);
+				StepData stepData = new StepData(reader.getRecord());
 				result.add(stepData);
 			}
 		}
-		finally
-		{
-			if (reader!=null)
-				reader.close();
-		}
+	}
+
+	private static ClearThCsvReaderConfig createCsvReaderConfig()
+	{
+		return ClearThCsvReaderConfig.withFirstLineAsHeader();
 	}
 
 	public void loadSteps(List<Step> stepsContainer, List<String> warnings) throws IOException
@@ -651,14 +646,13 @@ public abstract class SchedulerData
 		File f = new File(matricesFileName);
 		if (!f.isFile())
 			return;
-		
-		CsvReader reader = null;
-		try
+
+		try (ClearThCsvReader reader = new ClearThCsvReader(matricesFileName, createCsvReaderConfig()))
 		{
-			reader = new CsvReader(matricesFileName);
-			reader.setSafetySwitch(false);
-			reader.readHeaders();
-			while (reader.readRecord())
+			if (!reader.hasHeader())
+				return;
+
+			while (reader.hasNext())
 			{
 				String fileName = reader.get(MATRIX);
 				if ((fileName==null) || (fileName.isEmpty()))
@@ -676,10 +670,10 @@ public abstract class SchedulerData
 				Boolean isTrim = (reader.get(TRIM_SPACES) != null && !reader.get(TRIM_SPACES).isEmpty())
 						? Boolean.parseBoolean(reader.get(TRIM_SPACES)) : true;
 				
-				String link = reader.get(LINK);
-				String type = reader.get(TYPE);
+				String link = reader.contains(LINK) ? reader.get(LINK) : "";
+				String type = reader.contains(TYPE) ? reader.get(TYPE) : "";
 				String autoReload = reader.get(AUTO_RELOAD);
-				Boolean isAutoReload = isEmpty(autoReload) ? false : Boolean.parseBoolean(autoReload);
+				Boolean isAutoReload = !isEmpty(autoReload) && Boolean.parseBoolean(autoReload);
 
 				String name = reader.get(NAME);
 				if (StringUtils.isEmpty(name))
@@ -691,15 +685,10 @@ public abstract class SchedulerData
 				matricesContainer.add(md);
 			}
 		}
-		finally
-		{
-			if (reader!=null)
-				reader.close();
-		}
 	}
 	
 	@SuppressWarnings("unused")
-	protected void readAdditionalMatrixSettings(CsvReader reader, MatrixData md) throws IOException {}
+	protected void readAdditionalMatrixSettings(ClearThCsvReader reader, MatrixData md) throws IOException {}
 
 	public List<MatrixData> loadMatrices(String matricesFileName, String matricesDir) throws IOException
 	{
@@ -710,10 +699,8 @@ public abstract class SchedulerData
 	
 	public void saveMatrices(String fileName, List<MatrixData> matrices) throws IOException
 	{
-		CsvWriter writer = null;
-		try
+		try (ClearThCsvWriter writer =  new ClearThCsvWriter(fileName, createCsvWriterConfig()))
 		{
-			writer = new CsvWriter(fileName);
 			writeMatricesTableHeaders(writer);
 			for (MatrixData md : matrices)
 			{
@@ -721,14 +708,9 @@ public abstract class SchedulerData
 			}
 			writer.flush();
 		}
-		finally
-		{
-			if (writer != null)
-				writer.close();
-		}
 	}
 	
-	protected void writeMatricesTableHeaders(CsvWriter writer) throws IOException
+	protected void writeMatricesTableHeaders(ClearThCsvWriter writer) throws IOException
 	{
 		writer.write(NAME);
 		writer.write(MATRIX);
@@ -754,7 +736,7 @@ public abstract class SchedulerData
 		return emptyList();
 	}
 	
-	protected void writeMatrixData(CsvWriter writer, MatrixData md) throws IOException
+	protected void writeMatrixData(ClearThCsvWriter writer, MatrixData md) throws IOException
 	{
 		writer.write(md.getName());
 		writer.write(md.getFile().getName());
@@ -769,7 +751,7 @@ public abstract class SchedulerData
 	}
 	
 	@SuppressWarnings("unused")
-	protected void writeAdditionalMatrixSettings(CsvWriter writer, MatrixData md) throws IOException {	}
+	protected void writeAdditionalMatrixSettings(ClearThCsvWriter writer, MatrixData md) throws IOException {	}
 	
 	public List<MatrixData> loadMatrices() throws IOException
 	{

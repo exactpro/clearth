@@ -55,4 +55,11 @@ public class ClearThCsvReaderConfig extends ClearThCsvConfig
 	{
 		this.ignoreSurroundingSpaces = ignoreSurroundingSpaces;
 	}
+
+	public static ClearThCsvReaderConfig withFirstLineAsHeader()
+	{
+		ClearThCsvReaderConfig config = new ClearThCsvReaderConfig();
+		config.setFirstLineAsHeader(true);
+		return config;
+	}
 }

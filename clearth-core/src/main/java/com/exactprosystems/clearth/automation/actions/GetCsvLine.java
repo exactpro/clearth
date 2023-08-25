@@ -69,7 +69,7 @@ public class GetCsvLine extends Action
 
 		try (ClearThCsvReader reader = new ClearThCsvReader(rootRelative(fileName), createCsvReaderConfig()))
 		{
-			if (!reader.readHeader())
+			if (!reader.hasHeader())
 				throw new IOException("File does not have header");
 
 			Set<String> header = reader.getHeader(),

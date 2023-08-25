@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,11 +18,11 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.IOException;
-
-import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.automation.persistence.DefaultStepState;
 import com.exactprosystems.clearth.automation.persistence.StepState;
+
+import java.io.IOException;
+import java.util.Map;
 
 public class DefaultStepFactory extends StepFactory
 {
@@ -39,9 +39,9 @@ public class DefaultStepFactory extends StepFactory
 	}
 
 	@Override
-	public Step createStep(CsvReader reader) throws IOException
+	public Step createStep(Map<String, String> record) throws IOException
 	{
-		return new DefaultStep(reader);
+		return new DefaultStep(record);
 	}
 
 	@Override

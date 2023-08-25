@@ -48,7 +48,7 @@ public class TypedCsvDataReader extends AbstractCsvDataReader<TypedTableHeaderIt
 	@Override
 	protected Set<TypedTableHeaderItem> readHeader() throws IOException
 	{
-		if (!reader.readHeader())
+		if (!reader.hasHeader())
 			throw new IOException("Could not read CSV header");
 
 		LinkedHashSet<TypedTableHeaderItem> result = new LinkedHashSet<>();

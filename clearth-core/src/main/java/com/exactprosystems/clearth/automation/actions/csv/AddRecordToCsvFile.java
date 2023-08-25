@@ -121,7 +121,7 @@ public class AddRecordToCsvFile extends Action {
 	{
 		try (ClearThCsvReader csvReader = new ClearThCsvReader(new FileReader(f), createCsvReaderConfig()))
 		{
-			if (!csvReader.readHeader())
+			if (!csvReader.hasHeader())
 				throw new ResultException("Could not read header.");
 
 			return csvReader.getHeader();

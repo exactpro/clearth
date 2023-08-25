@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,11 +18,10 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.BinaryConverter;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
 import com.exactprosystems.clearth.utils.javaFunction.BiConsumerWithException;
 import org.slf4j.Logger;
 
@@ -82,21 +81,21 @@ public abstract class Step implements CsvDataManager
 		setComment(comment);
 	}
 
-	public Step(CsvReader reader) throws IOException
+	public Step(Map<String, String> record) throws IOException
 	{
-		assignFields(reader);
+		assignFields(record);
 	}
 
 
 	@Override
-	public void assignFields(CsvReader reader) throws IOException
+	public void assignFields(Map<String, String> record) throws IOException
 	{
-		stepData.assignBasicFields(reader);
+		stepData.assignBasicFields(record);
 		safeName = stepData.getName();
-		setStartAtTypeString(reader.get(StepParams.START_AT_TYPE.getValue()));
-		parameter = reader.get(StepParams.PARAMETER.getValue());
-		setComment(reader.get(StepParams.COMMENT.getValue()));
-		String waitNextD = reader.get(StepParams.WAIT_NEXT_DAY.getValue());
+		setStartAtTypeString(record.get(StepParams.START_AT_TYPE.getValue()));
+		parameter = record.get(StepParams.PARAMETER.getValue());
+		setComment(record.get(StepParams.COMMENT.getValue()));
+		String waitNextD = record.get(StepParams.WAIT_NEXT_DAY.getValue());
 		waitNextDay = !waitNextD.isEmpty() && !waitNextD.equals("0");
 	}
 
@@ -390,18 +389,18 @@ public abstract class Step implements CsvDataManager
 	}
 
 	@Override
-	public void save(CsvWriter writer) throws IOException
+	public void save(ClearThCsvWriter writer) throws IOException
 	{
-		writer.write(stepData.getName(), true);
-		writer.write(stepData.getKind(), true);
-		writer.write(stepData.getStartAt(), true);
-		writer.write(startAtType.getStringType(), true);
+		writer.write(stepData.getName());
+		writer.write(stepData.getKind());
+		writer.write(stepData.getStartAt());
+		writer.write(startAtType.getStringType());
 		writer.write(BinaryConverter.getBinaryStringFromBoolean(waitNextDay));
-		writer.write(parameter, true);
+		writer.write(parameter);
 		writer.write(BinaryConverter.getBinaryStringFromBoolean(stepData.isAskForContinue()));
 		writer.write(BinaryConverter.getBinaryStringFromBoolean(stepData.isAskIfFailed()));
 		writer.write(BinaryConverter.getBinaryStringFromBoolean(stepData.isExecute()));
-		writer.write(comment, true);
+		writer.write(comment);
 	}
 
 	public static String getValidFileName(String fileName) {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,14 +18,14 @@
 
 package com.exactprosystems.clearth.automation;
 
-import java.io.IOException;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
 
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
+import java.io.IOException;
+import java.util.Map;
 
 public interface CsvDataManager
 {
-	void save(CsvWriter writer) throws IOException;
+	void save(ClearThCsvWriter writer) throws IOException;
 
-	void assignFields(CsvReader reader) throws IOException;
+	void assignFields(Map<String, String> record) throws IOException;
 }
