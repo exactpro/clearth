@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>matrix.csv 2023.08.30 14:28:11  (PASSED)</title>
+		
+		<style>
+.passed
+{
+	color: #2E7D32;
+}
+
+.failed
+{
+	color: #E53935;
+}
+
+.failed_comparison
+{
+	color: #C48D36;
+}
+
+.failed_calculation
+{
+	color: black;
+}
+
+.not_executed
+{
+	color: #A2A2A2;
+}
+
+.info
+{
+	color: #0033CC;
+}
+
+
+#header td
+{
+	padding: 4px 0px 4px 20px;
+}
+
+#header td.logo
+{
+	padding: 0px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+table.w-limited tbody tr td
+{
+	max-width: 400px;
+	word-wrap: break-word;
+}
+
+table.big-w-limited tbody tr td
+{
+	max-width: 800px;
+	word-wrap: break-word;
+}
+
+.nodelist
+{
+	width: 100%;
+	line-height: 25px;
+	padding: 20px 0px 0px 20px;
+}
+
+.switch
+{
+	padding-left: 12px;
+	background: url(show.gif) left center no-repeat;
+}
+
+.node
+{
+	font-weight: bold;
+}
+
+
+.container
+{
+	padding-left: 20px;
+	display: none;
+}
+
+.desc
+{
+	padding-left: 12px;
+}
+
+.desc > span
+{
+	color: #9966CC;
+	font-weight: bold;
+}
+
+
+.message
+{
+	padding-left: 12px;
+}
+
+.message > span
+{
+	color: #6495ED;
+	font-weight: bold;
+}
+
+
+.action_data
+{
+	margin-left: 12px;
+}
+
+.action_data tr
+{
+	vertical-align: top;
+}
+
+.params
+{
+	padding-right: 15px;
+	max-width: 50%;
+}
+
+.comps
+{
+	padding-left: 15px;
+	max-width: 50%;
+}
+
+
+.tablehead td
+{
+	background-color: #6495ED;
+	font-weight: bold;
+}
+
+.comparison_result
+{
+	font-style: italic;
+	font-weight: bold;
+	border-color: inherit;
+}
+
+.status td, .params td, .comps td, .text-elements td
+{
+	padding: 2px 10px;
+	white-space: pre-wrap;
+}
+
+td.exception
+{
+	white-space: normal;
+}
+
+.error_message
+{
+	color: #E53935;
+	font-weight: bold;
+}
+
+.hiddenConstant
+{
+	display: none;
+}
+
+.async
+{
+    color: #0075d2;
+    font-weight: bold;
+}
+		</style>
+		<script type="text/javascript">
+function showhide(sender, id)
+{
+	e = document.getElementById(id);
+	e.style.display = e.style.display == 'block' ? 'none' : 'block';
+	sender.style.backgroundImage = e.style.display == 'block' ? 'url(hide.gif)' : 'url(show.gif)';
+}
+
+function togglePassed(show)
+{
+	ShowPassedFields = document.getElementById('ShowPassedFields');
+	if (show)
+	{
+		ShowPassedFields.disabled = true;
+		if (ShowPassedFields.checked == false)
+		{
+			togglePassedFields(true);
+			ShowPassedFields.checked = true;
+		}
+	}
+	else
+		ShowPassedFields.disabled = false;
+
+	elements = document.getElementsByClassName('action');
+	showInverted = document.getElementById('ShowInverted').checked;
+	for (var i=0; i<elements.length; i++)
+	{
+		el = elements[i];
+		span = el.getElementsByTagName('span')[0];
+		if (span.className.indexOf('passed')>-1)
+			if (show)
+			{
+				if (showInverted)
+				{
+					if (span.className.indexOf('inverted')>-1)
+						el.style.display = '';
+					else
+						el.style.display = 'none';
+				}
+				else
+					el.style.display = '';
+			}
+			else
+				el.style.display = 'none';
+	}
+}
+
+function togglePassedFields(show)
+{
+	elements = document.getElementsByClassName('comparison_line_passed');
+	for (var i=0; i<elements.length; i++)
+	{
+		el = elements[i];
+		if (show)
+			el.style.display = '';
+		else
+			el.style.display = 'none';
+	}
+}
+
+function toggleInverted(show)
+{
+	elements = document.getElementsByClassName('action');
+	showPassed = document.getElementById('ShowPassed').checked;
+	for (var i=0; i<elements.length; i++)
+	{
+		el = elements[i];
+		span = el.getElementsByTagName('span')[0];
+		if (span.className.indexOf('inverted')==-1)
+			if (show)
+				el.style.display = 'none';
+			else
+				if (!showPassed)
+				{
+					if (span.className.indexOf('passed')>-1)
+						el.style.display = 'none';
+					else
+						el.style.display = '';
+				}
+				else
+					el.style.display = '';
+	}
+}
+
+function toggleExpandAll(show)
+{
+	var container = document.getElementsByClassName('nodelist')[0];
+	var elements = container.getElementsByClassName('step');
+	for (var i=0; i<elements.length; i++)
+	{
+		var cont = elements[i].getElementsByClassName('container')[0];
+		if (show)
+		{
+			if (cont.style.display != 'block')
+				elements[i].getElementsByClassName('node')[0].click();
+			
+			if (!cont.getElementsByClassName('expandStep')[0].checked)
+				cont.getElementsByClassName('expandStep')[0].click();
+		}
+		else
+		{
+			if (cont.getElementsByClassName('expandStep')[0].checked)
+				cont.getElementsByClassName('expandStep')[0].click();
+			
+			if (cont.style.display != 'none')
+				elements[i].getElementsByClassName('node')[0].click();
+		}
+	}
+}
+
+function toggleExpandStep(step, show)
+{
+	var stepContainer = document.getElementById(step);
+	var elements = stepContainer.getElementsByClassName('action');
+	for (var i=0; i<elements.length; i++)
+	{
+		var cont = elements[i].getElementsByClassName('container')[0];
+		if (show)
+		{
+			if (cont.style.display != 'block')
+				elements[i].getElementsByClassName('node')[0].click();
+		}
+		else
+			if (cont.style.display != 'none')
+				elements[i].getElementsByClassName('node')[0].click();
+
+		var comps = cont.getElementsByClassName('comps')[0].getElementsByClassName('status');
+		for (var j=0; j<comps.length; j++)
+		{
+			cont = comps[j].getElementsByClassName('container')[0];
+			if (show)
+			{
+				if (cont.style.display != 'block')
+					showhide(comps[j].getElementsByClassName('switch')[0], cont.id);
+			}
+			else
+				if (cont.style.display != 'none')
+					showhide(comps[j].getElementsByClassName('switch')[0], cont.id);
+		}
+	}
+}
+
+function showAllConstants()
+{
+	var els = document.getElementsByClassName('hiddenConstant');
+	var i;
+	for (i = 0; i < els.length; i++)
+	{
+		els[i].style.display = 'block';
+	}
+	document.getElementById('showAllConstButton').style.display = 'none';
+}
+		</script>
+	</head>
+	<body>
+		<table width="100%" border="1" id="header">
+			<tbody><tr>
+				<td rowspan="4" class="logo" width="20%">
+					<img src="./report_files/app_logo.gif">
+					<div style="font-size: smaller; padding-bottom: 10px">revision #build_version</div>
+				</td>
+				<td>Script: matrix.csv</td>
+				<td width="30%">Result: <span class="passed" style="font-weight: bold;">PASSED</span></td>
+				<td rowspan="4" class="logo" width="20%"><img src="./report_files/logo.gif"></td>
+			</tr>
+			<tr>
+				<td>Execution started: 2023.08.30 14:28:11</td>
+				<td>Execution time: 1.203 sec</td>
+			</tr>
+			<tr>
+				<td>User: user</td>
+			</tr>
+			<tr>
+				<td>Description: <span style="white-space: pre-wrap"></span></td>
+				<td>Constants:<br>
+				
+				</td>
+			</tr>
+		</tbody></table>
+		<div class="nodelist">
+			<form action="report.html">
+				<label for="ShowPassed"><input type="checkbox" id="ShowPassed" onclick="togglePassed(this.checked)" checked="">Show passed actions</label>
+				<label for="ShowPassedFields"><input type="checkbox" id="ShowPassedFields" onclick="togglePassedFields(this.checked)" checked="" disabled="">Show passed fields</label>
+				<label for="ShowInverted"><input type="checkbox" id="ShowInverted" onclick="toggleInverted(this.checked)" unchecked="">Show only inverted actions</label>
+				<br><label for="ExpandAll"><input type="checkbox" id="ExpandAll" onclick="toggleExpandAll(this.checked)" unchecked="">Expand all</label>
+			</form>
+	<div class="step">
+		<span class="node passed switch" onclick="showhide(this, &#39;cont1&#39;);" style="background-image: url(&quot;hide.gif&quot;);">Step1 - Default (PASSED)</span>
+		<div class="container" id="cont1" style="display: block;">
+			<label><input type="checkbox" class="expandStep" onclick="toggleExpandStep(&#39;cont1&#39;, this.checked)" unchecked="">Expand all actions</label>
+
+	<div class="action">
+			<span class="node passed switch" onclick="showhide(this, &#39;Step1_action_1&#39;);" style="background-image: url(&quot;hide.gif&quot;);">id1 - SetStatic (PASSED)
+        	</span>
+		<div class="container" id="Step1_action_1" style="display: block;">
+				<div class="desc"><span>Timeout: </span>500</div>
+	<div class="status">
+		<span class="node passed switch" onclick="showhide(this, &#39;Step1_action_1_status&#39;);">Action status</span>
+		<div class="container" id="Step1_action_1_status">
+			<table border="1" class="big-w-limited">
+				<tbody><tr>
+					<td>Status</td>
+					<td>PASSED</td>
+				</tr>
+					<tr>
+						<td>Started</td>
+						<td>14:28:11:434</td>
+					</tr>
+					<tr>
+						<td>Finished</td>
+						<td>14:28:11:935</td>
+					</tr>
+					<tr>
+						<td>Wait before action</td>
+						<td>500</td>
+					</tr>
+			</tbody></table>
+		</div>
+	</div>
+			<table class="action_data">
+				<tbody><tr>
+					<td class="params">
+						<div class="node">Input parameters</div>
+		<table border="1" frame="box" rules="all" style="margin-left:0em;">
+			<tbody><tr class="tablehead">
+				<td>Name</td>
+				<td>Value</td>
+			</tr>
+					<tr>
+						<td>Instrument</td>
+							<td>AAD</td>
+					</tr>
+					<tr>
+						<td>Currency</td>
+							<td>BBQ</td>
+					</tr>
+					<tr>
+						<td>Quantity</td>
+							<td>100</td>
+					</tr>
+		</tbody></table>
+						<br>
+						<div class="node">Sub-actions</div>
+							<div>None</div>
+					</td>
+					<td class="comps">
+						<div class="node">Comparison table</div>
+							<div>None</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="text-elements">
+						<div>
+						</div>
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+	</div>
+	<div class="status">
+		<span class="node passed switch" onclick="showhide(this, &#39;cont1status&#39;);" style="background-image: url(&quot;hide.gif&quot;);">Step status</span>
+		<div class="container" id="cont1status" style="display: block;">
+			<table border="1" class="big-w-limited">
+				<tbody><tr>
+					<td>Status</td>
+					<td>PASSED</td>
+				</tr>
+					<tr>
+						<td>Started</td>
+						<td>14:28:11:424</td>
+					</tr>
+					<tr>
+						<td>Finished</td>
+						<td>14:28:12:599</td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top;">Description</td>
+						<td></td>
+					</tr>
+			</tbody></table>
+		</div>
+	</div>
+		</div>
+	</div>
+		</div>
+	
+
+</body></html>

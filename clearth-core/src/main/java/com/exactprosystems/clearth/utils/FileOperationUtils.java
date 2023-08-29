@@ -18,9 +18,9 @@
 
 package com.exactprosystems.clearth.utils;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
@@ -374,20 +374,13 @@ public class FileOperationUtils
 	
 	public static File createCsvFile(File fileToStore, String[] header, List<String[]> table) throws IOException
 	{
-		Writer writer = new OutputStreamWriter(new FileOutputStream(fileToStore));
-		CsvWriter csvWriter = null;
-		try
+		try (ClearThCsvWriter writer = new ClearThCsvWriter(new OutputStreamWriter(new FileOutputStream(fileToStore))))
 		{
-			csvWriter = new CsvWriter(writer, ',');
-			csvWriter.writeRecord(header);
+			writer.writeRecord(header);
 			for (String[] row : table)
-				csvWriter.writeRecord(row);
-			csvWriter.flush();
+				writer.writeRecord(row);
+			writer.flush();
 			return fileToStore;
-		}
-		finally
-		{
-			closeResource(csvWriter);
 		}
 	}
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.converters;
 
-import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.automation.ActionGenerator;
 import com.exactprosystems.clearth.automation.ActionMetaData;
 import com.exactprosystems.clearth.automation.actions.MessageAction;
@@ -27,10 +26,12 @@ import com.exactprosystems.clearth.connectivity.EncodeException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodecFactory;
 import com.exactprosystems.clearth.utils.Pair;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
 import com.exactprosystems.clearth.xmldata.XmlCodecConfig;
 import com.exactprosystems.clearth.xmldata.XmlScriptConverterConfig;
+
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,47 +44,12 @@ public class DefaultScriptConverter extends ScriptConverter
 	public String convert(String scriptToConvert, Map<String, XmlScriptConverterConfig> scriptConverterConfigs,
 						  ICodecFactory codecFactory, CodecsStorage codecsConfig) throws Exception
 	{
-		if (scriptToConvert.length() == 0)
+		if (scriptToConvert.isEmpty())
 			return "";
 
-		List<Pair<String[], String[]>> hv = new ArrayList<Pair<String[], String[]>>();
-		CsvReader reader = null;
-		try
-		{
-			reader = new CsvReader(new InputStreamReader(new ByteArrayInputStream(scriptToConvert.getBytes())));
-			reader.setSafetySwitch(false);
-			String[] currentHeader = null;
-			int lineNumber = 0;
-			while (reader.readRecord())
-			{
-				final String[] currentRecord = reader.getValues();
-				lineNumber++;
-				if (currentRecord.length==0 || currentRecord[0].startsWith(ActionGenerator.COMMENT_INDICATOR)) {
-					continue;
-				}
+		List<Pair<String[], String[]>> hv = readScriptToConvert(scriptToConvert);
 
-				if (isHeaderRecord(currentRecord)) {
-					currentHeader = currentRecord;
-					continue;
-				}
-
-				if (currentHeader != null) {
-					if (currentHeader.length != currentRecord.length) {
-						throw new EncodeException("Conversion error. Number of header columns " + currentHeader.length + " differs from number of values " + currentRecord.length + " in line " + lineNumber);
-					}
-					final Pair<String[], String[]> entry = new Pair<String[], String[]>();
-					entry.setFirst(currentHeader);
-					entry.setSecond(currentRecord);
-					hv.add(entry);
-				}
-			}
-		}
-		finally
-		{
-			Utils.closeResource(reader);
-		}
-
-		if (hv.size() == 0)
+		if (hv.isEmpty())
 			throw new Exception("No script strings found. Script should contain strings for header and values");
 
 		Pair<String[], String[]> entry1 = hv.get(0),
@@ -127,7 +93,7 @@ public class DefaultScriptConverter extends ScriptConverter
 		{
 			if (actionData.actionName.equals(action))
 			{
-				actionParams = new HashMap<String, String>(actionData.params);
+				actionParams = new HashMap<>(actionData.params);
 				break;
 			}
 		}
@@ -146,7 +112,7 @@ public class DefaultScriptConverter extends ScriptConverter
 			ClearThMessage sm = (ClearThMessage) messageClass.newInstance();
 			filler.fillByHeaderAndValues(sm, entry.getFirst(), entry.getSecond(), getIncludeList());
 			if (subMessages == null)
-				subMessages = new ArrayList<ClearThMessage>();
+				subMessages = new ArrayList<>();
 			subMessages.add(sm);
 		}
 		if (subMessages != null)
@@ -161,6 +127,47 @@ public class DefaultScriptConverter extends ScriptConverter
 			throw new Exception("Codec config for '" + codecName + "' codec not found");
 
 		return codecFactory.createCodec(codecConfig).encode(message);
+	}
+
+	protected List<Pair<String[], String[]>> readScriptToConvert(String scriptToConvert) throws IOException, EncodeException
+	{
+		List<Pair<String[], String[]>> hv = new ArrayList<>();
+
+		try (ClearThCsvReader reader = new ClearThCsvReader(new InputStreamReader(
+				new ByteArrayInputStream(scriptToConvert.getBytes()))))
+		{
+			String[] currentHeader = null;
+			int lineNumber = 0;
+			while (reader.hasNext())
+			{
+				final String[] currentRecord = reader.getValues();
+				lineNumber++;
+				if (currentRecord.length == 0 || currentRecord[0].startsWith(ActionGenerator.COMMENT_INDICATOR))
+				{
+					continue;
+				}
+
+				if (isHeaderRecord(currentRecord))
+				{
+					currentHeader = currentRecord;
+					continue;
+				}
+
+				if (currentHeader != null)
+				{
+					if (currentHeader.length != currentRecord.length)
+					{
+						throw new EncodeException("Conversion error. Number of header columns " + currentHeader.length +
+								" differs from number of values " + currentRecord.length + " in line " + lineNumber);
+					}
+					final Pair<String[], String[]> entry = new Pair<>();
+					entry.setFirst(currentHeader);
+					entry.setSecond(currentRecord);
+					hv.add(entry);
+				}
+			}
+		}
+		return hv;
 	}
 
 	protected MessageFiller createMessageFiller(XmlScriptConverterConfig config) throws InstantiationException, IllegalAccessException, ClassNotFoundException

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,11 +18,11 @@
 
 package com.exactprosystems.clearth.web.misc;
 
-import com.csvreader.CsvReader;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.Step;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.event.FileUploadEvent;
@@ -33,7 +33,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class StepUploadHandler
 {
@@ -126,25 +129,20 @@ public class StepUploadHandler
 	
 	public static List<String> readConfigHeaders(String storedFilePath) throws IOException
 	{
-		CsvReader reader = null;
 		List<String> undefinedFields = new ArrayList<>();
-		try
+		try (ClearThCsvReader reader = new ClearThCsvReader(storedFilePath, ClearThCsvReaderConfig.withFirstLineAsHeader()))
 		{
-			reader = new CsvReader(storedFilePath);
-			reader.setSafetySwitch(false);
-			reader.readHeaders();
+			if (!reader.hasHeader())
+				return undefinedFields;
 
-			List<String> header = Arrays.asList(reader.getHeaders());
+			Set<String> header = reader.getHeader();
 			Set<Step.StepParams> excludedParams = getExcludedParams();
+
 			for (Step.StepParams param : Step.StepParams.values())
 			{
 				if (!header.contains(param.getValue()) && !excludedParams.contains(param))
 					undefinedFields.add(param.getValue());
 			}
-		}
-		finally
-		{
-			Utils.closeResource(reader);
 		}
 		return undefinedFields;
 	}

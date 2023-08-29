@@ -18,21 +18,12 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
-import com.csvreader.CsvReader;
-import com.exactprosystems.clearth.utils.tabledata.BasicTableData;
-import com.exactprosystems.clearth.utils.tabledata.TableData;
-import com.exactprosystems.clearth.utils.tabledata.TableHeader;
-import com.exactprosystems.clearth.utils.tabledata.TableRow;
-import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
-import com.exactprosystems.clearth.utils.tabledata.RowsListFactories;
-import com.exactprosystems.clearth.utils.tabledata.UnmodifiableTableRow;
+import com.exactprosystems.clearth.utils.tabledata.*;
 
-import java.lang.UnsupportedOperationException;
-import java.util.Collection;
-import java.util.Set;
-import java.util.Iterator;
 import java.io.IOException;
-import java.io.Reader;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 
 public abstract class AbstractMemoryTableDataReader<A, B, C extends BasicTableData<A, B>> extends BasicTableDataReader<A, B, C>
 {

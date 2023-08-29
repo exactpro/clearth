@@ -18,15 +18,14 @@
 
 package com.exactprosystems.clearth.utils;
 
-import java.net.UnknownHostException;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.csvreader.CsvReader;
+import com.csvreader.CsvWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
+import java.net.UnknownHostException;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class Utils
 {
@@ -64,19 +63,19 @@ public class Utils
 			}
 		}
 	}
-	
+
 	public static void closeResource(CsvReader reader)
 	{
 		if (reader != null)
 			reader.close();
 	}
-	
+
 	public static void closeResource(CsvWriter writer)
 	{
 		if (writer != null)
 			writer.close();
 	}
-	
+
 	public static void closeStatement(Statement statement)
 	{
 		if (statement != null)

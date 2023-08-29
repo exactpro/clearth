@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,14 +18,15 @@
 
 package com.exactprosystems.clearth.automation.report.html;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.automation.ActionGenerator;
+import com.exactprosystems.clearth.utils.StringOperationUtils;
 import com.exactprosystems.clearth.utils.TagUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.lang.StringUtils;
 
-import javax.xml.stream.*;
-
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.*;
 import java.io.*;
 import java.util.*;
@@ -98,37 +99,40 @@ public class ReportParser
 		else
 			matrix = File.createTempFile("generated_matrix_", ".csv", new File(outputDir));
 
-		CsvWriter writer = null;
-		try
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(matrix.getAbsolutePath())))
 		{
-			writer = new CsvWriter(matrix.getAbsolutePath());
 			Set<String> currentHeader = null;
 			for (ActionDesc actionDesc : actions)
 			{
 				Map<String, String> params = actionDesc.inputParams;
-				Set<String> header = params.keySet();
+				Set<String> header = new LinkedHashSet<>();
+
+				for (String paramHeader : params.keySet())
+					header.add(HEADER_DELIMITER + paramHeader);
+
 				if (currentHeader == null || !currentHeader.equals(header))
 				{
-					for (String paramHeader : params.keySet())
-						writer.write(HEADER_DELIMITER + paramHeader);
-					writer.endRecord();
+					writer.write(valuesToLine(header));
 					currentHeader = header;
 				}
-				for (String paramHeader : params.keySet())
-					writer.write(params.get(paramHeader));
-				writer.endRecord();
-				currentHeader = params.keySet();
+
+				writer.write(valuesToLine(params.values()));
 			}
-		}
-		finally
-		{
-			Utils.closeResource(writer);
 		}
 		
 		actions = new LinkedList<ActionDesc>();
 		matrixName = null;
 		factory = null;
 		return matrix;
+	}
+
+	private String valuesToLine(Collection<String> values)
+	{
+		StringJoiner joiner = new StringJoiner(",");
+		for (String s : values)
+			joiner.add(StringOperationUtils.quote(s));
+
+		return joiner + System.lineSeparator();
 	}
 
 	protected void parse(File reportFile) throws IOException, XMLStreamException

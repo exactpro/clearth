@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,16 +18,13 @@
 
 package com.exactprosystems.clearth.tools.matrixupdater.model;
 
-import com.csvreader.CsvReader;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
+import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Addition
 {
@@ -49,41 +46,42 @@ public class Addition
 
 	public List<Map<String, String>> listAdditions() throws IOException
 	{
-		CsvReader reader = null;
-
-		try
+		try (ClearThCsvReader reader = new ClearThCsvReader(new FileReader(additionFile), createCsvReaderConfig()))
 		{
-			reader = new CsvReader(new FileReader(additionFile));
-			reader.setTrimWhitespace(true);
-			reader.readHeaders();
+			String[] header = null;
+			List<Map<String, String>> additionsList = new ArrayList<>();
 
-			String[] header = reader.getHeaders();
-
-			List<Map<String, String>> additionsList = new ArrayList<Map<String, String>>();
-
-			while (reader.readRecord())
+			while (reader.hasNext())
 			{
 				if (reader.getRawRecord().contains("#"))
 				{
 					header = reader.getValues();
-					reader.setHeaders(header);
 					continue;
 				}
 
-				Map<String, String> entry = new LinkedHashMap<String, String>();
+				if (header == null || header.length == 0)
+					continue;
+
+				Map<String, String> entry = new LinkedHashMap<>();
+				String[] record = reader.getValues();
+				int i = 0;
 
 				for (String column : header)
-					entry.put(column, reader.get(column));
+					entry.put(column, record[i++]);
 
 				additionsList.add(entry);
 			}
 
 			return additionsList;
 		}
-		finally
-		{
-			Utils.closeResource(reader);
-		}
+	}
+
+	private ClearThCsvReaderConfig createCsvReaderConfig()
+	{
+		ClearThCsvReaderConfig config = new ClearThCsvReaderConfig();
+		config.setWithTrim(true);
+		config.setFirstLineAsHeader(false);
+		return config;
 	}
 
 	public File getAdditionFile()

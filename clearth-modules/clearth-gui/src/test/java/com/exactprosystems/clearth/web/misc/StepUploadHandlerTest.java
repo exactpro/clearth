@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,9 +18,8 @@
 
 package com.exactprosystems.clearth.web.misc;
 
-import com.csvreader.CsvWriter;
 import com.exactprosystems.clearth.automation.Step;
-import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
 import org.testng.annotations.Test;
 
 import java.io.BufferedWriter;
@@ -52,23 +51,18 @@ public class StepUploadHandlerTest
 	@Test
 	public void testReadConfigHeader() throws IOException
 	{
-		File config = null;
-		CsvWriter csvWriter = null;
-		try
+		File config = File.createTempFile("step_config_", ".csv");
+		try (ClearThCsvWriter writer = new ClearThCsvWriter(new BufferedWriter(new FileWriter(config, false))))
 		{
-			config = File.createTempFile("step_config_", ".csv");
-			csvWriter = new CsvWriter(new BufferedWriter(new FileWriter(config, false)), ',');
-			csvWriter.writeRecord(successfulHeader.stream().map(Step.StepParams::getValue).toArray(String[]::new));
-			csvWriter.flush();
+			writer.writeRecord(successfulHeader.stream().map(Step.StepParams::getValue).toArray(String[]::new));
+			writer.flush();
 			
 			List<String> undefinedFields = StepUploadHandler.readConfigHeaders(config.getAbsolutePath());
 			assertTrue("Undefined fields found: " + undefinedFields, undefinedFields.isEmpty());
 		}
 		finally
 		{
-			Utils.closeResource(csvWriter);
-			if (config != null)
-				Files.delete(config.toPath());
+			Files.delete(config.toPath());
 		}
 	}
 }
