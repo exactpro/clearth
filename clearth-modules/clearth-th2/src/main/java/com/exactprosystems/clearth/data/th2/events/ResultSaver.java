@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.data.th2.events;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -72,6 +73,11 @@ public class ResultSaver
 	{
 		this.router = router;
 		this.maxBatchSize = config.getMaxBatchSize();
+	}
+	
+	public int getMaxBatchSize()
+	{
+		return maxBatchSize;
 	}
 	
 	public void storeResult(Result result, String name, Th2EventMetadata parentMetadata) throws UnsupportedResultException, TestExecutionHandlingException
@@ -275,7 +281,14 @@ public class ResultSaver
 			return;
 		}
 		
-		storeDetailsFromFile(result, storedContainer);
+		try (CsvDetailedResultReader reader = result.getReader())
+		{
+			storeDetailsFromFile(reader, storedContainer);
+		}
+		catch (Exception e)
+		{
+			throw new TestExecutionHandlingException("Error while processing CSV comparison result from file "+result.getReportFile(), e);
+		}
 	}
 	
 	protected void store(ContainerResult result, String name, Th2EventMetadata parentMetadata) throws TestExecutionHandlingException
@@ -402,7 +415,7 @@ public class ResultSaver
 	}
 	
 	
-	private EventBatch.Builder storeEventInBatch(com.exactpro.th2.common.grpc.Event event, EventBatch.Builder batch, 
+	protected EventBatch.Builder storeEventInBatch(com.exactpro.th2.common.grpc.Event event, EventBatch.Builder batch, 
 			com.exactpro.th2.common.grpc.Event batchContainer) throws TestExecutionHandlingException
 	{
 		if (batch == null)
@@ -416,7 +429,7 @@ public class ResultSaver
 		return batch;
 	}
 	
-	private void storePlainDetails(Collection<DetailedResult> details, com.exactpro.th2.common.grpc.Event storedContainer) throws TestExecutionHandlingException
+	protected void storePlainDetails(Collection<DetailedResult> details, com.exactpro.th2.common.grpc.Event storedContainer) throws TestExecutionHandlingException
 	{
 		EventBatch.Builder rowsBatch = null;
 		Instant start = EventUtils.getTimestamp(storedContainer.getId().getStartTimestamp()),
@@ -443,31 +456,25 @@ public class ResultSaver
 			storeProto(rowsBatch.build());
 	}
 	
-	private void storeDetailsFromFile(CsvDetailedResult result, com.exactpro.th2.common.grpc.Event storedContainer) throws TestExecutionHandlingException
+	protected void storeDetailsFromFile(CsvDetailedResultReader reader, com.exactpro.th2.common.grpc.Event storedContainer) 
+			throws IOException, TestExecutionHandlingException, Exception
 	{
-		try (CsvDetailedResultReader reader = result.getReader())
+		EventBatch.Builder rowsBatch = null;
+		Instant start = EventUtils.getTimestamp(storedContainer.getId().getStartTimestamp()),
+				end = EventUtils.getTimestamp(storedContainer.getEndTimestamp());
+		DetailedResult dr;
+		while ((dr = reader.readNext()) != null)
 		{
-			EventBatch.Builder rowsBatch = null;
-			Instant start = EventUtils.getTimestamp(storedContainer.getId().getStartTimestamp()),
-					end = EventUtils.getTimestamp(storedContainer.getEndTimestamp());
-			DetailedResult dr;
-			while ((dr = reader.readNext()) != null)
-			{
-				com.exactpro.th2.common.grpc.Event rowEvent = ClearThEvent.fromTo(start, end)
-						.name(dr.getComment())
-						.type(TYPE_COMPARISON)
-						.status(EventUtils.getStatus(dr.isSuccess()))
-						.bodyData(createComparisonTable(dr.getResultDetails()))
-						.toProto(storedContainer.getId());
-				rowsBatch = storeEventInBatch(rowEvent, rowsBatch, storedContainer);
-			}
-			
-			if (rowsBatch != null)
-				storeProto(rowsBatch.build());
+			com.exactpro.th2.common.grpc.Event rowEvent = ClearThEvent.fromTo(start, end)
+					.name(dr.getComment())
+					.type(TYPE_COMPARISON)
+					.status(EventUtils.getStatus(dr.isSuccess()))
+					.bodyData(createComparisonTable(dr.getResultDetails()))
+					.toProto(storedContainer.getId());
+			rowsBatch = storeEventInBatch(rowEvent, rowsBatch, storedContainer);
 		}
-		catch (Exception e)
-		{
-			throw new TestExecutionHandlingException("Error while processing CSV comparison result from file "+result.getReportFile(), e);
-		}
+		
+		if (rowsBatch != null)
+			storeProto(rowsBatch.build());
 	}
 }
