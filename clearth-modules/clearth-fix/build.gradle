@@ -1,5 +1,5 @@
 dependencies {
-	implementation 'org.quickfixj:quickfixj-core:2.3.1'
+	api 'org.quickfixj:quickfixj-core:2.3.1'
 }
 
 publishing {
