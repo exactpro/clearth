@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,9 @@
 
 package com.exactprosystems.clearth.web.beans;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.ConfigFiles;
 import com.exactprosystems.clearth.DeploymentConfig;
@@ -26,52 +29,117 @@ import com.exactprosystems.clearth.utils.MemoryAndSpaceMonitor;
 import com.exactprosystems.clearth.web.WebDeploymentConfig;
 import com.exactprosystems.clearth.web.jetty.JettyXmlUpdater;
 
-public abstract class ClearThCoreApplicationBean {
-
-	public static ClearThCoreApplicationBean appInstance = null;
-
+public abstract class ClearThCoreApplicationBean
+{
+	private static final Logger logger = LoggerFactory.getLogger(ClearThCoreApplicationBean.class);
+	
+	private static ClearThCoreApplicationBean appInstance = null;
+	
 	protected DeploymentConfig deploymentConfig = null;
 	protected ConfigFiles configFiles = null;
-
+	
+	private Exception initializationError = null;
 	private String appContextPath;
 	private boolean appContextPathOverride;
-
-	public String getAppContextPath()
-	{
-		return appContextPath;
-	}
-	public boolean isAppContextPathOverride()
-	{
-		return appContextPathOverride;
-	}
-
+	
 	public ClearThCoreApplicationBean() throws ClearThException
 	{
 		synchronized (ClearThCoreApplicationBean.class)
 		{
 			if (appInstance != null)
-			{
-				throw new ClearThException("ApplicationBean is already created");
-			}
+				throw new ClearThException("ApplicationBean already created");
+			
 			appInstance = this;
+			
+			try
+			{
+				configFiles = createConfigFiles();
+				deploymentConfig = createDeploymentConfig();
+				deploymentConfig.init(configFiles);
+				initApplication();
+				initWebApplication();
+			}
+			catch (Exception e)
+			{
+				initializationError = e;
+				logger.error("Error while initializing application", e);
+			}
 		}
-
-		configFiles = createConfigFiles();
-		deploymentConfig = createDeploymentConfig();
-		deploymentConfig.init(configFiles);
-		initApplication();
-		initWebApplication();
 	}
 
 	protected abstract void initApplication() throws ClearThException;
-
+	protected abstract ConfigFiles createConfigFiles();
+	
+	
+	public static ClearThCoreApplicationBean getInstance()
+	{
+		return appInstance;
+	}
+	
+	
+	public String getAppContextPath()
+	{
+		return appContextPath;
+	}
+	
+	public boolean isAppContextPathOverride()
+	{
+		return appContextPathOverride;
+	}
+	
+	public Exception getInitializationError()
+	{
+		return initializationError;
+	}
+	
+	public String getInitializationErrorText()
+	{
+		Exception error = getInitializationError();
+		if (error == null)
+			return null;
+		
+		String result = error.getMessage();
+		if (error.getCause() != null)
+		{
+			if (!result.endsWith("."))
+				result += ".";
+			result += " "+error.getCause().getMessage();
+		}
+		return result;
+	}
+	
+	public String getUsedMemoryInfo()
+	{
+		return String.valueOf(MemoryAndSpaceMonitor.getUsedMemoryMb());
+	}
+	
+	public String getMaxMemoryInfo()
+	{
+		return String.valueOf(MemoryAndSpaceMonitor.getMaxMemoryMb());
+	}
+	
+	public String getUsedSpaceInfo()
+	{
+		return String.valueOf(MemoryAndSpaceMonitor.getUsedSpace(MemoryAndSpaceMonitor.GB_FACTOR));
+	}
+	
+	public String getTotalSpaceInfo()
+	{
+		return String.valueOf(MemoryAndSpaceMonitor.getTotalSpace(MemoryAndSpaceMonitor.GB_FACTOR));
+	}
+	
+	public boolean isMemoryBreachesLimit()
+	{
+		return MemoryAndSpaceMonitor.isMemoryBreachLimit(90);
+	}
+	
+	
 	protected void initWebApplication() throws ClearThException
 	{
-
 		WebDeploymentConfig webDeploymentConfig = (WebDeploymentConfig) deploymentConfig;
 		this.appContextPath  = webDeploymentConfig.getAppContextPath();
 		this.appContextPathOverride = webDeploymentConfig.isAppContextPathOverride();
-
+		
 		updateJettyXml(ClearThCore.rootRelative("jetty/etc/jetty.xml"));
 	}
 	
@@ -85,41 +153,9 @@ public abstract class ClearThCoreApplicationBean {
 	{
 		return new JettyXmlUpdater();
 	}
-
+	
 	protected DeploymentConfig createDeploymentConfig()
 	{
 		return new WebDeploymentConfig();
-	}
-
-	protected abstract ConfigFiles createConfigFiles();
-
-	public static ClearThCoreApplicationBean getInstance()
-	{
-		return appInstance;
-	}
-
-	public String getUsedMemoryInfo()
-	{
-		return String.valueOf(MemoryAndSpaceMonitor.getUsedMemoryMb());
-	}
-
-	public String getMaxMemoryInfo()
-	{
-		return String.valueOf(MemoryAndSpaceMonitor.getMaxMemoryMb());
-	}
-
-	public String getUsedSpaceInfo()
-	{
-		return String.valueOf(MemoryAndSpaceMonitor.getUsedSpace(MemoryAndSpaceMonitor.GB_FACTOR));
-	}
-
-	public String getTotalSpaceInfo()
-	{
-		return String.valueOf(MemoryAndSpaceMonitor.getTotalSpace(MemoryAndSpaceMonitor.GB_FACTOR));
-	}
-
-	public boolean isMemoryBreachesLimit()
-	{
-		return MemoryAndSpaceMonitor.isMemoryBreachLimit(90);
 	}
 }

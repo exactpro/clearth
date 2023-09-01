@@ -534,6 +534,18 @@ img {
 	font-size: 0.75em;
 }
 
+#fatalError {
+	color: #b94a48;
+	background-color: #FFCDD2;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 500px;
+	margin: -50px 0 0 -250px;
+	padding: 10px;
+	font-size: 1.231em;
+}
+
 #cthLogo {
 	position: absolute;
 	left:50%;

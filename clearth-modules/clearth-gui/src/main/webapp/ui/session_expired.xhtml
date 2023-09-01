@@ -15,7 +15,7 @@
 	
 	<ui:define name="page">
 		<div id="loginContainer">
-			<h:form id="loginPanel-expired">
+			<h:form id="loginPanel-expired" rendered="#{ApplicationBean.initializationError == null}">
 				<div id="cthLogo" />
 				<div id="expired-msg">
 					Your session has expired. <br />
@@ -34,7 +34,9 @@
 					<f:param name="direction" value="'up'" />
 				</p:effect>
 			</h:form>
-			<!-- <p class="version"></p> -->
+			<p:outputPanel id="fatalError" rendered="#{ApplicationBean.initializationError != null}">
+				<h:outputText value="#{ApplicationBean.initializationErrorText}" />
+			</p:outputPanel>
 			<h:form>
 				<p style="margin-top: 0px" id="copyright">&copy; 2011-2023 Exactpro Systems, LLC<span style="margin-left: 10px;"><h:outputText value="#{ApplicationBean.versionInfo}" /></span></p>
 			</h:form>

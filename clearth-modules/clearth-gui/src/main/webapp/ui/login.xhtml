@@ -15,7 +15,7 @@
 	
 	<ui:define name="page">
 		<div id="loginContainer">
-			<h:form id="loginPanel">
+			<h:form id="loginPanel" rendered="#{ApplicationBean.initializationError == null}">
 				<div id="#{!userBean.newYear ? 'cthLogo' : 'cthLogoNY'}" />
 				<p:focus context="loginPanel" />
 				<p:inputText id="userName" styleClass="authorizeField" value="#{authBean.userName}" autocomplete="off" />
@@ -30,7 +30,9 @@
 					<f:param name="direction" value="'up'" />
 				</p:effect>
 			</h:form>
-			<!-- <p class="version"></p> -->
+			<p:outputPanel id="fatalError" rendered="#{ApplicationBean.initializationError != null}">
+				<h:outputText value="#{ApplicationBean.initializationErrorText}" />
+			</p:outputPanel>
 			<h:form>
 				<p style="margin-top: 0px" id="copyright">&copy; 2011-2023 Exactpro Systems, LLC<span style="margin-left: 10px;"><h:outputText value="#{ApplicationBean.versionInfo}" /></span></p>
 			</h:form>
