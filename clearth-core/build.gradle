@@ -54,7 +54,6 @@ dependencies {
 	api "org.apache.poi:poi-ooxml:5.2.2"
 	api "org.apache.poi:poi-ooxml-lite:5.2.2"
 	api "org.freemarker:freemarker:2.3.30"
-	api "net.sourceforge.javacsv:javacsv:2.0"
 	api "com.fasterxml.jackson.core:jackson-databind:2.15.2"
 	api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2"
 	api "javax.xml.bind:jaxb-api:2.2"
