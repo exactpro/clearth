@@ -22,10 +22,10 @@ import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
+import com.exactprosystems.clearth.data.DefaultDataHandlersFactory;
 import com.exactprosystems.clearth.messages.ConnectionFinder;
 import com.exactprosystems.clearth.messages.MessageFileReader;
 import com.exactprosystems.clearth.utils.ClearThException;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -41,7 +41,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.exactprosystems.clearth.data.DefaultDataHandlersFactory;
+import static org.testng.Assert.assertEquals;
 
 public class BasicClearThClientTest
 {
@@ -188,7 +188,7 @@ public class BasicClearThClientTest
 		con.stop();
 		
 		Collection<String> received = readFile(new MessageFileReader(), receivedFile);
-		Assert.assertEquals(received, expectedReceived);
+		assertEquals(received, expectedReceived);
 	}
 	
 	@Test(description = "Initialization of Collector from file written by FileListener")
@@ -208,9 +208,23 @@ public class BasicClearThClientTest
 		
 		ClearThMessageCollector collector = new ConnectionFinder().findCollector(con);
 		Collection<String> messages = collector.getMessages().stream().map(m -> m.getField(ClearThMessageCollector.MESSAGE)).collect(Collectors.toList());
-		Assert.assertEquals(messages, expectedReceived);
+		assertEquals(messages, expectedReceived);
 	}
-	
+
+	@Test
+	public void checkCloseConnection() throws Exception
+	{
+		assertEquals(TestBasicClearThClient.value, 15);
+		try
+		{
+			TestBasicClearThClient client = new TestBasicClearThClient(con);
+		}
+		catch (Exception e)
+		{
+			assertEquals(e.getMessage(), "value = 50");
+		}
+		assertEquals(TestBasicClearThClient.value, 30);
+	}
 	
 	private void clearDirectory(Path directory) throws IOException
 	{

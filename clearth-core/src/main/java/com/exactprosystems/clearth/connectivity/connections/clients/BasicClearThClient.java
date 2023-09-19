@@ -90,7 +90,7 @@ public abstract class BasicClearThClient implements ClearThClient
 		{
 			connect();
 		}
-		catch (ConnectionException e)
+		catch (Exception e)
 		{
 			logger.error("Could not init client for connection '{}', closing all opened related connections", name, e);
 			try
@@ -101,9 +101,9 @@ public abstract class BasicClearThClient implements ClearThClient
 			{
 				logger.error("Error while closing related connections", e1);
 			}
-			
+
 			Utils.closeResource(messageHandler);
-			
+
 			throw e;
 		}
 	}
