@@ -412,7 +412,12 @@ public class ConnectivityBean extends ClearThBean
 		try
 		{
 			File resultFile = ClearThCore.getInstance().getConnectionsTransmitter().exportConnections(selectedConnectionType.getName());
-			return WebUtils.downloadFile(resultFile);
+			String warnMess = "Connection list is empty";
+
+			if (resultFile == null)
+				getLogger().debug(warnMess);
+
+			return WebUtils.downloadFile(resultFile, warnMess);
 		}
 		catch (IOException | ConnectivityException e)
 		{

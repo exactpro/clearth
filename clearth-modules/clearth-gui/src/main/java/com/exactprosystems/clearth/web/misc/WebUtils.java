@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,10 +18,9 @@
 
 package com.exactprosystems.clearth.web.misc;
 
-import javax.activation.MimetypesFileTypeMap;
-import javax.faces.context.FacesContext;
-import java.io.*;
-
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.ExceptionUtils;
+import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.PrimeFaces;
@@ -31,9 +30,9 @@ import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.ExceptionUtils;
-import com.exactprosystems.clearth.utils.Utils;
+import javax.activation.MimetypesFileTypeMap;
+import javax.faces.context.FacesContext;
+import java.io.*;
 
 public class WebUtils
 {
@@ -69,8 +68,14 @@ public class WebUtils
 		}
 	}
 	
-	public static StreamedContent downloadFile(File file, String fileName) throws FileNotFoundException
+	public static StreamedContent downloadFile(File file, String fileName, String warnMess) throws FileNotFoundException
 	{
+		if (file == null || !file.exists())
+		{
+			MessageUtils.addWarningMessage("Nothing to download", warnMess);
+			return null;
+		}
+
 		@SuppressWarnings("resource")
 		InputStream stream = new FileInputStream(file);
 		return DefaultStreamedContent.builder()
@@ -79,10 +84,16 @@ public class WebUtils
 				.name(fileName)
 				.build();
 	}
-	
+
 	public static StreamedContent downloadFile(File file) throws FileNotFoundException
 	{
-		return downloadFile(file, file.getName());
+		return downloadFile(file, "File does not exist");
+	}
+
+	public static StreamedContent downloadFile(File file, String warnMess) throws FileNotFoundException
+	{
+		String fileName = file != null ? file.getName() : null;
+		return downloadFile(file, fileName, warnMess);
 	}
 
 	public static boolean addCanCloseCallback(boolean canClose)

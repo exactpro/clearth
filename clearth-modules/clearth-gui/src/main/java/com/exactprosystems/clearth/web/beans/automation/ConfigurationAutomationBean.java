@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -101,7 +101,12 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		try
 		{
 			File resultFile = ClearThCore.getInstance().getSchedulerSettingsTransmitter().exportSettings(schedulerData);
-			return WebUtils.downloadFile(resultFile);
+			String warnMess = "Configuration is empty";
+
+			if (resultFile == null)
+				getLogger().debug(warnMess);
+
+			return WebUtils.downloadFile(resultFile, warnMess);
 		}
 		catch (IOException e)
 		{

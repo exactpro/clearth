@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,17 +18,16 @@
 
 package com.exactprosystems.clearth.automation;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.FileOperationUtils;
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.utils.FileOperationUtils;
 
 public class SchedulerSettingsTransmitter
 {
@@ -39,9 +38,12 @@ public class SchedulerSettingsTransmitter
 
 	public File exportSettings(SchedulerData schedulerData) throws IOException
 	{
-		String destDir = ClearThCore.tempPath();
+		File schedulerDir = schedulerData.getSchedulerDir();
+		List<File> settings = getSettings(schedulerDir);
+		if (settings == null || settings.isEmpty())
+			return null;
 
-		File resultFile = File.createTempFile(schedulerData.getName()+"_data_", ".zip", new File(destDir));
+		String destDir = ClearThCore.tempPath();
 
 		File exportFolder = FileOperationUtils.createTempDirectory("scheduler_data_", new File(destDir));
 		File settingsFolder = new File(exportFolder, SETTINGS_FOLDER);
@@ -51,9 +53,7 @@ public class SchedulerSettingsTransmitter
 		Files.createDirectories(matricesFolder.toPath());
 		String settingsPath = settingsFolder.getCanonicalPath();
 		String matricesPath = matricesFolder.getCanonicalPath();
-		File schedulerDir = schedulerData.getSchedulerDir();
 
-		List<File> settings = getSettings(schedulerDir);
 		for (File file : settings)
 			FileOperationUtils.copyFile(file.getCanonicalPath(), settingsPath+File.separator+file.getName());
 
@@ -61,6 +61,7 @@ public class SchedulerSettingsTransmitter
 		for (MatrixData matrixData : matrices)
 			FileOperationUtils.copyFile(matrixData.getFile().getCanonicalPath(), matricesPath+File.separator+matrixData.getFile().getName());
 
+		File resultFile = File.createTempFile(schedulerData.getName()+"_data_", ".zip", new File(destDir));
 		FileOperationUtils.zipDirectories(resultFile, Arrays.asList(settingsFolder, matricesFolder));
 		clearSettingsDir(exportFolder);
 
