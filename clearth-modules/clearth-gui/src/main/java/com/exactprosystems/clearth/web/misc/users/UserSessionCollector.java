@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,8 +21,14 @@ package com.exactprosystems.clearth.web.misc.users;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
@@ -30,65 +36,92 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author andrey.panarin
- *
- */
 public class UserSessionCollector
 {
 	private static final Logger logger = LoggerFactory.getLogger(UserSessionCollector.class);
 	
-	private static final Map<String, List<HttpSession>> sessionsByLogin = new HashMap<String, List<HttpSession>>();
-	private static final Map<String, String> loginBySessionId = new HashMap<String, String>();
+	private static final ReadWriteLock lock = new ReentrantReadWriteLock();
+	private static final Lock readLock = lock.readLock(),
+			writeLock = lock.writeLock();
+	
+	private static final Map<String, Set<HttpSession>> sessionsByLogin = new LinkedHashMap<>();
+	private static final Map<String, String> loginBySessionId = new HashMap<>();
 	
 	private UserSessionCollector() {}
 	
+	public static List<String> getLogins()
+	{
+		readLock.lock();
+		try
+		{
+			return new ArrayList<>(sessionsByLogin.keySet());
+		}
+		finally
+		{
+			readLock.unlock();
+		}
+	}
+	
 	public static List<HttpSession> getSessionsByLogin(String login)
 	{
-		List<HttpSession> sessions;
-		synchronized (UserSessionCollector.class)
+		readLock.lock();
+		try
 		{
-			sessions = sessionsByLogin.get(login);
+			Set<HttpSession> sessions = sessionsByLogin.get(login);
+			return sessions == null ? Collections.emptyList() : new ArrayList<>(sessions);
 		}
-		if (sessions == null)
-			return Collections.emptyList();
-		
-		return new ArrayList<HttpSession>(sessions);
+		finally
+		{
+			readLock.unlock();
+		}
 	}
 	
 	public static void registerCurrentSession(String login)
 	{
 		HttpSession currentSession = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
-		String currentSessionId = currentSession.getId();
-		
-		synchronized (UserSessionCollector.class)
+		registerSession(login, currentSession);
+	}
+	
+	public static void registerSession(String login, HttpSession session)
+	{
+		String sessionId = session.getId();
+		writeLock.lock();
+		try
 		{
-			loginBySessionId.put(currentSessionId, login);
+			loginBySessionId.put(sessionId, login);
 			
-			List<HttpSession> sessions = sessionsByLogin.get(login);
-			if (sessions == null)
-			{
-				sessions = new ArrayList<HttpSession>();
-				sessionsByLogin.put(login, sessions);
-			}
-			sessions.add(currentSession);
+			Set<HttpSession> allSessions = sessionsByLogin.computeIfAbsent(login, l -> new HashSet<>());
+			allSessions.add(session);
+			
+			logger.debug("Session '{}' has been registered for '{}'", sessionId, login);
 		}
-		
-		logger.debug("Session '{}' has been registered as '{}'", currentSessionId, login);
+		finally
+		{
+			writeLock.unlock();
+		}
 	}
 	
 	public static void removeSession(HttpSession session)
 	{
-		synchronized (UserSessionCollector.class)
+		writeLock.lock();
+		try
 		{
 			String sessionId = session.getId();
 			String sessionLogin = loginBySessionId.remove(sessionId);
 			
-			List<HttpSession> sessionsForThisLogin = sessionsByLogin.get(sessionLogin);
+			Set<HttpSession> sessionsForThisLogin = sessionsByLogin.get(sessionLogin);
 			if (sessionsForThisLogin != null)
 			{
 				sessionsForThisLogin.remove(session);
+				if (sessionsForThisLogin.isEmpty())
+					sessionsByLogin.remove(sessionLogin);
 			}
+			
+			logger.debug("Session '{}' of '{}' has been unregistered", sessionId, sessionLogin);
+		}
+		finally
+		{
+			writeLock.unlock();
 		}
 	}
 }
