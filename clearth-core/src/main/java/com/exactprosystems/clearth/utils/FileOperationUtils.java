@@ -228,6 +228,7 @@ public class FileOperationUtils
 					Files.createDirectories(f.toPath());
 				else
 				{
+					Files.createDirectories(Paths.get(f.getParent()));
 					InputStream is = zip.getInputStream(entry);
 					BufferedOutputStream fileOutput = null;
 					try

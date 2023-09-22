@@ -86,14 +86,19 @@ public class CsvMatrixReader extends MatrixFileReader
 	{
 		Block block = new Block(new TableHeader<>(new HashSet<>()));
 
-		block.addAction(createRow(null, Arrays.asList(reader.getValues())));
+		block.addAction(createRow(null, valuesToList(reader.getValues())));
 
 		while (reader.readNextLine() && !isHeader(reader.getRawLine()))
 		{
-			block.addAction(createRow(null, Arrays.asList(reader.getValues())));
+			block.addAction(createRow(null, valuesToList(reader.getValues())));
 		}
 
 		return block;
+	}
+
+	protected List<String> valuesToList(String[] values)
+	{
+		return new ArrayList<>(Arrays.asList(values));
 	}
 
 	protected Block readBlock(CsvActionReader reader, Set<String> header, Map<Integer, String> duplicatedFields) throws IOException
@@ -105,7 +110,7 @@ public class CsvMatrixReader extends MatrixFileReader
 
 			while (hasNextLine && (reader.isCommentLine() || reader.isEmptyLine()))
 			{
-				block.addAction(createRow(null, Arrays.asList(reader.getValues())));
+				block.addAction(createRow(null, valuesToList(reader.getValues())));
 				hasNextLine = reader.readNextLine();
 			}
 
@@ -117,7 +122,7 @@ public class CsvMatrixReader extends MatrixFileReader
 		/** the other blocks */
 		while (reader.readNextLine() && !(reader.isEmptyLine() || reader.isCommentLine() || isHeader(reader.getRawLine())))
 		{
-			List<String> values = removeDuplicatedFieldsValues(Arrays.asList(reader.getValues()), duplicatedFields);
+			List<String> values = removeDuplicatedFieldsValues(valuesToList(reader.getValues()), duplicatedFields);
 			block.addAction(createRow(block.getHeader(), values));
 		}
 

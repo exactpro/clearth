@@ -41,6 +41,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static org.testng.Assert.assertEquals;
 
 public class MatrixUpdaterTest
 {
@@ -215,6 +220,31 @@ public class MatrixUpdaterTest
 		assertMatrixUpdaterConfig(matrixUpdater.getConfig().getUpdates());
 	}
 
+	@Test
+	public void testUpdateZippedMatrix() throws Exception
+	{
+		String matrix1Name = "matrix_in_archive.csv",
+				matrix2Name = "another_matrix.csv";
+		Path inputDir = resDir.resolve("UpdateZippedMatrix"),
+				cfgFile = inputDir.resolve("config_for_archive.zip"),
+				expectedDir = inputDir.resolve("expected"),
+				tempDir = testOutput.resolve("UpdateZippedMatrix"),
+				matricesZip = tempDir.resolve("matrices_tree.zip");
+		Files.createDirectories(tempDir);
+		FileOperationUtils.zipFiles(matricesZip.toFile(), 
+				new File[]{inputDir.resolve(matrix1Name).toFile(), inputDir.resolve(matrix2Name).toFile()});
+		
+		MatrixUpdater matrixUpdater = new MatrixUpdater(ADMIN, tempDir);
+		matrixUpdater.setConfig(cfgFile.toFile());
+		File updatedMatricesZip = matrixUpdater.update(matricesZip.toFile());
+		
+		List<File> files = FileOperationUtils.unzipFile(updatedMatricesZip, tempDir.toFile());
+		Map<String, File> updatedMatrices = files.stream().collect(Collectors.toMap(File::getName, Function.identity()));
+		
+		assertFiles(expectedDir.resolve(matrix1Name).toFile(), updatedMatrices.get(matrix1Name), matrix1Name);
+		assertFiles(expectedDir.resolve(matrix2Name).toFile(), updatedMatrices.get(matrix2Name), matrix2Name);
+	}
+
 	private void assertMatrixUpdaterConfig(List<Update> list)
 	{
 		Assert.assertEquals(list.size(), 1);
@@ -240,4 +270,10 @@ public class MatrixUpdaterTest
 		update.setSettings(settings);
 	}
 
+	private void assertFiles(File expected, File actual, String desc) throws IOException
+	{
+		String expectedText = FileUtils.readFileToString(expected, Utils.UTF8),
+				actualText = FileUtils.readFileToString(actual, Utils.UTF8);
+		assertEquals(actualText, expectedText, desc);
+	}
 }

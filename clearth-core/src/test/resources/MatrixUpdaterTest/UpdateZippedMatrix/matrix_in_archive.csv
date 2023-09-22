@@ -1,0 +1,4 @@
+#Id,#GlobalStep,#Action,#Character,#Code
+id1,Step1,SetStatic,Z,9901
+#Id,#GlobalStep,#Action,#Code
+id2,Step1,SetStatic,9901
