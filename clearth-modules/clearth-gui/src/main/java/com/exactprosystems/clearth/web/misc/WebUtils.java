@@ -72,7 +72,7 @@ public class WebUtils
 	{
 		if (file == null || !file.exists())
 		{
-			MessageUtils.addWarningMessage("Nothing to download", warnMess);
+			MessageUtils.addWarningMessage("Nothing to download", warnMess != null ? warnMess : "File does not exist");
 			return null;
 		}
 
@@ -87,13 +87,12 @@ public class WebUtils
 
 	public static StreamedContent downloadFile(File file) throws FileNotFoundException
 	{
-		return downloadFile(file, "File does not exist");
+		return downloadFile(file, file != null ? file.getName() : null, null);
 	}
 
-	public static StreamedContent downloadFile(File file, String warnMess) throws FileNotFoundException
+	public static StreamedContent downloadFile(File file, String fileName) throws FileNotFoundException
 	{
-		String fileName = file != null ? file.getName() : null;
-		return downloadFile(file, fileName, warnMess);
+		return downloadFile(file, fileName, null);
 	}
 
 	public static boolean addCanCloseCallback(boolean canClose)

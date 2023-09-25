@@ -417,7 +417,7 @@ public class ConnectivityBean extends ClearThBean
 			if (resultFile == null)
 				getLogger().debug(warnMess);
 
-			return WebUtils.downloadFile(resultFile, warnMess);
+			return WebUtils.downloadFile(resultFile, resultFile != null ? resultFile.getName() : null, warnMess);
 		}
 		catch (IOException | ConnectivityException e)
 		{
