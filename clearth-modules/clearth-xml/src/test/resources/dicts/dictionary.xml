@@ -187,4 +187,12 @@
             <fieldDesc name="HH" source="hh"/>
         </fieldDesc>
     </messageDesc>
+
+    <!--Test for value trimming-->
+    <messageDesc rootTag="spaces" type="spaces">
+        <fieldDesc name="tagValue" source="tag" />
+        <fieldDesc source="tag2">
+        	<attrDesc name="attrValue" source="attr" />
+        </fieldDesc>
+    </messageDesc>
 </XmlDictionaryDesc>

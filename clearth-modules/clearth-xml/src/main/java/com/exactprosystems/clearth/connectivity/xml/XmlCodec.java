@@ -62,7 +62,8 @@ public class XmlCodec implements ICodec
 
 	protected static final String FORMAT_NOMSGTYPE = "No message description with type '%s' in dictionary.";
 	
-	public static final String DEFAULT_CODEC_NAME = "Xml";
+	public static final String DEFAULT_CODEC_NAME = "Xml",
+			PARAM_TRIM_VALUES = "trimValues";
 
 	protected final XmlDictionary dictionary;
 	protected final boolean trimValues;
@@ -87,18 +88,13 @@ public class XmlCodec implements ICodec
 	@Deprecated
 	public XmlCodec(XmlDictionary dictionary)
 	{
-		this(dictionary, true, null);
+		this(dictionary, null);
 	}
 	
 	public XmlCodec(XmlDictionary dictionary, Map<String, String> codecParameters)
 	{
-		this(dictionary, true, codecParameters);
-	}
-	
-	public XmlCodec(XmlDictionary dictionary, boolean trimValues, Map<String, String> codecParameters)
-	{
 		this.dictionary = dictionary;
-		this.trimValues = trimValues;
+		this.trimValues = codecParameters == null ? true : Boolean.parseBoolean(codecParameters.getOrDefault(PARAM_TRIM_VALUES, "true"));
 		this.messageValidator = createMessageValidator();
 		this.codecParameters = codecParameters;
 	}

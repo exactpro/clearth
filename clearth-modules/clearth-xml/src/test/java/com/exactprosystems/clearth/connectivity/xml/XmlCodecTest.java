@@ -29,6 +29,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 import static com.exactprosystems.clearth.utils.CollectionUtils.map;
@@ -148,13 +149,19 @@ public class XmlCodecTest
 			map("MsgType", "nameAndSource",
 					"A", "1", "B", "2", "C", "3", "D", "4", "E", "5",
 					"F", "6", "FF", "66", "G", "7", "GG", "77", "H", "8", "HH", "88"));
-
+	
+	public static final ClearThXmlMessage WITH_SPACES = message(
+			map("MsgType", "spaces",
+					"tagValue", " 123 ", "attrValue", " 234 "));
+	
+	protected XmlDictionary dictionary;
 	protected XmlCodec codec;
 	
 	@Before
 	public void setUp() throws Exception
 	{
-		codec = new XmlCodec(new XmlDictionary(resourceToAbsoluteFilePath(DICTIONARY_PATH)));
+		dictionary = new XmlDictionary(resourceToAbsoluteFilePath(DICTIONARY_PATH), Collections.emptyMap());
+		codec = new XmlCodec(dictionary, Collections.emptyMap());
 	}
 	
 	//////////////// DECODING ////////////////////////
@@ -228,6 +235,15 @@ public class XmlCodecTest
 	public void decodeNameAndSource() throws Exception
 	{
 		decode(resourceToAbsoluteFilePath("messages/nameAndSource.xml"), NAME_AND_SOURCE);
+	}
+	
+	@Test
+	public void decodeNoTrim() throws Exception
+	{
+		String encodedMessage = Files.readString(Paths.get(resourceToAbsoluteFilePath("messages/withSpaces.xml")));
+		XmlCodec codec = new XmlCodec(dictionary, map("trimValues", "false"));
+		ClearThXmlMessage decoded = codec.decode(encodedMessage);
+		assertEquals(WITH_SPACES, decoded);
 	}
 	
 	protected void decode(String messagePath, ClearThXmlMessage expected) throws Exception
