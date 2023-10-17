@@ -83,9 +83,9 @@ public interface ClearThConnectionStorage
 
 	void removeConnection(ClearThConnection connection) throws ConnectivityException;
 
-	void loadConnections();
+	void loadConnections() throws ConnectivityException;
 
-	void reloadConnections();
+	void reloadConnections() throws ConnectivityException;
 
 	void validateConnectionStart(ClearThConnection connection) throws ConnectivityException, SettingsException;
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<dummyMessageConnection>
+    <name>DummyConnection</name>
+    <settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="dummyConnectionSettings">
+        <testField></testField>
+    </settings>
+    <listeners/>
+    <autoconnect>true</autoconnect>
+</dummyMessageConnection>

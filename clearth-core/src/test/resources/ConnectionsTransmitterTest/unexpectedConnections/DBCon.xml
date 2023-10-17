@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<dbConnection>
+    <name>DBCon</name>
+    <settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="dbConnectionSettings">
+        <jdbcUrl></jdbcUrl>
+        <username></username>
+        <password></password>
+        <initializationQuery></initializationQuery>
+    </settings>
+</dbConnection>

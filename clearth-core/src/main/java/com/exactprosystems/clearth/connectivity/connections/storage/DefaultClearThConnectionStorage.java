@@ -545,7 +545,7 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 	}
 
 	@Override
-	public void loadConnections()
+	public void loadConnections() throws ConnectivityException
 	{
 		modifyListLock.lock();
 		try
@@ -569,7 +569,7 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 	}
 	
 	@Override
-	public void reloadConnections()
+	public void reloadConnections() throws ConnectivityException
 	{
 		modifyListLock.lock();
 		try

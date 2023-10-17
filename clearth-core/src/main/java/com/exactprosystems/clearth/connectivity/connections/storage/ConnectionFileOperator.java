@@ -35,10 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.createDirectories;
@@ -64,12 +61,12 @@ public class ConnectionFileOperator
 		catch (FileNotFoundException e)
 		{
 			throw new ConnectivityException(e, "Could not load connection settings from file '%s'. File not found.",
-					file.getAbsolutePath());
+					file.getName());
 		}
 		catch (JAXBException e)
 		{
 			throw new ConnectivityException(e, "Could not load connection settings from file '%s'.",
-					file.getAbsolutePath());
+					file.getName());
 		}
 		finally
 		{
@@ -77,27 +74,21 @@ public class ConnectionFileOperator
 		}
 	}
 
-	public List<ClearThConnection> loadConnections(ConnectionTypeInfo info)
+	public List<ClearThConnection> loadConnections(ConnectionTypeInfo info) throws ConnectivityException
 	{
 		List<ClearThConnection> connections = new ArrayList<>();
 		Path directoryPath = info.getDirectory();
 		try (Stream<Path> dirStream = Files.list(directoryPath))
 		{
-			dirStream.filter(Files::isRegularFile)
-					.filter(filePath -> "xml".equalsIgnoreCase(getExtension(filePath.toString())))
-					.forEach(filePath ->
-					{
-						try
-						{
-							ClearThConnection connection = load(filePath.toFile(), info);
-							connection.setTypeInfo(info);
-							connections.add(connection);
-						}
-						catch (ConnectivityException e)
-						{
-							logger.error("Error while loading connection from file '{}'", filePath.toAbsolutePath(), e);
-						}
-					});
+			Iterator<Path> dirIterator = dirStream.filter(Files::isRegularFile)
+					.filter(file -> ("xml".equalsIgnoreCase(getExtension(file.toString())))).iterator();
+			while (dirIterator.hasNext())
+			{
+				Path filePath = dirIterator.next();
+				ClearThConnection connection = load(filePath.toFile(), info);
+				connection.setTypeInfo(info);
+				connections.add(connection);
+			}
 		}
 		catch (IOException e)
 		{

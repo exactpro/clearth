@@ -27,11 +27,11 @@ import com.exactprosystems.clearth.data.DefaultDataHandlersFactory;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,57 +40,95 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+
 public class ConnectionsTransmitterTest
 {
-	private static final String type = "Dummy", fileName = "file.xml";
-	private static final Path tempPath = Paths.get("testOutput", "exportConnections"),
-							connectionPath = tempPath.resolve("ConnectionsXML");
-	private static File tempDir, connDir;
+	private static final String TYPE = "Dummy", CLASS_NAME = ConnectionsTransmitterTest.class.getSimpleName();
+	private static final Path TEMP_PATH = Paths.get("testOutput").resolve(CLASS_NAME);
+	private static File tempDir;
+	private static Path resDir;
 
 	@BeforeClass
 	public static void init() throws ClearThException, IOException
 	{
-		if (!Files.isDirectory(connectionPath))
-			Files.createDirectories(connectionPath);
+		FileUtils.deleteDirectory(TEMP_PATH.toFile());
+		Files.createDirectories(TEMP_PATH);
 
-		connDir = connectionPath.toFile();
-		tempDir = tempPath.toFile();
-	}
-
-	@After
-	public void deleteTempFiles() throws IOException {
-		FileUtils.cleanDirectory(tempDir);
+		tempDir = TEMP_PATH.toFile();
+		resDir = Paths.get(FileOperationUtils.resourceToAbsoluteFilePath(CLASS_NAME));
 	}
 
 	@Test
 	public void testExportConnectionsFromConnectionStorage() throws ConnectivityException, IOException, SettingsException
 	{
-		ConnectionsTransmitter transmitter = loadConnectionAndGetTransmitter();
-		File resultZipFile = transmitter.exportConnections(type);
+		ConnectionsTransmitter transmitter = loadConnectionAndGetTransmitter(TEMP_PATH);
+		File resultZipFile = transmitter.exportConnections(TYPE);
 		Assert.assertTrue(resultZipFile.isFile());
 	}
 
 	@Test
 	public void testExportConnectionsToZipFile() throws ConnectivityException, IOException, SettingsException
 	{
-		ConnectionsTransmitter transmitter = loadConnectionAndGetTransmitter();
+		ConnectionsTransmitter transmitter = loadConnectionAndGetTransmitter(TEMP_PATH);
+		String fileName = "testExportConnectionsToZipFile.xml";
 
-		File trashFile = new File(connDir, fileName);
-		trashFile.createNewFile();
+		File trashFile = new File(tempDir, fileName);
+		try
+		{
+			trashFile.createNewFile();
+			File resultZipFile = transmitter.exportConnections(TYPE);
+			List<File> unzipFiles = FileOperationUtils.unzipFile(resultZipFile, tempDir);
 
-		File resultZipFile = transmitter.exportConnections(type);
-		List<File> unzipFiles = FileOperationUtils.unzipFile(resultZipFile, tempDir);
+			for (File file : unzipFiles)
+				assertNotEquals(fileName, file.getName());
 
-		for (File file: unzipFiles)
-			Assert.assertNotEquals(fileName, file.getName());
-
-		Assert.assertEquals(1,unzipFiles.size());
+			assertEquals(1, unzipFiles.size());
+		}
+		finally
+		{
+			Files.deleteIfExists(trashFile.toPath());
+		}
 	}
 
-	private ConnectionsTransmitter loadConnectionAndGetTransmitter()
+	@Test
+	public void testUploadCopyOfAnExistingConnection() throws ConnectivityException, SettingsException, IOException
+	{
+		Path uploadCopyPath = TEMP_PATH.resolve("testUploadCopyOfAnExistingConnection");
+		Files.createDirectories(uploadCopyPath);
+
+		ConnectionsTransmitter transmitter = loadConnectionAndGetTransmitter(uploadCopyPath);
+		String actualFile = FileUtils.readFileToString(uploadCopyPath.resolve("DummyConnection.xml").toFile(), Utils.UTF8);
+		String expectedFile = FileUtils.readFileToString(resDir.resolve("DummyConnection.xml").toFile(), Utils.UTF8);
+		assertNotEquals(actualFile, expectedFile);
+
+		transmitter.deployConnections(TYPE, resDir.resolve("Dummy_connection_for_update.zip").toFile());
+		String updatedFile = FileUtils.readFileToString(uploadCopyPath.resolve("DummyConnection.xml").toFile(), Utils.UTF8);
+		assertEquals(updatedFile, expectedFile);
+	}
+
+	@Test(expectedExceptions = ConnectivityException.class)
+	public void testUploadWrongZippedFilesToConnections() throws ConnectivityException, SettingsException, IOException
+	{
+		ConnectionsTransmitter transmitter = loadConnectionAndGetTransmitter(TEMP_PATH);
+		transmitter.deployConnections(TYPE, resDir.resolve("DB_connection.zip").toFile());
+	}
+
+	@Test(expectedExceptions = ConnectivityException.class,
+			expectedExceptionsMessageRegExp = "Could not load connection settings from file 'DBCon.xml'.")
+	public void testLoadConnectionsFromDirWithUnexpectedFiles() throws ConnectivityException, SettingsException
+	{
+		ConnectionTypeInfo info =  new ConnectionTypeInfo(TYPE, DummyMessageConnection.class, resDir.resolve("unexpectedConnections"));
+		ClearThConnectionStorage connectionStorage = new DefaultClearThConnectionStorage(new DefaultDataHandlersFactory());
+		connectionStorage.registerType(info);
+		connectionStorage.loadConnections();
+	}
+
+	private ConnectionsTransmitter loadConnectionAndGetTransmitter(Path path)
 			throws ConnectivityException, SettingsException
 	{
-		ConnectionTypeInfo info =  new ConnectionTypeInfo(type, DummyMessageConnection.class, connectionPath);
+		ConnectionTypeInfo info =  new ConnectionTypeInfo(TYPE, DummyMessageConnection.class, path);
 		ClearThConnectionStorage connectionStorage = new DefaultClearThConnectionStorage(new DefaultDataHandlersFactory());
 		connectionStorage.registerType(info);
 
@@ -99,6 +137,6 @@ public class ConnectionsTransmitterTest
 
 		connectionStorage.addConnection(connection);
 
-		return new ConnectionsTransmitter(tempDir, connectionStorage);
+		return new ConnectionsTransmitter(path.toFile(), connectionStorage);
 	}
 }

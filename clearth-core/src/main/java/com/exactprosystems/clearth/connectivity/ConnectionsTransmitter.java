@@ -19,9 +19,12 @@
 package com.exactprosystems.clearth.connectivity;
 
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
+import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConnection;
+import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
 import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.connections.storage.ConnectionFileOperator;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.SettingsException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +93,7 @@ public class ConnectionsTransmitter
 		return fileList;
 	}
 
-	public synchronized void deployConnections(String type, File zipFile) throws IOException, ConnectivityException
+	public synchronized void deployConnections(String type, File zipFile) throws IOException, ConnectivityException, SettingsException
 	{
 		File destDir = FileOperationUtils.createTempDirectory("imported_" + type + "_connections_", tempDir);
 		try
@@ -102,21 +105,50 @@ public class ConnectionsTransmitter
 			File[] files = destDir.listFiles();
 			if (files == null)
 				throw new IOException("Could not get files from '" + destDir + "'");
-			
+
+			ConnectionFileOperator operator = new ConnectionFileOperator();
+			ConnectionTypeInfo info = connectionStorage.getConnectionTypeInfo(type);
+
 			for (File conFile : files)
 			{
-				if (conFile != null)
-					FileOperationUtils.copyFile(conFile.getCanonicalPath(), connectionsDirPath + "/" + conFile.getName());
+				ClearThConnection connection = operator.load(conFile, info);
+				connection.setTypeInfo(info);
+				ClearThConnection oldConnection = connectionStorage.getConnection(connection.getName(), type);
+				if (oldConnection != null)
+				{
+					stopRunnableConnection(oldConnection);
+					connectionStorage.modifyConnection(oldConnection, connection);
+				}
+				else
+					connectionStorage.addConnection(connection);
 			}
 			logger.debug("Imported {} connections are unzipped and copied to '{}'", type, connectionsDirPath);
-			connectionStorage.reloadConnections();
 		}
 		finally
 		{
 			FileUtils.deleteDirectory(destDir);
 		}
 	}
-	
+
+	private void stopRunnableConnection(ClearThConnection connection)
+	{
+		if (connection instanceof ClearThRunnableConnection)
+		{
+			ClearThRunnableConnection runnableConnection = (ClearThRunnableConnection) connection;
+			if (runnableConnection.isRunning())
+			{
+				try
+				{
+					runnableConnection.stop();
+				}
+				catch (Exception e)
+				{
+					logger.error("Could not stop connection '{}'", connection.getName());
+				}
+			}
+		}
+	}
+
 	private Path getConnectionsPath(String type) throws ConnectivityException
 	{
 		return connectionStorage.getConnectionTypeInfo(type).getDirectory();
