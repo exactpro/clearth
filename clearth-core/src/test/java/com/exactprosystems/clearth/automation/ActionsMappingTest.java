@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,14 +19,15 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.utils.SettingsException;
-import org.junit.Test;
+import org.testng.annotations.Test;
+import org.testng.annotations.DataProvider;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.assertEquals;
 
 public class ActionsMappingTest {
 
@@ -41,6 +42,22 @@ public class ActionsMappingTest {
 
 	public ActionsMappingTest() throws SettingsException {}
 
+	@DataProvider(name = "causingInfiniteLoopFiles")
+	public Object[][] causingInfiniteLoopFiles()
+	{
+		return new Object[][]
+				{
+						{"actionsmapping_fail_infinite_loop.cfg"},
+						{"actionsmapping_fail_infinite_loop2.cfg"}
+				};
+	}
+
+	@Test(expectedExceptions = SettingsException.class, dataProvider = "causingInfiniteLoopFiles")
+	public void testIncorrectParamsCausingAnInfiniteLoop(String fileName) throws SettingsException
+	{
+		ActionsMapping mappingWithException = new ActionsMapping(PATH_TO_CONF_FILES.resolve(fileName), true);
+	}
+
 	@Test
 	public void parseDefaultInputParams_Simple() throws SettingsException
 	{
@@ -49,7 +66,7 @@ public class ActionsMappingTest {
 
 		Map<String, String> expected = buildMap("param1", "One");
 
-		assertEquals(expected, actual);
+		assertEquals(actual, expected);
 	}
 
 	@Test
@@ -60,7 +77,7 @@ public class ActionsMappingTest {
 
 		Map<String, String> expected = buildMap("param1", "One", "param2", "Two", "param3", "Three");
 
-		assertEquals(expected, actual);
+		assertEquals(actual, expected);
 	}
 
 	@Test
@@ -71,7 +88,7 @@ public class ActionsMappingTest {
 
 		Map<String, String> expected = buildMap("param1", "One", "param2", "Two", "param3", "Three");
 
-		assertEquals(expected, actual);
+		assertEquals(actual, expected);
 	}
 
 	@Test
@@ -82,7 +99,7 @@ public class ActionsMappingTest {
 
 		Map<String, String> expected = buildMap("param1", "One");
 
-		assertEquals(expected, actual);
+		assertEquals(actual, expected);
 	}
 
 	@Test
@@ -93,7 +110,7 @@ public class ActionsMappingTest {
 
 		Map<String, String> expected = buildMap("param1", "One", "param2", "T\"w\"o", "OtherParam", ",=\t!@$%^&*[]{}()\\");
 
-		assertEquals(expected, actual);
+		assertEquals(actual, expected);
 	}
 
 	@Test
@@ -105,31 +122,31 @@ public class ActionsMappingTest {
 		Map<String, String> expected = buildMap("loooooooooooooooooooooooooongparamname", "loooooooooooooooooooooooooongparamvalue",
 				"param2", "value2");
 
-		assertEquals(expected, actual);
+		assertEquals(actual, expected);
 	}
 
-	@Test(expected = SettingsException.class)
+	@Test(expectedExceptions = SettingsException.class)
 	public void parseDefaultInputParams_FailWithoutValue() throws SettingsException
 	{
 		ActionsMapping mappingWithException = new ActionsMapping(
 				PATH_TO_CONF_FILES.resolve("actionmapping_fail_withoutvalue.cfg"), true);
 	}
 
-	@Test(expected = SettingsException.class)
+	@Test(expectedExceptions = SettingsException.class)
 	public void parseDefaultInputParams_FailUnclosedQuote() throws SettingsException
 	{
 		ActionsMapping mappingWithException = new ActionsMapping(
 			   PATH_TO_CONF_FILES.resolve("actionmapping_fail_unclosedquote.cfg"), true);
 	}
 
-	@Test(expected = SettingsException.class)
+	@Test(expectedExceptions = SettingsException.class)
 	public void parseDefaultInputParams_FailWrongFirstCharacter() throws SettingsException
 	{
 		ActionsMapping mappingWithException = new ActionsMapping(
 				PATH_TO_CONF_FILES.resolve("actionmapping_fail_wrongfirstchar.cfg"), true);
 	}
 
-	@Test(expected = SettingsException.class)
+	@Test(expectedExceptions = SettingsException.class)
 	public void parseDefaultInputParams_FailWrongFirstCharacterNumber() throws SettingsException
 	{
 		ActionsMapping mappingWithException = new ActionsMapping(
@@ -150,10 +167,10 @@ public class ActionsMappingTest {
 		Map<String, String> actual = mappingTemplate.getParamsByActionName(firstAction);
 		Map<String, String> actual1 = mappingTemplate.getParamsByActionName(secondAction);
 
-		assertEquals(expected, actual);
-		assertEquals(expected1, actual1);
-		assertEquals(initialActionName, mappingTemplate.getClassByActionName(firstAction));
-		assertEquals(initialActionName, mappingTemplate.getClassByActionName(secondAction));
+		assertEquals(actual, expected);
+		assertEquals(actual1, expected1);
+		assertEquals(mappingTemplate.getClassByActionName(firstAction), initialActionName);
+		assertEquals(mappingTemplate.getClassByActionName(secondAction), initialActionName);
 	}
 
 	@Test
@@ -163,8 +180,8 @@ public class ActionsMappingTest {
 		String actionNameLowCase = actionName.toLowerCase();
 		String pathToAction = PATH_TO_ACTIONS + "TestAction";
 
-		assertEquals(actionName, mappingTemplate.getNameByActionName(actionNameLowCase));
-		assertEquals(pathToAction, mappingTemplate.getClassByActionName(actionNameLowCase));
+		assertEquals(mappingTemplate.getNameByActionName(actionNameLowCase), actionName);
+		assertEquals(mappingTemplate.getClassByActionName(actionNameLowCase), pathToAction);
 	}
 
 	@Test
@@ -178,9 +195,9 @@ public class ActionsMappingTest {
 
 		Map<String, String> actual = mappingTemplate.getParamsByActionName(actionNameLowCase);
 
-		assertEquals(actionName, mappingTemplate.getNameByActionName(actionNameLowCase));
-		assertEquals(pathToAction, mappingTemplate.getClassByActionName(actionNameLowCase));
-		assertEquals(expected, actual);
+		assertEquals(mappingTemplate.getNameByActionName(actionNameLowCase), actionName);
+		assertEquals(mappingTemplate.getClassByActionName(actionNameLowCase), pathToAction);
+		assertEquals(actual, expected);
 	}
 
 	@Test
@@ -189,8 +206,8 @@ public class ActionsMappingTest {
 		String packageName = "actionsdb";
 		String pathToPackage = PATH_TO_ACTIONS + "db";
 
-		assertEquals(packageName, mappingTemplate.getNameByActionName(packageName));
-		assertEquals(pathToPackage, mappingTemplate.getClassByActionName(packageName));
+		assertEquals(mappingTemplate.getNameByActionName(packageName), packageName);
+		assertEquals(mappingTemplate.getClassByActionName(packageName), pathToPackage);
 	}
 
 	@Test
@@ -200,8 +217,8 @@ public class ActionsMappingTest {
 		String actionNameLowCase = actionName.toLowerCase();
 		String pathToAction = PATH_TO_ACTIONS + "db.ActionWithRefInPackage";
 
-		assertEquals(actionName, mappingTemplate.getNameByActionName(actionNameLowCase));
-		assertEquals(pathToAction, mappingTemplate.getClassByActionName(actionNameLowCase));
+		assertEquals(mappingTemplate.getNameByActionName(actionNameLowCase), actionName);
+		assertEquals(mappingTemplate.getClassByActionName(actionNameLowCase), pathToAction);
 	}
 
 	private static Map<String, String> buildMap(String... keysAndValues)

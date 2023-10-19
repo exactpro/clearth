@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,7 +90,7 @@ public class ActionsMapping
 	private Map<String, ActionMetaData> parseActions(Map<String,String> actionsMap, boolean actionNameToLowerCase) throws SettingsException
 	{
 		Map<String, ActionMetaData> descriptions = new LinkedHashMap<>();
-
+		Set<String> solvedReferences = new HashSet<>();
 		Pattern patternForParamName = Pattern.compile("^[a-zA-Z_][\\w]*$");
 
 		for (Map.Entry<String, String> actionEntry : actionsMap.entrySet())
@@ -100,7 +102,7 @@ public class ActionsMapping
 
 			do {
 				clazz = splitActionClassAndParams(data, defaultInputParamsList);
-				clazz = replaceReferenceCharacters(clazz, actionsMap);
+				clazz = replaceReferenceCharacters(clazz, solvedReferences, name, actionsMap);
 				data = clazz;
 			} while (clazz.contains(REFERENCE_CHAR));
 
@@ -140,11 +142,14 @@ public class ActionsMapping
 		return clazz;
 	}
 
-	private String replaceReferenceCharacters(String clazz, Map<String,String> actions) throws SettingsException
+	private String replaceReferenceCharacters(String clazz, Set<String> solvedReferences, String actionName, Map<String, String> actionsMap) throws SettingsException
 	{
 			int start = clazz.indexOf(REFERENCE_CHAR);
 			if(start < 0)
+			{
+				solvedReferences.add(actionName);
 				return clazz;
+			}
 
 			start = start + 1;
 			int end = clazz.indexOf(REFERENCE_CHAR, start);
@@ -155,15 +160,14 @@ public class ActionsMapping
 			}
 
 			String ref = clazz.substring(start, end);
-			String refValue = actions.get(ref);
-			if (refValue == null)
+			if (!solvedReferences.contains(ref))
 			{
 				throw new SettingsException("Actions mapping contains unsolvable reference: '"+ref+"'. " +
 						"It's value should be declared before referencing it");
 			}
 
-			clazz = clazz.replace(REFERENCE_CHAR + ref + REFERENCE_CHAR, refValue);
-
+			clazz = clazz.replace(REFERENCE_CHAR + ref + REFERENCE_CHAR, actionsMap.get(ref));
+			solvedReferences.add(actionName);
 		return clazz;
 	}
 
