@@ -58,6 +58,7 @@ public class FixAcceptor extends FixApplication
 		}
 		catch (Exception e)
 		{
+			acceptor = null;
 			throw new ConnectionException(e);
 		}
 	}

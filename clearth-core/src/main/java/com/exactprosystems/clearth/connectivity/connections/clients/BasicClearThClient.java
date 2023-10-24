@@ -97,7 +97,7 @@ public abstract class BasicClearThClient implements ClearThClient
 			{
 				closeConnections();
 			}
-			catch (ConnectionException e1)
+			catch (Exception e1)
 			{
 				logger.error("Error while closing related connections", e1);
 			}
