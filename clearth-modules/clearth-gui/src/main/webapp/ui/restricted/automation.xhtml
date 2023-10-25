@@ -62,7 +62,7 @@
 			<h:form id="SchedulersMenu" style="float: left;">
 				<div style="float: left; margin: 6px 10px;">Scheduler to use:</div>
 				<p:selectOneMenu value="#{automationBean.scheduler}" style="width:125px">
-					<p:ajax update=":Container :AutomationMenu"/>
+					<p:ajax update=":Container :AutomationMenu :suspendedDlg :connectionFailureDlg"/>
 					<f:selectItems value="#{automationBean.schedulersMenu}"/>
 				</p:selectOneMenu>
 			</h:form>
