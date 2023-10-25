@@ -26,25 +26,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Set;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.LaxRedirectStrategy;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 
 import com.exactprosystems.clearth.automation.Action;
@@ -58,28 +44,25 @@ import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
+import com.exactprosystems.clearth.connectivity.th2.Th2LoaderConnection;
 import com.exactprosystems.clearth.messages.converters.MessageToJson;
 import com.exactprosystems.clearth.messages.converters.MessageToMap;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 
 public class SendTh2LoaderMessage extends Action
 {
-	public static final String PARAM_URL = "URL",
-			PARAM_HOST = "Host",
-			PARAM_PORT = "Port",
-			PARAM_ACTOR = "Actor",
-			PARAM_FLAT_DELIMITER = "FlatDelimiter",
-			
+	public static final String PARAM_FLAT_DELIMITER = "FlatDelimiter",
 			CONTEXT_LOADER_CLIENT = "Th2LoaderClient";
 	
 	//MsgType is excluded from these sets because it is often part of the message being sent to loader
-	private static final Set<String> BUILDER_SERVICE_PARAMS = Set.of(PARAM_URL,
-			PARAM_HOST, PARAM_PORT, PARAM_ACTOR, PARAM_FLAT_DELIMITER,
-			ClearThMessage.SUBMSGTYPE, ClearThMessage.SUBMSGSOURCE,
-			MessageAction.REPEATINGGROUPS, MessageAction.META_FIELDS);
+	private static final Set<String> BUILDER_SERVICE_PARAMS = Set.of(MessageAction.CONNECTIONNAME, 
+			MessageAction.REPEATINGGROUPS, MessageAction.META_FIELDS,
+			PARAM_FLAT_DELIMITER,
+			ClearThMessage.SUBMSGTYPE, ClearThMessage.SUBMSGSOURCE);
 	private static final Set<String> CONVERTER_SERVICE_FIELDS = Set.of(ClearThMessage.SUBMSGTYPE,
 			ClearThMessage.SUBMSGSOURCE, MessageToMap.SUBMSGKIND);
 			
@@ -87,37 +70,25 @@ public class SendTh2LoaderMessage extends Action
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
-		//User can specify full URL (to send message wherever specified) or separate components of URL (recommended way)
-		String url = getInputParam(PARAM_URL);
-		if (StringUtils.isEmpty(url))
-		{
-			InputParamsHandler handler = new InputParamsHandler(inputParams);
-			String host = handler.getRequiredString(PARAM_HOST);
-			Integer port = handler.getRequiredInteger(PARAM_PORT);
-			String actor = handler.getRequiredString(PARAM_ACTOR);
-			handler.check();
-			
-			url = buildUrl(host, port, actor);
-		}
+		InputParamsHandler handler = new InputParamsHandler(inputParams);
+		ClearThConnection con = handler.getRequiredClearThConnection(MessageAction.CONNECTIONNAME, Th2LoaderConnection.TYPE_TH2_LOADER);
+		handler.check();
+		
+		Th2LoaderConnection loaderCon = (Th2LoaderConnection)con;
 		
 		String flatDelimiter = getInputParam(PARAM_FLAT_DELIMITER);
 		
 		SimpleClearThMessage message = createClearThMessage(matrixContext);
-		String messageString = createMessageString(message, flatDelimiter);
+		String messageString = createMessageString(message, flatDelimiter),
+				url = loaderCon.getSettings().getUrl();
 		
 		logger.trace("Sending message to {}: {}", url, messageString);
 		
 		//client is not closed here. It is stored in globalContext to be reused by other actions and will be closed when Scheduler finishes execution 
-		CloseableHttpClient client = getHttpClient(globalContext);
+		CloseableHttpClient client = getHttpClient(globalContext, loaderCon);
 		return sendMessage(url, messageString, client);
 	}
 	
-	
-	protected String buildUrl(String host, int port, String actor)
-	{
-		return String.format("http://%s:%s/actor/%s/onevent",
-				host, port, actor);
-	}
 	
 	protected SimpleClearThMessage createClearThMessage(MatrixContext matrixContext)
 	{
@@ -146,14 +117,14 @@ public class SendTh2LoaderMessage extends Action
 		}
 	}
 	
-	protected CloseableHttpClient getHttpClient(GlobalContext gc)
+	protected CloseableHttpClient getHttpClient(GlobalContext gc, Th2LoaderConnection loaderCon)
 	{
 		try
 		{
 			CloseableHttpClient result = gc.getCloseableContext(CONTEXT_LOADER_CLIENT);
 			if (result == null)
 			{
-				result = createHttpClient();
+				result = createHttpClient(loaderCon);
 				gc.setCloseableContext(CONTEXT_LOADER_CLIENT, result);
 			}
 			return result;
@@ -218,27 +189,9 @@ public class SendTh2LoaderMessage extends Action
 		return new SimpleMetaFieldsGetter(false);
 	}
 	
-	protected CloseableHttpClient createHttpClient() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
+	protected CloseableHttpClient createHttpClient(Th2LoaderConnection loaderCon) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
 	{
-		HttpClientBuilder builder = HttpClients.custom();
-		builder.useSystemProperties();
-		builder.setRedirectStrategy(new LaxRedirectStrategy());
-		builder.setRetryHandler(new DefaultHttpRequestRetryHandler(3, true));
-		
-		//For HTTPS
-		SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
-		HostnameVerifier verifier = new DefaultHostnameVerifier();
-		SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(sslContext, verifier);
-		builder.setSSLSocketFactory(sslConnectionFactory);
-		
-		//Default request configuration
-		builder.setDefaultRequestConfig(RequestConfig.custom()
-				.setCookieSpec(CookieSpecs.DEFAULT)
-				.setCircularRedirectsAllowed(true)
-				.setRedirectsEnabled(true)
-				.build());
-		
-		return builder.build();
+		return loaderCon.createClient();
 	}
 	
 	protected HttpPost createRequest(String url, String message)
