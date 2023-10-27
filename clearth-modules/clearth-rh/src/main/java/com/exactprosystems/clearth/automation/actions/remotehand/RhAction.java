@@ -18,37 +18,38 @@
 
 package com.exactprosystems.clearth.automation.actions.remotehand;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.StringUtils;
-
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.GlobalContext;
-import com.exactprosystems.clearth.automation.MatrixContext;
-import com.exactprosystems.clearth.automation.StepContext;
-import com.exactprosystems.clearth.automation.TimeoutAwaiter;
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.actions.MessageAction;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.automation.report.results.AttachedFilesResult;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.connectivity.remotehand.data.RhScriptResult;
-import com.exactprosystems.clearth.connectivity.remotehand.RhConnection;
 import com.exactprosystems.clearth.connectivity.remotehand.RhClient;
+import com.exactprosystems.clearth.connectivity.remotehand.RhConnection;
 import com.exactprosystems.clearth.connectivity.remotehand.RhUtils;
+import com.exactprosystems.clearth.connectivity.remotehand.data.RhScriptResult;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RhAction extends Action implements TimeoutAwaiter
 {
@@ -76,7 +77,7 @@ public class RhAction extends Action implements TimeoutAwaiter
 		try
 		{
 			RhScriptResult scriptResult = client.executeScript(script.toPath(), inputParams, wait);
-			return processScriptResult(scriptResult);
+			return processScriptResult(client, scriptResult);
 		}
 		catch (Exception e)
 		{
@@ -87,7 +88,58 @@ public class RhAction extends Action implements TimeoutAwaiter
 			awaitedTimeout = sw.stop();
 		}
 	}
-	
+
+	private Result processScriptResult(RhClient client, RhScriptResult scriptResult)
+	{
+		List<String> ids = scriptResult.getScreenshotIds();
+		if (ids == null || ids.isEmpty())
+		{
+			Result result = new DefaultResult();
+			processScriptResult(scriptResult, result);
+			return result;
+		}
+
+		Path uploadStorageDir = Paths.get(ClearThCore.getInstance().getTempDirPath()).resolve("remote_hand");
+		try
+		{
+			Files.createDirectories(uploadStorageDir);
+		}
+		catch (IOException e)
+		{
+			return DefaultResult.failed("Error while creating directories for screenshots", e);
+		}
+
+		AttachedFilesResult attachedFilesResult = new AttachedFilesResult();
+		processScriptResult(scriptResult, attachedFilesResult);
+
+		for (String id : ids)
+		{
+			Path file = uploadStorageDir.resolve(id);
+			try (FileOutputStream outputStream = new FileOutputStream(file.toFile()))
+			{
+				byte[] bytes = client.downloadScreenshot(id);
+				outputStream.write(bytes);
+			}
+			catch (Exception e)
+			{
+				String msg = String.format("Error while downloading screenshot '%s'", id);
+				addComment(attachedFilesResult, msg);
+				attachedFilesResult.setError(e);
+				logger.error(msg, e);
+				return attachedFilesResult;
+			}
+			attachedFilesResult.attach(createId(id), file);
+		}
+		return attachedFilesResult;
+	}
+
+	private String createId(String id)
+	{
+		if (!id.contains("_"))
+			return id;
+		return id.substring(id.indexOf('_') + 1);
+	}
+
 	@Override
 	public long getAwaitedTimeout()
 	{
@@ -150,7 +202,7 @@ public class RhAction extends Action implements TimeoutAwaiter
 		return result;
 	}
 	
-	protected Result processScriptResult(RhScriptResult scriptResult)
+	protected void processScriptResult(RhScriptResult scriptResult, Result result)
 	{
 		LineBuilder lb = new LineBuilder();
 		for (String line : scriptResult.getActionResults())
@@ -161,7 +213,6 @@ public class RhAction extends Action implements TimeoutAwaiter
 			if (!StringUtils.isEmpty(keyValue.getSecond()))
 				addOutputParam(keyValue.getFirst(), keyValue.getSecond());
 		}
-		
 		String error = scriptResult.getErrorMessage();
 		if (!StringUtils.isEmpty(error))
 		{
@@ -169,11 +220,22 @@ public class RhAction extends Action implements TimeoutAwaiter
 				lb.eol();
 			lb.add("Error: ").append(error);
 		}
-		
-		Result result = new DefaultResult();
-		result.setComment(lb.toString());
+
+		addComment(result, lb.toString());
+
 		if (scriptResult.isFailed())
 			result.setSuccess(false);
-		return result;
+	}
+
+	private void addComment(Result result, String comment)
+	{
+		if (StringUtils.isEmpty(comment))
+			return;
+
+		String oldComment = result.getComment();
+		if (!StringUtils.isEmpty(oldComment))
+			comment = oldComment + System.lineSeparator() + comment;
+
+		result.setComment(comment);
 	}
 }
