@@ -341,6 +341,8 @@ public abstract class ClearThCore
 	{
 		Locale.setDefault(Locale.ENGLISH);
 		System.setOut(new SysoutFilter(System.out));
+		
+		System.setProperty("mvel2.disable.jit", "true");
 	}
 	
 	protected void initPaths(DeploymentConfig depConfig)
