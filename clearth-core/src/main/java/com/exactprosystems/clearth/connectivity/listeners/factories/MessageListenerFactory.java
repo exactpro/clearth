@@ -24,14 +24,14 @@ import com.exactprosystems.clearth.connectivity.MessageListener;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.utils.SettingsException;
 
-import java.util.Set;
+import java.util.Map;
 
 public interface MessageListenerFactory
 {
 	MessageListener createListener(ClearThConnection connection, ListenerConfiguration configuration)
 			throws SettingsException, ConnectivityException;
 
-	Set<Class<? extends MessageListener>> getSupportedListenerTypes();
+	Map<String, Class<? extends MessageListener>> getSupportedListenerTypes();
 
 	Class<?> getListenerClass(String type);
 }

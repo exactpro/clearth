@@ -36,35 +36,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import static com.exactprosystems.clearth.connectivity.ListenerType.Proxy;
-import static com.exactprosystems.clearth.connectivity.ListenerType.listenerTypeByLabel;
+import static com.exactprosystems.clearth.connectivity.ListenerType.*;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 public class BasicMessageListenerFactory implements MessageListenerFactory
 {
 	private static final Logger logger = LoggerFactory.getLogger(BasicMessageListenerFactory.class);
-
-	private final Set<Class<? extends MessageListener>> supportedListenerTypes;
+	private final Map<String, Class<? extends MessageListener>> supportedListenerTypes;
 
 	public BasicMessageListenerFactory()
 	{
-		this.supportedListenerTypes = Collections.unmodifiableSet(createSupportedListenerTypes());
+		this.supportedListenerTypes = Collections.unmodifiableMap(createTypesMap());
 	}
 
-	protected LinkedHashSet<Class<? extends MessageListener>> createSupportedListenerTypes()
+	protected Map<String, Class<? extends MessageListener>> createTypesMap()
 	{
-		LinkedHashSet<Class<? extends MessageListener>> result = new LinkedHashSet<>();
-		result.add(ProxyListener.class);
-		result.add(ClearThMessageCollector.class);
-		result.add(FileListener.class);
-
-		return result;
+		Map<String, Class<? extends MessageListener>> typesMap = new LinkedHashMap<>();
+		typesMap.put(File.getLabel(), FileListener.class);
+		typesMap.put(Proxy.getLabel(), ProxyListener.class);
+		typesMap.put(Collector.getLabel(), ClearThMessageCollector.class);
+		return typesMap;
 	}
 
 	public MessageListener createListener(ClearThConnection connection, ListenerConfiguration configuration)
@@ -113,7 +107,7 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 	}
 
 	@Override
-	public Set<Class<? extends MessageListener>> getSupportedListenerTypes()
+	public Map<String, Class<? extends MessageListener>> getSupportedListenerTypes()
 	{
 		return supportedListenerTypes;
 	}
@@ -203,22 +197,9 @@ public class BasicMessageListenerFactory implements MessageListenerFactory
 		return new MultiCodec(names);
 	}
 
-
 	@Override
 	public Class<?> getListenerClass(String type)
 	{
-		switch (listenerTypeByLabel(type))
-		{
-			case File : return FileListener.class;
-			case Proxy : return ProxyListener.class;
-			case Collector : return ClearThMessageCollector.class;
-			default : return getListenerClassEx(type);
-		}
+		return supportedListenerTypes.get(type);
 	}
-
-	protected  Class<?> getListenerClassEx(String type)
-	{
-		return null;
-	}
-
 }

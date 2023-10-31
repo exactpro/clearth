@@ -24,7 +24,7 @@ import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.messages.PlainMessageSender;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public interface ClearThMessageConnection extends ClearThRunnableConnection, PlainMessageSender
 {
@@ -36,7 +36,7 @@ public interface ClearThMessageConnection extends ClearThRunnableConnection, Pla
 
 	List<ListenerConfiguration> getListeners();
 
-	Set<Class<? extends MessageListener>> getSupportedListenerTypes();
+	Map<String, Class<? extends MessageListener>> getSupportedListenerTypes();
 
 	Class<?> getListenerClass(String type);
 	

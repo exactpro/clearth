@@ -22,6 +22,8 @@ import com.exactprosystems.clearth.connectivity.ClearThClient;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.connections.BasicClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.SettingsClass;
+import com.exactprosystems.clearth.connectivity.listeners.factories.CustomMessageListenerFactory;
+import com.exactprosystems.clearth.connectivity.listeners.factories.MessageListenerFactory;
 import com.exactprosystems.clearth.utils.SettingsException;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -85,5 +87,11 @@ public class DummyMessageConnection extends BasicClearThMessageConnection
 	public boolean isAutoConnect()
 	{
 		return autoconnect;
+	}
+
+	@Override
+	protected MessageListenerFactory createListenerFactory()
+	{
+		return new CustomMessageListenerFactory();
 	}
 }

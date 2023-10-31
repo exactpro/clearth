@@ -43,15 +43,12 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 public class ConnectivityBean extends ClearThBean
 {
-	private static final String defaultListenerType = ListenerType.File.getLabel();
-	
 	private final ClearThConnectionStorage storage = ClearThCore.connectionStorage();
 	private ConnectionTypeInfo selectedConnectionType;
 	private final List<ClearThConnection> selectedConnections = new ArrayList<ClearThConnection>();
 	private List<ClearThConnection> originalSelectedCons = null;
 	
-	private ListenerConfiguration newListener = createEmptyListener(),
-			selectedListener = null;
+	private ListenerConfiguration selectedListener = null;
 	private boolean copy = false;
 	private boolean copyListners = true;
 	private boolean noListenersInfo;
@@ -602,18 +599,9 @@ public class ConnectivityBean extends ClearThBean
 			setSelectedListener(null);
 	}
 
-	public ListenerConfiguration getNewListener()
+	public boolean isCollectorPresent(ClearThMessageConnection connection)
 	{
-		return newListener;
-	}
-
-	public boolean isCollectorPresent()
-	{
-		ClearThConnection c = getOneSelectedConnection();
-		if ((c == null) || (!(c instanceof ClearThMessageConnection)))
-			return false;
-
-		for (ListenerConfiguration listener : ((ClearThMessageConnection)c).getListeners())
+		for (ListenerConfiguration listener : connection.getListeners())
 		{
 			if (listener.getType().equals(ListenerType.Collector.getLabel()))
 				return true;
@@ -623,17 +611,24 @@ public class ConnectivityBean extends ClearThBean
 
 	public List<String> getListenersTypes()
 	{
-		if (isCollectorPresent())
-			return Arrays.asList(ListenerType.File.getLabel(), ListenerType.Proxy.getLabel());
-		else
-			return Arrays.asList(ListenerType.File.getLabel(), ListenerType.Proxy.getLabel(), ListenerType.Collector.getLabel());
+		ClearThConnection connection = getOneSelectedConnection();
+		if (!(connection instanceof ClearThMessageConnection))
+			return Collections.emptyList();
+
+		ClearThMessageConnection msgConnection = (ClearThMessageConnection) connection;
+		List<String> list = new ArrayList<>(msgConnection.getSupportedListenerTypes().keySet());
+
+		if (isCollectorPresent(msgConnection))
+			list.remove(ListenerType.Collector.getLabel());
+
+		return list;
 	}
 
 	public void addListener()
 	{
-		((ClearThMessageConnection)getOneSelectedConnection()).addListener(newListener);
-		setSelectedListener(newListener);
-		newListener = createEmptyListener();
+		ListenerConfiguration listener = createEmptyListener();
+		((ClearThMessageConnection)getOneSelectedConnection()).addListener(listener);
+		setSelectedListener(listener);
 		noListenersInfo = false;
 	}
 
@@ -812,10 +807,14 @@ public class ConnectivityBean extends ClearThBean
 		return (con instanceof ClearThRunnableConnection) && ((ClearThRunnableConnection)con).isRunning();
 	}
 
-	
 	protected ListenerConfiguration createEmptyListener()
 	{
-		return new ListenerConfiguration("", defaultListenerType, "", true, false);
+		List<String> typeList = getListenersTypes();
+		String defaultListenerType = typeList.isEmpty() ? "" : typeList. get(0);
+		ListenerConfiguration listenerCfg = new ListenerConfiguration("", defaultListenerType, "", true, false);
+		if (!typeList.isEmpty())
+			setSelectedListener(listenerCfg);
+		return listenerCfg;
 	}
 	
 	private Class<?> getSelectedListenerClass()

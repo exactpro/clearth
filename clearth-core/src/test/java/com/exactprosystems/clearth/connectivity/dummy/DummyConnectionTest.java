@@ -22,11 +22,14 @@ import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.ListenerConfiguration;
 import com.exactprosystems.clearth.connectivity.ListenerType;
+import com.exactprosystems.clearth.connectivity.MessageListener;
 import com.exactprosystems.clearth.connectivity.connections.BasicClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.ConnectionTypeInfo;
 import com.exactprosystems.clearth.connectivity.connections.clients.BasicClearThClient;
 import com.exactprosystems.clearth.connectivity.connections.storage.DefaultClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.listeners.DummyListener;
+import com.exactprosystems.clearth.connectivity.listeners.FileListener;
 import com.exactprosystems.clearth.data.DefaultDataHandlersFactory;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -42,11 +45,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /** Purpose of this class and it's Dummies is to test together abstract classes
  *  {@link ClearThMessageConnection},
@@ -264,5 +270,24 @@ public class DummyConnectionTest
 		{
 			con.stop();
 		}
+	}
+
+	@Test
+	public void testCustomisingFactory()
+	{
+		DummyMessageConnection connection = new DummyMessageConnection();
+		Class<?> listener = connection.getListenerClass("Dummy");
+		assertEquals(DummyListener.class, listener);
+
+		Map<String, Class<? extends MessageListener>> listenerTypeMap = connection.getSupportedListenerTypes();
+		assertEquals(createListenerTypeMap(), listenerTypeMap);
+	}
+
+	private Map<String, Class<? extends MessageListener>> createListenerTypeMap()
+	{
+		Map<String, Class<? extends MessageListener>> map = new LinkedHashMap<>();
+		map.put("File", FileListener.class);
+		map.put("Dummy", DummyListener.class);
+		return map;
 	}
 }
