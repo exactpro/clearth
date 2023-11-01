@@ -1,6 +1,6 @@
 dependencies {
-    implementation "org.apache.activemq:activemq-broker:5.16.6"
-    implementation "org.apache.activemq:activemq-kahadb-store:5.16.6"
+    implementation "org.apache.activemq:activemq-broker:5.18.3"
+    implementation "org.apache.activemq:activemq-kahadb-store:5.18.3"
 }
 
 publishing {
