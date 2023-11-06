@@ -2,8 +2,8 @@
 <XmlDictionaryDesc>
     <messageDesc type="C">
         <fieldDesc name="common">
-            <defaultAttrDesc value="1" name="a"/>
-            <defaultAttrDesc value="2" name="b"/>
+            <defaultAttrDesc name="a" value="1"/>
+            <defaultAttrDesc name="b" value="2"/>
             <attrDesc name="s"/>
             <attrDesc name="t"/>
             <attrDesc name="c"/>
@@ -12,9 +12,9 @@
     </messageDesc>
     <messageDesc type="B">
         <fieldDesc name="common">
-            <defaultAttrDesc value="3" name="e"/>
-            <defaultAttrDesc value="1" name="a"/>
-            <defaultAttrDesc value="2" name="b"/>
+            <defaultAttrDesc name="e" value="3"/>
+            <defaultAttrDesc name="a" value="1"/>
+            <defaultAttrDesc name="b" value="2"/>
             <attrDesc name="f"/>
             <attrDesc name="c"/>
             <attrDesc name="d"/>
@@ -22,8 +22,8 @@
     </messageDesc>
     <messageDesc type="A">
         <fieldDesc name="common">
-            <defaultAttrDesc value="1" name="a"/>
-            <defaultAttrDesc value="2" name="b"/>
+            <defaultAttrDesc name="a" value="1"/>
+            <defaultAttrDesc name="b" value="2"/>
             <attrDesc name="c"/>
             <attrDesc name="d"/>
         </fieldDesc>

@@ -16,7 +16,7 @@
 	<body>
 		<div class="info-panel">
 			<div>revision: #${revision}</div>
-			<div>© 2011-2020 Exactpro Systems, LLC</div>
+			<div>© 2011-2023 Exactpro Systems, LLC</div>
 		</div>
 		<h2>Information about ClearTH scheduler run</h2>
 		<div id="tabs">

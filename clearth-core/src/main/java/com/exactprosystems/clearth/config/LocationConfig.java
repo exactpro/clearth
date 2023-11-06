@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
 
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.*;
 
 @XmlType(name = "locations")
@@ -53,14 +54,24 @@ public class LocationConfig
 			return null;
 		return mappedLocations;
 	}
-
-	protected void updateLocationsMapping()
+	
+	
+	void afterUnmarshal(Unmarshaller unmarshaller, Object parent)
 	{
-		mappedLocations = new HashMap<String, String>();
-		for (ReplacedPath currentLocation : location)
+		updateLocationsMapping();
+	}
+	
+	private void updateLocationsMapping()
+	{
+		if (location == null)
 		{
-			mappedLocations.put(currentLocation.getOriginalPath(), currentLocation.getNewPath());
+			mappedLocations = null;
+			return;
 		}
+		
+		mappedLocations = new HashMap<>(location.size());
+		for (ReplacedPath currentLocation : location)
+			mappedLocations.put(currentLocation.getOriginalPath(), currentLocation.getNewPath());
 	}
 
 	@Override

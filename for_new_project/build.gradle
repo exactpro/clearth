@@ -1,12 +1,18 @@
 plugins {
 	id 'war'
 	id 'org.gretty' version '3.1.1'
+	id 'org.owasp.dependencycheck' version '7.4.4'
 }
 
 ext {
 	core_version = '@CORE_VERSION@'
 	build_version = 'build_version'
 	war_name = 'clearth.war'
+	jettyDistName = "jetty-distribution-${jetty94Version}"
+	
+	if (project.hasProperty('revision')) {
+		build_version = revision
+	}
 }
 
 repositories {
@@ -57,6 +63,42 @@ gretty {
 	serverConfigFile = 'jetty94.xml'
 }
 
+task downloadJetty() {
+	def f = new File(projectDir, "jetty")
+	def jettyDistZip = new File(f, "${jettyDistName}.zip")
+	
+	doLast {
+		def url = new URL("https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/${jetty94Version}/${jettyDistName}.zip")
+		f.mkdirs()
+		
+		println 'Downloading Jetty: ' + url
+		url.withInputStream { i -> jettyDistZip.withOutputStream { it << i } }
+		
+		println 'Unpacking Jetty'
+		copy {
+			from zipTree(jettyDistZip)
+			into f
+		}
+		
+		def unzipped = new File(f, jettyDistName)
+		copy {
+			from (unzipped) {
+				exclude 'demo-base'
+			}
+			into f
+		}
+		
+		def work = new File(f, 'work')
+		println 'Creating directory ' + work
+		work.mkdirs()
+		
+		println 'Removing temporary files'
+		delete jettyDistZip
+		delete unzipped
+	}
+}
+
+
 task copyWar(type: Copy, dependsOn: war) {
 	from "build/libs/${war_name}"
 	into 'jetty/webapps/'
@@ -73,20 +115,40 @@ task runClearTH(type: JavaExec,
 	jvmArgs '-Xdebug', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'
 }
 
-task buildRelease(type: Zip, group: 'ClearTH',
-		description: 'Builds ClearTH release to run within Jetty, i.e. WAR file and configuration packed into ZIP archive',  
+task buildRelease(type: Copy, group: 'ClearTH',
+		description: 'Builds ClearTH release to run within Jetty, i.e. WAR file and configuration',
 		dependsOn: copyWar) {
 	from '.'
 	include "jetty/webapps/${war_name}"
 	include 'cfg/**/*'
 	
-	archiveBaseName = 'clearth'
-	archiveAppendix = ''
-	archiveVersion = getDate('yyyyMMdd.HHmmss')
-	archiveClassifier = ''
-	archiveExtension = 'zip'
+	into "${buildDir}/dist"
+}
+
+def buildFullRelease = tasks.register('buildFullRelease') {
+	group 'ClearTH'
+	description 'Builds full ClearTH release to run within Jetty, i.e. it includes Jetty itself, configuration files and WAR file in proper location'
+	dependsOn buildRelease
+	dependsOn downloadJetty
 	
-	destinationDirectory = file("$buildDir/dist")
+	doLast {
+		def distDir = "${buildDir}/dist"
+		copy {
+			from ('jetty/') {
+				exclude 'webapps'
+			}
+			into "${distDir}/jetty/"
+		}
+	}
+}
+
+dependencyCheck {
+	skipConfigurations = ['grettyProductRuntime', 'grettyStarter', 
+		'grettyRunnerJetty93', 'grettyRunnerJetty94', 'grettyRunnerJetty7', 'grettyRunnerJetty8', 'grettyRunnerJetty9', 'grettyRunnerJetty10', 
+		'grettyRunnerTomcat85', 'grettyRunnerTomcat7', 'grettyRunnerTomcat8', 'grettyRunnerTomcat9', 
+		'grettyNoSpringBoot', 'grettySpringLoaded', 'gretty']
+	format = 'ALL'
+	failBuildOnCVSS = 7.6
 }
 
 wrapper {

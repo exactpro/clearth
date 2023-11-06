@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <XmlDictionaryDesc>
     <messageDesc type="A">
-        <fieldDesc repeat="true" name="common">
-            <fieldDesc repeat="true" name="abde">
-                <fieldDesc repeat="true" name="ab">
+        <fieldDesc name="common" repeat="true">
+            <fieldDesc name="abde" repeat="true">
+                <fieldDesc name="ab" repeat="true">
                     <fieldDesc name="a"/>
                     <fieldDesc name="b"/>
                 </fieldDesc>
-                <fieldDesc repeat="true" name="de">
+                <fieldDesc name="de" repeat="true">
                     <fieldDesc name="d"/>
                     <fieldDesc name="e"/>
                 </fieldDesc>
             </fieldDesc>
-            <fieldDesc repeat="true" name="bcf">
-                <fieldDesc repeat="true" name="bc">
+            <fieldDesc name="bcf" repeat="true">
+                <fieldDesc name="bc" repeat="true">
                     <fieldDesc name="b"/>
                     <fieldDesc name="c"/>
                 </fieldDesc>

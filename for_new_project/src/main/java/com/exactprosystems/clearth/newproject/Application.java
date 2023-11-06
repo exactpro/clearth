@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,8 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.ConfigFiles;
-import com.exactprosystems.clearth.DeploymentConfig;
 import com.exactprosystems.clearth.utils.ClearThException;
 
 public class Application extends ClearThCore

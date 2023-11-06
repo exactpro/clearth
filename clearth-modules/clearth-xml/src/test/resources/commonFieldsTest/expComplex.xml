@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <XmlDictionaryDesc>
     <messageDesc type="A">
-        <fieldDesc repeat="true" source="price" name="price">
+        <fieldDesc name="price" source="price" repeat="true">
             <fieldDesc name="value"/>
             <fieldDesc name="qty"/>
             <fieldDesc name="modificationDate"/>
             <fieldDesc name="modificationTime"/>
         </fieldDesc>
-        <fieldDesc repeat="true" source="instrument" name="instrument">
+        <fieldDesc name="instrument" source="instrument" repeat="true">
             <fieldDesc name="name"/>
             <fieldDesc name="id"/>
             <fieldDesc name="modificationDate"/>

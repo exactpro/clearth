@@ -34,7 +34,7 @@ ext {
 	if (!project.hasProperty('newProjectName')) {
 		newProjectName = undef
 	}
-	jettyVersion = '9.4.19.v20190610'
+	jettyVersion = '9.4.53.v20231009'
 	jettyDistName = "jetty-distribution-${jettyVersion}"
 }
 
@@ -94,8 +94,8 @@ subprojects {
 				//common dependenices are written explicilty to force modules use correct and expected versions
 				force   'commons-codec:commons-codec:1.15',
 						'commons-beanutils:commons-beanutils:1.9.4',
-						'commons-io:commons-io:2.7',
-						'javax.xml.bind:jaxb-api:2.2',
+						'commons-io:commons-io:2.11.0',
+						'javax.xml.bind:jaxb-api:2.3.0',
 						'commons-codec:commons-compress:1.21',
 						'junit:junit:4.13.1',
 						'org.hamcrest:hamcrest-core:1.3',
@@ -172,9 +172,9 @@ subprojects {
 	
 
 	dependencies {
-		jaxb 'com.sun.xml.bind:jaxb-xjc:2.1.3'
-		jaxb 'com.sun.xml.bind:jaxb-impl:2.1.3'
-		jaxb 'javax.xml.bind:jaxb-api:2.2'
+		jaxb 'com.sun.xml.bind:jaxb-xjc:2.3.9'
+		jaxb 'com.sun.xml.bind:jaxb-impl:2.3.9'
+		jaxb 'javax.xml.bind:jaxb-api:2.3.0'
 		jaxb 'javax.xml:jsr173:1.0'
 
 		testImplementation 'junit:junit:4.13.1'

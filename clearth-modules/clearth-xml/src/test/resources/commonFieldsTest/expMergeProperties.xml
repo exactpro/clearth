@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <XmlDictionaryDesc>
     <messageDesc type="A">
-        <fieldDesc repeat="false" mandatory="true" source="price" name="nowItIsNotRG">
-            <fieldDesc source="val" name="value"/>
-            <fieldDesc source="qty" name="quantity"/>
+        <fieldDesc name="nowItIsNotRG" source="price" mandatory="true" repeat="false">
+            <fieldDesc name="value" source="val"/>
+            <fieldDesc name="quantity" source="qty"/>
         </fieldDesc>
-        <fieldDesc repeat="true" mandatory="false" source="price" name="optionalRg">
-            <fieldDesc source="val" name="value"/>
-            <fieldDesc source="qty" name="quantity"/>
+        <fieldDesc name="optionalRg" source="price" mandatory="false" repeat="true">
+            <fieldDesc name="value" source="val"/>
+            <fieldDesc name="quantity" source="qty"/>
         </fieldDesc>
-        <fieldDesc repeat="true" mandatory="true" source="originalPrice" name="rgWithCustomSource">
-            <fieldDesc source="val" name="value"/>
-            <fieldDesc source="qty" name="quantity"/>
+        <fieldDesc name="rgWithCustomSource" source="originalPrice" mandatory="true" repeat="true">
+            <fieldDesc name="value" source="val"/>
+            <fieldDesc name="quantity" source="qty"/>
         </fieldDesc>
-        <fieldDesc repeat="true" mandatory="true" source="price" name="renamedRg">
-            <fieldDesc source="val" name="value"/>
-            <fieldDesc source="qty" name="quantity"/>
+        <fieldDesc name="renamedRg" source="price" mandatory="true" repeat="true">
+            <fieldDesc name="value" source="val"/>
+            <fieldDesc name="quantity" source="qty"/>
         </fieldDesc>
-        <fieldDesc repeat="true" mandatory="true" source="price" name="commonRG">
-            <fieldDesc source="val" name="value"/>
-            <fieldDesc source="qty" name="quantity"/>
+        <fieldDesc name="commonRG" source="price" mandatory="true" repeat="true">
+            <fieldDesc name="value" source="val"/>
+            <fieldDesc name="quantity" source="qty"/>
         </fieldDesc>
     </messageDesc>
     <messageDesc type="B">
-        <fieldDesc repeat="true" mandatory="true" name="mandatoryRG">
-            <fieldDesc source="val" name="value"/>
-            <fieldDesc source="qty" name="quantity"/>
+        <fieldDesc name="mandatoryRG" mandatory="true" repeat="true">
+            <fieldDesc name="value" source="val"/>
+            <fieldDesc name="quantity" source="qty"/>
         </fieldDesc>
         <fieldDesc name="complexField">
-            <fieldDesc source="val" name="value"/>
-            <fieldDesc source="qty" name="quantity"/>
+            <fieldDesc name="value" source="val"/>
+            <fieldDesc name="quantity" source="qty"/>
         </fieldDesc>
     </messageDesc>
 </XmlDictionaryDesc>

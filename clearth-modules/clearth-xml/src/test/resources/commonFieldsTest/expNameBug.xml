@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <XmlDictionaryDesc>
     <messageDesc type="SomeMessageA">
-        <fieldDesc repeat="true" name="messageRg">
+        <fieldDesc name="messageRg" repeat="true">
             <fieldDesc name="innerField"/>
         </fieldDesc>
-        <fieldDesc repeat="true" source="outerField" name="messageRgWithSrc">
+        <fieldDesc name="messageRgWithSrc" source="outerField" repeat="true">
             <fieldDesc name="innerField"/>
         </fieldDesc>
-        <fieldDesc repeat="true" name="commonRg">
+        <fieldDesc name="commonRg" repeat="true">
             <fieldDesc name="value"/>
             <fieldDesc name="qty"/>
         </fieldDesc>
-        <fieldDesc repeat="true" source="price" name="commonRgWithSrc">
+        <fieldDesc name="commonRgWithSrc" source="price" repeat="true">
             <fieldDesc name="value"/>
             <fieldDesc name="qty"/>
         </fieldDesc>

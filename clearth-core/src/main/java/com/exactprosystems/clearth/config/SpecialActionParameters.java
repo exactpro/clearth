@@ -18,6 +18,9 @@
 
 package com.exactprosystems.clearth.config;
 
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.HashSet;
@@ -25,33 +28,29 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 @XmlType(name = "specialActionParameters")
+@XmlAccessorType(XmlAccessType.NONE)
 public class SpecialActionParameters
 {
-	private Set<String> parameters;
-
-	public SpecialActionParameters() {}
-
 	@XmlElement(name = "parameter")
-	public void setParameters(Set<String> params)
-	{
-		if(params != null)
-		{
-			parameters = new HashSet<>(params.size());
-			for (String s : params)
-			{
-				parameters.add(s.toLowerCase());
-			}
-		} else
-			parameters = null;
-	}
-
+	private Set<String> parameters;
+	
+	public SpecialActionParameters() {}
+	
+	
 	public Set<String> getParameters()
 	{
 		if(parameters == null)
 			parameters = new HashSet<>();
 		return parameters;
 	}
-
+	
+	public void setParameters(Set<String> params)
+	{
+		this.parameters = params;
+		processParameters();
+	}
+	
+	
 	public boolean isSpecialParam(String name)
 	{
 		return isSpecialParamLowCase(name.toLowerCase());
@@ -61,7 +60,25 @@ public class SpecialActionParameters
 	{
 		return getParameters().contains(lowCaseName);
 	}
-
+	
+	
+	void afterUnmarshal(Unmarshaller unmarshaller, Object parent)
+	{
+		processParameters();
+	}
+	
+	private void processParameters()
+	{
+		if (parameters == null)
+			return;
+		
+		Set<String> newParameters = new HashSet<>(parameters.size());
+		for (String p : parameters)
+			newParameters.add(p.toLowerCase());
+		parameters = newParameters;
+	}
+	
+	
 	@Override
 	public String toString()
 	{
