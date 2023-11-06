@@ -1,0 +1,18 @@
+{
+  "msgType" : "TestMapMessage2",
+  "name" : "MappingMessage",
+  "map" : {
+    "a" : {
+      "v" : 1,
+      "x" : 2
+    },
+    "b" : {
+      "v" : 12,
+      "x" : 22
+    },
+    "c" : {
+      "v" : 13,
+      "x" : 23
+    }
+  }
+}

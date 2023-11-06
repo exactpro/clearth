@@ -18,7 +18,48 @@
 			<fieldDesc source="name" name="name" />
 		</fieldDesc>
 	</messageDesc>
-	
+
+	<messageDesc type="TestMapMessage1">
+		<typeCondition value="&quot;msgType&quot; *: *&quot;TestMapMessage1&quot;" />
+		<fieldDesc source="msgType" name="MsgType" />
+		<fieldDesc source="name" name="Name" type="text" />
+		<fieldDesc source="k" name="Map" type="map" keyName="key">
+			<fieldDesc source="v" type="number"/>
+			<fieldDesc source="x" repeat="true">
+				<fieldDesc source="v1" type="number"/>
+				<fieldDesc source="v2" type="number"/>
+				<fieldDesc source="v3" type="number"/>
+			</fieldDesc>
+		</fieldDesc>
+	</messageDesc>
+
+	<messageDesc type="TestMapMessage2">
+		<typeCondition value="&quot;msgType&quot; *: *&quot;TestMapMessage2&quot;" />
+		<fieldDesc source="msgType" name="MsgType" />
+		<fieldDesc source="name" name="Name" type="text" />
+		<fieldDesc source="map" name="Map" type="map" keyName="key">
+			<fieldDesc source="v" type="number"/>
+			<fieldDesc source="x" type="number"/>
+		</fieldDesc>
+	</messageDesc>
+
+	<messageDesc type="TestMapMessage3">
+		<typeCondition value="&quot;msgType&quot; *: *&quot;TestMapMessage3&quot;" />
+		<fieldDesc source="msgType" name="MsgType" />
+		<fieldDesc source="m" name="Map" type="map">
+			<fieldDesc source="v" type="number"/>
+			<fieldDesc source="x" type="number"/>
+		</fieldDesc>
+	</messageDesc>
+
+	<messageDesc type="TestMapMessage4">
+		<typeCondition value="&quot;a&quot;"/>
+		<fieldDesc source="" name="Map" type="map" keyName="key">
+			<fieldDesc source="v" type="number"/>
+			<fieldDesc source="x" type="number"/>
+		</fieldDesc>
+	</messageDesc>
+
 	<messageDesc type="Msg2">
 		<typeCondition value="Message2" />
 		<fieldDesc source="tag1" name="Tag1" />

@@ -22,6 +22,7 @@
 			<xsd:enumeration value="timestamp"/>
 			<xsd:enumeration value="textArray"/>
 			<xsd:enumeration value="numberArray"/>
+			<xsd:enumeration value="map"/>
 		</xsd:restriction>
 	</xsd:simpleType>
 	
@@ -38,6 +39,7 @@
 				<xsd:attribute name="type" type="JsonFieldType" default="text"/>
 				<xsd:attribute name="reference" type="xsd:string"/>
 				<xsd:attribute name="allowUndefinedFields" type="xsd:boolean" default="false"/>
+				<xsd:attribute name="keyName" type="xsd:string"/>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>

@@ -55,7 +55,7 @@ public class JsonCodec implements ICodec
 	public static final char PATH_SEPARATOR = '/';
 	public static final String EMPTY = "@{isEmpty}";
 	public static final String DEFAULT_CODEC_NAME = "Json";
-	
+	public static final String DEFAULT_KEY_NAME = "MapKey";
 	protected final JsonDictionary dictionary;
 	protected final JsonNodeFactory jsonNodeFactory = new JsonNodeFactory(false);
 	protected final ObjectMapper objectMapper= new ObjectMapper();
@@ -116,6 +116,17 @@ public class JsonCodec implements ICodec
 	protected boolean isContainerField(JsonFieldDesc fd)
 	{
 		return fd.isAllowUndefinedFields() || isNotEmpty(fd.getFieldDesc());
+	}
+
+	protected boolean isMapType(JsonFieldDesc fieldDesc)
+	{
+		return JsonFieldType.MAP.equals(fieldDesc.getType());
+	}
+
+	protected String getKeyName(JsonFieldDesc fieldDesc)
+	{
+		String keyName = fieldDesc.getKeyName();
+		return StringUtils.isEmpty(keyName) ? DEFAULT_KEY_NAME : keyName;
 	}
 
 	///////////////////////////////// DECODING ////////////////////////////
@@ -223,23 +234,23 @@ public class JsonCodec implements ICodec
 	{
 		Set<String> processedNodes = new HashSet<>();
 		for (JsonFieldDesc fd : fieldDescs)
-		{
-			decodeField(message, parentNode, fd, processedNodes);
-		}
+			decodeField(message, parentNode, fd, processedNodes, allowUndefinedFields);
+
 		if (allowUndefinedFields)
 			decodeUndefinedFields(message, parentNode, processedNodes);
 	}
-	
-	protected void decodeField(ClearThJsonMessage message, JsonNode parentNode, JsonFieldDesc fieldDesc, Set<String> processedNodes)
-		throws DecodeException
+
+	protected void decodeField(ClearThJsonMessage message, JsonNode parentNode, JsonFieldDesc fieldDesc, Set<String> processedNodes,
+		boolean allowUndefinedFields) throws DecodeException
 	{
 		JsonNode node = findNode(parentNode, fieldDesc);
 		if (node == null)
 			return;
-		
 		processedNodes.add(fieldDesc.getSource());
-		
-		if (fieldDesc.isRepeat())
+
+		if (isMapType(fieldDesc))
+			decodeMap(message, node, fieldDesc, allowUndefinedFields);
+		else if (fieldDesc.isRepeat())
 			decodeRepeatedField(message, node, fieldDesc);
 		else 
 			decodeSingleField(message, node, fieldDesc);
@@ -261,7 +272,23 @@ public class JsonCodec implements ICodec
 		}
 		return node;
 	}
-	
+
+	protected void decodeMap(ClearThJsonMessage message, JsonNode node, JsonFieldDesc fieldDesc, boolean allowUndefinedFields) throws DecodeException
+	{
+		Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+		while (iterator.hasNext())
+		{
+			Map.Entry<String, JsonNode> nodeValue = iterator.next();
+			ClearThJsonMessage subMessage = new ClearThJsonMessage();
+
+			subMessage.addField(SUBMSGTYPE, fieldDesc.getName());
+			subMessage.addField(getKeyName(fieldDesc), nodeValue.getKey());
+
+			decodeFields(subMessage, nodeValue.getValue(), fieldDesc.getFieldDesc(), allowUndefinedFields);
+			message.addSubMessage(subMessage);
+		}
+	}
+
 	protected void decodeRepeatedField(ClearThJsonMessage message, JsonNode node, JsonFieldDesc fieldDesc)
 		throws DecodeException
 	{
@@ -428,16 +455,51 @@ public class JsonCodec implements ICodec
 		}
 	}
 	
-	protected void encodeField(ClearThMessage message, ContainerNode parentNode,
-							   JsonFieldDesc fieldDesc)
-		throws EncodeException
+	protected void encodeField(ClearThMessage message, ContainerNode parentNode, JsonFieldDesc fieldDesc) throws EncodeException
 	{
-		if (fieldDesc.isRepeat())
+		if (isMapType(fieldDesc))
+			encodeMapField(message, parentNode, fieldDesc);
+		else if (fieldDesc.isRepeat())
 			encodeRepeatedField(message, parentNode, fieldDesc);
 		else 
 			encodeSingleField(message, parentNode, fieldDesc);
 	}
-	
+
+	protected void encodeMapField(ClearThMessage message, ContainerNode parentNode, JsonFieldDesc fieldDesc) throws EncodeException
+	{
+		List<ClearThMessage> subMessages = message.getSubMessages(getMsgFieldName(fieldDesc));
+		if (CollectionUtils.isEmpty(subMessages))
+			return;
+
+		if (StringUtils.isEmpty(fieldDesc.getSource()) && parentNode.isEmpty())
+			addKeyNode(subMessages, (ObjectNode) parentNode, fieldDesc);
+		else
+		{
+			ObjectNode objectNode = jsonNodeFactory.objectNode();
+			addKeyNode(subMessages, objectNode, fieldDesc);
+			addNode(parentNode, objectNode, fieldDesc);
+		}
+	}
+
+	protected void addKeyNode(List<ClearThMessage> subMessages, ObjectNode parentNode, JsonFieldDesc fieldDesc) throws EncodeException
+	{
+		for (ClearThMessage subMessage : subMessages)
+		{
+			ObjectNode objectNode = jsonNodeFactory.objectNode();
+			for (JsonFieldDesc desc : fieldDesc.getFieldDesc())
+				encodeField(subMessage, objectNode, desc);
+
+			String keyName = getKeyName(fieldDesc);
+			String key = subMessage.getField(keyName);
+
+			if (!StringUtils.isEmpty(key))
+				parentNode.set(key, objectNode);
+			else
+				throw new EncodeException(String.format("Sub-message '%s' does not have field '%s' required for encoding",
+						subMessage.getField(SUBMSGTYPE), keyName));
+		}
+	}
+
 	protected void encodeRepeatedField(ClearThMessage message, ContainerNode parentNode, JsonFieldDesc fieldDesc)
 		throws EncodeException
 	{
