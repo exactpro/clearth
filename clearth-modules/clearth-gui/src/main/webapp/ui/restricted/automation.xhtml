@@ -1270,7 +1270,7 @@
 		</p:dialog>
 		<!-- Execution suspended dialog -->
 		<p:dialog header="Execution suspended" widgetVar="suspendedDialog"
-				  resizable="false" id="suspendedDlg" width="380" modal="#{guiBean.modalDialog}" visible="#{automationSchedulerBean.suspended}" closable="false">
+				  resizable="false" id="suspendedDlg" width="380" modal="false" visible="#{automationSchedulerBean.suspended}" closable="false">
 			<h:outputText value="Scripts execution suspended in this scheduler." />
 			<br />
 			<p:outputPanel rendered="#{!automationConfigBean.steps.currentSchedulerStep.actionPause}">
@@ -1328,7 +1328,7 @@
 		</p:dialog>
 		<!-- Connection failure dialog -->
 		<p:dialog header="Connection '#{automationSchedulerBean.failoverConnectionName}' failed"
-		          visible="#{automationSchedulerBean.failover}" closable="false" resizable="false" modal="#{guiBean.modalDialog}"
+		          visible="#{automationSchedulerBean.failover}" closable="false" resizable="false" modal="false"
 		          id="connectionFailureDlg" widgetVar="connectionFailureDialog" width="610">
 			<h:outputText value="Scripts execution suspended in this scheduler due to failure with connection '#{automationSchedulerBean.failoverConnectionName}'." />
             <br/>
