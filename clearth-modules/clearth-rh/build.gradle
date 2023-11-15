@@ -33,10 +33,19 @@ ext {
 
 task installModule {
 	doLast {
+		def installationDir = "${projectDir}/installation"
+		def actions = file("${installationDir}/actions.cfg").text
+
 		def type = new Tuple4("RemoteHand",
 					"com.exactprosystems.clearth.connectivity.remotehand.RhConnection",
 					"connections/remotehand",
 					[])
-		installConTypeModule(clearthDir, moduleName, moduleImpl, type)
+
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+						{ addConnectionTypeToCfg(type, clearthDir) },
+						{ putActions(clearthDir, actions) }
+				]
+		)
 	}
 }
