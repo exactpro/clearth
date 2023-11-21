@@ -44,6 +44,10 @@
 				result = detail
 				resultId = "resultId_" + statics["java.lang.System"].nanoTime()
 			/>
+			<@resultTemplate.printAttachedFiles
+				result = detail
+				resultId = "resultId_files_" + statics["java.lang.System"].nanoTime()
+			/>
 		</div>
 	</#list>
 </#macro>

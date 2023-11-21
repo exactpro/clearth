@@ -28,6 +28,7 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateModelException;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,9 +50,9 @@ public class ReportTemplatesProcessor extends TemplatesProcessor
 		put("CsvDetailedResult", CsvDetailedResult.class);
 	}};
 
-	public ReportTemplatesProcessor() throws IOException, TemplateModelException
+	public ReportTemplatesProcessor(Path templatesPath) throws IOException, TemplateModelException
 	{
-		super();
+		super(templatesPath);
 	}
 
 	@Override
@@ -67,9 +68,9 @@ public class ReportTemplatesProcessor extends TemplatesProcessor
 	}
 
 	@Override
-	protected Configuration createConfiguration() throws IOException, TemplateModelException
+	protected Configuration createConfiguration(Path templatesPath) throws IOException, TemplateModelException
 	{
-		Configuration configuration = super.createConfiguration();
+		Configuration configuration = super.createConfiguration(templatesPath);
 		configuration.setSharedVariable("node", new NodeViewDirective());
 		configuration.setSharedVariable("specialCompValues", ComparisonUtils.SPECIAL_VALUES);
 		return configuration;

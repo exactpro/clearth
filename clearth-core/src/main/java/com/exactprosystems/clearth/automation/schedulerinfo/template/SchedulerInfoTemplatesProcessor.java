@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,33 +18,27 @@
 
 package com.exactprosystems.clearth.automation.schedulerinfo.template;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.report.html.template.NodeViewDirective;
 import com.exactprosystems.clearth.templates.TemplatesProcessor;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateModelException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by victor.klochkov on 5/5/17.
- */
 public class SchedulerInfoTemplatesProcessor extends TemplatesProcessor
 {
-	private static final String TEMPLATES_DIR = "schedulerInfo/";
-
 	protected static final Map<String, Object> PARAMETERS = new HashMap<String, Object>()
 	{{
 		putAll(COMMON_PARAMETERS);
 	}};
 
-	public SchedulerInfoTemplatesProcessor() throws IOException, TemplateModelException
+	public SchedulerInfoTemplatesProcessor(Path templatesPath) throws IOException, TemplateModelException
 	{
-		super();
+		super(templatesPath);
 	}
 
 	@Override
@@ -60,10 +54,9 @@ public class SchedulerInfoTemplatesProcessor extends TemplatesProcessor
 	}
 
 	@Override
-	protected Configuration createConfiguration() throws IOException, TemplateModelException
+	protected Configuration createConfiguration(Path templatesPath) throws IOException, TemplateModelException
 	{
-		Configuration configuration = super.createConfiguration();
-		configuration.setDirectoryForTemplateLoading(new File(ClearThCore.htmlTemplatesPath() + TEMPLATES_DIR));
+		Configuration configuration = super.createConfiguration(templatesPath);
 		configuration.setSharedVariable("node", new NodeViewDirective());
 		configuration.setSharedVariable("specialCompValues", ComparisonUtils.SPECIAL_VALUES);
 		return configuration;

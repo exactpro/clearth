@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,20 +18,16 @@
 
 package com.exactprosystems.clearth.templates;
 
-import com.exactprosystems.clearth.ClearThCore;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by victor.klochkov on 5/5/17.
- */
 public abstract class TemplatesProcessor
 {
 	protected Configuration configuration;
@@ -43,9 +39,9 @@ public abstract class TemplatesProcessor
 		put("statics", staticModels);
 	}};
 
-	public TemplatesProcessor() throws IOException, TemplateModelException
+	public TemplatesProcessor(Path templatesPath) throws IOException, TemplateModelException
 	{
-		configuration = createConfiguration();
+		configuration = createConfiguration(templatesPath);
 	}
 
 	public void processTemplate(Writer out, Map<String, Object> parameters, String fileName) throws IOException, TemplateException
@@ -55,10 +51,10 @@ public abstract class TemplatesProcessor
 		template.process(parameters, out);
 	}
 
-	protected Configuration createConfiguration() throws IOException, TemplateModelException
+	protected Configuration createConfiguration(Path templatesPath) throws IOException, TemplateModelException
 	{
 		Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
-		configuration.setDirectoryForTemplateLoading(new File(ClearThCore.htmlTemplatesPath()));
+		configuration.setDirectoryForTemplateLoading(templatesPath.toFile());
 		configuration.setDefaultEncoding("UTF-8");
 		configuration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
 		configuration.setSharedVariable("includeFile", new IncludeFileDirective());

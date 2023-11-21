@@ -54,6 +54,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -594,7 +595,7 @@ public abstract class ClearThCore
 	
 	protected ReportTemplatesProcessor createReportTemplatesProcessor() throws TemplateModelException, IOException
 	{
-		return new ReportTemplatesProcessor();
+		return new ReportTemplatesProcessor(Path.of(getHtmlTemplatesPath()));
 	}
 	
 	/**
@@ -610,7 +611,7 @@ public abstract class ClearThCore
 	
 	protected SchedulerInfoTemplatesProcessor createSchedulerInfoTemplatesProcessor() throws TemplateModelException, IOException
 	{
-		return new SchedulerInfoTemplatesProcessor();
+		return new SchedulerInfoTemplatesProcessor(Path.of(getHtmlTemplatesPath(), "schedulerInfo"));
 	}
 	
 	private void prepareRealTimeReport()
