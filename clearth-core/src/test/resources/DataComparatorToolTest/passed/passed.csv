@@ -1,0 +1,5 @@
+Comparison name,Comparison result,Row kind,C1,C2
+Row #1,PASSED,EXPECTED,1,2
+Row #1,PASSED,ACTUAL,1,2
+Row #2,PASSED,EXPECTED,3,4
+Row #2,PASSED,ACTUAL,3,4

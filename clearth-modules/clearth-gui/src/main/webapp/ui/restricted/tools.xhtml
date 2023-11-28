@@ -680,6 +680,10 @@
 			<p:outputPanel rendered="#{toolsBean.activeTab == 90}">
 				<ui:include src="tools/sqlExecutor.xhtml"/>
 			</p:outputPanel>
+<!-- Data comparator -->
+			<p:outputPanel rendered="#{toolsBean.activeTab == 200}">
+				<ui:include src="tools/dataComparator.xhtml"/>
+			</p:outputPanel>
 
 		</p:outputPanel>
 	</ui:define>

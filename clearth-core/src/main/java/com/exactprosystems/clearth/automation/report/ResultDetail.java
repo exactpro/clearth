@@ -96,7 +96,7 @@ public class ResultDetail implements Serializable
 	public void setExpected(String expected)
 	{
 		this.expected = expected;
-		forCompareValue = ClearThCore.getInstance().getComparisonUtils().isForCompareValues(expected);
+		forCompareValue = ClearThCore.getInstance() != null ? ClearThCore.getInstance().getComparisonUtils().isForCompareValues(expected) : false;
 	}
 
 	public boolean isForCompareValue()

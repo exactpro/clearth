@@ -239,6 +239,12 @@
 			<value>#{sqlBean}</value>
 		</managed-property>
 	</managed-bean>
+	
+	<managed-bean>
+		<managed-bean-name>dataCompBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.tools.datacomparator.DataComparatorBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
 <!--End of Tools beans-->
 
 	<factory>

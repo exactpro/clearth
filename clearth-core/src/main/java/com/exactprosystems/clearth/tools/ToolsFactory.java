@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,10 +23,8 @@ import com.exactprosystems.clearth.converters.DefaultMessageConverter;
 import com.exactprosystems.clearth.converters.DefaultScriptConverter;
 import com.exactprosystems.clearth.converters.MessageConverter;
 import com.exactprosystems.clearth.converters.ScriptConverter;
+import com.exactprosystems.clearth.tools.datacomparator.DataComparatorTool;
 
-/**
- * Created by alexander.magomedov on 11/22/16.
- */
 public class ToolsFactory
 {
 	public CollectorScannerTool createCollectorScannerTool()
@@ -76,5 +74,10 @@ public class ToolsFactory
 	public DictionaryValidatorTool createDictionaryValidatorTool()
 	{
 		return new DictionaryValidatorTool();
+	}
+	
+	public DataComparatorTool createDataComparatorTool()
+	{
+		return new DataComparatorTool();
 	}
 }

@@ -1,0 +1,7 @@
+Both datasets are empty
+
+Rows compared: 0
+Passed: 0
+Failed: 0
+Not found in actual data: 0
+Extra in actual data: 0

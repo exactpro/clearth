@@ -1,0 +1,8 @@
+Comparison started: .*
+Comparison finished: .*
+
+Rows compared: 5
+Passed: 1
+Failed: 2
+Not found in actual data: 1
+Extra in actual data: 1

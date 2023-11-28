@@ -46,7 +46,8 @@ public class ToolsManager
 			TOOL_EXP_CALC = "Expression calculator",
 			TOOL_DICT_VALIDATOR = "Dictionary validator",
 			TOOL_MATRIX_UPDATER = "Matrix updater",
-			TOOL_SQL_EXECUTOR = "SQL Executor";
+			TOOL_SQL_EXECUTOR = "SQL Executor",
+			TOOL_DATA_COMPARATOR = "Data comparator";
 	
 	protected final ToolsInfo toolsInfo;
 	protected final ToolsFactory toolsFactory;
@@ -72,7 +73,7 @@ public class ToolsManager
 	
 	protected List<ToolInfo> createToolsList()
 	{
-		List<ToolInfo> result = new ArrayList<ToolInfo>();
+		List<ToolInfo> result = new ArrayList<>();
 		result.add(createToolInfo(0, TOOL_MESSAGE_PARSER));
 		result.add(createToolInfo(3, TOOL_MESSAGE_TO_SCRIPT));
 		result.add(createToolInfo(6, TOOL_SCRIPT_TO_MESSAGE));
@@ -84,6 +85,7 @@ public class ToolsManager
 		result.add(createToolInfo(70, TOOL_DICT_VALIDATOR));
 		result.add(createToolInfo(80, TOOL_MATRIX_UPDATER));
 		result.add(createToolInfo(90, TOOL_SQL_EXECUTOR));
+		result.add(createToolInfo(200, TOOL_DATA_COMPARATOR));
 		return result;
 	}
 	
