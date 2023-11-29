@@ -1,5 +1,5 @@
 Comparison name,Comparison result,Row kind,C1,C2,C3
 Row #2,FAILED,EXPECTED,3,4,5
 Row #2,FAILED,ACTUAL,3,41,5
-Row #3,FAILED,EXPECTED,6,8
-Row #3,FAILED,ACTUAL,6,8a
+Row #3,FAILED,EXPECTED,6,@{isNotEqualText()},8
+Row #3,FAILED,ACTUAL,6,7,8a

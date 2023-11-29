@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -91,14 +91,17 @@ public class TableRowsComparator<A, B>
 	
 	protected void processValuesComparison(A column, B value1, B value2, RowComparisonData<A, B> compData)
 	{
+		ComparisonResult result;
 		try
 		{
-			compData.addComparisonDetail(column, value1, value2, compareValues(value1, value2, column));
+			result = compareValues(value1, value2, column);
 		}
 		catch (Exception e)
 		{
 			compData.addErrorMsg(ExceptionUtils.getDetailedMessage(e));
+			result = ComparisonResult.FAILED;
 		}
+		compData.addComparisonDetail(column, value1, value2, result);
 	}
 	
 	protected ComparisonResult compareValues(B expectedValue, B actualValue, A column) throws Exception
