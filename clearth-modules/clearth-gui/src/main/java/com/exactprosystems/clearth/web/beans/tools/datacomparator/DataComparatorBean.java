@@ -219,6 +219,7 @@ public class DataComparatorBean extends ClearThBean
 		File storedMapping;
 		try
 		{
+			Files.createDirectories(uploadsStorage.toPath());
 			storedMapping = WebUtils.storeUploadedFile(file, uploadsStorage, "mapping_", ".xml");
 		}
 		catch (Exception e)
@@ -247,6 +248,7 @@ public class DataComparatorBean extends ClearThBean
 		
 		try
 		{
+			Files.createDirectories(outputStorage);
 			Path file = outputStorage.resolve("mapping.xml");
 			XmlUtils.marshalObject(desc, file.toAbsolutePath().toString());
 			return WebUtils.downloadFile(file.toFile());
