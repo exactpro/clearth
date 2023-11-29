@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -163,15 +163,6 @@ public class AutomationBean extends ClearThBean
 		return selectedScheduler;
 	}
 	
-
-	/**
-	 @deprecated . Use getAppContextPath() in ApplicationBean;
-	 */
-	@Deprecated
-	public String getAppContextPath()
-	{
-		return ClearThCoreApplicationBean.getInstance().getAppContextPath();
-	}
 
 	public List<String> getStartAtTypes()
 	{

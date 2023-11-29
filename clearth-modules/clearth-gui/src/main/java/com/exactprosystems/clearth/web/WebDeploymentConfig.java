@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,9 +27,6 @@ import java.io.File;
 import java.util.Date;
 import java.util.jar.Manifest;
 
-/**
- * Created by alexey.karpukhin on 8/24/16.
- */
 public class WebDeploymentConfig extends DeploymentConfig {
 
 	protected String appContextPath;
@@ -57,7 +54,9 @@ public class WebDeploymentConfig extends DeploymentConfig {
 				currentContext = "/clearth";
 			if (!currentContext.startsWith("/"))
 				currentContext = "/" + currentContext;
-
+			if (currentContext.equals("/root"))  //When ClearTH is deployed as root application of server
+				currentContext = "";
+			
 			appContextPath = currentContext;
 		}
 	}
