@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -53,7 +53,6 @@ public class ExecuteScript extends Action {
 			PARAMETERS = "Parameters", //this is used only to pass complete string with script parameters
 			PARAMS_FROM_ACTION = "ParamsFromAction", //this is used to pass action params as script params
 			SCRIPT_DIRECTORY = "ScriptDirectory",
-			ASYNC = "Async",
 			OUTPUT = "Output",
 			FAIL_ON_ERROR_OUTPUT = "FailOnErrorOutput",
 			SUCCESS_RESULT_CODES = "SuccessResultCodes",
@@ -108,8 +107,8 @@ public class ExecuteScript extends Action {
 	protected Result noParametersResult()
 	{
 		return DefaultResult.failed(
-				String.format("No parameters specified. Required parameter: %s. Optional parameters: %s, %s, %s, %s.",
-				SCRIPT_FILE_NAME, SCRIPT_DIRECTORY, WORKING_DIRECTORY, PARAMETERS, ASYNC));
+				String.format("No parameters specified. Required parameter: %s. Optional parameters: %s, %s, %s.",
+				SCRIPT_FILE_NAME, SCRIPT_DIRECTORY, WORKING_DIRECTORY, PARAMETERS));
 	}
 	
 	protected String buildCommand(Map<String, String> parameters) throws ResultException
@@ -328,7 +327,7 @@ public class ExecuteScript extends Action {
 		return zipFile;
 	}
 
-	protected Result executeScriptSync(String command) throws ResultException
+	protected Result executeScript(String command) throws ResultException
 	{
 		ScriptResult res;
 		if (executableName == null)
@@ -348,41 +347,6 @@ public class ExecuteScript extends Action {
 		}
 		return buildActionResult(res, processScriptResult(res));
 	}
-
-	protected Result executeScriptAsync(String command) throws ResultException
-	{
-		String messageComplete = String.format("Script '%s' with params '%s' executed asynchronously, triggered by action '%s' from matrix '%s'.",
-		                                       command, convertToString(additionalCLineParams), getIdInMatrix(), getMatrix().getName());
-		String messageFail = String.format("Error while executing script '%s' with params '%s' asynchronously, triggered by action '%s' from matrix '%s'.",
-		                                   command, convertToString(additionalCLineParams), getIdInMatrix(), getMatrix().getName());
-		try
-		{
-			if (executableName != null)
-			{
-				ScriptUtils.executeScriptAsync(command, additionalCLineParams, executableName, shellOption, null, messageComplete,
-						messageFail, workingDir, envVars);
-			}
-			else
-			{
-				ScriptUtils.executeScriptAsync(command, additionalCLineParams, null, messageComplete, messageFail, workingDir, envVars);
-			}
-		}
-		catch (IOException e)
-		{
-			throw ResultException.failed(String.format("Script '%s' with params '%s' was not launched, triggered by action '%s' from matrix '%s'.",
-					command, convertToString(additionalCLineParams), getIdInMatrix(), getMatrix().getName()), e);
-		}
-
-		return DefaultResult.passed(String.format("Execution of script '%s' with params '%s' started asynchronously", command, convertToString(additionalCLineParams)));
-	}
-
-	protected Result executeScript(String command) throws ResultException
-	{
-		if (!InputParamsUtils.getBooleanOrDefault(getInputParams(), ASYNC, false))
-			return executeScriptSync(command);
-		return executeScriptAsync(command);
-	}
-
 
 	protected Map<String, String> createEnvironmentVars(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 	{
