@@ -1,0 +1,40 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix1.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" : [
+    {
+      "actionId" : "id1",
+      "actionName" : "SetStatic",
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "Param1" : {
+          "formula" : "@{envVars.PATH}",
+          "specialValue" : false
+        }
+      }
+    },
+    {
+      "actionId" : "id2",
+      "actionName" : "SetStatic",
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "Param1" : {
+          "formula" : "@{globalConst.env_name}",
+          "specialValue" : false
+        }
+      }
+    }]
+  }]
+}

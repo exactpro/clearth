@@ -18,18 +18,17 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.exactprosystems.clearth.BasicTestNgTest;
-import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.ValueGenerator;
-import com.exactprosystems.clearth.ValueGenerators;
+import com.exactprosystems.clearth.*;
 import com.exactprosystems.clearth.automation.exceptions.FunctionException;
 import com.exactprosystems.clearth.generators.LegacyValueGenerator;
 import com.exactprosystems.clearth.generators.LegacyValueGenerators;
+import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.ObjectWrapper;
 import com.exactprosystems.clearth.utils.javaFunction.FunctionWithException;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
-import org.junit.Assert;
+import org.hamcrest.MatcherAssert;
+import org.mvel2.PropertyAccessException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -77,6 +76,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 	private volatile MatrixFunctions funWithoutHolidaysWithWeekendsBaseTime;
 	private volatile MatrixFunctions funWithoutHolidaysWithoutWeekendsBaseTime;
+	private Path globConstPath, envVarsPath;
 
 	@BeforeClass
 	void prepare() throws IOException
@@ -165,8 +165,12 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@Override
-	protected void mockOtherApplicationFields(ClearThCore application)
+	protected void mockOtherApplicationFields(ClearThCore application) throws IOException
 	{
+		Path res_dir = Path.of(FileOperationUtils.resourceToAbsoluteFilePath(MatrixFunctionsTest.class.getSimpleName()));
+		globConstPath = res_dir.resolve("global_constants.cfg");
+		envVarsPath = res_dir.resolve("env_variables.cfg");
+
 		ValueGenerators valueGenerators = new LegacyValueGenerators(DEFAULT_GENERATOR_FILE);
 		when(application.getValueGenerators()).thenReturn(valueGenerators);
 	}
@@ -1797,7 +1801,7 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 
 		List<Matcher<? extends Number>> matchers = Arrays.stream(values).map(v -> (is(v))).collect(Collectors.toList());
 
-		Assert.assertThat(randomResult1, anyOf(matchers));
+		MatcherAssert.assertThat(randomResult1, anyOf(matchers));
 
 	}
 
@@ -1871,6 +1875,69 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		String actualResult = funWithHolidaysWithWeekends.abs(a);
 	}
 
+	@DataProvider(name = "envVarsAndGlobalConstants")
+	public Object[][] envVarsAndGlobalConstants() throws IOException
+	{
+		GlobalConstants constants = new GlobalConstants(globConstPath);
+		EnvVars envVars = new EnvVars(envVarsPath);
+		
+		Map<String, String> ids1 = envVars.getMap(),
+							ids2 = constants.getAll(),
+							env = System.getenv();
+		Map<String, Object> mvel1 = createMapForMvel("envVars", ids1),
+							mvel2 = createMapForMvel("globalConst", ids2);
+		
+		String param1 = "param1",
+				param2 = "param2",
+				s1 = env.get("PATH");
+
+		return new Object[][]
+				{
+					{"@{envVars.PATH}", mvel1, param1, s1},
+					{"@{globalConst.env_name}", mvel2, param2, "QA_55"},
+					{"@{globalConst.system_reports_dir}", mvel2, param2, "/opt/systemX/reports/"}
+				};
+	}
+
+	@Test(dataProvider = "envVarsAndGlobalConstants")
+	public void testEnvVarsAndGlobalConstants(String expression, Map<String, Object> mvelVars, String paramName, String expected) throws Exception
+	{
+			MatrixFunctions mf = getMatrixFunctionsForCalcExp();
+			Object object = mf.calculateExpression(expression, paramName, mvelVars, Collections.emptyMap(), null, new ObjectWrapper(0));
+			assertEquals(object, expected);
+	}
+	
+	@DataProvider(name = "envVarsAndGlobalConstantsIncorrectFiles")
+	public Object[][] envVarsAndGlobalConstantsIncorrectFiles() throws IOException
+	{
+		GlobalConstants constants = new GlobalConstants(envVarsPath);
+		EnvVars envVars = new EnvVars(globConstPath);
+
+		Map<String, Object> mvel1 = createMapForMvel("envVars", envVars.getMap()),
+							mvel2 = createMapForMvel("globalConst", constants.getAll());
+		String param1 = "param1";
+
+		return new Object[][]
+		{
+			{"@{envVars.PATH}", mvel1, param1},
+			{"@{globalConst.env_name}", mvel2, param1}
+		};
+	}
+	
+	@Test (dataProvider = "envVarsAndGlobalConstantsIncorrectFiles", expectedExceptions = PropertyAccessException.class)
+	public void testEnvVarsAndGlobalConstantsIncorrectFiles(String expression, Map<String, Object> mvelVars, String paramName) throws Exception
+	{
+		MatrixFunctions mf = getMatrixFunctionsForCalcExp();
+		mf.calculateExpression(expression, paramName, mvelVars, Collections.emptyMap(), null, new ObjectWrapper(0));
+	}
+	
+	private Map<String, Object> createMapForMvel(String paramName, Map<String, String> map)
+	{
+		Map<String, Object> mvelVars = new HashMap<>();
+		mvelVars.put(paramName, map);
+		return mvelVars;
+	}
+	
 	@AfterMethod
 	public void tearDown() throws IOException
 	{

@@ -74,7 +74,7 @@ public class Th2TestExecutionHandlerTest
 	public void init()
 	{
 		actionName = "SetStatic";
-		mvelFactory = new MvelVariablesFactory();
+		mvelFactory = new MvelVariablesFactory(null, null);
 	}
 	
 	@Test

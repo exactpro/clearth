@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,9 +26,7 @@ import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 
 import static com.exactprosystems.clearth.automation.ActionExecutor.*;
-import static com.exactprosystems.clearth.automation.MatrixFunctions.FORMULA_END;
-import static com.exactprosystems.clearth.automation.MatrixFunctions.FORMULA_START;
-import static com.exactprosystems.clearth.automation.MatrixFunctions.STRING_CONSTANT_QUOTE;
+import static com.exactprosystems.clearth.automation.MatrixFunctions.*;
 import static com.exactprosystems.clearth.automation.expressions.MvelExpressionUtils.isValidActionIdChar;
 import static com.exactprosystems.clearth.utils.StringOperationUtils.checkUnquotedSymbol;
 import static com.exactprosystems.clearth.utils.TagUtils.indexClosingTag;
@@ -40,7 +38,7 @@ import static java.util.Objects.requireNonNull;
 
 public class ActionReferenceFinder
 {
-	private static final Set<String> SPECIAL_REFS = new HashSet<>(asList(PARAMS_IN, PARAMS_OUT, VARKEY_ACTION));
+	private static final Set<String> SPECIAL_REFS = new HashSet<>(asList(PARAMS_IN, PARAMS_OUT, VARKEY_ACTION, ENV_VARS, GLOBAL_CONST));
 
 	private final String text;
 

@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.tools;
 
 import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.UnbalancedExpressionException;
 import com.exactprosystems.clearth.utils.ClearThException;
 import org.testng.annotations.*;
@@ -36,7 +37,7 @@ public class ExpressionCalculatorToolTest {
     private static final String POSTFIX = "_01";
     private String current_date;
     private static ApplicationManager clearThManager;
-    private final ExpressionCalculatorTool calculatorTool = new ExpressionCalculatorTool();
+    private ExpressionCalculatorTool calculatorTool;
 
     @DataProvider(name="test-data")
     public Object[][] dataProviderMethod() {
@@ -81,6 +82,14 @@ public class ExpressionCalculatorToolTest {
                 {
                         "@{pattern('\\\'123(')}",
                         "{pattern(''123(')}"
+                },
+                {
+                        "@{envVars.PATH}",
+                        System.getenv("PATH")
+                },
+                {
+                        "@{globalConst.env_name}",
+                        "QA_55"
                 }
         };
     }
@@ -91,6 +100,7 @@ public class ExpressionCalculatorToolTest {
     {
         clearThManager = new ApplicationManager();
         current_date = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+        calculatorTool = ClearThCore.getInstance().getToolsFactory().createExpressionCalculatorTool();
     }
 
     @Test(dataProvider = "test-data")

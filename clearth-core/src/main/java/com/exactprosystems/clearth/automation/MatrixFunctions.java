@@ -53,7 +53,10 @@ public class MatrixFunctions
 			FAIL_REASON_PARAM = "failReason",
 			STRING_CONSTANT_QUOTE = "'",
 			
-			ERROR_TIME_FORMAT = "Could not parse '%s' as timestamp in format '%s'";
+			ERROR_TIME_FORMAT = "Could not parse '%s' as timestamp in format '%s'",
+			
+			ENV_VARS = "envVars",
+			GLOBAL_CONST = "globalConst";
 	
 	protected static final String DEFAULT_VALUE_GENERATOR = "DefaultValueGenerator";
 	protected static final int MAX_SHIFT = 100000;

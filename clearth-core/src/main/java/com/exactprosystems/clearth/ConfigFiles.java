@@ -30,6 +30,8 @@ public class ConfigFiles
 	private static final String SCHEDULERS_DIR = CFG_DIR+"schedulers/";
 	private static final String USER_SETTINGS_DIR = CFG_DIR+"usersettings/";
 	private static final String ACTIONS_MAPPING_FILENAME = CFG_DIR+"actionsmapping.cfg";
+	private static final String GLOB_CONST_FILENAME = CFG_DIR + "global_constants.cfg";
+	private static final String ENV_VARS_FILENAME = CFG_DIR + "env_variables.cfg";
 	private static final String DICTS_DIR = CFG_DIR+"dicts/";
 	private static final String CODECS_FILENAME = CFG_DIR+"codecs.xml";
 	private static final String MESSAGE_CONVERTERS_FILENAME = CFG_DIR+"message_converters.xml";
@@ -98,7 +100,17 @@ public class ConfigFiles
 	{
 		return ACTIONS_MAPPING_FILENAME;
 	}
-	
+
+	public String getGlobalConstantsFilename()
+	{
+		return GLOB_CONST_FILENAME;
+	}
+
+	public String getEnvVarsFilename()
+	{
+		return ENV_VARS_FILENAME;
+	}
+
 	public String getLogsDir()
 	{
 		return LOGS_DIR;

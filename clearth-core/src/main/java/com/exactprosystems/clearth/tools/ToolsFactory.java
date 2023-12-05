@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.tools;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.report.html.ReportParser;
 import com.exactprosystems.clearth.converters.DefaultMessageConverter;
 import com.exactprosystems.clearth.converters.DefaultScriptConverter;
@@ -39,7 +40,7 @@ public class ToolsFactory
 	
 	public ExpressionCalculatorTool createExpressionCalculatorTool()
 	{
-		return new ExpressionCalculatorTool();
+		return new ExpressionCalculatorTool(ClearThCore.getInstance().getMvelVariablesFactory().create().getVariables());
 	}
 	
 	public MessageParserTool createMessageParserTool()

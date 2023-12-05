@@ -71,12 +71,16 @@ public class ApplicationManager
 			DEFAULT_REPORT_FILES_DIR = WEB_APP_DIR + "/WEB-INF/report_files/",
 			REALTIME_REPORT_DIR = APP_ROOT + "/ui/restricted/",
 			USER_SETTINGS_DIR = TEST_OUTPUT + "usersettings/",
-			USERS_LIST_FILE_PATH = USER_DIR + "/src/test/resources/users.xml";
+			USERS_LIST_FILE_PATH = USER_DIR + "/src/test/resources/users.xml",
+			GLOB_CONST_FILENAME = USER_DIR + "/src/test/resources/global_constants.cfg",
+			ENV_VARS_FILENAME = USER_DIR + "/src/test/resources/env_variables.cfg";
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 	private static boolean clearAppRoot = true, clearLogs = true;
-	private String configFilePath;
+	private String configFilePath,
+			envVarsFilePath = ENV_VARS_FILENAME,
+			globalConstFilePath = GLOB_CONST_FILENAME;
 	private DeploymentConfig deploymentConfig;
 	private DataHandlersFactory dataHandlersFactory;
 	
@@ -96,6 +100,14 @@ public class ApplicationManager
 	{
 		this.configFilePath = configFilePath;
 
+		initClearThInstance();
+	}
+
+	public ApplicationManager(String configFilePath, String envVarsFilePath, String globalConstFilePath) throws ClearThException
+	{
+		this.configFilePath = configFilePath;
+		this.envVarsFilePath = envVarsFilePath;
+		this.globalConstFilePath = globalConstFilePath;
 		initClearThInstance();
 	}
 
@@ -231,7 +243,7 @@ public class ApplicationManager
 			fail("Waiting for Scheduler to stop is interrupted.");
 		}
 	}
-	
+
 	protected ConfigFiles getConfigFiles()
 	{
 		ConfigFiles cfg = new ConfigFiles("clearth.cfg");
@@ -250,6 +262,8 @@ public class ApplicationManager
 		when(spy.getLogCfgFileName()).thenReturn(LOG_PROPERTIES_FILE_PATH);
 		when(spy.getUserSettingsDir()).thenReturn(USER_SETTINGS_DIR);
 		when(spy.getUsersFileName()).thenReturn(USERS_LIST_FILE_PATH);
+		when(spy.getGlobalConstantsFilename()).thenReturn(globalConstFilePath);
+		when(spy.getEnvVarsFilename()).thenReturn(envVarsFilePath);
 
 		return spy;
 	}

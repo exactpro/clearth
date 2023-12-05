@@ -83,6 +83,8 @@ public abstract class ClearThCore
 	protected ToolsManager toolsManager;
 	protected MatrixFunctionsFactory<MatrixFunctions> matrixFunctionsFactory;
 	protected MvelVariablesFactory mvelVariablesFactory;
+	protected GlobalConstants globalConstants;
+	protected EnvVars envVars;
 	protected Map<String, XmlMessageConverterConfig> messageConverterConfigs;
 	protected Map<String, XmlScriptConverterConfig> scriptConverterConfigs;
 	protected ReportTemplatesProcessor reportTemplatesProcessor;
@@ -280,6 +282,8 @@ public abstract class ClearThCore
 			schedulerInfoExporter = createSchedulerInfoExporter();
 			connectionsTransmitter = createConnectionsTransmitter();
 			matrixFunctionsFactory = createMatrixFunctionsHolder();
+			globalConstants = createGlobalConstants();
+			envVars = createEnvVars();
 			mvelVariablesFactory = createMvelVariablesFactory();
 			schedulerFactory = createSchedulerFactory(valueGenerators);
 			memoryMonitor = createMemoryMonitor();
@@ -386,7 +390,19 @@ public abstract class ClearThCore
 	
 	protected MvelVariablesFactory createMvelVariablesFactory()
 	{
-		return new MvelVariablesFactory();
+		return new MvelVariablesFactory(getEnvVars(), getGlobalConstants());
+	}
+	
+	protected GlobalConstants createGlobalConstants() throws IOException
+	{
+		Path globConsFile = Paths.get(rootRelative(configFiles.getGlobalConstantsFilename()));
+		return (!Files.exists(globConsFile)) ? new GlobalConstants() : new GlobalConstants(globConsFile);
+	}
+
+	protected EnvVars createEnvVars() throws IOException
+	{
+		Path envVarsFile = Paths.get(rootRelative(configFiles.getEnvVarsFilename()));
+		return (!Files.exists(envVarsFile)) ? new EnvVars() : new EnvVars(envVarsFile);
 	}
 	
 	protected ICodecFactory createCodecFactory()
@@ -1037,6 +1053,16 @@ public abstract class ClearThCore
 	public MvelVariablesFactory getMvelVariablesFactory()
 	{
 		return mvelVariablesFactory;
+	}
+
+	public GlobalConstants getGlobalConstants()
+	{
+		return globalConstants;
+	}
+
+	public EnvVars getEnvVars()
+	{
+		return envVars;
 	}
 
 	public ComparisonUtils getComparisonUtils() {

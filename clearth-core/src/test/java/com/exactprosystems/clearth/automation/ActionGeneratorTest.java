@@ -97,7 +97,7 @@ public class ActionGeneratorTest
 		specialActionParameters.setParameters(params);
 
 		ActionGeneratorResources resources = new ActionGeneratorResources(specialActionParameters, actionFactory,
-				new MvelVariablesFactory(), matrixFunctions, matrixFatalErrors);
+				new MvelVariablesFactory(null, null), matrixFunctions, matrixFatalErrors);
 
 		return new DefaultActionGenerator(steps, matrices, new HashMap<String, Preparable>(), resources);
 	}
@@ -126,7 +126,7 @@ public class ActionGeneratorTest
 
 		ActionFactory actionFactory = new ActionFactory();
 		actionFactory.loadActionsMapping(parentDir.resolve("actionsmapping.cfg"));
-		MvelVariablesFactory mvelFactory = new MvelVariablesFactory();
+		MvelVariablesFactory mvelFactory = new MvelVariablesFactory(null, null);
 		MatrixFunctions mf = new MatrixFunctions(null, null, null, false, null);
 		ActionGeneratorResources resources = new ActionGeneratorResources(specialActionParameters, actionFactory, mvelFactory,
 				mf, new MatrixFatalErrors());

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,7 +19,6 @@
 package com.exactprosystems.clearth.tools;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.ExecutorFactory;
 import com.exactprosystems.clearth.automation.MatrixFunctions;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.tools.calculator.CalculatorVariable;
@@ -37,9 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by alexander.magomedov on 11/16/16.
- */
 public class ExpressionCalculatorTool
 {
 	private static final Logger logger = LoggerFactory.getLogger(ExpressionCalculatorTool.class);
@@ -47,7 +43,12 @@ public class ExpressionCalculatorTool
 	private int maxHistorySize = 10;
 	private final List<CalculatorVariable> variables = new ArrayList<CalculatorVariable>();
 	private final LinkedList<HistoryRow> history = new LinkedList<HistoryRow>();
+	private final Map<String, Object> defaultVars;
 	
+	public ExpressionCalculatorTool(Map<String, Object> defaultVars)
+	{
+		this.defaultVars = defaultVars;
+	}
 	
 	public String calculate(String expression, Scheduler scheduler) throws Exception
 	{
@@ -122,10 +123,11 @@ public class ExpressionCalculatorTool
 	
 	protected Map<String, Object> makeMvelVars()
 	{
+		Map<String, Object> result = new HashMap<>(defaultVars);
+
 		if (variables.isEmpty())
-			return null;
+			return result;
 		
-		Map<String, Object> result = new HashMap<String, Object>();
 		for (CalculatorVariable var : variables)
 		{
 			if (var.isValid())

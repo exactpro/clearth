@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -35,9 +35,8 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import static com.exactprosystems.clearth.ClearThCore.rootRelative;
-import static com.exactprosystems.clearth.automation.ActionExecutor.PARAMS_PREV_ACTION;
-import static com.exactprosystems.clearth.automation.ActionExecutor.PARAMS_THIS_ACTION;
-import static com.exactprosystems.clearth.automation.MatrixFunctions.FORMULA_START;
+import static com.exactprosystems.clearth.automation.ActionExecutor.*;
+import static com.exactprosystems.clearth.automation.MatrixFunctions.*;
 import static com.exactprosystems.clearth.utils.Utils.nvl;
 import static java.nio.file.Files.exists;
 import static java.util.Collections.emptyMap;
@@ -54,6 +53,8 @@ public class MvelVarsCleaningTableBuilder
 	{
 		KEYWORDS_TO_IGNORE.add(PARAMS_PREV_ACTION);
 		KEYWORDS_TO_IGNORE.add(PARAMS_THIS_ACTION);
+		KEYWORDS_TO_IGNORE.add(ENV_VARS);
+		KEYWORDS_TO_IGNORE.add(GLOBAL_CONST);
 	}
 	
 	private final MatrixFunctions functions;
