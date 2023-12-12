@@ -1,0 +1,4 @@
+#ID,#GlobalStep,#Action,#Execute,#Timeout,#Comment,#Invert,#Async,#AsyncGroup,#WaitAsyncEnd,#RegularParam1,#RegularParam2
+id1,Step1,SetStatic,true,10,Dummy comment,false,false,None,Step,DummyValue,@{'234'}
+#ID,#GlobalStep,#Action,#RefExecute,#RefTimeout,#RefComment,#RefInvert,#RefAsync,#RefAsyncGroup,#RefWaitAsyncEnd,#RefRegularParam1,#RefRegularParam2
+id2,Step2,SetStatic,@{id1.execute},@{id1.timeout},@{id1.comment},@{id1.invert},@{id1.async},@{id1.asyncgroup},@{id1.waitasyncend},@{id1.RegularParam1},@{id1.RegularParam2}

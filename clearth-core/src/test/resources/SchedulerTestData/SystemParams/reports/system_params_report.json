@@ -1,0 +1,107 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "system_params.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "actionId" : "id1",
+      "actionName" : "SetStatic",
+      "timeout" : 10,
+      "async" : false,
+      "comment" : "Dummy comment",
+      "payloadFinished" : false,
+      "asyncGroup" : "None",
+      "waitAsyncEnd" : "STEP",
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "RegularParam1" : {
+          "value" : "DummyValue",
+          "specialValue" : false
+        },
+        "RegularParam2" : {
+          "value" : "234",
+          "formula" : "@{'234'}",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+
+  },{
+    "stepName" : "Step2",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "actionId" : "id2",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "RefAsyncGroup" : {
+          "value" : "None",
+          "formula" : "@{id1.asyncgroup}",
+          "specialValue" : false
+        },
+        "RefAsync" : {
+          "value" : "false",
+          "formula" : "@{id1.async}",
+          "specialValue" : false
+        },
+        "RefComment" : {
+          "value" : "Dummy comment",
+          "formula" : "@{id1.comment}",
+          "specialValue" : false
+        },
+        "RefInvert" : {
+          "value" : "false",
+          "formula" : "@{id1.invert}",
+          "specialValue" : false
+        },
+        "RefRegularParam1" : {
+          "value" : "DummyValue",
+          "formula" : "@{id1.RegularParam1}",
+          "specialValue" : false
+        },
+        "RefRegularParam2" : {
+          "value" : "234",
+          "formula" : "@{id1.RegularParam2}",
+          "specialValue" : false
+        },
+        "RefWaitAsyncEnd" : {
+          "value" : "Step",
+          "formula" : "@{id1.waitasyncend}",
+          "specialValue" : false
+        },
+        "RefExecute" : {
+          "value" : "true",
+          "formula" : "@{id1.execute}",
+          "specialValue" : false
+        },
+        "RefTimeout" : {
+          "value" : "10",
+          "formula" : "@{id1.timeout}",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+
+  } ]
+}

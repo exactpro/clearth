@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -38,6 +38,7 @@ public class ActionParamsCalculator
 	
 	private final MatrixFunctions matrixFunctions;
 	private Action action;
+	private MvelVariables mvelVars;
 	private List<String> errors;
 	private boolean warnOnError;
 	
@@ -75,18 +76,21 @@ public class ActionParamsCalculator
 
 	public List<String> calculateParameters(Action action, boolean warnOnError)
 	{
-		Matrix matrix = action.getMatrix();
-		MvelVariables mvelVars = matrix.getMvelVars();
+		this.action = action;
+		this.mvelVars = action.getMatrix().getMvelVars();
+		this.errors = new ArrayList<>();
+		this.warnOnError = warnOnError;
+		
 		mvelVars.saveInputParams(action);
-
-		calculateMainParameters(action, new ArrayList<String>(), warnOnError);
+		
+		calculateMainParameters();
 		calculateSpecialParameters();
 		
 		Map<String, String> params = action.getInputParams();
 		matrixFunctions.setCurrentTime(Calendar.getInstance());
 		for (Entry<String, String> param : params.entrySet())
 		{
-			String value = calculateParameter(param.getValue(), param.getKey());
+			String value = calculateAndSaveParameter(param.getValue(), param.getKey(), null);
 			if (value != null)
 				params.put(param.getKey(), value);
 		}
@@ -101,20 +105,17 @@ public class ActionParamsCalculator
 		if (formulas == null)
 			return;
 		
+		Map<String, String> specialParams = action.getSpecialParams();
 		for (String param : action.getSpecialParamsNames())
 		{
-			String value = calculateParameter(formulas.get(param), param);
+			String value = calculateAndSaveParameter(formulas.get(param), param, specialParams.get(param));
 			if (value != null)
-				action.getSpecialParams().put(param, value);
+				specialParams.put(param, value);
 		}
 	}
 	
-	public void calculateMainParameters(Action action, List<String> errorsOutput, boolean warnOnError)
+	private void calculateMainParameters()
 	{
-		this.action = action;
-		this.errors = errorsOutput;
-		this.warnOnError = warnOnError;
-		
 		calculateExecute();
 		calculateComment();
 		calculateTimeout(); 
@@ -136,15 +137,12 @@ public class ActionParamsCalculator
 		if (valueExpression == null)
 			return null;
 
-		MvelVariables mvelVars = action.getMatrix().getMvelVars();
 		try
 		{
 			Object valueObj = matrixFunctions.calculateExpression(valueExpression, parameterName,
 					mvelVars.getVariables(), mvelVars.getFixedIds(), getAction(), new ObjectWrapper(0));
 			
-			String value = (valueObj != null) ? valueObj.toString() : null;
-			mvelVars.saveCalculatedParameter(action.getIdInMatrix(), parameterName, value);
-			return value;
+			return (valueObj != null) ? valueObj.toString() : null;
 		}
 		catch (Exception e)
 		{
@@ -160,10 +158,19 @@ public class ActionParamsCalculator
 		}
 	}
 	
+	protected String calculateAndSaveParameter(String valueExpression, String parameterName, String defaultToSave)
+	{
+		String result = calculateParameter(valueExpression, parameterName),
+				toSave = result != null ? result : defaultToSave;
+		if (toSave != null)
+			mvelVars.saveCalculatedParameter(action.getIdInMatrix(), parameterName, toSave);
+		return result;
+	}
+	
 	protected void calculateExecute()
 	{
 		String formula = action.getFormulaExecutable(),
-				execute = calculateParameter(formula, ActionGenerator.COLUMN_EXECUTE);
+				execute = calculateAndSaveParameter(formula, ActionGenerator.COLUMN_EXECUTE, Boolean.toString(action.isExecutable()));
 		if (execute == null)
 			return;
 		
@@ -185,7 +192,7 @@ public class ActionParamsCalculator
 	protected void calculateComment()
 	{
 		String formula = action.getFormulaComment(),
-				comment = calculateParameter(formula, ActionGenerator.COLUMN_COMMENT);
+				comment = calculateAndSaveParameter(formula, ActionGenerator.COLUMN_COMMENT, action.getComment());
 		if (comment == null)
 		{
 			if (formula != null)
@@ -198,7 +205,7 @@ public class ActionParamsCalculator
 	protected void calculateTimeout()
 	{
 		String formula = action.getFormulaTimeout(),
-				timeout = calculateParameter(formula, ActionGenerator.COLUMN_TIMEOUT);
+				timeout = calculateAndSaveParameter(formula, ActionGenerator.COLUMN_TIMEOUT, Long.toString(action.getTimeOut()));
 		if (timeout == null)
 		{
 			if (formula != null)
@@ -221,7 +228,7 @@ public class ActionParamsCalculator
 	protected void calculateInverted()
 	{
 		String formula = action.getFormulaInverted(),
-				inverted = calculateParameter(formula, ActionGenerator.COLUMN_INVERT);
+				inverted = calculateAndSaveParameter(formula, ActionGenerator.COLUMN_INVERT, Boolean.toString(action.isInverted()));
 		if (inverted == null)
 			return;
 		
@@ -239,7 +246,7 @@ public class ActionParamsCalculator
 	protected void calculateAsync()
 	{
 		String formula = action.getFormulaAsync(),
-				async = calculateParameter(formula, ActionGenerator.COLUMN_ASYNC);
+				async = calculateAndSaveParameter(formula, ActionGenerator.COLUMN_ASYNC, Boolean.toString(action.isAsync()));
 		if (async == null)
 			return;
 		
@@ -257,7 +264,7 @@ public class ActionParamsCalculator
 	protected void calculateAsyncGroup()
 	{
 		String formula = action.getFormulaAsyncGroup(),
-				group = calculateParameter(formula, ActionGenerator.COLUMN_ASYNCGROUP);
+				group = calculateAndSaveParameter(formula, ActionGenerator.COLUMN_ASYNCGROUP, action.getAsyncGroup());
 		if (group != null)
 			action.setAsyncGroup(group);
 	}
@@ -265,7 +272,8 @@ public class ActionParamsCalculator
 	protected void calculateWaitAsyncEnd()
 	{
 		String formula = action.getFormulaWaitAsyncEnd(),
-				wait = calculateParameter(formula, ActionGenerator.COLUMN_WAITASYNCEND);
+				wait = calculateAndSaveParameter(formula, ActionGenerator.COLUMN_WAITASYNCEND, 
+						action.getWaitAsyncEnd() != null ? action.getWaitAsyncEnd().getLabel() : null);
 		if (wait != null)
 			action.setWaitAsyncEnd(WaitAsyncEnd.byLabel(wait));
 	}
