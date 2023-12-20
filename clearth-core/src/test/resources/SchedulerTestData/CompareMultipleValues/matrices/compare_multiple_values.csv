@@ -1,0 +1,2 @@
+"#ID","#GlobalStep","#Action","#Expected.Value1","#Actual.Value1","#Expected.A","#Actual.D","#Expected.B","#Actual.B","#Expected.C","#Actual.C"
+"id1","Step1","CompareMultipleValues","V1","V1",1,1,2,2,3,3

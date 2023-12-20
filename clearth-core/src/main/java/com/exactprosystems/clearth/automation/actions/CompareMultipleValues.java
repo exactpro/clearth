@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,7 +29,6 @@ import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.utils.ComparisonPair;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
-import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,22 +66,26 @@ public class CompareMultipleValues extends Action
 	
 	protected List<ComparisonPair<String>> mergePairs(Map<String, String> expected, Map<String, String> actual)
 	{
-		Collection<String> params = CollectionUtils.intersection(expected.keySet(), actual.keySet());
-		List<ComparisonPair<String>> result = new ArrayList<ComparisonPair<String>>(params.size());
-		for (String param : params)
-			result.add(new ComparisonPair<String>(param, expected.get(param), actual.get(param)));
+		List<ComparisonPair<String>> result = new ArrayList<>(expected.size());
+
+		for (Map.Entry<String, String> entry : expected.entrySet())
+		{
+			String param = entry.getKey(),
+					actualValue = actual.get(param);
+			if (actualValue != null)
+				result.add(new ComparisonPair<>(param, entry.getValue(), actualValue));
+		}
 		return result;
 	}
 
 	protected List<ComparisonPair<String>> collectPairs()
 	{
-		Map<String, String> expectedParams = new LinkedHashMap<String, String>(),
-				actualParams = new LinkedHashMap<String, String>();
+		Map<String, String> expectedParams = new LinkedHashMap<>(),
+				actualParams = new LinkedHashMap<>();
 		for (Map.Entry<String,String> entry : inputParams.entrySet())
 			parseParameter(entry.getKey(), entry.getValue(), expectedParams, actualParams);
 		
-		List<ComparisonPair<String>> result = mergePairs(expectedParams, actualParams);
-		return result;
+		return mergePairs(expectedParams, actualParams);
 	}
 	
 	

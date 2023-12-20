@@ -1,0 +1,107 @@
+{
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true,
+      "failReason" : "FAILED",
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "CompareMultipleValues",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : "FAILED",
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "Expected.A" : {
+          "value" : "1",
+          "specialValue" : false
+        },
+        "Actual.D" : {
+          "value" : "1",
+          "specialValue" : false
+        },
+        "Expected.B" : {
+          "value" : "2",
+          "specialValue" : false
+        },
+        "Actual.C" : {
+          "value" : "3",
+          "specialValue" : false
+        },
+        "Actual.B" : {
+          "value" : "2",
+          "specialValue" : false
+        },
+        "Expected.C" : {
+          "value" : "3",
+          "specialValue" : false
+        },
+        "Expected.Value1" : {
+          "value" : "V1",
+          "specialValue" : false
+        },
+        "Actual.Value1" : {
+          "value" : "V1",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "message" : null,
+        "comment" : null,
+        "linkedMessages" : [ ],
+        "failReason" : "FAILED",
+        "failoverData" : null,
+        "resultDetails" : [ {
+          "param" : "Value1",
+          "expected" : "V1",
+          "actual" : "V1",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        }, {
+          "param" : "B",
+          "expected" : "2",
+          "actual" : "2",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        }, {
+          "param" : "C",
+          "expected" : "3",
+          "actual" : "3",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        } ]
+      },
+      "subActions" : [ ]
+    }
+    ]
+  } ]
+}
