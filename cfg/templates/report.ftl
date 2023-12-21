@@ -70,9 +70,22 @@
 		</table>
 		<div class="nodelist">
 			<form action="">
-				<label for="ShowPassed"><input type="checkbox" id="ShowPassed" onclick="togglePassed(this.checked)" checked>Show passed actions</label>
-				<label for="ShowPassedFields"><input type="checkbox" id="ShowPassedFields" onclick="togglePassedFields(this.checked)" checked disabled>Show passed fields</label>
-				<label for="ShowInverted"><input type="checkbox" id="ShowInverted" onclick="toggleInverted(this.checked)" unchecked>Show only inverted actions</label>
+				<label for="ShowPassed">
+					<input type="checkbox" id="ShowPassed" onclick="togglePassed(this.checked)" checked>
+					Show passed actions
+				</label>
+				<label for="ShowPassedFields">
+					<input type="checkbox" id="ShowPassedFields" onclick="togglePassedFields(this.checked)" checked disabled>
+					Show passed fields
+				</label>
+				<label for="ShowInverted">
+					<input type="checkbox" id="ShowInverted" onclick="toggleInverted(this.checked)" unchecked>
+					Show only inverted actions
+				</label>
+				<label for="ShowNotExecuted">
+					<input type="checkbox" id="ShowNotExecuted" onclick="toggleNotExecuted(this.checked)" checked>
+					Show actions not executed by condition
+				</label>
 				<br><label for="ExpandAll"><input type="checkbox" id="ExpandAll" onclick="toggleExpandAll(this.checked)" unchecked>Expand all</label>
 			</form>
 			<#list stepsData as stepData>
