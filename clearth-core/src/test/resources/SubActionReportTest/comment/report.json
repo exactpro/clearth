@@ -1,0 +1,127 @@
+{
+  "result" : false,
+  "description" : "",
+  "constants" : { },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : false,
+      "failReason" : "FAILED",
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "CustomSendMessageAction",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : false,
+        "failReason" : "FAILED",
+        "comments" : [ "Sub-action with ID 'sub2' has errors. See details below.\r\nSub-action with ID 'sub3' has errors. See details below." ],
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "RepeatingGroups" : {
+          "value" : "sub1,sub2,sub3",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DefaultResult",
+        "success" : false,
+        "crashed" : false,
+        "inverted" : false,
+        "message" : null,
+        "comment" : "Sub-action with ID 'sub2' has errors. See details below.\r\nSub-action with ID 'sub3' has errors. See details below.",
+        "linkedMessages" : [ ],
+        "failReason" : "FAILED",
+        "failoverData" : null
+      },
+      "subActions" : [ {
+        "@c" : ".ActionReport",
+        "actionId" : "sub1",
+        "actionName" : "AddRepeatingGroup",
+        "timeout" : 0,
+        "async" : false,
+        "comment" : "Dummy sub-action",
+        "payloadFinished" : false,
+        "status" : {
+          "passed" : true,
+          "failReason" : "FAILED",
+          "comments" : null,
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "Param1" : {
+            "value" : "123",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      }, {
+        "@c" : ".ActionReport",
+        "actionId" : "sub2",
+        "actionName" : "AddRepeatingGroup",
+        "timeout" : 0,
+        "async" : false,
+        "comment" : "Sub-action with unknown function",
+        "payloadFinished" : false,
+        "status" : {
+          "passed" : false,
+          "failReason" : "FAILED",
+          "comments" : [ "Could not calculate the following parameters: \r\n'Param1' - Incorrect formula\r\nCheck if all references and function calls are correct and all referenced actions are successful" ],
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "Param1" : {
+            "value" : "@{unknownFunction(1)}",
+            "formula" : "@{unknownFunction(1)}",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      }, {
+        "@c" : ".ActionReport",
+        "actionId" : "sub3",
+        "actionName" : "AddRepeatingGroup",
+        "timeout" : 0,
+        "async" : false,
+        "payloadFinished" : false,
+        "status" : {
+          "passed" : false,
+          "failReason" : "FAILED",
+          "comments" : [ "Could not calculate the following parameters: \r\n'Param1' - Incorrect formula\r\nCheck if all references and function calls are correct and all referenced actions are successful" ],
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "Param1" : {
+            "value" : "@{unknownFunction(1)}",
+            "formula" : "@{unknownFunction(1)}",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      } ]
+    }
+    ]
+
+  } ]
+}

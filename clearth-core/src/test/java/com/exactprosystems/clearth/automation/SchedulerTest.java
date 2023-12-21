@@ -57,7 +57,7 @@ public class SchedulerTest
 	private static final String REPORTS_DIR = USER_DIR.getParent().resolve(ApplicationManager.TEST_REPORT_DIR)
 			.resolve("automation").resolve("reports").toString();
 
-	private static final Set<String> IGNORED_EXPECTED_PARAMS =
+	public static final Set<String> IGNORED_EXPECTED_PARAMS =
 			new HashSet<String>(Arrays.asList("version", "userName", "matrixName", "host", "executionStart", "executionEnd", 
 					"executionTime", "started", "finished"));
 

@@ -37,7 +37,8 @@ public class SubActionData
 	private LinkedHashMap<String, SubActionData> subActionData;
 	//TODO add ExceptionWrapper after JSON reports migration to core
 	public Exception exception;
-	private String comment;
+	private String comment,
+			failedComment;
 	private String idInTemplate;
 	private ReportStatus success;
 
@@ -64,6 +65,7 @@ public class SubActionData
 		this(action.getName(), action.getInputParams(), action.getMatrixInputParams(), action.getFormulas(),
 				action.getSpecialParams(), action.getSpecialParamsFormulas(), action.getSubActionData());
 		idInTemplate = action.getIdInTemplate();
+		comment = action.getComment();
 	}
 
 	public void setComment(String comment)
@@ -78,14 +80,14 @@ public class SubActionData
 
 	public void setFailedComment(String comment)
 	{
-		this.comment = comment;
-		success = new ReportStatus(false, comment);
+		this.failedComment = comment;
+		success = new ReportStatus(false, failedComment);
 	}
 
 	public void setException(Exception exception)
 	{
 		this.exception = exception;
-		success = new ReportStatus(false, comment, exception);
+		success = new ReportStatus(false, failedComment, exception);
 	}
 
 	public String getName()
@@ -153,6 +155,11 @@ public class SubActionData
 	public String getComment()
 	{
 		return comment;
+	}
+
+	public String getFailedComment()
+	{
+		return failedComment;
 	}
 
 	public ReportStatus getSuccess()

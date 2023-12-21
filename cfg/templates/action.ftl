@@ -9,7 +9,7 @@
 	<#list subActions?keys as key>
 	    <#if subActions[key]??>
             <#assign 
-                subActionData = subActions[key]			
+                subActionData = subActions[key]
                 containerIdSubAction = containerId+"_"+key
                 subActionStatus = subActionData.success
                 statusSubAction = subActionStatus.passed?then("passed", "failed")
@@ -17,6 +17,9 @@
             <div class="subaction">
                 <span class="node ${statusSubAction} switch" onclick="showhide(this, '${containerIdSubAction}');">
                     ${key} - ${subActionData.name!""} - ${statusSubAction} 
+                    <#if subActionData.comment?? && subActionData.comment != "">
+                        <span style="color:#9370DB">&#160;&#160;&#160;Comment: </span><span style="color:Black; font-weight:normal">${subActionData.comment}</span>
+                    </#if>
                 </span>
                 <#if subActionData.idInTemplate?? && subActionData.idInTemplate != "">
                     <span style="color:#9370DB">&#160;&#160;&#160;IdInTemplate:  </span>

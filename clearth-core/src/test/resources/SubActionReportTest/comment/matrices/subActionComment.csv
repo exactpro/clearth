@@ -1,0 +1,6 @@
+#ID,#GlobalStep,#Action,#Comment,#Param1
+sub1,Step1,AddRepeatingGroup,Dummy sub-action,123
+sub2,Step1,AddRepeatingGroup,Sub-action with unknown function,@{unknownFunction(1)}
+sub3,Step1,AddRepeatingGroup,,@{unknownFunction(1)}
+#ID,#GlobalStep,#Action,#RepeatingGroups
+id1,Step1,CustomSendMessageAction,"sub1,sub2,sub3"
