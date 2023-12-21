@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -134,6 +134,9 @@ public class XmlCodecTest
 	public static final ClearThXmlMessage SELF_CLOSING = message(
 			map("MsgType", "selfClosingType"));
 	
+	public static final ClearThXmlMessage SELF_CLOSING2 = message(
+			map("MsgType", "selfClosingTagType", "attr1", "value1", "attr2", "value"));
+	
 	public static final ClearThXmlMessage COMMON_FIELDS_GROUP = message(
 			map("MsgType", "commonFieldsGroup",
 				"a", "12", "b", "34", "c", "56", "d", "78"));
@@ -203,6 +206,12 @@ public class XmlCodecTest
 	public void decodeSelfEnclosing() throws Exception
 	{
 		decode(resourceToAbsoluteFilePath("messages/selfClosing.xml"), SELF_CLOSING);
+	}
+	
+	@Test
+	public void decodeSelfClosingRootTag() throws Exception
+	{
+		decode(resourceToAbsoluteFilePath("messages/selfClosingRootTag.xml"), SELF_CLOSING2);
 	}
 	
 	@Test
@@ -279,6 +288,18 @@ public class XmlCodecTest
 		encode(ATTRIBUTES, resourceToAbsoluteFilePath("messages/attributes.xml"));
 	}
 	
+	@Test
+	public void encodeSelfClosingRootTagAttributes() throws Exception
+	{
+		encode(SELF_CLOSING2, resourceToAbsoluteFilePath("messages/selfClosingRootTag.xml"));
+	}
+	
+	@Test
+	public void encodeSelfClosingRootTag() throws Exception
+	{
+		encode(SELF_CLOSING, resourceToAbsoluteFilePath("messages/selfClosing.xml"));
+	}
+
 	@Test
 	public void encodeCommonFields() throws Exception
 	{

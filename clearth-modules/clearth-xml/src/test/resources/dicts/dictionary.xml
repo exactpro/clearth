@@ -53,6 +53,12 @@
     <!--self closing root tag-->
     <messageDesc rootTag="selfClosing" type="selfClosingType">
     </messageDesc>
+
+    <!--self-closing root tag with attributes-->
+    <messageDesc rootTag="root_tag" type="selfClosingTagType">
+        <attrDesc name="attr1" source="attr1"/>
+        <attrDesc name="attr2" source="attr2"/>
+    </messageDesc>
     
     <!--COMMON FIELD GROUP TEST-->
     <!--fields-->

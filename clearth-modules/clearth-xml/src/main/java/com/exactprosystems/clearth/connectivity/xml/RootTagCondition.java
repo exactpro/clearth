@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,7 +33,7 @@ public class RootTagCondition implements MessageValidatorCondition
 	private static final String SPACES = "\\s*";
 	private static final String XML_TAG_TEMPLATE = "(<\\?(?i)xml(?-i).*>)?";
 	private static final String DOCTYPE_TAG_TEMPLATE = "(<!DOCTYPE[\\s\\S]*?(\\[(\\s\\S)*\\])|^\\[)?";
-	private static final String ROOT_TAG_FULL_REGEX = String.format("((<%s(\\s|>)+[\\s\\S]*<\\/%s>)|(<%s\\/>))",
+	private static final String ROOT_TAG_FULL_REGEX = String.format("((<%s(\\s|>)+[\\s\\S]*<\\/%s>)|(<%s(\\s|/>)))",
 			ROOT_TAG_TEMPLATE, ROOT_TAG_TEMPLATE, ROOT_TAG_TEMPLATE);
 	private static final String COMMENT_REGEX = "(<!--[\\s\\S]*?-->\\s*)*";
 	private static final String[] REGEX_PARTS = {"\\A", COMMENT_REGEX, XML_TAG_TEMPLATE, COMMENT_REGEX, DOCTYPE_TAG_TEMPLATE, COMMENT_REGEX, ROOT_TAG_FULL_REGEX, COMMENT_REGEX};
