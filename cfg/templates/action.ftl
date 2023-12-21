@@ -59,7 +59,7 @@
 		<#assign 
 			statusForClass = action.inverted?then("inverted ", "") + status.passed?then("passed", common.getFailStatus(status.failReason))
 			
-			statusForTitle = action.inverted?then("INVERTED TO ", "") + status.passed?then("PASSED", "FAILED")
+			statusForTitle = action.inverted?then("INVERTED TO ", "") + status.passed?then("PASSED", common.getFailStatusTitle(status.failReason))
 		>
 		<#if action.async && !action.payloadFinished>
 			<span class="node async switch" onclick="showhide(this, '${containerId}');">${action.idInMatrix} - ${action.name}

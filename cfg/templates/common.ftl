@@ -21,6 +21,15 @@
 	</#switch>
 </#function>
 
+<#function getFailStatusTitle failReason>
+	<#switch failReason>
+		<#case "NOT_EXECUTED">
+			<#return "NOT EXECUTED">
+		<#default>
+			<#return "FAILED">
+	</#switch>
+</#function>
+
 <#function getHeaderColor result>
 	<#if instanceOf(result, TableResult) || instanceOf(result, ContainerResult)>
 		<#if !result.hasStatus>
