@@ -154,8 +154,10 @@ public class SchedulerTest
 	private void allSuccessVerify(XmlSchedulerLaunchInfo launch, Path executedMatricesPath)
 	{
 		assertNotNull("Scheduler launch info is not available", launch);
-		assertTrue("Scheduler launch info has not-success status", launch.isSuccess());
-		assertTrue("Reports by last launch are not generated", checkLastReportDir(launch.getReportsPath()));
+		
+		String reportsPath = launch.getReportsPath();
+		assertTrue("Scheduler launch info has not-success status, see "+reportsPath, launch.isSuccess());
+		assertTrue("Reports by last launch are not generated, see "+reportsPath, checkLastReportDir(reportsPath));
 		assertTrue("Last executed matrices are not generated", checkLastExecutedMatrices(executedMatricesPath));
 	}
 

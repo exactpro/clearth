@@ -31,6 +31,41 @@
           "value" : "234",
           "formula" : "@{'234'}",
           "specialValue" : false
+        },
+        "RefAsyncGroup" : {
+          "value" : "None",
+          "formula" : "@{thisAction.asyncgroup}",
+          "specialValue" : false
+        },
+        "RefAsync" : {
+          "value" : "false",
+          "formula" : "@{thisAction.async}",
+          "specialValue" : false
+        },
+        "RefComment" : {
+          "value" : "Dummy comment",
+          "formula" : "@{thisAction.comment}",
+          "specialValue" : false
+        },
+        "RefInvert" : {
+          "value" : "false",
+          "formula" : "@{thisAction.invert}",
+          "specialValue" : false
+        },
+        "RefWaitAsyncEnd" : {
+          "value" : "Step",
+          "formula" : "@{thisAction.waitasyncend}",
+          "specialValue" : false
+        },
+        "RefExecute" : {
+          "value" : "true",
+          "formula" : "@{thisAction.execute}",
+          "specialValue" : false
+        },
+        "RefTimeout" : {
+          "value" : "10",
+          "formula" : "@{thisAction.timeout}",
+          "specialValue" : false
         }
       }
     }
@@ -45,6 +80,63 @@
     "actionReports" :     [
     {
       "actionId" : "id2",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "RefAsyncGroup" : {
+          "value" : "None",
+          "formula" : "@{prevAction.asyncgroup}",
+          "specialValue" : false
+        },
+        "RefAsync" : {
+          "value" : "false",
+          "formula" : "@{prevAction.async}",
+          "specialValue" : false
+        },
+        "RefComment" : {
+          "value" : "Dummy comment",
+          "formula" : "@{prevAction.comment}",
+          "specialValue" : false
+        },
+        "RefInvert" : {
+          "value" : "false",
+          "formula" : "@{prevAction.invert}",
+          "specialValue" : false
+        },
+        "RefRegularParam1" : {
+          "value" : "DummyValue",
+          "formula" : "@{prevAction.RegularParam1}",
+          "specialValue" : false
+        },
+        "RefRegularParam2" : {
+          "value" : "234",
+          "formula" : "@{prevAction.RegularParam2}",
+          "specialValue" : false
+        },
+        "RefWaitAsyncEnd" : {
+          "value" : "Step",
+          "formula" : "@{prevAction.waitasyncend}",
+          "specialValue" : false
+        },
+        "RefExecute" : {
+          "value" : "true",
+          "formula" : "@{prevAction.execute}",
+          "specialValue" : false
+        },
+        "RefTimeout" : {
+          "value" : "10",
+          "formula" : "@{prevAction.timeout}",
+          "specialValue" : false
+        }
+      }
+    },{
+      "actionId" : "id3",
       "actionName" : "SetStatic",
       "timeout" : 0,
       "async" : false,
@@ -97,6 +189,63 @@
         "RefTimeout" : {
           "value" : "10",
           "formula" : "@{id1.timeout}",
+          "specialValue" : false
+        }
+      }
+    },{
+      "actionId" : "id4",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "RefAsyncGroup" : {
+          "value" : "None",
+          "formula" : "@{id1.in.asyncgroup}",
+          "specialValue" : false
+        },
+        "RefAsync" : {
+          "value" : "false",
+          "formula" : "@{id1.in.async}",
+          "specialValue" : false
+        },
+        "RefComment" : {
+          "value" : "Dummy comment",
+          "formula" : "@{id1.in.comment}",
+          "specialValue" : false
+        },
+        "RefInvert" : {
+          "value" : "false",
+          "formula" : "@{id1.in.invert}",
+          "specialValue" : false
+        },
+        "RefRegularParam1" : {
+          "value" : "DummyValue",
+          "formula" : "@{id1.in.RegularParam1}",
+          "specialValue" : false
+        },
+        "RefRegularParam2" : {
+          "value" : "234",
+          "formula" : "@{id1.in.RegularParam2}",
+          "specialValue" : false
+        },
+        "RefWaitAsyncEnd" : {
+          "value" : "Step",
+          "formula" : "@{id1.in.waitasyncend}",
+          "specialValue" : false
+        },
+        "RefExecute" : {
+          "value" : "true",
+          "formula" : "@{id1.in.execute}",
+          "specialValue" : false
+        },
+        "RefTimeout" : {
+          "value" : "10",
+          "formula" : "@{id1.in.timeout}",
           "specialValue" : false
         }
       }

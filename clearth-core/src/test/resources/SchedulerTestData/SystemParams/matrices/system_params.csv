@@ -1,4 +1,8 @@
-#ID,#GlobalStep,#Action,#Execute,#Timeout,#Comment,#Invert,#Async,#AsyncGroup,#WaitAsyncEnd,#RegularParam1,#RegularParam2
-id1,Step1,SetStatic,true,10,Dummy comment,false,false,None,Step,DummyValue,@{'234'}
+#ID,#GlobalStep,#Action,#Execute,#Timeout,#Comment,#Invert,#Async,#AsyncGroup,#WaitAsyncEnd,#RegularParam1,#RegularParam2,#RefExecute,#RefTimeout,#RefComment,#RefInvert,#RefAsync,#RefAsyncGroup,#RefWaitAsyncEnd
+id1,Step1,SetStatic,true,10,Dummy comment,false,false,None,Step,DummyValue,@{'234'},@{thisAction.execute},@{thisAction.timeout},@{thisAction.comment},@{thisAction.invert},@{thisAction.async},@{thisAction.asyncgroup},@{thisAction.waitasyncend}
 #ID,#GlobalStep,#Action,#RefExecute,#RefTimeout,#RefComment,#RefInvert,#RefAsync,#RefAsyncGroup,#RefWaitAsyncEnd,#RefRegularParam1,#RefRegularParam2
-id2,Step2,SetStatic,@{id1.execute},@{id1.timeout},@{id1.comment},@{id1.invert},@{id1.async},@{id1.asyncgroup},@{id1.waitasyncend},@{id1.RegularParam1},@{id1.RegularParam2}
+id2,Step2,SetStatic,@{prevAction.execute},@{prevAction.timeout},@{prevAction.comment},@{prevAction.invert},@{prevAction.async},@{prevAction.asyncgroup},@{prevAction.waitasyncend},@{prevAction.RegularParam1},@{prevAction.RegularParam2}
+#ID,#GlobalStep,#Action,#RefExecute,#RefTimeout,#RefComment,#RefInvert,#RefAsync,#RefAsyncGroup,#RefWaitAsyncEnd,#RefRegularParam1,#RefRegularParam2
+id3,Step2,SetStatic,@{id1.execute},@{id1.timeout},@{id1.comment},@{id1.invert},@{id1.async},@{id1.asyncgroup},@{id1.waitasyncend},@{id1.RegularParam1},@{id1.RegularParam2}
+#ID,#GlobalStep,#Action,#RefExecute,#RefTimeout,#RefComment,#RefInvert,#RefAsync,#RefAsyncGroup,#RefWaitAsyncEnd,#RefRegularParam1,#RefRegularParam2
+id4,Step2,SetStatic,@{id1.in.execute},@{id1.in.timeout},@{id1.in.comment},@{id1.in.invert},@{id1.in.async},@{id1.in.asyncgroup},@{id1.in.waitasyncend},@{id1.in.RegularParam1},@{id1.in.RegularParam2}

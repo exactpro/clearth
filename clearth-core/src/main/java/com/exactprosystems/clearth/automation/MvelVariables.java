@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2023 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -85,14 +85,13 @@ public class MvelVariables
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public void saveCalculatedParameter(String actionId, String parameterName, String value)
 	{
 		String idForMvel = actionIdInMatrixToIdForMvel.getOrDefault(actionId, actionId);
-		//noinspection unchecked
 		Map<String, Object> actionParams = (Map<String, Object>) variables.computeIfAbsent(idForMvel, k -> new HashMap<>());
 		actionParams.put(parameterName, value);
-
-		//noinspection unchecked
+		
 		Map<String, Object> inParams =
 				(Map<String, Object>) actionParams.computeIfAbsent(PARAMS_IN, k -> new HashMap<>());
 		inParams.put(parameterName, value);
@@ -109,7 +108,7 @@ public class MvelVariables
 
 		variables.merge(idForMvel, makeInputParamsMap(action.getInputParams()), this::mergeActionsParams);
 
-		variables.put(PARAMS_THIS_ACTION, action.getInputParams());
+		variables.put(PARAMS_THIS_ACTION, variables.get(idForMvel));
 	}
 
 
