@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,49 +18,28 @@
 
 package com.exactprosystems.clearth.web.beans.tools.datacomparator;
 
-import org.primefaces.model.file.UploadedFile;
-
-public class FileSettings
+public class DbSettings
 {
-	private FileSource source;
-	private UploadedFile uploadedFile;
-	private String pathOnBackend;
+	private String query;
+	private String connectionName;
 	
-	public FileSettings(FileSource source)
+	public String getConnectionName()
 	{
-		this.source = source;
+		return connectionName;
 	}
 	
-	
-	public FileSource getSource()
+	public void setConnectionName(String connectionName)
 	{
-		return source;
+		this.connectionName = connectionName;
 	}
 	
-	public void setSource(FileSource source)
+	public String getQuery()
 	{
-		this.source = source;
+		return query;
 	}
 	
-	
-	public UploadedFile getUploadedFile()
+	public void setQuery(String query)
 	{
-		return uploadedFile;
-	}
-	
-	public void setUploadedFile(UploadedFile uploadedFile)
-	{
-		this.uploadedFile = uploadedFile;
-	}
-	
-	
-	public String getPathOnBackend()
-	{
-		return pathOnBackend;
-	}
-	
-	public void setPathOnBackend(String pathOnBackend)
-	{
-		this.pathOnBackend = pathOnBackend;
+		this.query = query;
 	}
 }

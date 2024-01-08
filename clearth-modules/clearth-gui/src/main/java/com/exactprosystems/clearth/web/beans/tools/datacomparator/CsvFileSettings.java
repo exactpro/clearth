@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,15 +18,9 @@
 
 package com.exactprosystems.clearth.web.beans.tools.datacomparator;
 
-public class CsvFileSettings extends FileSettings
+public class CsvFileSettings
 {
 	private char delimiter = ',';
-	
-	public CsvFileSettings(FileSource source)
-	{
-		super(source);
-	}
-	
 	
 	public char getDelimiter()
 	{

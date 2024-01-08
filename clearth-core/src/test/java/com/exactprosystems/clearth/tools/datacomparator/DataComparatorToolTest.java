@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,9 +21,18 @@ package com.exactprosystems.clearth.tools.datacomparator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.StringJoiner;
 
+import com.exactprosystems.clearth.connectivity.ConnectivityException;
+import com.exactprosystems.clearth.connectivity.db.DbConnection;
+import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -44,6 +53,7 @@ public class DataComparatorToolTest
 {
 	private static final Path RES_DIR = Path.of("src", "test", "resources", DataComparatorToolTest.class.getSimpleName()),
 			OUTPUT_DIR = Path.of("testOutput", DataComparatorToolTest.class.getSimpleName());
+	private static final String TABLE1 = "tOne", TABLE2 = "tTwo", DB = "db";
 	private static final String FILE_EXPECTED = "expected.csv",
 			FILE_ACTUAL = "actual.csv",
 			FILE_PASSED = "passed.csv",
@@ -100,6 +110,62 @@ public class DataComparatorToolTest
 		assertTexts(result.getErrors().toFile(), dirWithFiles.resolve("errors.txt").toFile(), "Errors");
 	}
 	
+	@Test
+	public void compareDB() throws Exception
+	{
+		Path dbPath = OUTPUT_DIR.resolve(DB),
+				resFiles = RES_DIR.resolve(DB);
+		String sqlQuery = "select * from ";
+		
+		DbConnection dbConnection = createDbConnection(dbPath);
+		Connection connection = dbConnection.getConnection();
+		createTable(connection, TABLE1, List.of("param1", "param2"), List.of("123, 123", "456, 456"));
+		createTable(connection, TABLE2, List.of("param1", "param2"), List.of("111, 222", "456, 456"));
+		
+		DbDataReader expectedReader = createDbReader(dbConnection, sqlQuery + TABLE1);
+		DbDataReader actualReader = createDbReader(dbConnection, sqlQuery + TABLE2);
+		
+		ComparisonSettings settings = new ComparisonSettings(dbPath, null, new ComparisonUtils());
+		ComparisonResult result = new DataComparatorTool().compare(expectedReader, actualReader, settings);
+		
+		assertTextAndArchive(result.getPassedDetails(), resFiles.resolve(FILE_PASSED), "Passed details");
+		assertTextAndArchive(result.getFailedDetails(), resFiles.resolve(FILE_FAILED), "Failed details");
+	}
+	
+	private DbConnection createDbConnection(Path dbPath) throws Exception
+	{
+		FileUtils.deleteDirectory(dbPath.toFile());
+		Files.createDirectories(dbPath);
+		
+		DbConnection connection = new DbConnection();
+		connection.getSettings().setJdbcUrl("jdbc:sqlite:" + dbPath.resolve("file.db"));
+		return connection;
+	}
+	
+	private void createTable(Connection connection, String table, List<String> columnList, List<String> valuesList) throws SQLException
+	{
+		StringJoiner tableCols = new StringJoiner(","),
+				cols = new StringJoiner(",");
+		tableCols.add("id INTEGER PRIMARY KEY");
+		columnList.stream().map(column -> column + " INTEGER").forEach(tableCols::add);
+		execStatement(connection, String.format("create table %s (%s)", table, tableCols));
+		
+		columnList.forEach(cols::add);
+		for (String value : valuesList)
+			execStatement(connection, String.format("insert into %s (%s) values (%s)", table, cols, value));
+	}
+	private void execStatement(Connection connection, String query) throws SQLException
+	{
+		try(PreparedStatement prStatement = connection.prepareStatement(query))
+		{
+			prStatement.execute();
+		}
+	}
+	
+	private DbDataReader createDbReader(DbConnection connection, String query) throws ConnectivityException, SettingsException, SQLException
+	{
+		return new DbDataReader(connection.getConnection().prepareStatement(query), true);
+	}
 	
 	private ComparisonResult compareFiles(Path filesDirectory, Path resultStorage, DataMapping<String> mapping) throws IOException, ParametersException, ComparisonException
 	{

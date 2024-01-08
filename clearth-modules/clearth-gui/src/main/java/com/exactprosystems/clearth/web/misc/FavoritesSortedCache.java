@@ -42,7 +42,7 @@ public class FavoritesSortedCache extends ProcessedConnectionsCache
 		List<ClearThConnection> result = new ArrayList<>(connections);
 		result.sort((o1, o2) ->
 		{
-			return connectionComparision(o1, o2);
+			return connectionComparison(o1, o2);
 		});
 		return result;
 	}
@@ -68,7 +68,7 @@ public class FavoritesSortedCache extends ProcessedConnectionsCache
 		ClearThConnection prev = null;
 		for (ClearThConnection current : connections)
 		{
-			if (prev != null && connectionComparision(prev, current) > 0)
+			if (prev != null && connectionComparison(prev, current) > 0)
 				return false;
 			prev = current;
 		}
@@ -80,7 +80,7 @@ public class FavoritesSortedCache extends ProcessedConnectionsCache
 		return getFavorites().contains(con.getName());
 	}
 	
-	private int connectionComparision(ClearThConnection o1, ClearThConnection o2)
+	private int connectionComparison(ClearThConnection o1, ClearThConnection o2)
 	{
 		boolean isC1Fav = isFavorite(o1);
 		return isC1Fav == isFavorite(o2) ?  o1.getName().compareToIgnoreCase(o2.getName()) : (isC1Fav) ? -1 : 1;

@@ -1,0 +1,3 @@
+Comparison name,Comparison result,Row kind,id,param1,param2
+Row #1,FAILED,EXPECTED,1,123,123
+Row #1,FAILED,ACTUAL,1,111,222

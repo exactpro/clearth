@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,14 +18,15 @@
 
 package com.exactprosystems.clearth.web.beans.tools.datacomparator;
 
-public enum FileSource
+public enum DataSource
 {
 	UPLOAD("Upload file"),
-	BACKEND("File on backend");
+	BACKEND("File on backend"),
+	DB("DB");
 	
 	private final String label;
 	
-	private FileSource(String label)
+	private DataSource(String label)
 	{
 		this.label = label;
 	}

@@ -5,57 +5,81 @@
 				xmlns:p="http://primefaces.org/ui"
 				xmlns:c="http://java.sun.com/jsp/jstl/core">
 	
-	<p:importEnum type="com.exactprosystems.clearth.web.beans.tools.datacomparator.FileSource" var="FileSource" allSuffix="ALL"/>
+	<p:importEnum type="com.exactprosystems.clearth.web.beans.tools.datacomparator.DataSource" var="DataSource" allSuffix="ALL"/>
 	<div class="ui-grid ui-grid-responsive" style="margin-top: 10px">
 		<div class="ui-grid-row">
 			<div class="ui-grid-col-7">
 				<h:form id="DataComparator" enctype="multipart/form-data">
-					<ui:param name="expectedCsv" value="#{dataCompBean.expectedCsv}" />
-					<ui:param name="actualCsv" value="#{dataCompBean.actualCsv}" />
+					<ui:param name="expData" value="#{dataCompBean.expData}" />
+					<ui:param name="actData" value="#{dataCompBean.actData}" />
 					<div>
 						<div>
 							<h:outputText style="font-weight: bold" value="Expected data" />
 						</div>
-						<p:selectOneButton id="expectedSource" value="#{expectedCsv.source}" unselectable="false"
+						<p:selectOneButton id="expectedSource" value="#{expData.source}" unselectable="false"
 								style="margin-top: 5px">
-							<p:ajax update="expectedFile" />
-							<f:selectItems value="#{dataCompBean.fileSources}" var="fs"
+							<p:ajax update="expectedDataSettings" />
+							<f:selectItems value="#{dataCompBean.dataSources}" var="fs"
 									itemValue="#{fs}" itemLabel="#{fs.label}"/>
 						</p:selectOneButton>
-						<p:outputPanel id="expectedFile" style="margin: 10px 0">
-							<p:fileUpload value="#{expectedCsv.uploadedFile}"
-									rendered="#{expectedCsv.source == FileSource.UPLOAD}"
+						<p:outputPanel id="expectedDataSettings" style="margin: 10px 0">
+							<p:fileUpload value="#{expData.uploadedFile}"
+									rendered="#{expData.source == DataSource.UPLOAD}"
 									label="Select file"
 									mode="simple" skinSimple="true" />
-							<p:inputText value="#{expectedCsv.pathOnBackend}"
-									rendered="#{expectedCsv.source == FileSource.BACKEND}"
+							<p:inputText value="#{expData.pathOnBackend}"
+									placeholder="Path to file"
+									rendered="#{expData.source == DataSource.BACKEND}"
 									style="width: 350px" />
+							<p:selectOneMenu value="#{expData.dbSettings.connectionName}" dynamic="true"
+									rendered="#{expData.source == DataSource.DB}">
+								<f:selectItem itemValue="" itemLabel="-Choose DB connection-" noSelectionOption="true" />
+								<f:selectItems value="#{dataCompBean.connections}"/>
+							</p:selectOneMenu>
+							<br/>
+							<br/>
+							<p:inputTextarea placeholder="Query" value="#{expData.dbSettings.query}" autoResize="false"
+									rendered="#{expData.source == DataSource.DB}" style="resize: none; height: 120px; width: 95%; margin-bottom: 5px;" />
+							<h:outputText value="Delimiter: "
+									rendered="#{expData.source != DataSource.DB}"/>
+							<p:inputText value="#{expData.csvSettings.delimiter}"
+									rendered="#{expData.source != DataSource.DB}" style="width: 30px" />
 						</p:outputPanel>
-						<h:outputText value="Delimiter: " />
-						<p:inputText value="#{expectedCsv.delimiter}" style="width: 30px" />
 					</div>
-					
+
 					<div style="margin-top: 20px">
 						<div>
 							<h:outputText style="font-weight: bold" value="Actual data" />
 						</div>
-						<p:selectOneButton id="actualSource" value="#{actualCsv.source}" unselectable="false"
+						<p:selectOneButton id="actualSource" value="#{actData.source}" unselectable="false"
 								style="margin-top: 5px">
-							<p:ajax update="actualFile" />
-							<f:selectItems value="#{dataCompBean.fileSources}" var="fs"
+							<p:ajax update="actualDataSettings" />
+							<f:selectItems value="#{dataCompBean.dataSources}" var="fs"
 									itemValue="#{fs}" itemLabel="#{fs.label}"/>
 						</p:selectOneButton>
-						<p:outputPanel id="actualFile" style="margin: 10px 0">
-							<p:fileUpload value="#{actualCsv.uploadedFile}"
-									rendered="#{actualCsv.source == FileSource.UPLOAD}"
+						<p:outputPanel id="actualDataSettings" style="margin: 10px 0">
+							<p:fileUpload value="#{actData.uploadedFile}"
+									rendered="#{actData.source == DataSource.UPLOAD}"
 									label="Select file"
 									mode="simple" skinSimple="true" />
-							<p:inputText value="#{actualCsv.pathOnBackend}"
-									rendered="#{actualCsv.source == FileSource.BACKEND}"
+							<p:inputText value="#{actData.pathOnBackend}"
+									placeholder="Path to file"
+									rendered="#{actData.source == DataSource.BACKEND}"
 									style="width: 350px" />
+							<p:selectOneMenu value="#{actData.dbSettings.connectionName}"
+									rendered="#{actData.source == DataSource.DB}">
+								<f:selectItem itemValue="" itemLabel="-Choose DB connection-" noSelectionOption="true" />
+								<f:selectItems value="#{dataCompBean.connections}"/>
+							</p:selectOneMenu>
+							<br/>
+							<br/>
+							<p:inputTextarea placeholder="Query" value="#{actData.dbSettings.query}" autoResize="false"
+									rendered="#{actData.source == DataSource.DB}" style="resize: none; height: 120px; width: 95%; margin-bottom: 5px;" />
+							<h:outputText value="Delimiter: "
+									rendered="#{actData.source != DataSource.DB}"/>
+							<p:inputText value="#{actData.csvSettings.delimiter}"
+									rendered="#{actData.source != DataSource.DB}" style="width: 30px" />
 						</p:outputPanel>
-						<h:outputText value="Delimiter: " />
-						<p:inputText value="#{actualCsv.delimiter}" style="width: 30px" />
 					</div>
 					
 					<p:outputPanel id="StartStop" style="margin-top: 20px">

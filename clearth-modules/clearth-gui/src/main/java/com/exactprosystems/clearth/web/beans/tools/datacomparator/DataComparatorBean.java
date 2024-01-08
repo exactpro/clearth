@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,11 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
+import com.exactprosystems.clearth.web.misc.DbConnectionsCache;
 import org.apache.commons.lang3.StringUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
@@ -60,44 +61,32 @@ public class DataComparatorBean extends ClearThBean
 	private final File uploadsStorage;
 	private final Path outputStorage;
 	private final List<MappingEntry> mappingEntries = new ArrayList<>();
-	private final CsvFileSettings expectedCsv,
-			actualCsv;
 	private DataComparisonTask task;
 	private String errorText;
 	private File resultFile;
-	
+	private final DbConnectionsCache cache;
+	private final DataSourceSettings expData, actData;
 	
 	public DataComparatorBean()
 	{
 		ClearThCore core = ClearThCore.getInstance();
 		comparator = core.getToolsFactory().createDataComparatorTool();
+		cache = createDbConnectionsCache();
 		
 		String toolDir = "data_comparator",
 				userName = UserInfoUtils.getUserName();
 		uploadsStorage = Path.of(core.getUploadStoragePath(), toolDir, userName).toFile();
 		outputStorage = Path.of(core.getTempDirPath(), toolDir, userName);
 		
-		expectedCsv = new CsvFileSettings(FileSource.UPLOAD);
-		actualCsv = new CsvFileSettings(FileSource.UPLOAD);
+		expData = createDataSourceSettings();
+		actData = createDataSourceSettings();
 	}
 	
-	
-	public FileSource[] getFileSources()
+	public DataSource[] getDataSources()
 	{
-		return FileSource.values();
+		return DataSource.values();
 	}
-	
-	
-	public CsvFileSettings getExpectedCsv()
-	{
-		return expectedCsv;
-	}
-	
-	public CsvFileSettings getActualCsv()
-	{
-		return actualCsv;
-	}
-	
+
 	
 	public boolean isRunning()
 	{
@@ -260,27 +249,42 @@ public class DataComparatorBean extends ClearThBean
 		}
 	}
 	
+	protected DataSourceSettings createDataSourceSettings()
+	{
+		return new DataSourceSettings(DataSource.UPLOAD);
+	}
 	
+	protected DbConnectionsCache createDbConnectionsCache()
+	{
+		return new DbConnectionsCache(ClearThCore.connectionStorage());
+	}
+
 	protected BasicTableDataReader<String, String, ?> createExpectedReader()
 	{
-		return createReader(expectedCsv, "expected");
+		return createReader(expData, "expected");
 	}
 	
 	protected BasicTableDataReader<String, String, ?> createActualReader()
 	{
-		return createReader(actualCsv, "actual");
+		return createReader(actData, "actual");
 	}
 	
-	protected BasicTableDataReader<String, String, ?> createReader(CsvFileSettings settings, String kind)
+
+	protected BasicTableDataReader<String, String, ?> createReader(DataSourceSettings settings, String kind)
 	{
 		switch (settings.getSource())
 		{
-		case UPLOAD : return createReader(settings.getUploadedFile(), settings.getDelimiter(), kind);
-		case BACKEND : return createReader(settings.getPathOnBackend(), settings.getDelimiter(), kind);
-		default : {
-			MessageUtils.addWarningMessage("Unsupported source", "Selected file source ("+settings.getSource()+") is not supported");
-			return null;
-		}
+			case UPLOAD :
+				return createReader(settings.getUploadedFile(), settings.getCsvSettings().getDelimiter(), kind);
+			case BACKEND :
+				return createReader(settings.getPathOnBackend(), settings.getCsvSettings().getDelimiter(), kind);
+			case DB:
+				return createReader(settings.getDbSettings().getConnectionName(), settings.getDbSettings().getQuery(), kind);
+			default :
+			{
+				MessageUtils.addWarningMessage("Unsupported source", "Selected data source ("+settings.getSource()+") is not supported");
+				return null;
+			}
 		}
 	}
 	
@@ -307,7 +311,7 @@ public class DataComparatorBean extends ClearThBean
 		return createReader(file, delimiter, kind);
 	}
 	
-	protected BasicTableDataReader<String, String, ?> createReader(String path, char demiliter, String kind)
+	protected BasicTableDataReader<String, String, ?> createReader(String path, char delimiter, String kind)
 	{
 		if (StringUtils.isEmpty(path))
 		{
@@ -322,7 +326,7 @@ public class DataComparatorBean extends ClearThBean
 			return null;
 		}
 		
-		return createReader(file.toFile(), demiliter, kind);
+		return createReader(file.toFile(), delimiter, kind);
 	}
 	
 	protected BasicTableDataReader<String, String, ?> createReader(File file, char delimiter, String kind)
@@ -337,6 +341,31 @@ public class DataComparatorBean extends ClearThBean
 		catch (Exception e)
 		{
 			WebUtils.logAndGrowlException("Could not create reader for "+kind+" file", e, getLogger());
+			return null;
+		}
+	}
+	
+	protected BasicTableDataReader<String, String, ?> createReader(String connectionName, String query, String kind)
+	{
+		if (StringUtils.isEmpty(connectionName))
+		{
+			MessageUtils.addWarningMessage("No connection specified", "Please choose " + kind + " connection");
+			return null;
+		}
+		
+		if (StringUtils.isEmpty(query))
+		{
+			MessageUtils.addWarningMessage("Query is empty", "Please specify query for " + kind + " connection");
+			return null;
+		}
+		
+		try
+		{
+			return new DbDataReader(cache.getConnection(connectionName).getConnection().prepareStatement(query), true);
+		}
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Could not create reader for " + kind + " DB connection", e, getLogger());
 			return null;
 		}
 	}
@@ -374,5 +403,20 @@ public class DataComparatorBean extends ClearThBean
 		Path result = Files.createTempFile(outputStorage, "result_", ".zip");
 		new ComparisonResultWriter().write(compResult, result);
 		return result.toFile();
+	}
+	
+	public DataSourceSettings getExpData()
+	{
+		return expData;
+	}
+	
+	public DataSourceSettings getActData()
+	{
+		return actData;
+	}
+	
+	public List<String> getConnections()
+	{
+		return cache.getConnectionNames();
 	}
 }
