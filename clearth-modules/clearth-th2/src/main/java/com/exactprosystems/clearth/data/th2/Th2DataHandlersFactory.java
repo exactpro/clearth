@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -54,11 +54,11 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	
 	public Th2DataHandlersFactory(Path configDir) throws ClearThException
 	{
-		Path rabbitConfigFile = configDir.resolve(FILE_RABBIT_CONFIG);
+		Path rabbitConfigFile = getRabbitConfigFile(configDir);
 		if (!Files.isRegularFile(rabbitConfigFile))
 			throw new ClearThException("File with configuration to connect to th2 doesn't exist: "+rabbitConfigFile);
 		
-		Path storageConfigFile = configDir.resolve(FILE_STORAGE_CONFIG);
+		Path storageConfigFile = getStorageConfigFile(configDir);
 		if (!Files.isRegularFile(storageConfigFile))
 			throw new ClearThException("File with storage configuration doesn't exist: "+storageConfigFile);
 		
@@ -125,6 +125,17 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	public String getBook()
 	{
 		return storageConfig.getBook();
+	}
+	
+	
+	protected Path getRabbitConfigFile(Path configDir)
+	{
+		return configDir.resolve(FILE_RABBIT_CONFIG);
+	}
+	
+	protected Path getStorageConfigFile(Path configDir)
+	{
+		return configDir.resolve(FILE_STORAGE_CONFIG);
 	}
 	
 	
