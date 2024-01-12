@@ -1,0 +1,57 @@
+fields {
+  key: "PlainField1"
+  value {
+    key: true
+    simple_filter: "PlainValue12"
+  }
+}
+fields {
+  key: "PlainField2"
+  value {
+    simple_filter: "PlainValue3"
+  }
+}
+fields {
+  key: "simpleList"
+  value {
+    list_filter {
+      values {
+        message_filter {
+          fields {
+            key: "Field10"
+            value {
+              key: true
+              simple_filter: "Value20"
+            }
+          }
+          fields {
+            key: "Field20"
+            value {
+              simple_filter: "Value30"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+fields {
+  key: "simpleMap"
+  value {
+    message_filter {
+      fields {
+        key: "MapField1"
+        value {
+          simple_filter: "123"
+        }
+      }
+      fields {
+        key: "MapField2"
+        value {
+          key: true
+          simple_filter: "234"
+        }
+      }
+    }
+  }
+}

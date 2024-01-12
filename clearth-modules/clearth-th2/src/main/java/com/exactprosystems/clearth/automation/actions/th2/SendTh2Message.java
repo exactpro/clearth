@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,13 +23,15 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import com.exactpro.th2.check1.grpc.Check1Service;
+import com.exactpro.th2.check1.grpc.CheckpointRequest;
+import com.exactpro.th2.check1.grpc.CheckpointResponse;
 import com.exactpro.th2.common.grpc.EventID;
 import com.exactpro.th2.common.schema.message.MessageRouter;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.EventId;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.GroupBatch;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageGroup;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.ParsedMessage;
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.MatrixContext;
@@ -39,6 +41,7 @@ import com.exactprosystems.clearth.automation.StepContext;
 import com.exactprosystems.clearth.automation.actions.MessageAction;
 import com.exactprosystems.clearth.automation.actions.metadata.MetaFieldsGetter;
 import com.exactprosystems.clearth.automation.actions.metadata.SimpleMetaFieldsGetter;
+import com.exactprosystems.clearth.automation.actions.th2.check1.Check1Utils;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
@@ -46,15 +49,10 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
-import com.exactprosystems.clearth.data.DataHandlersFactory;
-import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory;
-import com.exactprosystems.clearth.data.th2.events.EventUtils;
-import com.exactprosystems.clearth.data.th2.events.Th2EventId;
 import com.exactprosystems.clearth.messages.converters.ConversionException;
 import com.exactprosystems.clearth.messages.th2.SendingProperties;
 import com.exactprosystems.clearth.messages.th2.Th2MessageFactory;
-import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 
 public class SendTh2Message extends Action implements Preparable
@@ -64,39 +62,44 @@ public class SendTh2Message extends Action implements Preparable
 			PARAM_BOOK = "Book",
 			PARAM_ROUTER_ATTRIBUTES = "RouterAttributes",
 			PARAM_FLAT_DELIMITER = "FlatDelimiter",
+			PARAM_CREATE_CHECKPOINT = "CreateCheckpoint",
+			PARAM_CHECKPOINT_DESC = "CheckpointDesc",
 			CONTEXT_ROUTER = "Th2MessageRouter";
 	
 	private static final Set<String> SERVICE_PARAMS = Set.of(PARAM_SESSION_ALIAS,
-		PARAM_SESSION_GROUP, PARAM_BOOK, PARAM_ROUTER_ATTRIBUTES, PARAM_FLAT_DELIMITER,
-		ClearThMessage.MSGTYPE, ClearThMessage.SUBMSGTYPE, ClearThMessage.SUBMSGSOURCE, 
-		MessageAction.REPEATINGGROUPS, MessageAction.META_FIELDS);
+			PARAM_SESSION_GROUP, PARAM_BOOK, PARAM_ROUTER_ATTRIBUTES, PARAM_FLAT_DELIMITER,
+			PARAM_CREATE_CHECKPOINT, PARAM_CHECKPOINT_DESC,
+			ClearThMessage.MSGTYPE, ClearThMessage.SUBMSGTYPE, ClearThMessage.SUBMSGSOURCE, 
+			MessageAction.REPEATINGGROUPS, MessageAction.META_FIELDS);
 	
 	@Override
 	public void prepare(GlobalContext globalContext, SchedulerStatus schedulerStatus) throws Exception
 	{
-		DataHandlersFactory handlersFactory = ClearThCore.getInstance().getDataHandlersFactory();
-		if (!(handlersFactory instanceof Th2DataHandlersFactory))
-			throw new SettingsException("dataHandlersFactory is not "+Th2DataHandlersFactory.class.getCanonicalName()+". Check clearth.cfg");
+		Th2ActionUtils.getDataHandlersFactory();
 	}
 	
 	@Override
 	protected Result run(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 			throws ResultException, FailoverException
 	{
-		//Class of DataHandlersFactory was verified in prepare(), cast is safe
-		Th2DataHandlersFactory th2Factory = (Th2DataHandlersFactory)ClearThCore.getInstance().getDataHandlersFactory();
+		Th2DataHandlersFactory th2Factory = getDataHandlersFactory();
 		
 		InputParamsHandler handler = new InputParamsHandler(inputParams);
 		String sessionAlias = handler.getRequiredString(PARAM_SESSION_ALIAS),
 				sessionGroup = handler.getString(PARAM_SESSION_GROUP, sessionAlias),
 				book = handler.getString(PARAM_BOOK, th2Factory.getBook()),
-				flatDelimiter = handler.getString(PARAM_FLAT_DELIMITER);
+				flatDelimiter = handler.getString(PARAM_FLAT_DELIMITER),
+				checkpointDesc = handler.getString(PARAM_CHECKPOINT_DESC);
+		boolean createCheckpoint = handler.getBoolean(PARAM_CREATE_CHECKPOINT, false);
 		Set<String> routerAttrs = handler.getSet(PARAM_ROUTER_ATTRIBUTES, ",");
 		handler.check();
 		
 		SimpleClearThMessage message = createClearThMessage(matrixContext);
 		ParsedMessage th2Message = createTh2Message(message, sessionAlias, flatDelimiter);
 		SendingProperties props = createSendingProperties(book, sessionGroup, routerAttrs);
+		
+		if (createCheckpoint)
+			createCheckpoint(checkpointDesc, globalContext, th2Factory, matrixContext);
 		
 		logger.trace("Sending message to {}: {}", props, th2Message);
 		
@@ -112,6 +115,11 @@ public class SendTh2Message extends Action implements Preparable
 		}
 	}
 	
+	
+	protected Th2DataHandlersFactory getDataHandlersFactory()
+	{
+		return Th2ActionUtils.getDataHandlersFactoryOrResultException();
+	}
 	
 	protected SimpleClearThMessage createClearThMessage(MatrixContext matrixContext)
 	{
@@ -144,6 +152,25 @@ public class SendTh2Message extends Action implements Preparable
 		result.setSessionGroup(sessionGroup);
 		result.setRouterAttrs(routerAttrs);
 		return result;
+	}
+	
+	protected void createCheckpoint(String desc, GlobalContext globalContext, Th2DataHandlersFactory th2Factory, MatrixContext matrixContext)
+	{
+		try
+		{
+			CheckpointRequest request = createCheckpointRequest(desc);
+			Check1Service service = Check1Utils.getService(globalContext, th2Factory);
+			
+			logger.trace("Sending request: {}", request);
+			CheckpointResponse response = service.createCheckpoint(request);
+			
+			logger.trace("Response: {}", response);
+			Check1Utils.setCheckpoint(getIdInMatrix(), matrixContext, response.getCheckpoint());
+		}
+		catch (Exception e)
+		{
+			throw ResultException.failed("Error while creating checkpoint", e);
+		}
 	}
 	
 	protected MessageRouter<GroupBatch> getRouter(GlobalContext globalContext, Th2DataHandlersFactory th2Factory)
@@ -213,18 +240,17 @@ public class SendTh2Message extends Action implements Preparable
 	
 	protected EventId getActionEventId()
 	{
-		HandledTestExecutionId id = getTestExecutionId();
-		if (id == null)
-			throw ResultException.failed("Action has no handled test execution ID");
-		if (!(id instanceof Th2EventId))
-			throw ResultException.failed("Action's handled test execution ID must be of class "+Th2EventId.class.getCanonicalName()+", but it is "+id.getClass().getCanonicalName());
+		return Th2ActionUtils.getEventId(this);
+	}
+	
+	protected CheckpointRequest createCheckpointRequest(String desc)
+	{
+		EventID eventId = Th2ActionUtils.getGrpcEventId(this);
+		CheckpointRequest.Builder builder = CheckpointRequest.newBuilder()
+				.setParentEventId(eventId);
+		if (desc != null)
+			builder = builder.setDescription(desc);
 		
-		EventID eventId = ((Th2EventId)id).getId();
-		return EventId.builder()
-				.setBook(eventId.getBookName())
-				.setId(eventId.getId())
-				.setScope(eventId.getScope())
-				.setTimestamp(EventUtils.getTimestamp(eventId.getStartTimestamp()))
-				.build();
+		return builder.build();
 	}
 }

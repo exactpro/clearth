@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,8 +20,15 @@ package com.exactprosystems.clearth.messages;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.exactprosystems.clearth.utils.KeyValueUtils;
+import com.exactprosystems.clearth.utils.Pair;
+
 import java.util.Set;
 
 public class RgKeyFieldNames
@@ -31,6 +38,36 @@ public class RgKeyFieldNames
 	public RgKeyFieldNames()
 	{
 		keyNamesInRgs = new LinkedHashMap<>();
+	}
+	
+	//Expected format: RGType1=Field1,Field2;RGType2=Field3,Field4
+	public static RgKeyFieldNames parse(Set<String> rgKeyNames)
+	{
+		if (rgKeyNames.isEmpty())
+			return null;
+		
+		RgKeyFieldNames result = new RgKeyFieldNames();
+		for (String k : rgKeyNames)
+		{
+			Pair<String, String> rgKeys = KeyValueUtils.parseKeyValueString(k);
+			String type = rgKeys.getFirst();
+			if (type != null)
+				type = type.trim();
+			if (StringUtils.isEmpty(type))
+				continue;
+			
+			Set<String> keys = new LinkedHashSet<>();
+			for (String oneKey : rgKeys.getSecond().split(","))
+			{
+				oneKey = oneKey.trim();
+				if (!oneKey.isEmpty())
+					keys.add(oneKey);
+			}
+			
+			if (!keys.isEmpty())
+				result.addRgKeyFields(type, keys);
+		}
+		return result;
 	}
 	
 	

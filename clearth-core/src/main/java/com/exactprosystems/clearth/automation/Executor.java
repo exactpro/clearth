@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,6 +28,7 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.automation.steps.Default;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
+import com.exactprosystems.clearth.data.TestExecutionHandlingException;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.utils.ObjectWrapper;
 import com.exactprosystems.clearth.utils.Utils;
@@ -477,20 +478,13 @@ public abstract class Executor extends Thread
 	}
 	
 	
-	protected void handleExecutionStart()
+	protected void handleExecutionStart() throws TestExecutionHandlingException
 	{
 		if (!checkExecutionHandler("scheduler start"))
 			return;
 		
-		try
-		{
-			List<String> matrixNames = matrices.stream().map(Matrix::getName).collect(Collectors.toList());
-			executionHandler.onTestStart(matrixNames, globalContext);
-		}
-		catch (Exception e)
-		{
-			getLogger().warn("Error occurred while handling test start", e);
-		}
+		List<String> matrixNames = matrices.stream().map(Matrix::getName).collect(Collectors.toList());
+		executionHandler.onTestStart(matrixNames, globalContext);
 	}
 	
 	protected void handleExecutionEnd()

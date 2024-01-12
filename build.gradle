@@ -86,7 +86,7 @@ subprojects {
 			resolutionStrategy {
 				failOnVersionConflict()
 				
-				def kotlinVersion = '1.6.21'
+				def kotlinVersion = '1.8.22'
 				def jacksonVersion = '2.15.2'
 				def cassandraVersion = '4.15.0'
 				def nettyVersion = '4.1.94.Final'
@@ -116,17 +116,18 @@ subprojects {
 						"org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}",
 						"org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}",
 						'org.jetbrains:annotations:23.0.0',
-						'com.google.guava:guava:31.1-jre',
-						'com.google.errorprone:error_prone_annotations:2.14.0',
-						'com.exactpro.th2:bom:4.2.0',
+						'com.google.guava:guava:32.0.1-jre',
+						'com.google.errorprone:error_prone_annotations:2.18.0',
+						'com.exactpro.th2:bom:4.5.0',
 						'com.squareup.okhttp3:okhttp:4.10.0',
 						'io.github.microutils:kotlin-logging:2.1.21',
 						'io.prometheus:simpleclient:0.16.0',
-						'com.google.protobuf:protobuf-java-util:3.21.7',
+						'com.google.protobuf:protobuf-java-util:3.23.3',
 						'com.datastax.oss:java-driver-core:4.15.0',
-						'com.exactpro.th2:grpc-service-generator:3.3.1',
+						'com.exactpro.th2:grpc-service-generator:3.4.0',
+						'com.exactpro.th2:grpc-common:4.4.0-dev',
 						'io.dropwizard.metrics:metrics-core:4.1.18',
-						'com.google.protobuf:protobuf-java:3.21.12',
+						'com.google.protobuf:protobuf-java:3.23.3',
 						'com.google.code.gson:gson:2.9.0',
 						'com.squareup.okio:okio:3.5.0',
 						"com.datastax.oss:java-driver-query-builder:${cassandraVersion}",

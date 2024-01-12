@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,7 +26,6 @@ import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.messages.*;
 import com.exactprosystems.clearth.utils.CommaBuilder;
-import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
@@ -57,7 +56,7 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 			REMOVE_FILE = "RemoveFile",
 			REVERSE_ORDER = "ReverseOrder";
 	
-	protected static final Set<String> SERVICE_PARAMETERS = unmodifiableSet(new HashSet<String>()
+	protected static final Set<String> SERVICE_PARAMETERS = unmodifiableSet(new HashSet<>()
 	{{
 		add(MessageAction.CONNECTIONNAME);
 		add(ClearThMessage.MSGTYPE);
@@ -199,34 +198,9 @@ public abstract class ReceiveMessageAction<T extends ClearThMessage<T>> extends 
 	
 	protected RgKeyFieldNames getRgKeyFieldNames(StepContext stepContext, MatrixContext matrixContext, GlobalContext globalContext)
 	{
-		//Expected format: RGType1=Field1,Field2;RGType2=Field3,Field4
 		InputParamsHandler handler = new InputParamsHandler(inputParams);
 		Set<String> rgKeyNames = handler.getSet(PARAM_RG_KEYFIELDS);
-		if (rgKeyNames.isEmpty())
-			return null;
-		
-		RgKeyFieldNames result = new RgKeyFieldNames();
-		for (String k : rgKeyNames)
-		{
-			Pair<String, String> rgKeys = KeyValueUtils.parseKeyValueString(k);
-			String type = rgKeys.getFirst();
-			if (type != null)
-				type = type.trim();
-			if (StringUtils.isEmpty(type))
-				continue;
-			
-			Set<String> keys = new LinkedHashSet<>();
-			for (String oneKey : rgKeys.getSecond().split(","))
-			{
-				oneKey = oneKey.trim();
-				if (!oneKey.isEmpty())
-					keys.add(oneKey);
-			}
-			
-			if (!keys.isEmpty())
-				result.addRgKeyFields(type, keys);
-		}
-		return result;
+		return RgKeyFieldNames.parse(rgKeyNames);
 	}
 	
 	private List<KeyFieldsData> findKeysInRgs(T message, String type, Set<String> names)

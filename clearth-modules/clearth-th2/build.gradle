@@ -6,8 +6,12 @@ repositories {
 }
 
 dependencies {
-	api ('com.exactpro.th2:common:5.4.0-dev') {
-		//Core decides what logging implementation to use. So, excluding dependencies of th2-common
+	//Core decides what logging implementation to use. So, excluding dependencies of th2-common
+	api ('com.exactpro.th2:common:5.7.0-dev') {
+		exclude (group: 'org.apache.logging.log4j')
+		exclude (group: 'org.slf4j')
+	}
+	api ('com.exactpro.th2:grpc-check1:4.3.1-dev') {
 		exclude (group: 'org.apache.logging.log4j')
 		exclude (group: 'org.slf4j')
 	}

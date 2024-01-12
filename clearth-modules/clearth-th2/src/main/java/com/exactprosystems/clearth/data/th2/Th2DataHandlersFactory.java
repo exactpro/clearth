@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import com.exactpro.th2.common.grpc.EventBatch;
 import com.exactpro.th2.common.grpc.RawMessageBatch;
 import com.exactpro.th2.common.schema.factory.CommonFactory;
+import com.exactpro.th2.common.schema.grpc.router.GrpcRouter;
 import com.exactpro.th2.common.schema.message.MessageRouter;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.GroupBatch;
 import com.exactprosystems.clearth.ClearThCore;
@@ -119,6 +120,11 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	public MessageRouter<GroupBatch> createGroupBatchRouter()
 	{
 		return factory.getTransportGroupBatchRouter();
+	}
+	
+	public GrpcRouter createGrpcRouter()
+	{
+		return factory.getGrpcRouter();
 	}
 	
 	
