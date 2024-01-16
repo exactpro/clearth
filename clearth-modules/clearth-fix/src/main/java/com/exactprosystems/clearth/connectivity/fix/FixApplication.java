@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,9 +39,12 @@ import quickfix.field.TargetCompID;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 public abstract class FixApplication extends BasicClearThClient implements Application
 {
@@ -57,8 +60,9 @@ public abstract class FixApplication extends BasicClearThClient implements Appli
 			ERROR_DICTIONARY_NOT_SET = "Setting '%s' and setting with default value '%s' are missing in both connection and default settings";
 	
 	public static final String SETTING_WRITE_LOG = "WriteLog",
-			DEFAULT_SETTINGS_FILE = ClearThCore.rootRelative("cfg/fixsettings.cfg");
-	
+			DEFAULT_SETTINGS_FILE = ClearThCore.rootRelative("cfg/fixsettings.cfg"),
+			DICT_EXT = ".xml";
+	protected static final String[] DICTS_PATHS_PARAMS = {TRANSPORT_DATA_DICT, APP_DATA_DICT, DATA_DICT};
 	protected String transportDictFile, appDictFile,
 			beginString, senderCompId, targetCompId;
 	protected ApplVerID appVerID;
@@ -87,10 +91,12 @@ public abstract class FixApplication extends BasicClearThClient implements Appli
 		processConnectionSettings(conSettings);
 		
 		Map<String, String> fixSettings = KeyValueUtils.parseKeyValueString(conSettings.getFixSettings(), "\\R", false);
+		changeRelativePaths(fixSettings);
 		
 		try
 		{
 			SessionSettings defaultSettings = new SessionSettings(new FileInputStream(DEFAULT_SETTINGS_FILE));
+			changeRelativePaths(defaultSettings.getDefaultProperties());
 			String dataDictFile = getSessionSetting(DATA_DICT, false, fixSettings, defaultSettings);
 			
 			transportDictFile = getDictionarySetting(TRANSPORT_DATA_DICT, fixSettings, defaultSettings, dataDictFile);
@@ -341,5 +347,30 @@ public abstract class FixApplication extends BasicClearThClient implements Appli
 	private DataDictionary createDataDictionary(String fileName) throws ConfigError
 	{
 		return new DataDictionary(ClearThCore.rootRelative(fileName));
+	}
+	
+	protected void changeRelativePaths(Map<String, String> settings)
+	{
+		for (String paramName : DICTS_PATHS_PARAMS)
+		{
+			String path = settings.get(paramName);
+			if (isValidDictionarySetting(path))
+				settings.put(paramName, ClearThCore.rootRelative(path));
+		}
+	}
+	
+	protected void changeRelativePaths(Properties properties)
+	{
+		for (String paramName : DICTS_PATHS_PARAMS)
+		{
+			String path = properties.getProperty(paramName);
+			if (isValidDictionarySetting(path))
+				properties.put(paramName, ClearThCore.rootRelative(path));
+		}
+	}
+	
+	protected boolean isValidDictionarySetting(String filePath)
+	{
+		return filePath != null && filePath.endsWith(DICT_EXT);
 	}
 }
