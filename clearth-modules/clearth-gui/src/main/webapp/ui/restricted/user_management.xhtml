@@ -20,7 +20,8 @@
 							update=":UserDlg" oncomplete="PF('userDialog').show()" rendered="#{userBean.admin}" />
 					&#160;&#160;
 					<p:fileUpload listener="#{userManagementBean.uploadConfiguration}" allowTypes="/(\.|\/)(xml)$/" label="Upload configuration"
-							mode="advanced" auto="true" showButtons="false" multiple="false" update="UserOperations :UsersList :Growl" styleClass="simple" />
+							mode="advanced" auto="true" showButtons="false" multiple="false" chooseIcon="ui-icon-plusthick"
+							update="UserOperations :UsersList :Growl" styleClass="simple" />
 					
 					<p:commandButton value="Download configuration" ajax="false" icon="ui-icon-arrowthickstop-1-s">
 						<p:fileDownload value="#{userManagementBean.downloadConfig()}" />

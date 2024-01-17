@@ -85,13 +85,13 @@
 	<br/>
 	<h:form id="matrixUpdaterTool" enctype="multipart/form-data">
 		<p:outputPanel style="width:100%; min-width:1010px">
-		<p:panelGrid style="width:100%">
+		<p:panelGrid layout="tabular" columns="0" style="width:100%">
 			<p:row>
 				<p:column style="width:450px;min-width:450px">
 					<label class="pageTitle" style="margin-bottom:0px">Settings</label>
 					<p:fileUpload listener="#{matrixUpdaterToolBean.uploadConfigFile}"
 								  label="Upload"
-								  mode="advanced" auto="true" showButtons="false"
+								  mode="advanced" auto="true" showButtons="false" chooseIcon="ui-icon-plusthick"
 								  multiple="false" styleClass="simple"
 								  update=":matrixUpdaterTool :Growl ">
 					</p:fileUpload>
@@ -109,8 +109,8 @@
 				<p:column >
 					<label class="pageTitle" style="margin-bottom:0px">Matrices</label>
 					<p:fileUpload listener="#{matrixUpdaterToolBean.uploadMatrixFile}"
-								  label="File | Archive" mode="advanced"
-								  auto="true" showButtons="false"
+								  label="File | Archive"
+								  mode="advanced" auto="true" showButtons="false" chooseIcon="ui-icon-plusthick"
 								  accept=".csv,.xls,.xlsx,.zip"
 								  multiple="false" styleClass="simple"
 								  update="matricesFileName :Growl matrixUpdaterTool:updateMatrix">
@@ -133,7 +133,7 @@
 				</p:row>
 			</f:facet>
 		</p:panelGrid>
-		<p:panelGrid style="height:100%; width:100%;">
+		<p:panelGrid layout="tabular" columns="0" style="height:100%; width:100%;">
 			<p:row style="height:100%">
 				<p:column style="width:35%; border-right-width:thick; min-width:260px; vertical-align:top">
 					<p:commandLink id="updatesHelp" styleClass="linkButton" style="float: left;">
@@ -241,7 +241,7 @@
 									var="condition" multiple="true" styleClass="lightBlueAccordion noPadding">
 								<p:tab>
 									<f:facet name="title" >
-										<p:panelGrid styleClass="accordionHeader">
+										<p:panelGrid layout="tabular" columns="0" styleClass="accordionHeader">
 											<p:row style="border:0;">
 												<p:column style="width:100%">
 													<p:inplace onclick="return false;" editor="true">
@@ -328,7 +328,7 @@
 									</div>
 									<div class="upperRightContainer">
 										<p:fileUpload listener="#{matrixUpdaterToolBean.uploadAdditionFile}"
-												mode="advanced" auto="true" showButtons="false"
+												mode="advanced" auto="true" showButtons="false" chooseIcon="ui-icon-plusthick"
 												multiple="false"
 												styleClass="simple" update="Growl actionsFileName" style="margin-bottom: 5px;"/>
 									</div>
@@ -423,7 +423,7 @@
 				  style="margin: 0 auto"
 				  closable="false">
 		<h:form id="progressDialogForm" >
-			<p:panelGrid style="width:100%;" id="progressDialog">
+			<p:panelGrid layout="tabular" columns="0" style="width:100%;" id="progressDialog">
 				<p:row style="border:0">
 					<p:column style="width:100%">
 						<p:progressBar widgetVar="pbAjax" ajax="false"

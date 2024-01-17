@@ -315,7 +315,7 @@
 				<h:form id="ConfigMaker" enctype="multipart/form-data">
 					Upload a script file (matrix) to make scheduler config file for it.
 					<br />
-					<p:fileUpload value="#{configMakerToolBean.file}" mode="simple" skinSimple="true" /><br />
+					<p:fileUpload value="#{configMakerToolBean.file}" mode="simple" skinSimple="true" chooseIcon="ui-icon-plusthick" /><br />
 					<br />
 					<p:selectOneMenu id="configMakerSchedulerCB" value="#{configMakerToolBean.selectedScheduler}" style="vertical-align: bottom">
 						<f:selectItem itemLabel="-Select a scheduler-" itemValue="" noSelectionOption="false"/>
@@ -334,7 +334,7 @@
 				<h:form id="MatrixFromReport" enctype="multipart/form-data">
 					Upload a report to make a script file (matrix) for it.
 					<br />
-					<p:fileUpload value="#{matrixFromReportToolBean.file}" mode="simple" skinSimple="true" /><br />
+					<p:fileUpload value="#{matrixFromReportToolBean.file}" mode="simple" skinSimple="true" chooseIcon="ui-icon-plusthick" /><br />
 					<br />
 					<p:commandButton value="Make matrix" ajax="false" actionListener="#{matrixFromReportToolBean.makeMatrix}" action="tools?faces-redirect=true" />
 				</h:form>

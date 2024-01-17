@@ -38,7 +38,7 @@
 				<div class="upperRightContainer">
 					<p:fileUpload listener="#{connectivityBean.uploadConnections}"
 								  allowTypes="/(\.|\/)(zip)$/" label="Upload connections"
-								  mode="advanced" auto="true" showButtons="false" multiple="false"
+								  mode="advanced" auto="true" showButtons="false" multiple="false" chooseIcon="ui-icon-plusthick"
 								  update=":Connections :Growl" styleClass="simple">
 					</p:fileUpload>
 					<h:outputText value="&#160;&#160;&#160;"/>
@@ -204,7 +204,7 @@
 									 actionListener="#{connectivityBean.addListener}" styleClass="margin-top"/>
 				</h:panelGroup>
 				<h:panelGroup layout="block" rendered="#{isMessageConnection and !connectivityBean.noListenersInfo}">
-					<p:panelGrid styleClass="fullWidth ui-noborder borderBottom">
+					<p:panelGrid layout="tabular" columns="0" styleClass="fullWidth ui-noborder borderBottom">
 						<p:row styleClass="topAlignment">
 							<p:column style="width: 230px;" styleClass="listeners-dlg-list-column">
 								<div class="block-container-wrapper margin-all">

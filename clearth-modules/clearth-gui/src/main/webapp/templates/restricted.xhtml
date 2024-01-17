@@ -138,7 +138,7 @@
 					<p:poll interval="5" update="memorySpaceInfo" global="false"/>
 				</h:form>
 				<span id="footerBuild"><h:outputText value="#{ApplicationBean.versionInfo}" /></span>
-				<span id="footerCopyright" style="margin-top: 0px">&copy; 2011-2023 Exactpro Systems, LLC</span>
+				<span id="footerCopyright" style="margin-top: 0px">&copy; 2011-2024 Exactpro Systems, LLC</span>
 			</div>
 		</p:outputPanel>
 		
@@ -162,7 +162,7 @@
 			<h:form id="PopupsDialog">
 				<p:scrollPanel mode="native" id="messagesPanel" style="min-height: 200px; min-width: 300px; max-height: 500px;">
 					<ui:repeat id="messageList" value="#{popUpMsgsBean.messages}" var="msg">
-						<p:panelGrid styleClass="popUpMessagesTable" style="table-layout:auto; width: 100%;">
+						<p:panelGrid layout="tabular" columns="0" styleClass="popUpMessagesTable" style="table-layout:auto; width: 100%;">
 							<p:row>
 								<p:column style="width: 32px">
 									<h:outputText styleClass="ui-growl-image ui-growl-image-error" rendered="#{msg.severity == 'ERROR'}" />

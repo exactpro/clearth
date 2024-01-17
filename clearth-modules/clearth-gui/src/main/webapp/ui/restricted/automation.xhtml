@@ -306,7 +306,7 @@
 					<div class="upperRightContainer" style="margin-left; 0px;">
 						<h:form>
 							<p:fileUpload listener="#{automationConfigBean.uploadSchedulerSettings}" allowTypes="/(\.|\/)(zip)$/" label="Upload configuration"
-										  mode="advanced" auto="true" showButtons="false" multiple="false"
+										  mode="advanced" auto="true" showButtons="false" multiple="false" chooseIcon="ui-icon-plusthick"
 										  update=":BusinessDay :WeekendIsHoliday :ConfigFile :ConnectionsToIgnoreFailures :Steps :Growl" styleClass="simple">
 							</p:fileUpload>
 							&#160;&#160;
@@ -385,7 +385,8 @@
 							<p:commandButton value="New step" actionListener="#{automationConfigBean.steps.newStep}" update=":StepDlg" oncomplete="PF('stepDialog').show();" icon="ui-icon-plusthick"/>
 							&#160;&#160;
 							<p:fileUpload listener="#{automationConfigBean.steps.uploadSteps}" label="Upload steps"
-										  mode="advanced" auto="true" showButtons="false" multiple="false" update=":SchedulerSteps :Steps :ConfigFile :Growl" styleClass="simple">
+									mode="advanced" auto="true" showButtons="false" multiple="false" chooseIcon="ui-icon-plusthick"
+									update=":SchedulerSteps :Steps :ConfigFile :Growl" styleClass="simple">
 							</p:fileUpload>
 							<p:selectBooleanCheckbox value="#{automationConfigBean.steps.appendSteps}" itemLabel="Append steps" style="top: -3px; position: relative;">
 								<p:ajax />
@@ -973,10 +974,12 @@
 		<!-- Upload matrices dialog -->
 		<p:dialog header="Upload matrix" id="uploadMatrixDialog" widgetVar="uploadMatrixDialog" resizable="false" width="600" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form enctype="multipart/form-data">
-				<p:fileUpload listener="#{automationMatricesBean.uploadMatrix}" allowTypes="/(\.|\/)(csv|zip|xls|xlsx|CSV|ZIP|XLS|XLSX)$/" mode="advanced" multiple="true"
-							  onstart="matricesToUpload = getNumberOfFilesToUpload('uploadMatrixDialog'); disableChoosing('uploadMatrixDialog');"
-							  oncomplete="matricesToUpload--; if (closeUploadDialogIfDone('uploadMatrixDialog', matricesToUpload)) { enableChoosing('uploadMatrixDialog'); }"
-							  update=":Matrices :Growl" />
+				<p:fileUpload listener="#{automationMatricesBean.uploadMatrix}" allowTypes="/(\.|\/)(csv|zip|xls|xlsx|CSV|ZIP|XLS|XLSX)$/"
+						mode="advanced" multiple="true"
+						chooseIcon="ui-icon-plusthick" uploadIcon="ui-icon-arrowreturnthick-1-n" cancelIcon="ui-icon-cancel"
+						onstart="matricesToUpload = getNumberOfFilesToUpload('uploadMatrixDialog'); disableChoosing('uploadMatrixDialog');"
+						oncomplete="matricesToUpload--; if (closeUploadDialogIfDone('uploadMatrixDialog', matricesToUpload)) { enableChoosing('uploadMatrixDialog'); }"
+						update=":Matrices :Growl" />
 			</h:form>
 		</p:dialog>
 		<!-- Linked matrix properties dialog -->
@@ -1125,7 +1128,7 @@
 					}
 				</script>
 				<br />
-				<p:panelGrid columns="4" style="float: right">
+				<p:panelGrid layout="tabular" columns="4" style="float: right">
 					<style>
 						.ui-widget-content {
 							border: none;
