@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -54,7 +54,7 @@ public class ConnectivityBean extends ClearThBean
 	private boolean noListenersInfo;
 	private boolean listenerInfoVisible = false;
 	private FavoriteConnectionManager favoritesManager;
-	private ProcessedConnectionsCache cachedConnections;
+	private FavoritesSortedCache cachedConnections;
 	private Set<String> favoriteConnections;
 	private String username;
 	private List<ClearThConnection> connections;

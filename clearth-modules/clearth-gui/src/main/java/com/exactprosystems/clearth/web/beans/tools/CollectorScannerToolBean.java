@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,7 +26,6 @@ import com.exactprosystems.clearth.tools.CollectorScannerTool;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.FavoritesSortedCache;
-import com.exactprosystems.clearth.web.misc.ProcessedConnectionsCache;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.lang.StringUtils;
@@ -44,7 +43,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class CollectorScannerToolBean extends ClearThBean
 {
@@ -60,7 +58,7 @@ public class CollectorScannerToolBean extends ClearThBean
 	protected int collectorScannerMessagesTab = 0;
 	protected String textToParse = "";
 	
-	protected ProcessedConnectionsCache cachedConnections;
+	protected FavoritesSortedCache cachedConnections;
 	protected Set<String> favoriteConnectionList;
 	
 	protected CollectorScannerTool collectorScannerTool;
@@ -83,7 +81,7 @@ public class CollectorScannerToolBean extends ClearThBean
 	}
 	
 	public String getSelectedConnection()
-	{   
+	{
 		if (selectedConnection == null)
 			return null;
 		if (!ClearThCore.connectionStorage().containsConnection(selectedConnection.getName()))
@@ -208,8 +206,8 @@ public class CollectorScannerToolBean extends ClearThBean
 	
 	public List<String> getCollectingConnections()
 	{
-		return cachedConnections.refreshIfNeeded(collectorScannerTool.getCollectingConnections()).stream()
-			.map(con -> con.getName()).collect(Collectors.toList());
+		cachedConnections.refreshIfNeeded(collectorScannerTool.getCollectingConnections());
+		return cachedConnections.getConnectionNames();
 	}
 	
 	public boolean isFavorite(String conName)

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,12 +21,14 @@ package com.exactprosystems.clearth.web.misc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 
-public class FavoritesSortedCache extends ProcessedConnectionsCache
+public class FavoritesSortedCache extends ProcessedCache<ClearThConnection, ClearThConnection>
 {
 	private final Set<String> favorites;
+	private List<String> connectionNames;
 	
 	public FavoritesSortedCache(Set<String> favorites)
 	{
@@ -34,31 +36,41 @@ public class FavoritesSortedCache extends ProcessedConnectionsCache
 	}
 	
 	@Override
-	protected List<ClearThConnection> processConnections(List<ClearThConnection> connections)
+	protected List<ClearThConnection> processData(List<ClearThConnection> connections)
 	{
-		if (isSorted(connections))
-			return connections;
-		
 		List<ClearThConnection> result = new ArrayList<>(connections);
-		result.sort((o1, o2) ->
+		
+		if (!isSorted(result))
 		{
-			return connectionComparison(o1, o2);
-		});
+			result.sort((o1, o2) ->
+			{
+				return connectionComparison(o1, o2);
+			});
+		}
+		connectionNames = createConnectionNamesList(result);
 		return result;
 	}
 	
 	@Override
 	protected boolean isNeedRefresh(List<ClearThConnection> currentConnections)
 	{
-		return super.isNeedRefresh(currentConnections) || !isSorted(getConnections());  //Checks if state of processed connections has changed so we need to re-process them
+		return super.isNeedRefresh(currentConnections) || !isSorted(getProcessedData());  //Checks if state of processed connections has changed so we need to re-process them
 	}
-	
 	
 	public Set<String> getFavorites()
 	{
 		return favorites;
 	}
 	
+	public List<String> getConnectionNames()
+	{
+		return connectionNames;
+	}
+	
+	private List<String> createConnectionNamesList(List<ClearThConnection> connections)
+	{
+		return connections.stream().map(ClearThConnection::getName).collect(Collectors.toList());
+	}
 	
 	private boolean isSorted(List<ClearThConnection> connections)
 	{

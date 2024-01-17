@@ -26,8 +26,10 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
+import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
-import com.exactprosystems.clearth.web.misc.DbConnectionsCache;
+import com.exactprosystems.clearth.web.misc.ConnectionNamesCache;
 import org.apache.commons.lang3.StringUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
@@ -64,13 +66,16 @@ public class DataComparatorBean extends ClearThBean
 	private DataComparisonTask task;
 	private String errorText;
 	private File resultFile;
-	private final DbConnectionsCache cache;
+	private final ConnectionNamesCache cache;
 	private final DataSourceSettings expData, actData;
+	private final ClearThConnectionStorage storage;
+	private static final String DB_TYPE = "DB";
 	
 	public DataComparatorBean()
 	{
 		ClearThCore core = ClearThCore.getInstance();
 		comparator = core.getToolsFactory().createDataComparatorTool();
+		storage = core.getConnectionStorage();
 		cache = createDbConnectionsCache();
 		
 		String toolDir = "data_comparator",
@@ -254,9 +259,9 @@ public class DataComparatorBean extends ClearThBean
 		return new DataSourceSettings(DataSource.UPLOAD);
 	}
 	
-	protected DbConnectionsCache createDbConnectionsCache()
+	protected ConnectionNamesCache createDbConnectionsCache()
 	{
-		return new DbConnectionsCache(ClearThCore.connectionStorage());
+		return new ConnectionNamesCache();
 	}
 
 	protected BasicTableDataReader<String, String, ?> createExpectedReader()
@@ -361,7 +366,8 @@ public class DataComparatorBean extends ClearThBean
 		
 		try
 		{
-			return new DbDataReader(cache.getConnection(connectionName).getConnection().prepareStatement(query), true);
+			DbConnection dbConnection = (DbConnection) storage.getConnection(connectionName, DB_TYPE);
+			return new DbDataReader(dbConnection.getConnection().prepareStatement(query), true);
 		}
 		catch (Exception e)
 		{
@@ -417,6 +423,6 @@ public class DataComparatorBean extends ClearThBean
 	
 	public List<String> getConnections()
 	{
-		return cache.getConnectionNames();
+		return cache.refreshIfNeeded(storage.getConnections(DB_TYPE));
 	}
 }
