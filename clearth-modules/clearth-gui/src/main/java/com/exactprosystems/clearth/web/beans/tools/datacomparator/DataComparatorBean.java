@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -359,13 +360,16 @@ public class DataComparatorBean extends ClearThBean
 			return null;
 		}
 		
+		Connection connection = null;
 		try
 		{
 			DbConnection dbConnection = (DbConnection) storage.getConnection(connectionName, DB_TYPE);
-			return new DbDataReader(dbConnection.getConnection().prepareStatement(query), true);
+			connection = dbConnection.getConnection();
+			return new DbDataReader(connection.prepareStatement(query), true);
 		}
 		catch (Exception e)
 		{
+			Utils.closeResource(connection);
 			WebUtils.logAndGrowlException("Could not create reader for " + kind + " DB connection", e, getLogger());
 			return null;
 		}
