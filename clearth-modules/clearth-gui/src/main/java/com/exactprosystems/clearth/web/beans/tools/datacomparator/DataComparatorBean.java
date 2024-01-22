@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
-import com.exactprosystems.clearth.web.misc.ConnectionNamesCache;
+import com.exactprosystems.clearth.web.misc.*;
 import org.apache.commons.lang3.StringUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
@@ -52,9 +52,6 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.mappings.descs.Map
 import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.CsvDataReader;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
-import com.exactprosystems.clearth.web.misc.MessageUtils;
-import com.exactprosystems.clearth.web.misc.UserInfoUtils;
-import com.exactprosystems.clearth.web.misc.WebUtils;
 
 public class DataComparatorBean extends ClearThBean
 {
@@ -66,9 +63,10 @@ public class DataComparatorBean extends ClearThBean
 	private DataComparisonTask task;
 	private String errorText;
 	private File resultFile;
-	private final ConnectionNamesCache cache;
+	private final FavoritesSortedCache cache;
 	private final DataSourceSettings expData, actData;
 	private final ClearThConnectionStorage storage;
+	private final Set<String> favoriteConnections;
 	private static final String DB_TYPE = "DB";
 	
 	public DataComparatorBean()
@@ -76,10 +74,12 @@ public class DataComparatorBean extends ClearThBean
 		ClearThCore core = ClearThCore.getInstance();
 		comparator = core.getToolsFactory().createDataComparatorTool();
 		storage = core.getConnectionStorage();
-		cache = createDbConnectionsCache();
-		
 		String toolDir = "data_comparator",
 				userName = UserInfoUtils.getUserName();
+		
+		favoriteConnections = core.getFavoriteConnections().getUserFavoriteConnectionList(userName);
+		cache = new FavoritesSortedCache(favoriteConnections);
+		
 		uploadsStorage = Path.of(core.getUploadStoragePath(), toolDir, userName).toFile();
 		outputStorage = Path.of(core.getTempDirPath(), toolDir, userName);
 		
@@ -258,11 +258,6 @@ public class DataComparatorBean extends ClearThBean
 	{
 		return new DataSourceSettings(DataSource.UPLOAD);
 	}
-	
-	protected ConnectionNamesCache createDbConnectionsCache()
-	{
-		return new ConnectionNamesCache();
-	}
 
 	protected BasicTableDataReader<String, String, ?> createExpectedReader()
 	{
@@ -423,6 +418,12 @@ public class DataComparatorBean extends ClearThBean
 	
 	public List<String> getConnections()
 	{
-		return cache.refreshIfNeeded(storage.getConnections(DB_TYPE));
+		cache.refreshIfNeeded(storage.getConnections(DB_TYPE));
+		return cache.getConnectionNames();
+	}
+	
+	public boolean isFavorite(String conName)
+	{
+		return favoriteConnections.contains(conName);
 	}
 }

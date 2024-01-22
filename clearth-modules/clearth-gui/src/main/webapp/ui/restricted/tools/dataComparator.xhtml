@@ -31,10 +31,16 @@
 									placeholder="Path to file"
 									rendered="#{expData.source == DataSource.BACKEND}"
 									style="width: 350px" />
-							<p:selectOneMenu value="#{expData.dbSettings.connectionName}" dynamic="true"
-									rendered="#{expData.source == DataSource.DB}">
+							<p:selectOneMenu value="#{expData.dbSettings.connectionName}"
+									rendered="#{expData.source == DataSource.DB}" var="con">
 								<f:selectItem itemValue="" itemLabel="-Choose DB connection-" noSelectionOption="true" />
 								<f:selectItems value="#{dataCompBean.connections}"/>
+								<p:column style="display:flex; align-items:center">
+									<h:graphicImage value="/images/star.png" alt="Favorite" style="vertical-align: middle"
+											rendered="#{dataCompBean.isFavorite(con)}" />
+									&#160;
+									<h:outputText value="#{con}" />
+								</p:column>
 							</p:selectOneMenu>
 							<br/>
 							<br/>
@@ -67,9 +73,15 @@
 									rendered="#{actData.source == DataSource.BACKEND}"
 									style="width: 350px" />
 							<p:selectOneMenu value="#{actData.dbSettings.connectionName}"
-									rendered="#{actData.source == DataSource.DB}">
+									rendered="#{actData.source == DataSource.DB}" var="con">
 								<f:selectItem itemValue="" itemLabel="-Choose DB connection-" noSelectionOption="true" />
 								<f:selectItems value="#{dataCompBean.connections}"/>
+								<p:column style="display:flex; align-items:center">
+									<h:graphicImage value="/images/star.png" alt="Favorite" style="vertical-align: middle"
+											rendered="#{dataCompBean.isFavorite(con)}" />
+									&#160;
+									<h:outputText value="#{con}" />
+								</p:column>
 							</p:selectOneMenu>
 							<br/>
 							<br/>
