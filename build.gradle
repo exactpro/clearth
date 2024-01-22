@@ -7,7 +7,7 @@ buildscript {
 	}
 	dependencies {
 		classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.21.0"
-		classpath 'org.owasp:dependency-check-gradle:7.4.4'
+		classpath 'org.owasp:dependency-check-gradle:9.0.9'
 	}
 }
 
@@ -34,6 +34,14 @@ ext {
 	if (!project.hasProperty('newProjectName')) {
 		newProjectName = undef
 	}
+	
+	if (!project.hasProperty('checkApiKey')) {
+		checkApiKey = ''
+	}
+	if (!project.hasProperty('knownExploitedVulnerabilitiesUrl')) {
+		knownExploitedVulnerabilitiesUrl = null
+	}
+	
 	jettyVersion = '9.4.53.v20231009'
 	jettyDistName = "jetty-distribution-${jettyVersion}"
 }
@@ -393,6 +401,12 @@ dependencyCheck {
 	format = 'ALL'
 	failBuildOnCVSS = 7.6
 	suppressionFile = "${projectDir}/dependency-check/suppressions.xml"
+	nvd {
+		apiKey = checkApiKey
+	}
+	analyzers {
+		knownExploitedURL = knownExploitedVulnerabilitiesUrl
+	}
 }
 
 wrapper {

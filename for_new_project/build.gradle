@@ -1,7 +1,7 @@
 plugins {
 	id 'war'
 	id 'org.gretty' version '3.1.1'
-	id 'org.owasp.dependencycheck' version '7.4.4'
+	id 'org.owasp.dependencycheck' version '9.0.9'
 }
 
 ext {
@@ -12,6 +12,13 @@ ext {
 	
 	if (project.hasProperty('revision')) {
 		build_version = revision
+	}
+	
+	if (!project.hasProperty('checkApiKey')) {
+		checkApiKey = ''
+	}
+	if (!project.hasProperty('knownExploitedVulnerabilitiesUrl')) {
+		knownExploitedVulnerabilitiesUrl = null
 	}
 }
 
@@ -149,6 +156,12 @@ dependencyCheck {
 		'grettyNoSpringBoot', 'grettySpringLoaded', 'gretty']
 	format = 'ALL'
 	failBuildOnCVSS = 7.6
+	nvd {
+		apiKey = checkApiKey
+	}
+	analyzers {
+		knownExploitedURL = knownExploitedVulnerabilitiesUrl
+	}
 }
 
 wrapper {
