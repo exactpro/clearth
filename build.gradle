@@ -95,7 +95,7 @@ subprojects {
 				failOnVersionConflict()
 				
 				def kotlinVersion = '1.8.22'
-				def jacksonVersion = '2.15.2'
+				def jacksonVersion = '2.16.0'
 				def cassandraVersion = '4.15.0'
 				def nettyVersion = '4.1.100.Final'
 				
