@@ -97,7 +97,7 @@ subprojects {
 				def kotlinVersion = '1.8.22'
 				def jacksonVersion = '2.15.2'
 				def cassandraVersion = '4.15.0'
-				def nettyVersion = '4.1.94.Final'
+				def nettyVersion = '4.1.100.Final'
 				
 				//common dependenices are written explicilty to force modules use correct and expected versions
 				force   'commons-codec:commons-codec:1.15',
@@ -118,6 +118,7 @@ subprojects {
 						"com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}",
 						"com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
 						"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}",
+						'org.apache.mina:mina-core:2.1.5',
 						
 						"org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}",
 						"org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}",
