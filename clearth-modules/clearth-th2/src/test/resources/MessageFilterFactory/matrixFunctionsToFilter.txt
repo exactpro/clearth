@@ -1,0 +1,47 @@
+fields {
+  key: "Field1"
+  value {
+    operation: MORE
+    simple_filter: "50"
+  }
+}
+fields {
+  key: "Field2"
+  value {
+    operation: LESS
+    simple_filter: "65"
+  }
+}
+fields {
+  key: "Field3"
+  value {
+    operation: NOT_EQUAL
+    simple_filter: "b"
+  }
+}
+fields {
+  key: "Field4"
+  value {
+    operation: LIKE
+    simple_filter: "[0-9].*"
+  }
+}
+fields {
+  key: "Field5"
+  value {
+    operation: EMPTY
+  }
+}
+fields {
+  key: "Field6"
+  value {
+    operation: NOT_EMPTY
+  }
+}
+fields {
+  key: "Field7"
+  value {
+    operation: EQ_DECIMAL_PRECISION
+    simple_filter: "53.0"
+  }
+}

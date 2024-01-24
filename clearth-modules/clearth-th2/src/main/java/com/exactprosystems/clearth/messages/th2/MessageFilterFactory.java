@@ -27,29 +27,45 @@ import com.exactpro.th2.common.grpc.FilterOperation;
 import com.exactpro.th2.common.grpc.ListValueFilter;
 import com.exactpro.th2.common.grpc.MessageFilter;
 import com.exactpro.th2.common.grpc.ValueFilter;
+import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
 import com.exactprosystems.clearth.messages.RgKeyFieldNames;
 import com.exactprosystems.clearth.messages.converters.ConversionException;
 import com.exactprosystems.clearth.messages.converters.MessageToMap;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
+import org.apache.commons.lang.StringUtils;
+
+import static com.exactpro.th2.common.grpc.FilterOperation.*;
+import static com.exactprosystems.clearth.utils.ComparisonUtils.*;
+import static com.exactprosystems.clearth.utils.ParametersUtils.*;
 
 public class MessageFilterFactory
 {
 	private static final Set<String> SERVICE_FIELDS = Set.of(ClearThMessage.MSGTYPE, ClearThMessage.SUBMSGTYPE, 
 			ClearThMessage.SUBMSGSOURCE, MessageToMap.SUBMSGKIND);
-	
+	private static final Map<String, FilterOperation> FILTER_OPERATION_MAP = Map.of(
+			IS_NOT_EQUAL_TEXT, NOT_EQUAL,
+			IS_EMPTY, EMPTY,
+			IS_NOT_EMPTY, NOT_EMPTY,
+			IS_GREATER_THAN, MORE,
+			IS_LESS_THAN, LESS,
+			AS_NUMBER_START, EQ_DECIMAL_PRECISION,
+			PATTERN_START, LIKE);
 	private final MessageToMap converter;
+	private final ComparisonUtils comparisonUtils;
 	
-	public MessageFilterFactory()
+	public MessageFilterFactory(ComparisonUtils comparisonUtils)
 	{
+		this.comparisonUtils = comparisonUtils;
 		converter = new MessageToMap(SERVICE_FIELDS);
 	}
 	
-	public MessageFilterFactory(String flatDelimiter)
+	public MessageFilterFactory(ComparisonUtils comparisonUtils, String flatDelimiter)
 	{
+		this.comparisonUtils = comparisonUtils;
 		converter = new MessageToMap(flatDelimiter, SERVICE_FIELDS);
 	}
-	
 	
 	public MessageFilter createMessageFilter(SimpleClearThMessage message, Set<String> keyFields, RgKeyFieldNames rgKeyFields) throws ConversionException
 	{
@@ -101,7 +117,6 @@ public class MessageFilterFactory
 		return builder.build();
 	}
 	
-	
 	protected boolean isKey(String name, String value, Set<String> keyFields)
 	{
 		return keyFields != null && keyFields.contains(name);
@@ -109,16 +124,60 @@ public class MessageFilterFactory
 	
 	protected ValueFilter.Builder initValueFilterBuilder()
 	{
-		return ValueFilter.newBuilder()
-				.setOperation(FilterOperation.EQUAL);
+		return ValueFilter.newBuilder();
 	}
 	
-	protected ValueFilter createSimpleValueFilter(String value, boolean key)
+	protected ValueFilter.Builder createValueFilterBuilder(String function) throws ConversionException
 	{
-		return initValueFilterBuilder()
-				.setKey(key)
-				.setSimpleFilter(value)
-				.build();
+		if (function == null)
+			return initValueFilterBuilder();
+		
+		FilterOperation operation = getFilterOperation(function);
+		if (operation == EMPTY || operation == NOT_EMPTY)
+			return initValueFilterBuilder().setOperation(operation);
+		
+		String value = processValue(function, operation);
+		return initValueFilterBuilder().setOperation(operation).setSimpleFilter(value);
+	}
+	
+	protected String processValue(String function, FilterOperation operation) throws ConversionException
+	{
+		String value = comparisonUtils.prepareExpectedValue(function);
+		if (value == null)
+			return function;
+		
+		if (operation == LIKE)
+			return removeQuotesAndSpaces(value);
+		
+		if (operation == EQ_DECIMAL_PRECISION)
+		{
+			String[] params = removeQuotesAndSpaces(StringUtils.split(value, ','));
+			try
+			{
+				checkNumberOfParams(function, params, 1, 1);
+				return params[0];
+			}
+			catch (ParametersException e)
+			{
+				throw new ConversionException("Comparison with accuracy is not implemented", e);
+			}
+		}
+		return value;
+	}
+	
+	protected FilterOperation getFilterOperation(String value)
+	{
+		for (Map.Entry<String, FilterOperation> entry : FILTER_OPERATION_MAP.entrySet())
+		{
+			if (StringUtils.startsWith(value, entry.getKey()))
+				return entry.getValue();
+		}
+		return EQUAL;
+	}
+	
+	protected ValueFilter createSimpleValueFilter(String value, boolean key) throws ConversionException
+	{
+		return createValueFilterBuilder(value).setKey(key).build();
 	}
 	
 	protected ValueFilter createListValueFilter(String name, List<Object> list, Set<String> thisMapKeyFields, RgKeyFieldNames allKeyFields) throws ConversionException
@@ -136,7 +195,6 @@ public class MessageFilterFactory
 				.setMessageFilter(filter)
 				.build();
 	}
-	
 	
 	private ConversionException unsupportedValueClass(String name, Object value)
 	{

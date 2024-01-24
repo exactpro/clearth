@@ -21,6 +21,8 @@ package com.exactprosystems.clearth.automation.actions.th2;
 import java.util.Map;
 import java.util.Set;
 
+import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.exactpro.th2.check1.grpc.Check1Service;
@@ -277,7 +279,8 @@ public class VerifyTh2Message extends Action implements Preparable, TimeoutAwait
 	
 	protected MessageFilterFactory getMessageFilterFactory(String flatDelimiter)
 	{
+		ComparisonUtils utils = ClearThCore.comparisonUtils();
 		//Checking for null, not with StringUtils.isEmpty(), to allow switching flat mode off by specifying #FlatDelimiter=""
-		return flatDelimiter == null ? new MessageFilterFactory() : new MessageFilterFactory(flatDelimiter);
+		return flatDelimiter == null ? new MessageFilterFactory(utils) : new MessageFilterFactory(utils, flatDelimiter);
 	}
 }

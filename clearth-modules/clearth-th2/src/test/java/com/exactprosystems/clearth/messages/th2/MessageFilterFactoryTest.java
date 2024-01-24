@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -38,12 +39,12 @@ import com.exactprosystems.clearth.messages.converters.MessageToMap;
 
 public class MessageFilterFactoryTest
 {
-	private MessageFilterFactory factory = new MessageFilterFactory();
+	private MessageFilterFactory factory;
 	
 	@BeforeClass
 	public void init()
 	{
-		factory = new MessageFilterFactory();
+		factory = new MessageFilterFactory(new ComparisonUtils());
 	}
 	
 	@Test
@@ -75,7 +76,35 @@ public class MessageFilterFactoryTest
 		rgKeyFields.addRgKeyField("simpleMap", "MapField2");
 		
 		MessageFilter filter = factory.createMessageFilter(message, keyFields, rgKeyFields);
-		Path expectedContentFile = Path.of("src", "test", "resources", "MessageFilterFactory", "expectedFilter.txt");
+		assertEquals(filter, "expectedFilter.txt");
+	}
+	
+	@Test
+	public void matrixFunctionsToFilter() throws ConversionException, IOException
+	{
+		SimpleClearThMessageBuilder builder = new SimpleClearThMessageBuilder();
+		SimpleClearThMessage message = builder.subMessageType("simpleList")
+				.field(MessageToMap.SUBMSGKIND, MessageToMap.KIND_LIST)
+				.field("Field1", "@{isGreaterThan(50)}")
+				.field("Field2", "@{isLessThan(65)}")
+				.field("Field3", "@{isNotEqualText(b)}")
+				.field("Field4", "{pattern('[0-9].*')}")
+				.field("Field5", "@{isEmpty}")
+				.field("Field6", "@{isNotEmpty}")
+				.field("Field7", "{asNumber('53.0')}")
+				.build();
+		
+		Set<String> keyFields = Collections.emptySet();
+		RgKeyFieldNames rgKeyFields = new RgKeyFieldNames();
+		rgKeyFields.addRgKeyField("simpleList", "Field1");
+		
+		MessageFilter filter = factory.createMessageFilter(message, keyFields, rgKeyFields);
+		assertEquals(filter, "matrixFunctionsToFilter.txt");
+	}
+	
+	private void assertEquals(MessageFilter filter, String fileName) throws IOException
+	{
+		Path expectedContentFile = Path.of("src", "test", "resources", "MessageFilterFactory", fileName);
 		String expectedContent = FileUtils.readFileToString(expectedContentFile.toFile(), StandardCharsets.UTF_8)
 				.replace("\r\n", "\n");  //MessageFilter.toString() uses \n an all platforms
 		Assert.assertEquals(filter.toString(), expectedContent);

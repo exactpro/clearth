@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -109,11 +109,15 @@ public class ParametersUtils {
 	public static String[] removeQuotesAndSpaces(String[] entries)
 	{
 		for (int i = 0; i < entries.length; i++)
-		{
-			entries[i] = StringUtils.trim(entries[i]);
-			if (entries[i].startsWith("'") && entries[i].endsWith("'"))
-				entries[i] = entries[i].substring(1, entries[i].length() - 1);
-		}
+			entries[i] = removeQuotesAndSpaces(entries[i]);
 		return entries;
+	}
+	
+	public static String removeQuotesAndSpaces(String value)
+	{
+		value = StringUtils.trim(value);
+		if (value.startsWith("'") && value.endsWith("'"))
+			value = value.substring(1, value.length() - 1);
+		return value;
 	}
 }
