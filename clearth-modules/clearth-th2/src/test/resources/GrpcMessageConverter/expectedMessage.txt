@@ -1,0 +1,14 @@
+PlainField1 = 'PlainValue12'
+PlainField2 = 'PlainValue3'
+
+Sub-message 'simpleList':
+  Field10 = 'Value20'
+  Field20 = 'Value30'
+
+
+Sub-message 'simpleMap':
+  MapField1 = '123'
+  MapField2 = '234'
+
+
+

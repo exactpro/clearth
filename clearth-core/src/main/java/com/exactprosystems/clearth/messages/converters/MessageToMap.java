@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,10 +36,12 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 	public static final String SUBMSGKIND = "SubMsgKind",
 			KIND_MAP = "Map",
 			KIND_LIST = "List",
+			FLAT_DELIMITER = "FlatDelimiter",
 			FLAT_DELIMITER_DEFAULT = "_";
 	
 	private static final Set<String> SERVICE_FIELDS = Set.of(ClearThMessage.MSGTYPE, ClearThMessage.SUBMSGTYPE, 
-			ClearThMessage.SUBMSGSOURCE, SUBMSGKIND);
+			ClearThMessage.SUBMSGSOURCE, SUBMSGKIND,
+			FLAT_DELIMITER);
 	
 	
 	private final String flatDelimiter;

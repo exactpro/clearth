@@ -61,16 +61,16 @@ public class SendTh2Message extends Action implements Preparable
 			PARAM_SESSION_GROUP = "SessionGroup",
 			PARAM_BOOK = "Book",
 			PARAM_ROUTER_ATTRIBUTES = "RouterAttributes",
-			PARAM_FLAT_DELIMITER = "FlatDelimiter",
 			PARAM_CREATE_CHECKPOINT = "CreateCheckpoint",
 			PARAM_CHECKPOINT_DESC = "CheckpointDesc",
 			CONTEXT_ROUTER = "Th2MessageRouter";
 	
 	private static final Set<String> SERVICE_PARAMS = Set.of(PARAM_SESSION_ALIAS,
-			PARAM_SESSION_GROUP, PARAM_BOOK, PARAM_ROUTER_ATTRIBUTES, PARAM_FLAT_DELIMITER,
+			PARAM_SESSION_GROUP, PARAM_BOOK, PARAM_ROUTER_ATTRIBUTES,
 			PARAM_CREATE_CHECKPOINT, PARAM_CHECKPOINT_DESC,
 			ClearThMessage.MSGTYPE, ClearThMessage.SUBMSGTYPE, ClearThMessage.SUBMSGSOURCE, 
-			MessageAction.REPEATINGGROUPS, MessageAction.META_FIELDS);
+			MessageAction.REPEATINGGROUPS, MessageAction.META_FIELDS,
+			Th2ActionUtils.PARAM_FLAT_DELIMITER);
 	
 	@Override
 	public void prepare(GlobalContext globalContext, SchedulerStatus schedulerStatus) throws Exception
@@ -88,7 +88,7 @@ public class SendTh2Message extends Action implements Preparable
 		String sessionAlias = handler.getRequiredString(PARAM_SESSION_ALIAS),
 				sessionGroup = handler.getString(PARAM_SESSION_GROUP, sessionAlias),
 				book = handler.getString(PARAM_BOOK, th2Factory.getBook()),
-				flatDelimiter = handler.getString(PARAM_FLAT_DELIMITER),
+				flatDelimiter = handler.getString(Th2ActionUtils.PARAM_FLAT_DELIMITER),
 				checkpointDesc = handler.getString(PARAM_CHECKPOINT_DESC);
 		boolean createCheckpoint = handler.getBoolean(PARAM_CREATE_CHECKPOINT, false);
 		Set<String> routerAttrs = handler.getSet(PARAM_ROUTER_ATTRIBUTES, ",");

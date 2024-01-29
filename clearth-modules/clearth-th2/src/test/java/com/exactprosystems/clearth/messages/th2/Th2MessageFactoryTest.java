@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,13 +29,11 @@ import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.EventId;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageId;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.ParsedMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
 import com.exactprosystems.clearth.messages.converters.ConversionException;
-import com.exactprosystems.clearth.messages.converters.MessageToMap;
 
 public class Th2MessageFactoryTest
 {
-	private Th2MessageFactory factory = new Th2MessageFactory();
+	private Th2MessageFactory factory;
 	
 	@BeforeClass
 	public void init()
@@ -47,25 +45,7 @@ public class Th2MessageFactoryTest
 	public void buildFromSimpleMessage() throws ConversionException
 	{
 		String sessionAlias = "TestConn-1";
-		SimpleClearThMessageBuilder builder = new SimpleClearThMessageBuilder();
-		
-		SimpleClearThMessage listItem = builder.subMessageType("simpleList")
-				.field(MessageToMap.SUBMSGKIND, MessageToMap.KIND_LIST)
-				.field("Field10", "Value20")
-				.field("Field20", "Value30")
-				.build();
-		
-		SimpleClearThMessage simpleMap = builder.subMessageType("simpleMap")
-				.field("MapField1", "123")
-				.field("MapField2", "234")
-				.build();
-		
-		SimpleClearThMessage message = new SimpleClearThMessageBuilder().type("Message1")
-				.field("PlainField1", "PlainValue12")
-				.field("PlainField2", "PlainValue3")
-				.rg(listItem)
-				.rg(simpleMap)
-				.build();
+		SimpleClearThMessage message = MessageTestUtils.createComplexMessage();
 		
 		EventId parentEvent = EventId.builder()
 				.setBook("Book1")

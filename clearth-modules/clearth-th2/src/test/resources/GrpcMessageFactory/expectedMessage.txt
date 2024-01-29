@@ -1,0 +1,68 @@
+metadata {
+  id {
+    connection_id {
+      session_alias: "Session1"
+      session_group: "SessionGroup1"
+    }
+    direction: SECOND
+    book_name: "test_book"
+    timestamp {
+      seconds: 1706875200
+    }
+  }
+  message_type: "TestMsg"
+}
+fields {
+  key: "PlainField1"
+  value {
+    simple_value: "PlainValue12"
+  }
+}
+fields {
+  key: "PlainField2"
+  value {
+    simple_value: "PlainValue3"
+  }
+}
+fields {
+  key: "simpleList"
+  value {
+    list_value {
+      values {
+        message_value {
+          fields {
+            key: "Field10"
+            value {
+              simple_value: "Value20"
+            }
+          }
+          fields {
+            key: "Field20"
+            value {
+              simple_value: "Value30"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+fields {
+  key: "simpleMap"
+  value {
+    message_value {
+      fields {
+        key: "MapField1"
+        value {
+          simple_value: "123"
+        }
+      }
+      fields {
+        key: "MapField2"
+        value {
+          simple_value: "234"
+        }
+      }
+    }
+  }
+}
