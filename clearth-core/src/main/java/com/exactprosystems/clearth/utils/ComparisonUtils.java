@@ -424,7 +424,7 @@ public class ComparisonUtils
 			usage = "@{isNotEqualNumber(500.1, 10, 1)}",
 			description = "Checks if the actual number and the given number are not equal numbers"
 	)
-	protected boolean isNotEqualNumber(String expectedValue, String actualValue) throws ParametersException
+	public boolean isNotEqualNumber(String expectedValue, String actualValue) throws ParametersException
 	{
 		return numbersEqual(expectedValue, actualValue, false, true, IS_NOT_EQUAL_NUMBER_NAME);
 	}
@@ -929,7 +929,7 @@ public class ComparisonUtils
 			usage = "@{isNotEqualText('Your text', true, true)}",
 			description = "Checks if the actual text and the given text are not equal"
 	)
-	protected boolean isNotEqualText(String expectedValue, String actualValue) throws ParametersException
+	public boolean isNotEqualText(String expectedValue, String actualValue) throws ParametersException
 	{
 		String expressionParameters = prepareExpectedValue(expectedValue);
 		if(isEmpty(expressionParameters))
