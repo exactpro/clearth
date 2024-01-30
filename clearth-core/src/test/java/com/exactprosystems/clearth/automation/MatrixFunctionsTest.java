@@ -22,6 +22,7 @@ import com.exactprosystems.clearth.*;
 import com.exactprosystems.clearth.automation.exceptions.FunctionException;
 import com.exactprosystems.clearth.generators.LegacyValueGenerator;
 import com.exactprosystems.clearth.generators.LegacyValueGenerators;
+import com.exactprosystems.clearth.utils.ComparisonUtils;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.ObjectWrapper;
 import com.exactprosystems.clearth.utils.javaFunction.FunctionWithException;
@@ -54,6 +55,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class MatrixFunctionsTest extends BasicTestNgTest
 {
@@ -1936,6 +1938,32 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 		Map<String, Object> mvelVars = new HashMap<>();
 		mvelVars.put(paramName, map);
 		return mvelVars;
+	}
+	
+	@DataProvider(name = "calculateExpressionsForNumberMatrixFunctions")
+	public Object[][] calculateExpressionsForNumberMatrixFunctions()
+	{
+		return new Object[][]
+		{
+			{"@{asNumber(12, 3, 1)}", "14"},
+			{"@{asNumber(12, 3)}", "13"},
+			{"@{asNumber(12.0)}", "12"},
+			{"@{asAbsNumber(-12, 3, 1)}", "14"},
+			{"@{asAbsNumber(-12, 3)}", "13"},
+			{"@{asAbsNumber(-12.0)}", "12"},
+			{"@{isNotEqualNumber(12, 3, 1)}", "22"},
+			{"@{isNotEqualNumber(12, 3)}", "22"},
+			{"@{isNotEqualNumber(12.0)}", "22"}
+		};
+	}
+	
+	@Test (dataProvider = "calculateExpressionsForNumberMatrixFunctions")
+	public void testNumberMatrixFunctions(String expression, String actualValue) throws Exception
+	{
+		MatrixFunctions mf = getMatrixFunctionsForCalcExp();
+		Object calcExpr = mf.calculateExpression(expression, null, Collections.emptyMap(),
+				Collections.emptyMap(), null, new ObjectWrapper(0));
+		assertTrue(new ComparisonUtils().compareValues((String) calcExpr, actualValue));
 	}
 	
 	@AfterMethod

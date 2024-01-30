@@ -111,6 +111,10 @@ public class MatrixFunctions
 	public String asNumber(String expected, String precision){
 		return String.format("%s'%s','%s')}", ComparisonUtils.AS_NUMBER_START, expected, precision);
 	}
+	
+	public String asNumber(String expected, String precision, String scale){
+		return String.format("%s'%s','%s','%s')}", ComparisonUtils.AS_NUMBER_START, expected, precision, scale);
+	}
 
 	public String asAbsNumber(String expected){
 		return String.format("%s'%s')}", ComparisonUtils.AS_ABS_NUMBER_START, expected);
@@ -118,6 +122,10 @@ public class MatrixFunctions
 
 	public String asAbsNumber(String expected, String precision){
 		return String.format("%s'%s','%s')}", ComparisonUtils.AS_ABS_NUMBER_START, expected, precision);
+	}
+	
+	public String asAbsNumber(String expected, String precision, String scale){
+		return String.format("%s'%s','%s','%s')}", ComparisonUtils.AS_ABS_NUMBER_START, expected, precision, scale);
 	}
 
 	public String pattern(String value)
