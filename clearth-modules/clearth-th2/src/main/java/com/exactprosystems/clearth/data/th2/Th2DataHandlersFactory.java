@@ -22,6 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.exactpro.th2.common.grpc.EventBatch;
 import com.exactpro.th2.common.grpc.RawMessageBatch;
 import com.exactpro.th2.common.schema.factory.CommonFactory;
@@ -41,6 +44,8 @@ import com.exactprosystems.clearth.utils.ClearThException;
 
 public class Th2DataHandlersFactory implements DataHandlersFactory
 {
+	private static final Logger logger = LoggerFactory.getLogger(Th2DataHandlersFactory.class);
+	
 	public static final String FILE_RABBIT_CONFIG = "rabbitMQ.json",
 			FILE_STORAGE_CONFIG = "storage.json";
 	
@@ -64,6 +69,7 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 			throw new ClearThException("File with storage configuration doesn't exist: "+storageConfigFile);
 		
 		storageConfig = createStorageConfig(storageConfigFile);
+		logger.info("Storage configuration: {}", storageConfig);
 		factory = createCommonFactory(configDir);
 		eventFactory = createEventFactory(storageConfig);
 	}
@@ -80,6 +86,7 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	{
 		try
 		{
+			logger.debug("Creating message handler for '{}'", connectionName);
 			return new Th2MessageHandler(connectionName, createRawMessageBatchRouter(), storageConfig);
 		}
 		catch (Exception e)
@@ -93,6 +100,7 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	{
 		try
 		{
+			logger.debug("Creating test execution handler for '{}'", schedulerName);
 			MessageRouter<EventBatch> eventRouter = createEventBatchRouter();
 			ResultSaver resultSaver = createResultSaver(eventRouter, storageConfig);
 			return new Th2TestExecutionHandler(schedulerName, eventRouter, eventFactory, resultSaver);

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,9 +20,12 @@ package com.exactprosystems.clearth.data.th2.events;
 
 import java.time.Instant;
 
+import com.exactpro.cradle.BookId;
+import com.exactpro.cradle.testevents.StoredTestEventId;
 import com.exactpro.th2.common.event.Event.Status;
 import com.exactpro.th2.common.grpc.Event;
 import com.exactpro.th2.common.grpc.EventBatch;
+import com.exactpro.th2.common.grpc.EventID;
 import com.exactprosystems.clearth.automation.Action;
 import com.google.protobuf.Timestamp;
 
@@ -55,5 +58,14 @@ public class EventUtils
 	public static Instant getActionEndTimestamp(Action action)
 	{
 		return action.getFinished() != null ? Instant.ofEpochMilli(action.getFinished().getTime()) : null;
+	}
+	
+	public static String idToString(EventID id)
+	{
+		StoredTestEventId storedId = new StoredTestEventId(new BookId(id.getBookName()), 
+				id.getScope(), 
+				getTimestamp(id.getStartTimestamp()),
+				id.getId());
+		return storedId.toString();
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -32,6 +32,14 @@ public class EventsConfig
 		this.scope = scope;
 		this.maxBatchSize = maxBatchSize;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "[scope = " + scope + 
+				"; maxBatchSize = " + maxBatchSize + "]";
+	}
+	
 	
 	public String getScope()
 	{

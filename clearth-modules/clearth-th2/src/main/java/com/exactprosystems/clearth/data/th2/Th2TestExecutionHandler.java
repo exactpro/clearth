@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,6 +19,9 @@
 package com.exactprosystems.clearth.data.th2;
 
 import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.exactpro.th2.common.grpc.Event;
 import com.exactpro.th2.common.grpc.EventBatch;
@@ -40,6 +43,8 @@ import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public class Th2TestExecutionHandler implements TestExecutionHandler
 {
+	private static final Logger logger = LoggerFactory.getLogger(Th2TestExecutionHandler.class);
+	
 	private final MessageRouter<EventBatch> router;
 	private final SchedulerExecutionInfo executionInfo;
 	private final EventFactory eventFactory;
@@ -67,6 +72,9 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		executionInfo.setFromGlobalContext(globalContext);
 		
 		EventID id = storeSchedulerInfo();
+		if (logger.isInfoEnabled())
+			logger.info("Stored start event of scheduler '{}', th2 ID={}", 
+					executionInfo.getName(), EventUtils.idToString(id));
 		executionInfo.setEventId(id);
 		
 		storeMatricesInfo(matrices);
@@ -96,6 +104,9 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 			return null;
 		
 		Event actionEvent = eventFactory.createActionEvent(action, executionInfo);
+		if (logger.isDebugEnabled())
+			logger.debug("Storing event of action '{}', th2 ID={}", 
+					action.getIdInMatrix(), EventUtils.idToString(actionEvent.getId()));
 		storeEvent(actionEvent);
 		
 		EventBatch subEvents = eventFactory.createActionSubEvents(action, actionEvent);
@@ -148,6 +159,9 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		{
 			Event event = eventFactory.createMatrixEvent(m, executionInfo.getStartTimestamp(), parentId);
 			EventID id = event.getId();
+			if (logger.isInfoEnabled())
+				logger.info("Storing start event of matrix '{}', th2 ID={}", 
+						m, EventUtils.idToString(id));
 			MatrixExecutionInfo info = new MatrixExecutionInfo(m, id);
 			executionInfo.setMatrixInfo(m, info);
 			storeEvent(event);
@@ -158,7 +172,12 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 	{
 		Event event = eventFactory.createStepEvent(metadata, matrixInfo.getEventId());
 		EventID id = event.getId();
-		matrixInfo.setStepEventId(metadata.getName(), id);
+		
+		String stepName = metadata.getName();
+		if (logger.isInfoEnabled())
+			logger.info("Storing start event of global step '{}', matrix '{}', th2 ID={}", 
+					stepName, matrixInfo.getName(), EventUtils.idToString(id));
+		matrixInfo.setStepEventId(stepName, id);
 		storeEvent(event);
 	}
 	
@@ -173,6 +192,7 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 	{
 		try
 		{
+			logger.trace("Storing event: {}", batch);
 			router.send(batch);
 		}
 		catch (Exception e)

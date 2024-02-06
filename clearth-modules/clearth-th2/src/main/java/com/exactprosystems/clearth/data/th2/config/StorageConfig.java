@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -44,6 +44,15 @@ public class StorageConfig
 	{
 		return new ObjectMapper().readValue(file.toFile(), StorageConfig.class);
 	}
+	
+	
+	@Override
+	public String toString()
+	{
+		return "[book = " + book 
+				+ "; events: " + events + "]";
+	}
+	
 	
 	public String getBook()
 	{

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.exactpro.th2.common.event.Event;
 import com.exactpro.th2.common.event.IBodyData;
@@ -60,6 +62,8 @@ import com.exactprosystems.clearth.data.th2.tables.MapRow;
 
 public class ResultSaver
 {
+	private static final Logger logger = LoggerFactory.getLogger(ResultSaver.class);
+	
 	public static final String NAME_RESULT = "Result",
 			TYPE_COMPARISON = "Comparison",
 			TYPE_CONTAINER = "Container",
@@ -187,6 +191,7 @@ public class ResultSaver
 	{
 		try
 		{
+			logger.trace("Storing event: {}", protoBatch);
 			getRouter().send(protoBatch);
 		}
 		catch (Exception e)

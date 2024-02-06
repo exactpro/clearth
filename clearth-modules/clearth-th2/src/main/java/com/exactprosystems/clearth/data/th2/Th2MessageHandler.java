@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,6 +22,9 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.exactpro.th2.common.grpc.ConnectionID;
 import com.exactpro.th2.common.grpc.Direction;
 import com.exactpro.th2.common.grpc.MessageID;
@@ -43,6 +46,8 @@ import com.google.protobuf.Timestamp;
 
 public class Th2MessageHandler implements MessageHandler
 {
+	private static final Logger logger = LoggerFactory.getLogger(Th2MessageHandler.class);
+	
 	private final String connectionName;
 	private final MessageRouter<RawMessageBatch> router;
 	private final AtomicLong sentMessageIndex,
@@ -163,6 +168,7 @@ public class Th2MessageHandler implements MessageHandler
 	{
 		try
 		{
+			logger.trace("Storing message: {}", message);
 			router.send(message);
 		}
 		catch (Exception e)
