@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -60,7 +60,8 @@ public class DefaultActionResultSetCheckerTest extends BasicTestNgTest
 	@BeforeClass
 	void init() throws FileNotFoundException, SQLException
 	{
-		String initScriptPath = resourceToAbsoluteFilePath(INIT_DB_SCRIPT_PATH);
+		String initScriptPath = resourceToAbsoluteFilePath(INIT_DB_SCRIPT_PATH)
+				.replace("\\", "/");
 		String url = format(URL_PATTERN, initScriptPath);
 
 		//noinspection CallToDriverManagerGetConnection

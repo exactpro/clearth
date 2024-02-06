@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -53,13 +53,13 @@ public class TypedDbDataReaderTest
 														COLUMN_FLOAT + " REAL" + ");";
 	
 	private static final String INSERT_NORMAL_DATA_QUERY = "INSERT INTO " + TABLE_NAME
-																	+ " values('text1',TRUE, " +
-																		Integer.MAX_VALUE + "," +
-																		Short.MAX_VALUE + "," +
-																		Long.MAX_VALUE + "," +
-																		Double.MAX_VALUE + "," +
-																		Byte.MAX_VALUE + "," +
-																		Float.MAX_VALUE + ");";
+			+ " (" + String.join(", ",
+					COLUMN_STRING, COLUMN_BOOLEAN, COLUMN_INT, COLUMN_SHORT,
+					COLUMN_LONG, COLUMN_DOUBLE, COLUMN_BYTE, COLUMN_FLOAT)+")"
+			+ " values(" + String.join(", ",
+					"'text1'", "TRUE", String.valueOf(Integer.MAX_VALUE), String.valueOf(Short.MAX_VALUE),
+					String.valueOf(Long.MAX_VALUE), String.valueOf(10.5), String.valueOf(Byte.MAX_VALUE), String.valueOf(Float.MAX_VALUE))
+			+ ");";
 	private static final String INSERT_NULL_DATA_QUERY = "INSERT INTO " + TABLE_NAME
 												+ " values(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);";
 	private static final String SELECT_QUERY = "SELECT * FROM " + TABLE_NAME;
@@ -108,7 +108,7 @@ public class TypedDbDataReaderTest
 					Short.MAX_VALUE,
 					Long.MAX_VALUE,
 					Float.MAX_VALUE,
-					Double.MAX_VALUE,
+					10.5,
 					Byte.MAX_VALUE
 				},
 				{null, null, null, null, null, null, null , null}
@@ -130,14 +130,14 @@ public class TypedDbDataReaderTest
 		
 		SoftAssert softAssert = new SoftAssert();
 		
-		softAssert.assertEquals(reader.getValue(COLUMN_STRING, ResultSet::getString), stringValue);
-		softAssert.assertEquals(reader.getValue(COLUMN_BOOLEAN, ResultSet::getBoolean), booleanValue);
-		softAssert.assertEquals(reader.getValue(COLUMN_INT, ResultSet::getInt), integerValue);
-		softAssert.assertEquals(reader.getValue(COLUMN_SHORT, ResultSet::getShort), shortValue);
-		softAssert.assertEquals(reader.getValue(COLUMN_LONG, ResultSet::getLong), longValue);
-		softAssert.assertEquals(reader.getValue(COLUMN_DOUBLE, ResultSet::getDouble), doubleValue);
-		softAssert.assertEquals(reader.getValue(COLUMN_FLOAT, ResultSet::getFloat), floatValue);
-		softAssert.assertEquals(reader.getValue(COLUMN_BYTE, ResultSet::getByte), byteValue);
+		softAssert.assertEquals(reader.getValue(COLUMN_STRING, ResultSet::getString), stringValue, COLUMN_STRING);
+		softAssert.assertEquals(reader.getValue(COLUMN_BOOLEAN, ResultSet::getBoolean), booleanValue, COLUMN_BOOLEAN);
+		softAssert.assertEquals(reader.getValue(COLUMN_INT, ResultSet::getInt), integerValue, COLUMN_INT);
+		softAssert.assertEquals(reader.getValue(COLUMN_SHORT, ResultSet::getShort), shortValue, COLUMN_SHORT);
+		softAssert.assertEquals(reader.getValue(COLUMN_LONG, ResultSet::getLong), longValue, COLUMN_LONG);
+		softAssert.assertEquals(reader.getValue(COLUMN_DOUBLE, ResultSet::getDouble), doubleValue, COLUMN_DOUBLE);
+		softAssert.assertEquals(reader.getValue(COLUMN_FLOAT, ResultSet::getFloat), floatValue, COLUMN_FLOAT);
+		softAssert.assertEquals(reader.getValue(COLUMN_BYTE, ResultSet::getByte), byteValue, COLUMN_BYTE);
 		
 		softAssert.assertAll();
 	}

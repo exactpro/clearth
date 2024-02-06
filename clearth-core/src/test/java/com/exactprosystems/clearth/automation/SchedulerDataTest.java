@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.StringOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FileUtils;
 import org.testng.annotations.AfterClass;
@@ -110,7 +111,9 @@ public class SchedulerDataTest
 
 		schedulerData.saveMatrices(matrixFile.toString(), createMatrixDataList());
 		String actualData = FileUtils.readFileToString(matrixFile.toFile(), Utils.UTF8);
-		String expectedData = "Name,Matrix,Uploaded,Execute,TrimSpaces,Link,Type,AutoReload\n" + "matrix1,matrix1.csv,,true,false,,,false\n";
+		String expectedData = StringOperationUtils.multilineString(System.lineSeparator(),
+				"Name,Matrix,Uploaded,Execute,TrimSpaces,Link,Type,AutoReload",
+				"matrix1,matrix1.csv,,true,false,,,false");
 		assertEquals(actualData, expectedData);
 	}
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -69,6 +69,20 @@ public class StringOperationUtils
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < length; i++)
 			sb.append(" ");
+		return sb.toString();
+	}
+	
+	public static String multilineString(String delimiter, String... lines)
+	{
+		if (lines == null)
+			return null;
+		
+		if (lines.length == 0)
+			return "";
+		
+		StringBuilder sb = new StringBuilder();
+		for (String s : lines)
+			sb.append(s).append(delimiter);
 		return sb.toString();
 	}
 	

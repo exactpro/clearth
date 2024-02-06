@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -129,7 +129,9 @@ public class ClearThCollectorSourceTest {
 	private String[] getMessagesFromFile(String fileName) throws IOException
 	{
 		File file = COLLECTOR_SOURCE_TEST_OUTPUT_DIR.resolve(fileName).toFile();
-		return FileUtils.readFileToString(file, Charset.defaultCharset()).split(MESSAGES_DELIMITER);
+		String content = FileUtils.readFileToString(file, Charset.defaultCharset());
+		return content.replace("\r\n", "\n")
+				.split(MESSAGES_DELIMITER);
 	}
 	
 	private void putMessages(ClearThMessageCollector listener, String[] messages, int first, int last) throws IllegalArgumentException {

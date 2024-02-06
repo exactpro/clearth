@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation.report.html;
 
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.StringOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FileUtils;
 import org.testng.annotations.BeforeClass;
@@ -53,8 +54,9 @@ public class ReportParserTest
 		File matrixFile = reportParser.writeMatrix(resDir.resolve("report.html").toFile(), TEST_OUTPUT.toString());
 
 		String actualData = FileUtils.readFileToString(matrixFile, Utils.UTF8);
-		String expectedData = "#id,#globalstep,#action,#execute,#timeout,#Instrument,#Currency,#Quantity\n" +
-				"id1,Step1,SetStatic,y,500,AAD,BBQ,100\n";
+		String expectedData = StringOperationUtils.multilineString(System.lineSeparator(),
+				"#id,#globalstep,#action,#execute,#timeout,#Instrument,#Currency,#Quantity",
+				"id1,Step1,SetStatic,y,500,AAD,BBQ,100");
 		assertEquals(actualData, expectedData);
 	}
 }

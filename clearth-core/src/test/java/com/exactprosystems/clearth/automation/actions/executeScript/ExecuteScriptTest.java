@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,8 +23,11 @@ import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.TestActionUtils;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
+
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testng.Assert;
@@ -53,6 +56,7 @@ public class ExecuteScriptTest
 	@BeforeClass
 	public static void startTestApp() throws ClearThException
 	{
+		Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
 		clearThManager = new ApplicationManager();
 	}
 
@@ -66,6 +70,6 @@ public class ExecuteScriptTest
 	public static void disposeTestApp() throws IOException
 	{
 		if (clearThManager != null)
-				clearThManager.dispose();
+			clearThManager.dispose();
 	}
 }

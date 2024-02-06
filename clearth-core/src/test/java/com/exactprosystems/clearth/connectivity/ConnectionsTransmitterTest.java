@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -99,13 +99,14 @@ public class ConnectionsTransmitterTest
 		Files.createDirectories(uploadCopyPath);
 
 		ConnectionsTransmitter transmitter = loadConnectionAndGetTransmitter(uploadCopyPath);
-		String actualFile = FileUtils.readFileToString(uploadCopyPath.resolve("DummyConnection.xml").toFile(), Utils.UTF8);
-		String expectedFile = FileUtils.readFileToString(resDir.resolve("DummyConnection.xml").toFile(), Utils.UTF8);
-		assertNotEquals(actualFile, expectedFile);
+		File actualFile = uploadCopyPath.resolve("DummyConnection.xml").toFile();
+		String actualContent = readFile(actualFile),
+				expectedContent = readFile(resDir.resolve("DummyConnection.xml").toFile());
+		assertNotEquals(actualContent, expectedContent);
 
 		transmitter.deployConnections(TYPE, resDir.resolve("Dummy_connection_for_update.zip").toFile());
-		String updatedFile = FileUtils.readFileToString(uploadCopyPath.resolve("DummyConnection.xml").toFile(), Utils.UTF8);
-		assertEquals(updatedFile, expectedFile);
+		String updatedFile = readFile(actualFile);
+		assertEquals(updatedFile, expectedContent);
 	}
 
 	@Test(expectedExceptions = ConnectivityException.class)
@@ -138,5 +139,11 @@ public class ConnectionsTransmitterTest
 		connectionStorage.addConnection(connection);
 
 		return new ConnectionsTransmitter(path.toFile(), connectionStorage);
+	}
+	
+	private String readFile(File file) throws IOException
+	{
+		return FileUtils.readFileToString(file, Utils.UTF8)
+				.replace("\r\n", "\n");
 	}
 }

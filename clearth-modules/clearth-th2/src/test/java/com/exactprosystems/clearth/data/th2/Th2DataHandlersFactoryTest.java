@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,9 @@ package com.exactprosystems.clearth.data.th2;
 
 import java.nio.file.Paths;
 
+import org.apache.commons.lang3.SystemUtils;
+import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.exactprosystems.clearth.data.DataHandlersFactory;
@@ -27,6 +30,13 @@ import com.exactprosystems.clearth.utils.ClearThException;
 
 public class Th2DataHandlersFactoryTest
 {
+	@BeforeClass
+	public void init()
+	{
+		if (SystemUtils.IS_OS_WINDOWS)
+			throw new SkipException("th2-common doesn't initialize on Windows");
+	}
+	
 	@Test(description = "Tests that factory is instantiated if all required files are in place")
 	public void goodConfig() throws Exception
 	{

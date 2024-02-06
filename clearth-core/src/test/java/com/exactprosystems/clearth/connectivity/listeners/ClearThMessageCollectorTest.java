@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -137,7 +137,9 @@ public class ClearThMessageCollectorTest
 	private String[] getMessagesFromFile(String fileName) throws IOException
 	{
 		File file = MESSAGE_COLLECTOR_TEST_OUTPUT_DIR.resolve(fileName).toFile();
-		return FileUtils.readFileToString(file, Charset.defaultCharset()).split(MESSAGES_DELIMITER);
+		String content = FileUtils.readFileToString(file, Charset.defaultCharset());
+		return content.replace("\r\n", "\n")
+				.split(MESSAGES_DELIMITER);
 	}
 	
 }

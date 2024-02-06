@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,6 +27,7 @@ import com.exactprosystems.clearth.connectivity.dummy.DummyMessageConnection;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -138,7 +139,7 @@ public class ListenersNotWritingToBusyFilesRuleTest extends BasicTestNgTest
 	public void checkConnectionWithConflicts(ClearThMessageConnection connection, String expectedErrorMessage)
 	{
 		assertTrue(rule.isConnectionSuitable(connection));
-		assertEquals(rule.check(connection), expectedErrorMessage);
+		assertEquals(rule.check(connection), expectedErrorMessage.replace("/", File.separator));
 	}
 
 	@Test(dataProvider = "validData")

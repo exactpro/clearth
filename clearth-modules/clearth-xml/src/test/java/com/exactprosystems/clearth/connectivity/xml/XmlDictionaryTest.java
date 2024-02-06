@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,9 +46,6 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
 import static org.testng.AssertJUnit.assertEquals;
 
-/**
- *         22 December 2016
- */
 public class XmlDictionaryTest
 {
 	private static final String DICTIONARY = "dicts/dictionary.xml";
@@ -63,7 +61,7 @@ public class XmlDictionaryTest
 			throw new FileNotFoundException(DICTIONARY + " file not found");
 		
 		
-		dictionary = new XmlDictionary(file.getAbsolutePath());
+		dictionary = new XmlDictionary(file.getAbsolutePath(), Collections.emptyMap());
 		marshaller = JAXBContext.newInstance(XmlDictionaryDesc.class).createMarshaller();
 		marshaller.setProperty(JAXB_FORMATTED_OUTPUT, true);
 	}
@@ -109,13 +107,15 @@ public class XmlDictionaryTest
 		private List<Pair<XmlDictionaryDesc, String>> loadParameters(File baseDir) throws IOException, JAXBException
 		{
 			List<Pair<XmlDictionaryDesc, String>> parameters = new ArrayList<>();
-			Iterator iterator = iterateFiles(baseDir, prefixFileFilter("src"), null);
+			Iterator<File> iterator = iterateFiles(baseDir, prefixFileFilter("src"), null);
 			while (iterator.hasNext())
 			{
 				File srcFile = (File) iterator.next();
 				XmlDictionaryDesc srcDesc = fromXml(srcFile);
 				File expFile = expFile(srcFile);
+				
 				String expXml = readFileToString(expFile, Charset.forName("UTF-8"));
+				expXml = expXml.replace("\r\n", "\n");
 				parameters.add(new Pair<>(srcDesc, expXml));
 			}
 			return parameters;

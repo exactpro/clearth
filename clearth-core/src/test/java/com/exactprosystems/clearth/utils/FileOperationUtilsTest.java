@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -50,10 +50,11 @@ public class FileOperationUtilsTest
 		File file = FileOperationUtils.createCsvFile(TEST_OUTPUT.resolve("file.csv").toFile(), header, createTable());
 
 		String actualData = FileUtils.readFileToString(file, Utils.UTF8);
-		String expectedData = "Param1,Param2,Param3\n" +
-								"Val1,Val2,Val3\n" +
-								"Field1,Field2,Field3\n" +
-								"123,456,789\n";
+		String expectedData = StringOperationUtils.multilineString(System.lineSeparator(),
+				"Param1,Param2,Param3",
+				"Val1,Val2,Val3",
+				"Field1,Field2,Field3",
+				"123,456,789");
 
 		assertEquals(actualData, expectedData);
 	}

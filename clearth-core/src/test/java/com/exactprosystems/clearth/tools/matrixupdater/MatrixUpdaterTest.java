@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.tools.matrixupdater.model.Matrix;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.*;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.utils.StringOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
@@ -170,10 +171,11 @@ public class MatrixUpdaterTest
 		MatrixUpdaterConfig config = matrixUpdater.getConfig();
 
 		String actualData = FileUtils.readFileToString(matrixUpdater.update(copiedFile), Utils.UTF8);
-		String expectedData = "#ID,#GlobalStep,#Action,#Expected,#Actual\n" +
-							"id1,Step1,Compare2Values,123,123\n" +
-							"id2,Step1,Compare2Values,990,234\n" +
-							"id3,Step1,Compare2Values,@{isNotEmpty},456\n";
+		String expectedData = StringOperationUtils.multilineString(System.lineSeparator(),
+				"#ID,#GlobalStep,#Action,#Expected,#Actual",
+				"id1,Step1,Compare2Values,123,123",
+				"id2,Step1,Compare2Values,990,234",
+				"id3,Step1,Compare2Values,@{isNotEmpty},456");
 
 		Assert.assertFalse(config.getUpdate("Modification").getSettings().getConditions().get(0).getCells().get(0).isUseExpression());
 		Assert.assertEquals(actualData, expectedData);
