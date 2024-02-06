@@ -27,6 +27,8 @@ import com.exactprosystems.clearth.automation.report.ReportsWriter;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.automation.steps.Default;
+import com.exactprosystems.clearth.data.HandledTestExecutionIdStorage;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import com.exactprosystems.clearth.data.TestExecutionHandlingException;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
@@ -73,6 +75,7 @@ public abstract class Executor extends Thread
 	protected final ActionExecutor actionExecutor;
 	protected final List<StepData> stepData;
 
+	private HandledTestExecutionIdStorage handledIdStorage;
 	private Map<String, String> fixedIds = null;  //Contains action IDs fixed for MVEL so that they can start with digits or underscores
 	
 	private AtomicBoolean terminated = new AtomicBoolean(false), //Must be set on interruption: on terminate() method call and on throw of InterruptedException
@@ -484,7 +487,10 @@ public abstract class Executor extends Thread
 			return;
 		
 		List<String> matrixNames = matrices.stream().map(Matrix::getName).collect(Collectors.toList());
-		executionHandler.onTestStart(matrixNames, globalContext);
+		handledIdStorage = executionHandler.onTestStart(matrixNames, globalContext);
+		
+		status.add(String.format("ID in %s: %s", executionHandler.getName(),
+				handledIdStorage != null ? handledIdStorage.getExecutionId() : null));
 	}
 	
 	protected void handleExecutionEnd()
@@ -718,6 +724,13 @@ public abstract class Executor extends Thread
 	public Map<String, Boolean> getHolidays()
 	{
 		return globalContext.getHolidays();
+	}
+	
+	public HandledTestExecutionId getMatrixExecutionId(String matrixName)
+	{
+		if (handledIdStorage == null)
+			return null;
+		return handledIdStorage.getMatrixId(matrixName);
 	}
 	
 
@@ -1200,7 +1213,7 @@ public abstract class Executor extends Thread
 		{
 			List<String> stepsMatrix = getMatrixSteps(matrix.getShortFileName());
 
-			reportsWriter.buildAndWriteReports(matrix, stepsMatrix, globalContext.getStartedByUser());
+			reportsWriter.buildAndWriteReports(matrix, stepsMatrix, globalContext.getStartedByUser(), executionHandler.getName());
 		}
 		
 		lastReportsInfo = new ReportsInfo();

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,6 +25,7 @@ import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.ReportException;
 import com.exactprosystems.clearth.automation.report.ReportStatus;
 import com.exactprosystems.clearth.automation.report.html.template.*;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.utils.DateTimeUtils;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
@@ -54,6 +55,9 @@ public class HtmlReport
 	protected String userName, scriptName, execStart, execTime;
 	protected boolean testPassed;
 	protected Matrix matrix;
+	protected HandledTestExecutionId matrixExecutionId;
+	protected String testHandlerName;
+	protected ReportTemplatesProcessor templatesProcessor;
 	
 	static
 	{
@@ -61,14 +65,25 @@ public class HtmlReport
 	}
 	
 	public HtmlReport(){}
-
-	public HtmlReport(Matrix matrix, String pathToReport, String userName, String reportName, Date startTime, Date endTime) throws IOException
+	
+	public HtmlReport(Matrix matrix, String pathToReport, String userName, String reportName, Date startTime,
+			Date endTime, String testHandlerName, HandledTestExecutionId matrixExecutionId) throws IOException
+	{
+		this(matrix, pathToReport, userName, reportName, startTime, endTime, testHandlerName, matrixExecutionId,
+				ClearThCore.getInstance().getReportTemplatesProcessor());
+	}
+	public HtmlReport(Matrix matrix, String pathToReport, String userName, String reportName, Date startTime,
+			Date endTime, String testHandlerName, HandledTestExecutionId matrixExecutionId,
+			ReportTemplatesProcessor templatesProcessor) throws IOException
 	{
 		this.matrix = matrix;
 
 		this.userName = userName;
 		this.scriptName = matrix.getName();
 		this.testPassed = matrix.isSuccessful();
+		this.matrixExecutionId = matrixExecutionId;
+		this.testHandlerName = testHandlerName;
+		this.templatesProcessor = templatesProcessor;
 		
 		if (startTime!=null)
 			execStart = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(startTime);
@@ -108,7 +123,7 @@ public class HtmlReport
 
 		try (Writer writer = new BufferedWriter(new FileWriter(reportFilePath)))
 		{
-			ClearThCore.getInstance().getReportTemplatesProcessor().processTemplate(writer, parameters, ReportTemplateFiles.REPORT);
+			templatesProcessor.processTemplate(writer, parameters, ReportTemplateFiles.REPORT);
 		}
 		catch (TemplateException e)
 		{
@@ -156,6 +171,8 @@ public class HtmlReport
 		parameters.put("execStart", execStart);
 		parameters.put("execTime", execTime);
 		parameters.put("testPassed", testPassed);
+		parameters.put("handledTestExecutionId", matrixExecutionId);
+		parameters.put("handlerName", testHandlerName);
 		parameters.put("description", matrix.getDescription());
 		parameters.put("constants", matrix.getConstants());
 		parameters.put("formulas", matrix.getFormulas());

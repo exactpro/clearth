@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,7 +30,7 @@ import com.exactprosystems.clearth.automation.report.Result;
  */
 public interface TestExecutionHandler extends AutoCloseable
 {
-	void onTestStart(Collection<String> matrices, GlobalContext globalContext) throws TestExecutionHandlingException;
+	HandledTestExecutionIdStorage onTestStart(Collection<String> matrices, GlobalContext globalContext) throws TestExecutionHandlingException;
 	void onTestEnd() throws TestExecutionHandlingException;
 	void onGlobalStepStart(StepMetadata stepData) throws TestExecutionHandlingException;
 	void onGlobalStepEnd() throws TestExecutionHandlingException;
@@ -38,4 +38,5 @@ public interface TestExecutionHandler extends AutoCloseable
 	void onActionResult(Result result, Action action) throws TestExecutionHandlingException;
 	
 	boolean isActive();
+	String getName();
 }

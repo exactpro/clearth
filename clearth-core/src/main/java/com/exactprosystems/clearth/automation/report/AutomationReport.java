@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -32,6 +32,7 @@ public class AutomationReport
 	
 	protected String version;
 	protected String matrixName;
+	protected String handledTestExecutionId;
 	protected String userName;
 	protected String host;
 	
@@ -181,5 +182,15 @@ public class AutomationReport
 	public void setConstants(Map<String, String> constants)
 	{
 		this.constants = constants;
+	}
+	
+	public String getHandledTestExecutionId()
+	{
+		return handledTestExecutionId;
+	}
+	
+	public void setHandledTestExecutionId(String handledTestExecutionId)
+	{
+		this.handledTestExecutionId = handledTestExecutionId;
 	}
 }

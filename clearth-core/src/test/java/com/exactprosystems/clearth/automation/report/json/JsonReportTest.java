@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.ClearThVersion;
 import com.exactprosystems.clearth.automation.CoreStepKind;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.data.DummyTestExecutionId;
 import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FileUtils;
 import org.testng.annotations.*;
@@ -103,7 +104,7 @@ public class JsonReportTest extends BasicTestNgTest
 		Files.createDirectories(JSON_REPORTS_OUTPUT.resolve(MATRIX_FILE_NAME));
 
 		Path actualReportPath = JSON_REPORTS_OUTPUT.resolve(MATRIX_FILE_NAME).resolve(JSON_REPORT_NAME);
-		JsonReport report = new JsonReport(matrix, allSteps, matrixSteps, USER_NAME, START_TIME, END_TIME);
+		JsonReport report = new JsonReport(matrix, allSteps, matrixSteps, USER_NAME, START_TIME, END_TIME, new DummyTestExecutionId("Id-12345"));
 		report.writeReport(actualReportPath, actionsReportsPath);
 
 		String expectedJson = loadExpectedJson(expectedReportPath);

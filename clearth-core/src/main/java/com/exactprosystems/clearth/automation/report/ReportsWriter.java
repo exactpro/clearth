@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.report.html.HtmlReport;
 import com.exactprosystems.clearth.automation.report.json.JsonReport;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,38 +71,42 @@ public class ReportsWriter
 
 
 	protected HtmlReport createHtmlReport(Matrix matrix, String pathToReport, String userName, String reportName, 
-			Date startTime, Date endTime) throws IOException
+			Date startTime, Date endTime, String testHandlerName, HandledTestExecutionId matrixExecutionId) throws IOException
 	{
-		return new HtmlReport(matrix, pathToReport, userName, reportName, startTime, endTime);
+		return new HtmlReport(matrix, pathToReport, userName, reportName, startTime, endTime, testHandlerName, matrixExecutionId);
 	}
 	
 	protected JsonReport createJsonReport(Matrix matrix, Collection<Step> allSteps, Set<String> matrixStepNames,
-	                                      String userName, Date startTime, Date endTime)
+			String userName, Date startTime, Date endTime, HandledTestExecutionId matrixExecutionId)
 	{
-		return new JsonReport(matrix, allSteps, matrixStepNames, userName, startTime, endTime);
+		return new JsonReport(matrix, allSteps, matrixStepNames, userName, startTime, endTime, matrixExecutionId);
 	}
 	
 	protected void makeHtmlReportsEndings(HtmlReport report, HtmlReport report_failed) throws ReportException
 	{
 	}
 	
-	public void buildAndWriteReports(Matrix matrix, List<String> matrixSteps, String userName) throws IOException, ReportException
+	public void buildAndWriteReports(Matrix matrix, List<String> matrixSteps, String userName, String testHandlerName) throws IOException, ReportException
 	{
 		Date startTime = executor.getStarted();
 		Date endTime = executor.getReportEndTime();
+		HandledTestExecutionId matrixExecutionId = executor.getMatrixExecutionId(matrix.getName());
 
-		buildAndWriteHtmlReports(matrix, matrixSteps, userName, startTime, endTime);
-		buildAndWriteJsonReports(matrix, matrixSteps, userName, startTime, endTime);
+		buildAndWriteHtmlReports(matrix, matrixSteps, userName, startTime, endTime,
+				testHandlerName, matrixExecutionId);
+		buildAndWriteJsonReports(matrix, matrixSteps, userName, startTime, endTime, matrixExecutionId);
 		copyResultDetailsDir(matrix);
 	}
 
 	protected void buildAndWriteHtmlReports(Matrix matrix, List<String> matrixSteps, String userName,
-			Date startTime, Date endTime) throws IOException, ReportException
+			Date startTime, Date endTime, String testHandlerName, HandledTestExecutionId matrixExecutionId) throws IOException, ReportException
 	{
 		logger.debug("Writing HTML reports for matrix '{}'...", matrix.getName());
 		
-		HtmlReport report = createHtmlReport(matrix, reportsPath, userName, "report", startTime, endTime);
-		HtmlReport report_failed = createHtmlReport(matrix, reportsPath, userName, "report_failed", startTime, endTime);
+		HtmlReport report = createHtmlReport(matrix, reportsPath, userName, "report",
+				startTime, endTime, testHandlerName, matrixExecutionId);
+		HtmlReport report_failed = createHtmlReport(matrix, reportsPath, userName, "report_failed",
+				startTime, endTime, testHandlerName, matrixExecutionId);
 		
 		File actionsReports = new File(actionsReportsPath);
 		report.writeReport(executor.getSteps(), matrixSteps, actionsReports, false);
@@ -112,10 +117,10 @@ public class ReportsWriter
 	
 	
 	protected void buildAndWriteJsonReports(Matrix matrix, List<String> matrixSteps, String userName,
-	                                        Date startTime, Date endTime) throws IOException
+	                                        Date startTime, Date endTime, HandledTestExecutionId matrixExecutionId) throws IOException
 	{
 		JsonReport report = createJsonReport(matrix, executor.getSteps(), new HashSet<>(matrixSteps),
-				userName, startTime, endTime);
+				userName, startTime, endTime, matrixExecutionId);
 		
 		Path reportPath = Paths.get(rootRelative(reportsPath), matrix.getShortFileName(), JSON_REPORT_NAME);
 		Path actionsReportsDir = Paths.get(rootRelative(executor.getActionsReportsDir()), matrix.getShortFileName());

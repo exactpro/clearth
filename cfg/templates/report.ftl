@@ -1,5 +1,5 @@
 <#--
-	External parameters: userName, scriptName, execStart, execTime, testPassed, pathToStyles, pathToJS, revision, host, stepsData
+	External parameters: userName, scriptName, execStart, execTime, testPassed, pathToStyles, pathToJS, revision, host, stepsData, handledTestExecutionId, handlerName
 -->
 
 <#import "step.ftl" as stepTemplate>
@@ -24,7 +24,9 @@
 					<div style="font-size: smaller; padding-bottom: 10px">revision #${revision}</div>
 				</td>
 				<td>Script: ${scriptName}</td>
-				<td width="30%">Result: <span class="${testPassed?then('passed','failed')}" style="font-weight: bold;">${testPassed?then('PASSED','FAILED')}</span></td>
+				<td width="30%">Result: <span class="${testPassed?then('passed','failed')}" style="font-weight: bold;">${testPassed?then('PASSED','FAILED')}</span>
+					<#if handlerName?? && handledTestExecutionId??><br>ID in ${handlerName}: ${handledTestExecutionId}</#if>
+				</td>
 				<td rowspan="4" class="logo" width="20%"><img src="logo.gif"></td>
 			</tr>
 			<tr>

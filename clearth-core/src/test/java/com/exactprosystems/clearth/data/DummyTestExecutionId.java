@@ -16,32 +16,19 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.data.th2.events;
+package com.exactprosystems.clearth.data;
 
-import com.exactpro.th2.common.grpc.EventID;
-import com.exactprosystems.clearth.data.HandledTestExecutionId;
-import com.exactprosystems.clearth.data.th2.serialization.EventIDSerializer;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-public class Th2EventId implements HandledTestExecutionId
+public class DummyTestExecutionId implements HandledTestExecutionId
 {
-	@JsonSerialize(using = EventIDSerializer.class)  //This is required if action data is saved as JSON
-	private final EventID id;
+	private final String id;
 	
-	public Th2EventId(EventID id)
+	public DummyTestExecutionId(String id)
 	{
 		this.id = id;
 	}
 	
 	@Override
 	public String toString()
-	{
-		if (id == null)
-			return null;
-		return EventUtils.idToString(id);
-	}
-	
-	public EventID getId()
 	{
 		return id;
 	}

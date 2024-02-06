@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -51,11 +51,12 @@ public class DummyTestExecutionHandler implements TestExecutionHandler
 	}
 	
 	@Override
-	public void onTestStart(Collection<String> matrices, GlobalContext globalContext)
+	public HandledTestExecutionIdStorage onTestStart(Collection<String> matrices, GlobalContext globalContext)
 			throws TestExecutionHandlingException
 	{
 		testStarted = true;
 		this.matrices = matrices;
+		return null;
 	}
 	
 	@Override
@@ -102,6 +103,11 @@ public class DummyTestExecutionHandler implements TestExecutionHandler
 		return active;
 	}
 	
+	@Override
+	public String getName()
+	{
+		return null;
+	}
 	
 	public void setActive(boolean active)
 	{

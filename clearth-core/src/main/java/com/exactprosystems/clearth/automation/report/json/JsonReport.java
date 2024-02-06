@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.report.AutomationReport;
 import com.exactprosystems.clearth.automation.report.StepReport;
+import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import com.exactprosystems.clearth.utils.JsonMarshaller;
 import com.exactprosystems.clearth.utils.Utils;
 import org.slf4j.Logger;
@@ -58,10 +59,10 @@ public class JsonReport
 	protected final String userName;
 	protected final Date startTime;
 	protected final Date endTime;
-
-
+	protected final HandledTestExecutionId matrixExecutionId;
+	
 	public JsonReport(Matrix matrix, Collection<Step> allSteps, Set<String> matrixStepNames,
-	                  String userName, Date startTime, Date endTime)
+	                  String userName, Date startTime, Date endTime, HandledTestExecutionId matrixExecutionId)
 	{
 		this.matrix = matrix;
 		this.allSteps = allSteps;
@@ -69,6 +70,7 @@ public class JsonReport
 		this.userName = userName;
 		this.startTime = startTime;
 		this.endTime = endTime;
+		this.matrixExecutionId = matrixExecutionId;
 	}
 
 
@@ -92,7 +94,7 @@ public class JsonReport
 		logger.debug("Writing JSON report for matrix '{}'...", matrix.getName());
 
 		AutomationReport automationReport = createAutomationReport();
-		setAutomationReportFields(automationReport, matrix, userName, startTime, endTime);
+		setAutomationReportFields(automationReport, matrix, userName, startTime, endTime, matrixExecutionId);
 		setAutomationReportCustomFields(automationReport, matrix);
 		String automationReportJson = toJson(automationReport);
 
@@ -120,7 +122,7 @@ public class JsonReport
 	}
 	
 	private void setAutomationReportFields(AutomationReport report, Matrix matrix, String userName,
-	                                       Date startTime, Date endTime)
+	                                       Date startTime, Date endTime, HandledTestExecutionId matrixExecutionId)
 	{
 		report.setReportName(matrix.getName());
 		report.setMatrixName(matrix.getName());
@@ -133,6 +135,7 @@ public class JsonReport
 		report.setResult(matrix.isSuccessful());
 		report.setDescription(matrix.getDescription());
 		report.setConstants(matrix.getConstants());
+		report.setHandledTestExecutionId(getStringMatrixExecutionId(matrixExecutionId));
 	}
 	
 	private void buildAndWriteStepJsonReports(BufferedWriter reportWriter, Path actionsReportsDir) throws IOException
@@ -191,6 +194,13 @@ public class JsonReport
 		}
 	}
 	
+	
+	protected String getStringMatrixExecutionId(HandledTestExecutionId matrixExecutionId)
+	{
+		if (matrixExecutionId == null)
+			return null;
+		return matrixExecutionId.toString();
+	}
 	
 	protected <T> String toJson(T object) throws IOException
 	{

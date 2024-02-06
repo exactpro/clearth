@@ -19,6 +19,8 @@
 package com.exactprosystems.clearth.data.th2;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ import com.exactprosystems.clearth.automation.GlobalContext;
 import com.exactprosystems.clearth.automation.StepMetadata;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.data.HandledTestExecutionIdStorage;
 import com.exactprosystems.clearth.data.TestExecutionHandlingException;
 import com.exactprosystems.clearth.data.th2.events.EventFactory;
 import com.exactprosystems.clearth.data.th2.events.EventUtils;
@@ -44,6 +47,7 @@ import com.exactprosystems.clearth.data.TestExecutionHandler;
 public class Th2TestExecutionHandler implements TestExecutionHandler
 {
 	private static final Logger logger = LoggerFactory.getLogger(Th2TestExecutionHandler.class);
+	private static final String NAME = "th2";
 	
 	private final MessageRouter<EventBatch> router;
 	private final SchedulerExecutionInfo executionInfo;
@@ -58,26 +62,25 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		this.resultSaver = resultSaver;
 	}
 	
-	
 	@Override
 	public void close() throws Exception
 	{
 		router.close();
 	}
 	
-	
 	@Override
-	public void onTestStart(Collection<String> matrices, GlobalContext globalContext) throws TestExecutionHandlingException
+	public HandledTestExecutionIdStorage onTestStart(Collection<String> matrices, GlobalContext globalContext) throws TestExecutionHandlingException
 	{
 		executionInfo.setFromGlobalContext(globalContext);
 		
 		EventID id = storeSchedulerInfo();
 		if (logger.isInfoEnabled())
-			logger.info("Stored start event of scheduler '{}', th2 ID={}", 
+			logger.info("Stored start event of scheduler '{}', th2 ID={}",
 					executionInfo.getName(), EventUtils.idToString(id));
 		executionInfo.setEventId(id);
 		
-		storeMatricesInfo(matrices);
+		Map<String, HandledTestExecutionId> idMap= storeMatricesInfo(matrices);
+		return new HandledTestExecutionIdStorage(new Th2EventId(executionInfo.getEventId()), idMap);
 	}
 	
 	@Override
@@ -105,7 +108,7 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		
 		Event actionEvent = eventFactory.createActionEvent(action, executionInfo);
 		if (logger.isDebugEnabled())
-			logger.debug("Storing event of action '{}', th2 ID={}", 
+			logger.debug("Storing event of action '{}', th2 ID={}",
 					action.getIdInMatrix(), EventUtils.idToString(actionEvent.getId()));
 		storeEvent(actionEvent);
 		
@@ -143,6 +146,12 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		return true;
 	}
 	
+	@Override
+	public String getName()
+	{
+		return NAME;
+	}
+	
 	
 	protected EventID storeSchedulerInfo() throws TestExecutionHandlingException
 	{
@@ -152,20 +161,23 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		return result;
 	}
 	
-	protected void storeMatricesInfo(Collection<String> matrices) throws TestExecutionHandlingException
+	protected Map<String, HandledTestExecutionId> storeMatricesInfo(Collection<String> matrices) throws TestExecutionHandlingException
 	{
 		EventID parentId = executionInfo.getEventId();
+		Map<String, HandledTestExecutionId> idMap = new HashMap<>(matrices.size());
 		for (String m : matrices)
 		{
 			Event event = eventFactory.createMatrixEvent(m, executionInfo.getStartTimestamp(), parentId);
 			EventID id = event.getId();
 			if (logger.isInfoEnabled())
-				logger.info("Storing start event of matrix '{}', th2 ID={}", 
+				logger.info("Storing start event of matrix '{}', th2 ID={}",
 						m, EventUtils.idToString(id));
 			MatrixExecutionInfo info = new MatrixExecutionInfo(m, id);
 			executionInfo.setMatrixInfo(m, info);
+			idMap.put(m, new Th2EventId(id));
 			storeEvent(event);
 		}
+		return idMap;
 	}
 	
 	protected void startStepInMatrix(StepMetadata metadata, MatrixExecutionInfo matrixInfo) throws TestExecutionHandlingException
@@ -175,7 +187,7 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		
 		String stepName = metadata.getName();
 		if (logger.isInfoEnabled())
-			logger.info("Storing start event of global step '{}', matrix '{}', th2 ID={}", 
+			logger.info("Storing start event of global step '{}', matrix '{}', th2 ID={}",
 					stepName, matrixInfo.getName(), EventUtils.idToString(id));
 		matrixInfo.setStepEventId(stepName, id);
 		storeEvent(event);
