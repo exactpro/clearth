@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,12 +45,11 @@ public class EnvVars
 		Map<String, String> map = new LinkedHashMap<>();
 		try (BufferedReader reader = new BufferedReader(new FileReader(cfgFile.toFile())))
 		{
-			Map<String, String> env = System.getenv();
 			Iterator<String> lines = reader.lines().iterator();
 			while (lines.hasNext())
 			{
 				String var = lines.next(),
-						value = env.get(var);
+						value = System.getenv(var);
 
 				if (StringUtils.isEmpty(value))
 					continue;
