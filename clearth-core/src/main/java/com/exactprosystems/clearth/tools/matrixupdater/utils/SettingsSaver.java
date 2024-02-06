@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,8 +29,8 @@ import org.apache.commons.lang.StringUtils;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 
@@ -71,29 +71,23 @@ public class SettingsSaver
 	 */
 	public static Path saveSettings(MatrixUpdaterConfig config, String username, Path pathToFiles) throws JAXBException, IOException
 	{
-		File dir = MatrixUpdaterPathHandler.userConfigPath(username).toFile();
-
-		if (!dir.exists())
-			dir.mkdirs();
-
-		File dirToZip = MatrixUpdaterPathHandler.userConfigInnerDirectory(username).toFile();
-
-		if (!dirToZip.exists())
-			dirToZip.mkdirs();
-
-		File xmlCfg = MatrixUpdaterPathHandler.userConfigXmlFile(username).toFile();
-
-		if (!xmlCfg.exists())
-			xmlCfg.createNewFile();
-
+		Path dir = MatrixUpdaterPathHandler.userConfigPath(username);
+		if (!Files.isDirectory(dir))
+			Files.createDirectories(dir);
+		
+		Path dirToZip = MatrixUpdaterPathHandler.userConfigInnerDirectory(username);
+		if (!Files.isDirectory(dirToZip))
+			Files.createDirectories(dirToZip);
+		
+		Path xmlCfg = MatrixUpdaterPathHandler.userConfigXmlFile(username);
+		if (!Files.isRegularFile(xmlCfg))
+			Files.createFile(xmlCfg);
+		
 		copyAdditionFiles(config, username, pathToFiles);
-
-		XmlUtils.marshalObject(config, new FileOutputStream(xmlCfg));
-
+		XmlUtils.marshalObject(config, xmlCfg.toAbsolutePath().toString());
+		
 		Path result = MatrixUpdaterPathHandler.userConfigZipFile(username);
-
-		FileOperationUtils.zipDirectories(result.toFile(), Collections.singletonList(dirToZip));
-
+		FileOperationUtils.zipDirectories(result.toFile(), Collections.singletonList(dirToZip.toFile()));
 		return result;
 	}
 }

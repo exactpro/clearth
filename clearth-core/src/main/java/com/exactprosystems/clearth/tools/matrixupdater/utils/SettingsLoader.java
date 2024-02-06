@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,7 +26,6 @@ import org.apache.commons.io.FileUtils;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,24 +58,22 @@ public class SettingsLoader
 	public static MatrixUpdaterConfig loadSettings(File config, String username, Path pathToFiles) throws MatrixUpdaterException, IOException, JAXBException
 	{
 		validateConfig(config);
-
+		
 		Path tempDir = userConfigPath(username);
-
 		createOrCleanDir(tempDir);
-
-		List<File>  unzippedFiles = FileOperationUtils.unzipFile(config, tempDir.toFile());
-
-		File xmlCfg = userConfigXmlFile(username).toFile();
-		MatrixUpdaterConfig updaterConfig = XmlUtils.unmarshalObject(MatrixUpdaterConfig.class, new FileInputStream(xmlCfg));
-
+		
+		List<File> unzippedFiles = FileOperationUtils.unzipFile(config, tempDir.toFile());
+		
+		Path xmlCfg = userConfigXmlFile(username);
+		MatrixUpdaterConfig updaterConfig = XmlUtils.unmarshalObject(MatrixUpdaterConfig.class, xmlCfg.toAbsolutePath().toString());
+		
 		createOrCleanDir(pathToFiles);
-
+		
 		//Now we have validated archive and ensured that updaterConfig has correct format.
 		//We can safely move files from archive to updater directory.
-
 		for (File f : unzippedFiles)
 			FileUtils.moveFile(f, pathToFiles.resolve(f.getName()).toFile());
-
+		
 		return updaterConfig;
 	}
 
@@ -89,24 +86,25 @@ public class SettingsLoader
 	{
 		if (config == null)
 			throw new MatrixUpdaterException(format(ERROR_MSG, "config file is null"));
-
-		final Enumeration<? extends ZipEntry> entries = new ZipFile(config).entries();
-
-		boolean containCfgFile = false;
-
-		while (entries.hasMoreElements())
+		
+		try (ZipFile zip = new ZipFile(config))
 		{
-			String name = entries.nextElement().getName().replace(FILE_SEPARATOR, File.separator)
-					.replace(FILE_WINDOWS_SEPARATOR, File.separator);
-			if (name.equals(VALIDATE_FILE_NAME))
+			final Enumeration<? extends ZipEntry> entries = zip.entries();
+			boolean containCfgFile = false;
+			while (entries.hasMoreElements())
 			{
-				containCfgFile = true;
-				break;
+				String name = entries.nextElement().getName().replace(FILE_SEPARATOR, File.separator)
+						.replace(FILE_WINDOWS_SEPARATOR, File.separator);
+				if (name.equals(VALIDATE_FILE_NAME))
+				{
+					containCfgFile = true;
+					break;
+				}
 			}
+			
+			if (!containCfgFile)
+				throw new MatrixUpdaterException(format(ERROR_MSG, "it must contain " + VALIDATE_FILE_NAME + " file"));
 		}
-
-		if (!containCfgFile)
-			throw new MatrixUpdaterException(format(ERROR_MSG, "it must contain " + VALIDATE_FILE_NAME + " file"));
 	}
 
 	private static void createOrCleanDir(Path path) throws IOException
