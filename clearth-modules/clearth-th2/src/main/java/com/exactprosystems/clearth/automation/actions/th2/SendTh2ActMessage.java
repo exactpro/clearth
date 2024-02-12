@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation.actions.th2;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,11 +38,10 @@ import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.ConnectionException;
-import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
 import com.exactprosystems.clearth.connectivity.th2.GrpcServiceGetter;
 import com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory;
+import com.exactprosystems.clearth.messages.SimpleClearThMessageFactory;
 import com.exactprosystems.clearth.messages.th2.GrpcRequestFactory;
 import com.exactprosystems.clearth.messages.th2.MessageProperties;
 import com.exactprosystems.clearth.utils.Stopwatch;
@@ -130,13 +128,8 @@ public abstract class SendTh2ActMessage<S, RQ, RS> extends Action implements Pre
 	
 	protected SimpleClearThMessage createClearThMessage(MatrixContext matrixContext)
 	{
-		Map<String, String> ip = getInputParams();
-		return getMessageBuilder(getServiceParameters(), getMetaFields(ip))
-				.fields(ip)
-				.metaFields(ip)
-				.rgs(matrixContext, this)
-				.type(ip.get(ClearThMessage.MSGTYPE))
-				.build();
+		return new SimpleClearThMessageFactory(getServiceParameters(), getMetaFieldsGetter())
+				.createMessage(getInputParams(), matrixContext, this);
 	}
 	
 	protected RQ createRequest(SimpleClearThMessage message, MessageProperties messageProperties, String flatDelimiter, GlobalContext globalContext)
@@ -175,20 +168,6 @@ public abstract class SendTh2ActMessage<S, RQ, RS> extends Action implements Pre
 	protected Set<String> getServiceParameters()
 	{
 		return Th2ActionUtils.SENDING_SERVICE_PARAMS;
-	}
-	
-	protected Set<String> getMetaFields(Map<String, String> params)
-	{
-		MetaFieldsGetter metaGetter = getMetaFieldsGetter();
-		Set<String> result = metaGetter.getFields(params);
-		metaGetter.checkFields(result, params);
-		return result;
-	}
-	
-	
-	protected SimpleClearThMessageBuilder getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
-	{
-		return new SimpleClearThMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	protected MetaFieldsGetter getMetaFieldsGetter()

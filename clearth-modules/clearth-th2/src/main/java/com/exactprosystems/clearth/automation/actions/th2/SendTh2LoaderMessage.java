@@ -23,9 +23,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.Set;
 
+import com.exactprosystems.clearth.messages.SimpleClearThMessageFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -47,7 +47,6 @@ import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
 import com.exactprosystems.clearth.connectivity.th2.Th2LoaderConnection;
 import com.exactprosystems.clearth.messages.converters.MessageToJson;
 import com.exactprosystems.clearth.messages.converters.MessageToMap;
@@ -89,15 +88,10 @@ public class SendTh2LoaderMessage extends Action
 		return sendMessage(url, messageString, client);
 	}
 	
-	
 	protected SimpleClearThMessage createClearThMessage(MatrixContext matrixContext)
 	{
-		Map<String, String> ip = getInputParams();
-		return getMessageBuilder(getBuilderServiceParameters(), getMetaFields(ip))
-				.fields(ip)
-				.metaFields(ip)
-				.rgs(matrixContext, this)
-				.build();
+		return new SimpleClearThMessageFactory(getBuilderServiceParameters(), getMetaFieldsGetter())
+				.createMessageWithoutType(getInputParams(), matrixContext, this);
 	}
 	
 	protected String createMessageString(SimpleClearThMessage message, String flatDelimiter)
@@ -168,20 +162,6 @@ public class SendTh2LoaderMessage extends Action
 	protected Set<String> getConverterServiceFields()
 	{
 		return CONVERTER_SERVICE_FIELDS;
-	}
-	
-	protected Set<String> getMetaFields(Map<String, String> params)
-	{
-		MetaFieldsGetter metaGetter = getMetaFieldsGetter();
-		Set<String> result = metaGetter.getFields(params);
-		metaGetter.checkFields(result, params);
-		return result;
-	}
-	
-	
-	protected SimpleClearThMessageBuilder getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
-	{
-		return new SimpleClearThMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	protected MetaFieldsGetter getMetaFieldsGetter()

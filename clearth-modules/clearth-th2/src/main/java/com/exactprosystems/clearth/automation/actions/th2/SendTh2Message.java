@@ -48,8 +48,8 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
 import com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory;
+import com.exactprosystems.clearth.messages.SimpleClearThMessageFactory;
 import com.exactprosystems.clearth.messages.converters.ConversionException;
 import com.exactprosystems.clearth.messages.th2.SendingProperties;
 import com.exactprosystems.clearth.messages.th2.Th2MessageFactory;
@@ -123,13 +123,8 @@ public class SendTh2Message extends Action implements Preparable
 	
 	protected SimpleClearThMessage createClearThMessage(MatrixContext matrixContext)
 	{
-		Map<String, String> ip = getInputParams();
-		return getMessageBuilder(getServiceParameters(), getMetaFields(ip))
-				.fields(ip)
-				.metaFields(ip)
-				.rgs(matrixContext, this)
-				.type(ip.get(ClearThMessage.MSGTYPE))
-				.build();
+		return new SimpleClearThMessageFactory(getServiceParameters(), getMetaFieldsGetter())
+				.createMessage(getInputParams(), matrixContext, this);
 	}
 	
 	protected ParsedMessage createTh2Message(SimpleClearThMessage message, String sessionAlias, String flatDelimiter)
@@ -211,20 +206,6 @@ public class SendTh2Message extends Action implements Preparable
 	protected Set<String> getServiceParameters()
 	{
 		return SERVICE_PARAMS;
-	}
-	
-	protected Set<String> getMetaFields(Map<String, String> params)
-	{
-		MetaFieldsGetter metaGetter = getMetaFieldsGetter();
-		Set<String> result = metaGetter.getFields(params);
-		metaGetter.checkFields(result, params);
-		return result;
-	}
-	
-	
-	protected SimpleClearThMessageBuilder getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
-	{
-		return new SimpleClearThMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	protected MetaFieldsGetter getMetaFieldsGetter()

@@ -19,7 +19,6 @@
 package com.exactprosystems.clearth.automation.actions.th2;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.exactprosystems.clearth.automation.Action;
@@ -36,8 +35,8 @@ import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
 import com.exactprosystems.clearth.messages.RgKeyFieldNames;
+import com.exactprosystems.clearth.messages.SimpleClearThMessageFactory;
 import com.exactprosystems.clearth.messages.th2.GrpcResponseConverter;
 import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
@@ -96,12 +95,8 @@ public abstract class VerifyTh2ActMessage<RS> extends Action
 	
 	protected SimpleClearThMessage createExpectedMessage(MatrixContext matrixContext)
 	{
-		Map<String, String> ip = getInputParams();
-		return getMessageBuilder(getServiceParameters(), getMetaFields(ip))
-				.fields(ip)
-				.metaFields(ip)
-				.rgs(matrixContext, this)
-				.build();
+		return new SimpleClearThMessageFactory(getServiceParameters(), getMetaFieldsGetter())
+				.createMessageWithoutType(getInputParams(), matrixContext, this);
 	}
 	
 	protected MessageComparator<SimpleClearThMessage> getMessageComparator()
@@ -135,19 +130,6 @@ public abstract class VerifyTh2ActMessage<RS> extends Action
 	protected Set<String> getServiceParameters()
 	{
 		return SERVICE_PARAMS;
-	}
-	
-	protected Set<String> getMetaFields(Map<String, String> params)
-	{
-		MetaFieldsGetter metaGetter = getMetaFieldsGetter();
-		Set<String> result = metaGetter.getFields(params);
-		metaGetter.checkFields(result, params);
-		return result;
-	}
-	
-	protected SimpleClearThMessageBuilder getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
-	{
-		return new SimpleClearThMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	protected MetaFieldsGetter getMetaFieldsGetter()

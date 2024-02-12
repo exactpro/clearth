@@ -18,10 +18,10 @@
 
 package com.exactprosystems.clearth.automation.actions.th2;
 
-import java.util.Map;
 import java.util.Set;
 
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.messages.SimpleClearThMessageFactory;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -54,7 +54,6 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
-import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessageBuilder;
 import com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory;
 import com.exactprosystems.clearth.messages.RgKeyFieldNames;
 import com.exactprosystems.clearth.messages.converters.ConversionException;
@@ -106,7 +105,7 @@ public class VerifyTh2Message extends Action implements Preparable, TimeoutAwait
 		Direction direction = handler.getEnum(PARAM_DIRECTION, Direction.class, Direction.FIRST);
 		handler.check();
 		
-		SimpleClearThMessage message = createClearThMessage(msgType, matrixContext);
+		SimpleClearThMessage message = createClearThMessage(matrixContext);
 		MessageFilter messageFilter = createMessageFilter(message, flatDelimiter, keyFields, rgKeyFields);
 		RootMessageFilter rootFilter = createRootMessageFilter(msgType, messageFilter);
 		
@@ -152,16 +151,10 @@ public class VerifyTh2Message extends Action implements Preparable, TimeoutAwait
 		return awaitedTimeout;
 	}
 	
-	
-	protected SimpleClearThMessage createClearThMessage(String msgType, MatrixContext matrixContext)
+	protected SimpleClearThMessage createClearThMessage(MatrixContext matrixContext)
 	{
-		Map<String, String> ip = getInputParams();
-		return getMessageBuilder(getServiceParameters(), getMetaFields(ip))
-				.fields(ip)
-				.metaFields(ip)
-				.rgs(matrixContext, this)
-				.type(msgType)
-				.build();
+		return new SimpleClearThMessageFactory(getServiceParameters(), getMetaFieldsGetter())
+				.createMessage(getInputParams(), matrixContext, this);
 	}
 	
 	protected MessageFilter createMessageFilter(SimpleClearThMessage message, String flatDelimiter, Set<String> keyFields, RgKeyFieldNames rgKeyFields)
@@ -256,20 +249,6 @@ public class VerifyTh2Message extends Action implements Preparable, TimeoutAwait
 	protected Set<String> getServiceParameters()
 	{
 		return SERVICE_PARAMS;
-	}
-	
-	protected Set<String> getMetaFields(Map<String, String> params)
-	{
-		MetaFieldsGetter metaGetter = getMetaFieldsGetter();
-		Set<String> result = metaGetter.getFields(params);
-		metaGetter.checkFields(result, params);
-		return result;
-	}
-	
-	
-	protected SimpleClearThMessageBuilder getMessageBuilder(Set<String> serviceParameters, Set<String> metaFields)
-	{
-		return new SimpleClearThMessageBuilder(serviceParameters, metaFields);
 	}
 	
 	protected MetaFieldsGetter getMetaFieldsGetter()
