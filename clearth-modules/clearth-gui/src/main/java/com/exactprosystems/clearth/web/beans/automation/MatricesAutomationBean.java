@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,12 +25,17 @@ import com.exactprosystems.clearth.tools.ConfigMakerTool;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.MatrixUploadHandler;
+import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.exception.MatrixUploadHandlerException;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.beans.tools.ConfigMakerToolBean;
 import com.exactprosystems.clearth.web.misc.MatrixIssue;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.UpdatedMatricesData;
 import com.exactprosystems.clearth.web.misc.WebUtils;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.primefaces.event.FileUploadEvent;
@@ -42,6 +47,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.automation.MatrixFileExtensions.isExtensionSupported;
 import static java.lang.String.format;
@@ -59,6 +66,7 @@ public class MatricesAutomationBean extends ClearThBean {
 	protected MatrixUploadHandler matrixUploadHandler;
 
 	protected MatrixData selectedLinkedMatrix = null;
+	protected UpdatedMatricesData updatedMatrices;
 	
 	
 	public MatricesAutomationBean()
@@ -135,15 +143,11 @@ public class MatricesAutomationBean extends ClearThBean {
 	public void uploadMatrix(FileUploadEvent event)
 	{
 		UploadedFile uploadedFile = event.getFile();
-
-		if (uploadedFile.getContent().length == 0)
-		{
-			MessageUtils.addErrorMessage("Invalid file content", "Uploaded file is empty");
+		if (!checkFile(uploadedFile))
 			return;
-		}
-
+		
 		String uploadedFileName = uploadedFile.getFileName();
-
+		
 		try
 		{
 			matrixUploadHandler.handleUploadedFile(uploadedFile.getInputStream(), uploadedFileName, selectedScheduler());
@@ -161,8 +165,116 @@ public class MatricesAutomationBean extends ClearThBean {
 			WebUtils.logAndGrowlException(errMsg, e, getLogger());
 		}
 	}
-
-
+	
+	
+	public void resetUpdatedMatrices()
+	{
+		updatedMatrices = new UpdatedMatricesData();
+	}
+	
+	public void uploadUpdatedMatrix(FileUploadEvent event)
+	{
+		UploadedFile uploadedFile = event.getFile();
+		if (!checkFile(uploadedFile))
+			return;
+		
+		String uploadedFileName = uploadedFile.getFileName();
+		if (!matrixUploadHandler.isMatrixFile(uploadedFileName))
+		{
+			MessageUtils.addErrorMessage("Invalid file format", "Uploaded file '"+uploadedFileName+"' must be a plain matrix file");
+			return;
+		}
+		
+		try
+		{
+			Pair<String, File> storedFile = matrixUploadHandler.storeUploadedMatrixFile(uploadedFile.getInputStream(), uploadedFileName);
+			MatrixData md = selectedScheduler().getMatrixDataFactory()
+					.createMatrixData(storedFile.getFirst(), storedFile.getSecond(), new Date(), true, true, null, null, false);
+			
+			updatedMatrices.addMatrix(md);
+			getLogger().info("uploaded updated matrix '{}'", storedFile.getFirst());
+		}
+		catch (MatrixUploadHandlerException e)
+		{
+			MessageUtils.addErrorMessage(e.getMessage(), e.getDetails());
+		}
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Error while uploading file", e, getLogger());
+		}
+	}
+	
+	public void applyUpdatedMatrices()
+	{
+		List<MatrixData> matrices = updatedMatrices.getMatrices();
+		if (matrices.isEmpty())
+			return;
+		
+		getLogger().info("updates matrices in running scheduler");
+		
+		try
+		{
+			try
+			{
+				selectedScheduler().updateRunningMatrices(matrices);
+			}
+			catch (Exception e)
+			{
+				String msg = "Could not update matrices";
+				getLogger().error(msg, e);
+				updatedMatrices.setResultAndError(msg, e);
+				return;
+			}
+			
+			for (MatrixData md : matrices)
+			{
+				try
+				{
+					selectedScheduler().addMatrix(md.getFile(), md.getName());
+				}
+				catch (Exception e)
+				{
+					String msg = "Error while refreshing matrix '"+md.getName()+"'";
+					getLogger().error(msg, e);
+					updatedMatrices.setResultAndError(msg, e);
+					return;
+				}
+			}
+			
+			updatedMatrices.setResultAndError("Matrices updated successfully. Matrix files in the storage have been updated.", null);
+		}
+		finally
+		{
+			updatedMatrices.cleanMatrices();
+		}
+	}
+	
+	public String getMatricesUpdateResult()
+	{
+		return updatedMatrices != null ? updatedMatrices.getResult() : null;
+	}
+	
+	public Throwable getMatricesUpdateError()
+	{
+		return updatedMatrices != null ? updatedMatrices.getError() : null;
+	}
+	
+	public String getUpdateLimitation()
+	{
+		Step currentStep = selectedScheduler().getCurrentStep();
+		if (currentStep == null)
+			return null;
+		
+		if (currentStep.isEnded())
+			return "Updates will be applied only to actions of global steps that are after '"+currentStep.getName()+"'.";
+		
+		Action currentAction = currentStep.getCurrentAction();
+		if (currentAction == null)
+			return "Updates will be applied only to actions that are in global step '"+currentStep.getName()+"' or after it.";
+		return "Updates will be applied only to actions that are after action '"+currentAction.getIdInMatrix()+"' from matrix '"+currentAction.getMatrix().getName()+"'.";
+	}
+	
+	
 	protected void resetMatricesSelection()
 	{
 		selectedMatrices.clear();
@@ -410,5 +522,16 @@ public class MatricesAutomationBean extends ClearThBean {
 	public void editLinkedMatrix(MatrixData matrix)
 	{
 		selectedLinkedMatrix = matrix.clone();
+	}
+	
+	
+	private boolean checkFile(UploadedFile file)
+	{
+		if (file.getContent().length == 0)
+		{
+			MessageUtils.addErrorMessage("Invalid file content", "Uploaded file '"+file.getFileName()+"' is empty");
+			return false;
+		}
+		return true;
 	}
 }

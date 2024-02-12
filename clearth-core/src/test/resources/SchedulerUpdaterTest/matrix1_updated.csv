@@ -1,0 +1,4 @@
+#ID,#GlobalStep,#Action,#P1
+id1,Step1,SetStatic,V1
+#ID,#GlobalStep,#Action,#P2
+id2,Step2,SetStatic,V2

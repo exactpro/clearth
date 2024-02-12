@@ -1028,7 +1028,44 @@
 				</h:panelGrid>
 			</h:form>
 		</p:dialog>
-
+		
+		<!-- Upload updated matrices dialog -->
+		<p:dialog header="Upload updated matrix" id="uploadUpdatedMatrixDialog" widgetVar="uploadUpdatedMatrixDialog"
+				resizable="false" width="600" closeOnEscape="true" modal="#{guiBean.modalDialog}" styleClass="subDialog">
+			<h:form enctype="multipart/form-data">
+				<p:remoteCommand name="resetUpdates" actionListener="#{automationMatricesBean.resetUpdatedMatrices()}" />
+				<p:remoteCommand name="applyUpdates" actionListener="#{automationMatricesBean.applyUpdatedMatrices()}" update="updateResults :Growl" />
+				
+				<p:outputPanel style="margin-bottom: 10px">
+					<h:outputText value="#{automationMatricesBean.getUpdateLimitation()}" />
+				</p:outputPanel>
+				<p:outputPanel id="updateResults" style="margin-bottom: 10px">
+					<ui:param name="updateResult" value="#{automationMatricesBean.matricesUpdateResult}" />
+					<ui:param name="updateError" value="#{automationMatricesBean.matricesUpdateError}" />
+					<p:outputPanel rendered="#{updateError != null}">
+						<h:outputText value="#{updateResult}" style="color: red" />
+						<br />
+						<h:outputText value="#{updateError.getMessage()}" style="color: red" />
+					</p:outputPanel>
+					<h:outputText value="#{updateResult}" rendered="#{updateError == null}" style="color: green"/>
+				</p:outputPanel>
+				
+				<p:fileUpload listener="#{automationMatricesBean.uploadUpdatedMatrix}" allowTypes="/(\.|\/)(csv|xls|xlsx|CSV|XLS|XLSX)$/"
+						mode="advanced" multiple="true"
+						chooseIcon="ui-icon-plusthick" uploadIcon="ui-icon-arrowreturnthick-1-n" cancelIcon="ui-icon-cancel"
+						onstart="matricesToUpload = getNumberOfFilesToUpload('uploadUpdatedMatrixDialog'); disableChoosing('uploadUpdatedMatrixDialog'); resetUpdates();"
+						oncomplete="matricesToUpload--; if (matricesToUpload == 0) { enableChoosing('uploadUpdatedMatrixDialog'); applyUpdates(); }"
+						update="updateResults :Growl" />
+				
+				<p:outputPanel layout="block" style="text-align: right; margin-top: 10px">
+					<p:commandButton value="Close"
+							onclick="PF('uploadUpdatedMatrixDialog').hide();"
+							icon="ui-icon ui-icon-close"
+							type="button" />
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+		
 		<!-- Remove matrices confirm dialog -->
 		<p:confirmDialog id="RemoveMatricesConfirmDlg" header="#{automationMatricesBean.oneMatrixSelected ? 'Matrix removal' : 'Matrices removal'}"
 						 message="Are you sure you want to remove #{automationMatricesBean.oneMatrixSelected ? 'this matrix' : 'selected matrices'}?"
@@ -1295,6 +1332,12 @@
 			<h:form id="CurrentReports">
 				<h:outputText value="You can examine reports of already finished steps" />
 				<p:commandButton value="Make and show reports" action="#{automationReportsBean.makeReports}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" />
+			</h:form>
+			<br />
+			<h:form id="UpdateMatrices">
+				<h:outputText value="You can update matrices used in the scheduler" />
+				<p:commandButton value="Update matrices" actionListener="#{automationMatricesBean.resetUpdatedMatrices()}"
+						update=":uploadUpdatedMatrixDialog" oncomplete="PF('uploadUpdatedMatrixDialog').show();" />
 			</h:form>
 			<br />
 			<h:form id="CurrentState">

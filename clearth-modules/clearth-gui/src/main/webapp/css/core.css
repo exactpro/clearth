@@ -668,6 +668,10 @@ img {
 	margin-right: -1em;
 }
 
+.ui-dialog.subDialog {
+	z-index: 100000 !important;
+}
+
 .toBottom .ui-datagrid-row {
 	height: 100%;
 }

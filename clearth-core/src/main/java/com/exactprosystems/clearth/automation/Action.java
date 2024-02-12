@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -558,11 +558,17 @@ public abstract class Action
 		return step;
 	}
 	
+	public void setStep(Step step)
+	{
+		this.step = step;
+	}
+	
+	
 	public Matrix getMatrix()
 	{
 		return matrix;
 	}
-
+	
 	public void setMatrix(Matrix matrix)
 	{
 		this.matrix = matrix;

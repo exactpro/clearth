@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -65,7 +65,11 @@ public class DefaultScheduler extends Scheduler
 	@Override
 	protected ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException
 	{
-		return (ExecutorStateInfo)XmlUtils.xmlFileToObject(new File(sourceDir, ExecutorState.STATEINFO_FILENAME),
+		File stateInfoFile = new File(sourceDir, ExecutorState.STATEINFO_FILENAME);
+		if (!stateInfoFile.isFile())
+			return null;
+		
+		return (ExecutorStateInfo)XmlUtils.xmlFileToObject(stateInfoFile,
 				DefaultExecutorState.STATEINFO_ANNOTATIONS, DefaultExecutorState.ALLOWED_CLASSES);
 	}
 

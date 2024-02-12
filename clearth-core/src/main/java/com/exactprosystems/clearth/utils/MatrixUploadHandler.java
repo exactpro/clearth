@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -79,17 +79,41 @@ public class MatrixUploadHandler
 			throw new MatrixUploadHandlerException(exceptionMessage, exceptionDetails);
 		}
 	}
-
-	protected void handleUploadedMatrixFile(InputStream matrixStream, String fileName, Scheduler scheduler) throws MatrixUploadHandlerException
+	
+	public boolean isMatrixFile(String fileName)
+	{
+		String lowerCase = fileName.toLowerCase();
+		for (String suffix : MATRIX_FILE_SUFFIX_LIST)
+		{
+			if (lowerCase.endsWith(suffix))
+				return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean isArchiveFile(String fileName)
+	{
+		return fileName.toLowerCase().endsWith(ARCHIVE_FILE_SUFFIX);
+	}
+	
+	public Pair<String, File> storeUploadedMatrixFile(InputStream matrixStream, String fileName) throws MatrixUploadHandlerException
 	{
 		logger.trace("Original filename: '{}'", fileName);
 		String normalizedFileName = normalizeUploadedFileName(fileName);
 		logger.trace("Filename to use: '{}'", normalizedFileName);
-
+		
 		File storedFile = createStoredFile(matrixStream, normalizedFileName, getMatrixUploadDir());
-		addMatrixToScheduler(scheduler, storedFile, normalizedFileName);
+		return new Pair<>(normalizedFileName, storedFile);
 	}
-
+	
+	
+	protected void handleUploadedMatrixFile(InputStream matrixStream, String fileName, Scheduler scheduler) throws MatrixUploadHandlerException
+	{
+		Pair<String, File> storedFile = storeUploadedMatrixFile(matrixStream, fileName);
+		addMatrixToScheduler(scheduler, storedFile.getSecond(), storedFile.getFirst());
+	}
+	
 	private void addMatrixToScheduler(Scheduler scheduler, File storedFile, String originalName) throws MatrixUploadHandlerException
 	{
 		try
@@ -190,18 +214,6 @@ public class MatrixUploadHandler
 		return "."+ FilenameUtils.getExtension(fileName).toLowerCase();
 	}
 
-	protected boolean isMatrixFile(String fileName)
-	{
-		String lowerCase = fileName.toLowerCase();
-		for (String suffix : MATRIX_FILE_SUFFIX_LIST)
-		{
-			if (lowerCase.endsWith(suffix))
-				return true;
-		}
-
-		return false;
-	}
-
 	protected static IOFileFilter createMatrixFileFilter()
 	{
 		return new SuffixFileFilter(MATRIX_FILE_SUFFIX_LIST, IOCase.INSENSITIVE);
@@ -210,11 +222,6 @@ public class MatrixUploadHandler
 	protected IOFileFilter getMatrixFileFilter()
 	{
 		return MATRIX_FILES_FILE_FILTER;
-	}
-
-	protected boolean isArchiveFile(String fileName)
-	{
-		return fileName.toLowerCase().endsWith(ARCHIVE_FILE_SUFFIX);
 	}
 
 	protected String buildPrefix(String fileName)

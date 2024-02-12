@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -137,7 +137,9 @@ public class Matrix
 	
 	public void setActions(List<Action> actions)
 	{
-		this.actions = actions;
+		this.actions.clear();
+		if (actions != null)
+			this.actions.addAll(actions);
 	}
 	
 	

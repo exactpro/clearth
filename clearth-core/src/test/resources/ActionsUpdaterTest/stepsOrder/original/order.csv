@@ -1,0 +1,4 @@
+#ID,#GlobalStep,#Action,#Param1
+id2,Verify,SetStatic,Value1
+#ID,#GlobalStep,#Action,#PX
+id1,Upload,SetStatic,V

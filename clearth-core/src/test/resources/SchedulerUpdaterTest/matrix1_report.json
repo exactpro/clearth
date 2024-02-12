@@ -1,0 +1,56 @@
+{
+  "matrixName" : "matrix1.csv",
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+        "P1" : {
+          "value" : "V1",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+
+  },{
+    "stepName" : "Step2",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id2",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+        "P2" : {
+          "value" : "V2",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+
+  } ]
+}

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -41,6 +41,8 @@ public abstract class Step implements CsvDataManager
 	
 	protected final List<Action> actions = new ArrayList<>();
 	protected final Set<Action> asyncActions = new HashSet<>();
+	protected volatile Iterator<Action> actionsIterator = null;
+	protected volatile Action currentAction = null;
 	protected String actionsReportsDir = null;
 
 	protected boolean interrupted = false, paused = false;
@@ -276,6 +278,11 @@ public abstract class Step implements CsvDataManager
 		stepData.setFinished(finished);
 	}
 	
+	public boolean isEnded()
+	{
+		return getFinished() != null;
+	}
+	
 	
 	public ActionsExecutionProgress getExecutionProgress()
 	{
@@ -508,11 +515,13 @@ public abstract class Step implements CsvDataManager
 
 			AtomicBoolean canReplay = new AtomicBoolean(false);
 			logger.info("Running actions for step '{}'", this.getName());
-			for (Action action : actions)
+			actionsIterator = createActionsIterator();
+			while (actionsIterator.hasNext())
 			{
+				currentAction = actionsIterator.next();
 				try
 				{
-					if (action.getFinished() != null)  // If we replay the step and this action is already done
+					if (currentAction.getFinished() != null)  // If we replay the step and this action is already done
 						continue;
 					
 					if (paused)
@@ -521,30 +530,31 @@ public abstract class Step implements CsvDataManager
 					if (interrupted)
 						break;
 					
-					actionExec.prepareToAction(action);
+					actionExec.prepareToAction(currentAction);
 					
-					Matrix matrix = action.getMatrix();
+					Matrix matrix = currentAction.getMatrix();
 					MatrixContext matrixContext = matrix.getContext();
 					StepContext stepContext = getStepContext(matrix);
 					
-					beforeAction(action, stepContext, matrixContext, globalContext);
+					beforeAction(currentAction, stepContext, matrixContext, globalContext);
 					
-					if (replay.getValue() && !actionExec.prepareActionReplay(action))
+					if (replay.getValue() && !actionExec.prepareActionReplay(currentAction))
 						continue;
 
 					//Need to "execute actions" even if step is not executable, because actions may need to set some parameters referenced by further actions
-					actionExec.executeAction(action, stepContext, canReplay);
+					actionExec.executeAction(currentAction, stepContext, canReplay);
 					
-					afterAction(action, stepContext, matrixContext, globalContext);
+					afterAction(currentAction, stepContext, matrixContext, globalContext);
 					updateByAsyncActions(actionExec);
 				}
 				finally
 				{
-					if (!isAsyncAction(action))
-						action.dispose();
+					if (!isAsyncAction(currentAction))
+						currentAction.dispose();
 				}
 			}
-
+			actionsIterator = null;
+			
 			actionExec.afterActionsExecution(this);
 			waitForAsyncActions(actionExec, ActionExecutor::waitForStepAsyncActions);
 			replay.setValue(canReplay.get());
@@ -601,8 +611,36 @@ public abstract class Step implements CsvDataManager
 		asyncActions.addAll(actions.stream().filter(Action::isAsync).collect(Collectors.toList()));
 		executable = stepData.isExecute() && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
 		async = !asyncActions.isEmpty();
+		
+		if (actionsIterator != null)
+		{
+			actionsIterator = createActionsIterator();
+			currentAction = null;
+		}
 	}
-
+	
+	public void rewindToAction(Action action)
+	{
+		if (action.getStep() != this)
+			throw new IllegalArgumentException("Given action (ID="+action.getIdInMatrix()+") is not from this global step");
+		
+		if (actionsIterator == null)
+			throw new IllegalStateException("This global step is not being executed");
+		
+		Iterator<Action> newIterator = createActionsIterator();
+		while (newIterator.hasNext())
+		{
+			Action nextAction = newIterator.next();
+			if (nextAction == action)
+			{
+				actionsIterator = newIterator;
+				currentAction = action;
+				return;
+			}
+		}
+		throw new IllegalArgumentException("Given action (ID="+action.getIdInMatrix()+") is not found in this global step");
+	}
+	
 	public void refreshAsyncFlag(Action asyncAction)
 	{
 		synchronized (asyncActions)
@@ -613,6 +651,18 @@ public abstract class Step implements CsvDataManager
 			}
 		}
 	}
+	
+	public Action getCurrentAction()
+	{
+		return currentAction;
+	}
+	
+	
+	private Iterator<Action> createActionsIterator()
+	{
+		return actions.iterator();
+	}
+	
 	
 	public enum StepParams
 	{

@@ -1,0 +1,3 @@
+#ID,#GlobalStep,#Action,#Param1
+id1,Step1,SetStatic,Value1
+id2,Step1,SetStatic,Value123

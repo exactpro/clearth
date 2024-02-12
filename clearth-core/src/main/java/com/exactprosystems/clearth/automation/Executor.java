@@ -195,8 +195,7 @@ public abstract class Executor extends Thread
 				{
 					stepData.add(step.getStepData());
 
-					//Is step already done?
-					if (step.getFinished()!=null)
+					if (step.isEnded())
 						continue;
 					
 					startTimeStep = 0L;
@@ -1348,7 +1347,7 @@ public abstract class Executor extends Thread
 		Path executedMatricesPath = scheduler.getExecutedMatricesPath();
 		Files.createDirectories(executedMatricesPath);
 		List<MatrixData> executedMatrices = new ArrayList<>(matrices.size());
-		MatrixDataFactory matrixDataFactory = ClearThCore.getInstance().getMatrixDataFactory();
+		MatrixDataFactory matrixDataFactory = scheduler.getMatrixDataFactory();
 
 		try
 		{

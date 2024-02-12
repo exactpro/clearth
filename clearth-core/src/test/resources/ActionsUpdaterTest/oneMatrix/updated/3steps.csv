@@ -1,0 +1,10 @@
+#ID,#GlobalStep,#Action,#Param1
+id1,Init,SetStatic,ChangedValue
+#ID,#GlobalStep,#Action,#ParamX,#ParamY
+id2,Init,SetStatic,1,2
+#ID,#GlobalStep,#Action,#ParamX
+id3,Init,SetStatic,2
+#ID,#GlobalStep,#Action,#FileName
+id4,Upload,SetStatic,my.csv
+#ID,#GlobalStep,#Action,#Expected,#Actual
+id5,Verify,Compare2Values,2,3

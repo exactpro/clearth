@@ -19,9 +19,11 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.exceptions.ActionUpdateException;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.FatalAutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
+import com.exactprosystems.clearth.automation.exceptions.SchedulerUpdateException;
 import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProviderHolder;
@@ -68,6 +70,7 @@ public abstract class Scheduler
 	protected final String scriptsDir, lastExecutionDataDir;
 	protected final ExecutorFactory executorFactory;
 	protected final StepFactory stepFactory;
+	protected final MatrixDataFactory matrixDataFactory;
 	protected final ActionGeneratorResources generatorResources;
 	protected final SchedulerData schedulerData;
 	protected List<Step> steps = new ArrayList<Step>();
@@ -96,28 +99,28 @@ public abstract class Scheduler
 	{
 		scriptsDir = ClearThCore.scriptsPath() + schedulerDirName + File.separator + name + File.separator;
 		lastExecutionDataDir = ClearThCore.lastExecutionPath() + schedulerDirName + File.separator + name + File.separator;
-
+		
 		this.executorFactory = executorFactory;
 		this.stepFactory = stepFactory;
+		this.matrixDataFactory = ClearThCore.getInstance().getMatrixDataFactory();
 		this.generatorResources = generatorResources;
 		schedulerData = createSchedulerData(name, configsRoot, schedulerDirName, lastExecutionDataDir, scriptsDir);
-
+		
 		//If some matrices files were added before scheduler construction - let's add them to schedulerData
 		File mdFile = new File(scriptsDir);
-		File[] files =
-				mdFile.listFiles(file -> isExtensionSupported(FilenameUtils.getExtension(file.getName())));
-		if (files==null)
-			return;
-		MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
-		boolean added = false;
-		for (File f : files)
-			if (schedulerData.matrixFileIndex(f)<0)
-			{
-				schedulerData.getMatrices().add(mdf.createMatrixData(f, null, true,true));
-				added = true;
-			}
-		if (added)
-			saveMatrices();
+		File[] files = mdFile.listFiles(file -> isExtensionSupported(FilenameUtils.getExtension(file.getName())));
+		if (files != null)
+		{
+			boolean added = false;
+			for (File f : files)
+				if (schedulerData.matrixFileIndex(f)<0)
+				{
+					schedulerData.getMatrices().add(matrixDataFactory.createMatrixData(f, null, true,true));
+					added = true;
+				}
+			if (added)
+				saveMatrices();
+		}
 		
 		try
 		{
@@ -125,7 +128,7 @@ public abstract class Scheduler
 		}
 		catch (IOException e)
 		{
-			//Info might not be saved, so it's normal to silence exception here
+			logger.error("Error while loading state info", e);
 			stateInfo = null;
 		}
 	}
@@ -726,10 +729,7 @@ public abstract class Scheduler
 	{
 		int index = schedulerData.matrixFileIndex(newMatrix);
 		if (index < 0)
-		{
-			MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
-			schedulerData.getMatrices().add(mdf.createMatrixData(newMatrix, new Date(), true, true));
-		}
+			schedulerData.getMatrices().add(matrixDataFactory.createMatrixData(newMatrix, new Date(), true, true));
 		return true;
 	}
 	
@@ -754,10 +754,7 @@ public abstract class Scheduler
 			checkMatricesExistance();
 			int index = schedulerData.matrixFileIndex(matrix);
 			if (index < 0)
-			{
-				MatrixDataFactory mdf = ClearThCore.getInstance().getMatrixDataFactory();
-				schedulerData.getMatrices().add(mdf.createMatrixData(matrix, new Date(), true, true));
-			}
+				schedulerData.getMatrices().add(matrixDataFactory.createMatrixData(matrix, new Date(), true, true));
 			else
 			{
 				MatrixData matrixData = schedulerData.getMatrices().get(index);
@@ -788,6 +785,15 @@ public abstract class Scheduler
 	{
 		md.setTrim(!md.isTrim());
 		saveMatrices();
+	}
+	
+	synchronized public void updateRunningMatrices(List<MatrixData> updatedMatrixData) throws AutomationException, SchedulerUpdateException, ActionUpdateException
+	{
+		if (!isSuspended())
+			throw new AutomationException("Scheduler is not in suspended state. Matrices cannot be updated");
+		
+		SchedulerUpdater updater = new SchedulerUpdater(this);
+		updater.updateMatrices(updatedMatrixData);
 	}
 	
 	
@@ -1100,8 +1106,6 @@ public abstract class Scheduler
 	{
 		if (!isSuspended())
 			return;
-		
-		
 		
 		if (!sequentialRun) {
 			executor.clearLastReportsInfo();
@@ -1545,6 +1549,11 @@ public abstract class Scheduler
 	public StepFactory getStepFactory()
 	{
 		return stepFactory;
+	}
+	
+	public MatrixDataFactory getMatrixDataFactory()
+	{
+		return matrixDataFactory;
 	}
 	
 	

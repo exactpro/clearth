@@ -1,0 +1,4 @@
+#ID,#GlobalStep,#Action,#Param1
+id2_1,Init,SetStatic,Value2.1
+#ID,#GlobalStep,#Action,#FileName
+id2_2,Upload,SetStatic,dummy.txt

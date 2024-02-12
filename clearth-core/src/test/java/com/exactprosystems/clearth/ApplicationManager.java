@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -48,6 +48,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -226,13 +227,24 @@ public class ApplicationManager
 
 	public static void waitForSchedulerToStop(Scheduler scheduler, long delay, long timeout)
 	{
+		waitForSchedulerState(scheduler, delay, timeout, s -> !s.isRunning(), "stop");
+	}
+	
+	public static void waitForSchedulerToSuspend(Scheduler scheduler, long delay, long timeout)
+	{
+		waitForSchedulerState(scheduler, delay, timeout, s -> s.isSuspended(), "suspension");
+	}
+	
+	
+	private static void waitForSchedulerState(Scheduler scheduler, long delay, long timeout, Function<Scheduler, Boolean> stateChecker, String stateName)
+	{
 		try
 		{
 			Stopwatch s = Stopwatch.createAndStart(timeout);
-			while (scheduler.isRunning())
+			while (!stateChecker.apply(scheduler))
 			{
 				if (s.isExpired())
-					fail("Too long to wait for Scheduler to finish.");
+					fail("Too long waiting for Scheduler "+stateName);
 
 				TimeUnit.MILLISECONDS.sleep(delay);
 			}
@@ -240,7 +252,7 @@ public class ApplicationManager
 		catch (InterruptedException e)
 		{
 			Thread.currentThread().interrupt();
-			fail("Waiting for Scheduler to stop is interrupted.");
+			fail("Waiting for Scheduler "+stateName+" interrupted");
 		}
 	}
 

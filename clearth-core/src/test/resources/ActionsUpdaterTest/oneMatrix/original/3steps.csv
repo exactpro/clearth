@@ -1,0 +1,7 @@
+#ID,#GlobalStep,#Action,#Param1
+id1,Init,SetStatic,Value1
+#ID,#GlobalStep,#Action,#ParamX,#ParamY
+id2,Init,SetStatic,1,2
+#ID,#GlobalStep,#Action,#FileName
+id3,Upload,SetStatic,file1.txt
+id4,Upload,SetStatic,file50.txt
