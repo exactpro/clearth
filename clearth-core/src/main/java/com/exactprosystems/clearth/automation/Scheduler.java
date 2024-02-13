@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -49,6 +49,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -1516,13 +1517,15 @@ public abstract class Scheduler
 	{
 		if (!sequentialRun)
 		{
-			if (!reuseReports || executor.getLastReportsInfo() == null)
+			ReportsInfo reportsInfo = executor.getLastReportsInfo();
+			if (!reuseReports || reportsInfo == null || !Files.isDirectory(Path.of(reportsInfo.getPath())))
 				executor.makeCurrentReports(pathToStoreReports);
 			return executor.getLastReportsInfo();
 		}
 		else
 		{
-			if (!reuseReports || seqExec.getLastReportInfo() == null)
+			ReportsInfo reportsInfo = seqExec.getLastReportInfo();
+			if (!reuseReports || reportsInfo == null || !Files.isDirectory(Path.of(reportsInfo.getPath())))
 				seqExec.makeCurrentReport(pathToStoreReports);
 			return seqExec.getLastReportInfo();
 		}

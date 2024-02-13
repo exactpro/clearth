@@ -92,7 +92,7 @@ public abstract class Executor extends Thread
 	private Date started, ended;
 	private final SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 	protected String reportsDir, specificDir, completedReportsDir, actionsReportsDir;
-	protected ReportsInfo lastReportsInfo = null;
+	protected volatile ReportsInfo lastReportsInfo = null;
 	private Object executionMonitor = null;
 	protected File storedActionsReportsDir;
 
