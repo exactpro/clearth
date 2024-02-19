@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -42,8 +42,20 @@ public class StepData implements CsvDataManager
 	{
 		assignFields(record);
 	}
-
-
+	
+	public StepData(StepData copyFrom)
+	{
+		name = copyFrom.getName();
+		kind = copyFrom.getKind();
+		startAt = copyFrom.getStartAt();
+		askForContinue = copyFrom.isAskForContinue();
+		askIfFailed = copyFrom.isAskIfFailed();
+		execute = copyFrom.isExecute();
+		started = copyFrom.getStarted();
+		finished = copyFrom.getFinished();
+	}
+	
+	
 	public String getName()
 	{
 		return name;

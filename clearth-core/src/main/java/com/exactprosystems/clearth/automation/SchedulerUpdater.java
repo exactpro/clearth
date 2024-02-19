@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -51,7 +52,17 @@ public class SchedulerUpdater
 			logger.info("Compiling updated matrices: {}", updatedMatrixData.stream().map(MatrixData::getName).collect(Collectors.toList()));
 		List<Matrix> updatedMatrices = compileUpdatedMatrices(updatedMatrixData);
 		logger.info("Updating matrices in scheduler");
-		applyUpdate(updatedMatrices);
+		applyUpdatedMatrices(updatedMatrices);
+	}
+	
+	public void updateSteps(List<StepData> updatedStepData) throws SchedulerUpdateException
+	{
+		Map<String, Step> existingSteps = scheduler.getSteps().stream().collect(Collectors.toMap(Step::getName, Function.identity()));
+		checkUpdatedSteps(updatedStepData, existingSteps);
+		
+		if (logger.isInfoEnabled())
+			logger.info("Updating steps: {}", updatedStepData.stream().map(StepData::getName).collect(Collectors.toList()));
+		applyUpdatedSteps(updatedStepData, existingSteps);
 	}
 	
 	
@@ -89,7 +100,7 @@ public class SchedulerUpdater
 		return updatedMatrices;
 	}
 	
-	private void applyUpdate(List<Matrix> updatedMatrices) throws ActionUpdateException
+	private void applyUpdatedMatrices(List<Matrix> updatedMatrices) throws ActionUpdateException
 	{
 		Step currentStep = scheduler.getCurrentStep();
 		Action currentAction = currentStep.getCurrentAction();
@@ -99,6 +110,44 @@ public class SchedulerUpdater
 		
 		if (!currentStep.isEnded())  //If current step is not finished yet, need to rewind its progress back to current action
 			currentStep.rewindToAction(currentAction);
+	}
+	
+	
+	private void checkUpdatedSteps(List<StepData> updatedSteps, Map<String, Step> existingSteps) throws SchedulerUpdateException
+	{
+		for (StepData step : updatedSteps)
+		{
+			String stepName = step.getName();
+			Step existingStep = existingSteps.get(stepName);
+			if (existingStep == null)
+				throw new SchedulerUpdateException("Global step '"+stepName+"' is not used in the run");
+			if (existingStep.isEnded())
+				throw new SchedulerUpdateException("Global step '"+stepName+"' is ended and cannot be updated");
+			if (!existingStep.isExecute() && step.isExecute())
+				throw new SchedulerUpdateException("Global step '"+stepName+"' is not executable and cannot be changed to executable");
+		}
+	}
+	
+	private void applyUpdatedSteps(List<StepData> updatedSteps, Map<String, Step> existingSteps)
+	{
+		for (StepData step : updatedSteps)
+		{
+			String stepName = step.getName();
+			logger.debug("Updating step '{}': Ask for continue={}, Ask if failed={}",
+					stepName, step.isAskForContinue(), step.isAskIfFailed());
+			
+			Step existingStep = existingSteps.get(stepName);
+			existingStep.setAskForContinue(step.isAskForContinue());
+			existingStep.setAskIfFailed(step.isAskIfFailed());
+			if (existingStep.getStarted() == null)  //Can update the values below only for steps that are not started yet
+			{
+				logger.debug("Updating startup fields: Execute={}, Start at={}, Kind={}",
+						step.isExecute(), step.getStartAt(), step.getKind());
+				existingStep.setExecute(step.isExecute());
+				existingStep.setStartAt(step.getStartAt());
+				existingStep.setKind(step.getKind());
+			}
+		}
 	}
 	
 	

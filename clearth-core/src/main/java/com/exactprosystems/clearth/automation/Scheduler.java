@@ -453,6 +453,15 @@ public abstract class Scheduler
 		saveStepsAndInit("Error while saving steps after moving one of them down");
 	}
 	
+	synchronized public void updateRunningSteps(List<StepData> updatedStepData) throws AutomationException, SchedulerUpdateException
+	{
+		if (!isSuspended())
+			throw new AutomationException("Scheduler is not in suspended state. Steps cannot be updated");
+		
+		SchedulerUpdater updater = new SchedulerUpdater(this);
+		updater.updateSteps(updatedStepData);
+	}
+	
 	
 	/* Matrices compilation and check */
 	

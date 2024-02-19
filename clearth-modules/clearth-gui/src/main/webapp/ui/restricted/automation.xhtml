@@ -970,7 +970,45 @@
 								 type="button" />
 			</h:form>
 		</p:confirmDialog>
-
+		
+		<!-- Update steps dialog -->
+		<p:dialog header="Steps update" widgetVar="updateStepsDialog" id="updateStepsDialog"
+				width="750" resizable="false" closeOnEscape="true" modal="#{guiBean.modalDialog}" styleClass="subDialog">
+			<h:form>
+				<p:dataTable id="updatedStepsTable" var="step" value="#{automationConfigBean.steps.stepsToUpdate}"
+						scrollable="true" scrollHeight="400" resizableColumns="false" liveResize="false"
+						emptyMessage="No steps available">
+					<ui:param name="startupChangeable" value="#{step.started == null and step.execute}" />
+					<p:column headerText="Name" responsivePriority="1" style="width: 30%">
+						<h:outputText value="#{step.name}" />
+					</p:column>
+					<p:column headerText="Ask&#160;for&#160;continue" responsivePriority="2">
+						<p:selectBooleanCheckbox value="#{step.askForContinue}" />
+					</p:column>
+					<p:column headerText="Ask&#160;if&#160;failed" responsivePriority="2">
+						<p:selectBooleanCheckbox value="#{step.askIfFailed}" />
+					</p:column>
+					<p:column headerText="Execute" responsivePriority="2">
+						<p:selectBooleanCheckbox value="#{step.execute}" rendered="#{startupChangeable}" />
+					</p:column>
+					<p:column headerText="Start&#160;at" responsivePriority="2">
+						<p:inputText value="#{step.startAt}" rendered="#{startupChangeable}" style="width: 100px" />
+					</p:column>
+				</p:dataTable>
+				<p:outputPanel layout="block" style="text-align: right; margin-top: 10px">
+					<p:commandButton value="OK" update=":SchedulerSteps :Growl"
+							actionListener="#{automationConfigBean.steps.updateSteps}"
+							oncomplete="PF('updateStepsDialog').hide();"
+							icon="ui-icon ui-icon-check" />
+					<p:commandButton value="Cancel"
+							onclick="PF('updateStepsDialog').hide();"
+							icon="ui-icon ui-icon-close"
+							type="button" />
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+		
+		
 		<!-- Upload matrices dialog -->
 		<p:dialog header="Upload matrix" id="uploadMatrixDialog" widgetVar="uploadMatrixDialog" resizable="false" width="600" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form enctype="multipart/form-data">
@@ -1334,10 +1372,12 @@
 				<p:commandButton value="Make and show reports" action="#{automationReportsBean.makeReports}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" />
 			</h:form>
 			<br />
-			<h:form id="UpdateMatrices">
-				<h:outputText value="You can update matrices used in the scheduler" />
+			<h:form id="UpdateScheduler">
+				<h:outputText value="You can update matrices and steps used in the scheduler" />
 				<p:commandButton value="Update matrices" actionListener="#{automationMatricesBean.resetUpdatedMatrices()}"
 						update=":uploadUpdatedMatrixDialog" oncomplete="PF('uploadUpdatedMatrixDialog').show();" />
+				<p:commandButton value="Update steps" actionListener="#{automationConfigBean.steps.prepareStepsToUpdate()}"
+						update=":updateStepsDialog" oncomplete="PF('updateStepsDialog').show();" />
 			</h:form>
 			<br />
 			<h:form id="CurrentState">

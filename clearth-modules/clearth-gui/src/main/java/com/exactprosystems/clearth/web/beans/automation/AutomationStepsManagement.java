@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.automation.CoreStepKind;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.automation.StepData;
 import com.exactprosystems.clearth.automation.StepImpl;
 import com.exactprosystems.clearth.automation.steps.ParamDescription;
 import com.exactprosystems.clearth.utils.CommaBuilder;
@@ -57,6 +58,8 @@ public class AutomationStepsManagement {
 	protected boolean executeAll = true;
 	protected boolean askIfFailedAll = true;
 	protected boolean stepsReordering = true;
+	
+	protected List<StepData> stepsToUpdate;
 	
 	protected ConfigurationAutomationBean configurationBean;
 
@@ -441,4 +444,41 @@ public class AutomationStepsManagement {
 		this.stepsReordering = stepsReordering;
 	}
 	
+	
+	public void prepareStepsToUpdate()
+	{
+		List<Step> steps = getSchedulerSteps();
+		stepsToUpdate = new ArrayList<>(steps.size());
+		for (Step s : steps)
+		{
+			if (s.isEnded())
+				continue;
+			
+			StepData newData = new StepData(s.getStepData());
+			stepsToUpdate.add(newData);
+		}
+	}
+	
+	public List<StepData> getStepsToUpdate()
+	{
+		return stepsToUpdate;
+	}
+	
+	public void updateSteps()
+	{
+		logger.info("updates steps in running scheduler");
+		try
+		{
+			selectedScheduler().updateRunningSteps(stepsToUpdate);
+			MessageUtils.addInfoMessage("Success", "Properties of steps have been updated");
+		}
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Could not update steps", e, logger);
+		}
+		finally
+		{
+			stepsToUpdate = null;
+		}
+	}
 }

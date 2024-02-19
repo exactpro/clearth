@@ -1,0 +1,10 @@
+#ID,#GlobalStep,#Action
+id1,Step1,SchedulerPause
+#ID,#GlobalStep,#Action,#P1
+id2,Step1,SetStatic,V1
+#ID,#GlobalStep,#Action,#Param1
+id3,Step2,SetStatic,Value1
+#ID,#GlobalStep,#Action,#NewParam
+id4,Step3,SetStatic,NewValue
+#ID,#GlobalStep,#Action,#AnotherParam
+id5,Step4,SetStatic,@{id90.InvalidReference}

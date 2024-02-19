@@ -1,0 +1,94 @@
+{
+  "matrixName" : "matrix1.csv",
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "SchedulerPause",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+      }
+    },
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id2",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+        "P1" : {
+          "value" : "V1",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+  },
+  {
+    "stepName" : "Step3",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id4",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+        "NewParam" : {
+          "value" : "NewValue",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+  },
+  {
+    "stepName" : "Step4",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : false
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id5",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "status" : {
+        "passed" : false,
+        "comments" : [ "Could not calculate the following parameters: \r\n'AnotherParam' - Incorrect formula\r\nCheck if all references and function calls are correct and all referenced actions are successful" ]
+      },
+      "inputParams" : {
+        "AnotherParam" : {
+          "value" : "@{id90.InvalidReference}",
+          "formula" : "@{id90.InvalidReference}",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+  }]
+}
