@@ -79,7 +79,7 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 					executionInfo.getName(), EventUtils.idToString(id));
 		executionInfo.setEventId(id);
 		
-		Map<String, HandledTestExecutionId> idMap= storeMatricesInfo(matrices);
+		Map<String, HandledTestExecutionId> idMap = storeMatricesInfo(matrices);
 		return new HandledTestExecutionIdStorage(new Th2EventId(executionInfo.getEventId()), idMap);
 	}
 	
@@ -91,8 +91,7 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 	@Override
 	public void onGlobalStepStart(StepMetadata metadata) throws TestExecutionHandlingException
 	{
-		for (MatrixExecutionInfo mi : executionInfo.getMatrixInfos())
-			startStepInMatrix(metadata, mi);
+		executionInfo.setStepMetadata(metadata.getName(), metadata);
 	}
 	
 	@Override
@@ -106,7 +105,9 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		if (action.isSubaction())
 			return null;
 		
-		Event actionEvent = eventFactory.createActionEvent(action, executionInfo);
+		EventID stepEventId = getStepEventId(action);
+		
+		Event actionEvent = eventFactory.createActionEvent(action, stepEventId);
 		if (logger.isDebugEnabled())
 			logger.debug("Storing event of action '{}', th2 ID={}",
 					action.getIdInMatrix(), EventUtils.idToString(actionEvent.getId()));
@@ -180,7 +181,19 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 		return idMap;
 	}
 	
-	protected void startStepInMatrix(StepMetadata metadata, MatrixExecutionInfo matrixInfo) throws TestExecutionHandlingException
+	protected EventID getStepEventId(Action action) throws TestExecutionHandlingException
+	{
+		String stepName = action.getStepName();
+		
+		MatrixExecutionInfo mi = executionInfo.getMatrixInfo(action.getMatrix().getName());
+		EventID stepEventId = mi.getStepEventId(stepName);
+		if (stepEventId != null)
+			return stepEventId;
+		
+		return startStepInMatrix(executionInfo.getStepMetadata(stepName), mi);
+	}
+	
+	protected EventID startStepInMatrix(StepMetadata metadata, MatrixExecutionInfo matrixInfo) throws TestExecutionHandlingException
 	{
 		Event event = eventFactory.createStepEvent(metadata, matrixInfo.getEventId());
 		EventID id = event.getId();
@@ -191,6 +204,7 @@ public class Th2TestExecutionHandler implements TestExecutionHandler
 					stepName, matrixInfo.getName(), EventUtils.idToString(id));
 		matrixInfo.setStepEventId(stepName, id);
 		storeEvent(event);
+		return id;
 	}
 	
 	

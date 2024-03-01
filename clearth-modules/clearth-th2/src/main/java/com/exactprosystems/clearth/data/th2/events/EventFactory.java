@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -49,7 +49,6 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.data.HandledMessageId;
 import com.exactprosystems.clearth.data.MessageHandlingUtils;
-import com.exactprosystems.clearth.data.th2.MatrixExecutionInfo;
 import com.exactprosystems.clearth.data.th2.SchedulerExecutionInfo;
 import com.exactprosystems.clearth.data.th2.config.EventsConfig;
 import com.exactprosystems.clearth.data.th2.config.StorageConfig;
@@ -132,13 +131,18 @@ public class EventFactory
 		}
 	}
 	
-	public Event createActionEvent(Action action, SchedulerExecutionInfo executionInfo) throws EventCreationException
+	public Event createActionEvent(Action action, EventID parentId) throws EventCreationException
 	{
-		MatrixExecutionInfo mi = executionInfo.getMatrixInfo(action.getMatrix().getName());
-		EventID parentId = mi.getStepEventId(action.getStepName());
 		try
 		{
-			return createActionEvent(action, parentId);
+			Instant startTimestamp = EventUtils.getActionStartTimestamp(action),
+					endTimestamp = EventUtils.getActionEndTimestamp(action);
+			
+			com.exactpro.th2.common.event.Event event = ClearThEvent.fromTo(startTimestamp, endTimestamp)
+					.name(buildActionName(action.getIdInMatrix(), action.getName()))
+					.type(TYPE_ACTION)
+					.description(buildActionDescription(action));
+			return event.toProto(parentId);
 		}
 		catch (Exception e)
 		{
@@ -229,18 +233,6 @@ public class EventFactory
 		}
 	}
 	
-	
-	protected Event createActionEvent(Action action, EventID parentId) throws IOException
-	{
-		Instant startTimestamp = EventUtils.getActionStartTimestamp(action),
-				endTimestamp = EventUtils.getActionEndTimestamp(action);
-		
-		com.exactpro.th2.common.event.Event event = ClearThEvent.fromTo(startTimestamp, endTimestamp)
-				.name(buildActionName(action.getIdInMatrix(), action.getName()))
-				.type(TYPE_ACTION)
-				.description(buildActionDescription(action));
-		return event.toProto(parentId);
-	}
 	
 	protected Event createInputParams(Action action, Instant startTimestamp, Instant endTimestamp, EventID parentId) throws IOException
 	{

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,11 +26,13 @@ import java.util.Map;
 
 import com.exactpro.th2.common.grpc.EventID;
 import com.exactprosystems.clearth.automation.GlobalContext;
+import com.exactprosystems.clearth.automation.StepMetadata;
 
 public class SchedulerExecutionInfo
 {
 	private final String name;
 	private final Map<String, MatrixExecutionInfo> matrixInfos = new HashMap<>();
+	private final Map<String, StepMetadata> stepMetadatas = new HashMap<>();
 	private EventID eventId;
 	private String startedByUser;
 	private Instant startTimestamp,
@@ -68,6 +70,22 @@ public class SchedulerExecutionInfo
 	public void setMatrixInfo(String name, MatrixExecutionInfo info)
 	{
 		matrixInfos.put(name, info);
+	}
+	
+	
+	public Collection<StepMetadata> getStepMetadatas()
+	{
+		return Collections.unmodifiableCollection(stepMetadatas.values());
+	}
+	
+	public StepMetadata getStepMetadata(String name)
+	{
+		return stepMetadatas.get(name);
+	}
+	
+	public void setStepMetadata(String name, StepMetadata metadata)
+	{
+		stepMetadatas.put(name, metadata);
 	}
 	
 	

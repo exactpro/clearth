@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -86,11 +86,13 @@ public class Th2TestExecutionHandlerTest
 				schedulerName = "main",
 				userName = "user1",
 				matrixName = "test_matrix",
-				stepName = "Initialization",
+				initStepName = "Initialization",
+				procStepName = "Processing",
 				actionId = "firstAction";
 		StorageConfig config = new StorageConfig(book, new EventsConfig(scope, 100));
 		Instant schedulerStart = Instant.ofEpochSecond(Instant.now().getEpochSecond()),  //It will be converted to Date which lacks nanoseconds and then back to Instant
-				stepStart,
+				initStepStart,
+				procStepStart,
 				now = Instant.now();
 		
 		MessageID msgId = MessageID.newBuilder()
@@ -116,9 +118,13 @@ public class Th2TestExecutionHandlerTest
 			
 			handler.onTestStart(Collections.singleton(matrixName), gc);
 			
-			stepStart = Instant.now();
-			handler.onGlobalStepStart(new StepMetadata(stepName, stepStart));
-			onAction(createSetStatic(actionId, createMatrix(matrixName), createStep(stepName), new EncodedClearThMessage("Test message", msgMetadata)),
+			initStepStart = Instant.now();
+			handler.onGlobalStepStart(new StepMetadata(initStepName, initStepStart));
+			handler.onGlobalStepEnd();
+			
+			procStepStart = Instant.now();
+			handler.onGlobalStepStart(new StepMetadata(procStepName, procStepStart));
+			onAction(createSetStatic(actionId, createMatrix(matrixName), createStep(procStepName), new EncodedClearThMessage("Test message", msgMetadata)),
 					handler);
 			handler.onGlobalStepEnd();
 			handler.onTestEnd();
@@ -147,8 +153,8 @@ public class Th2TestExecutionHandlerTest
 		assertEquals(EventUtils.getTimestamp(matrixEvent.getId().getStartTimestamp()), schedulerStart, "Matrix event start timestamp");
 		
 		Event stepEvent = getFirstEvent(it.next());
-		assertEquals(stepEvent.getName(), stepName, "Step event name");
-		assertEquals(EventUtils.getTimestamp(stepEvent.getId().getStartTimestamp()), stepStart, "Step event start timestamp");
+		assertEquals(stepEvent.getName(), procStepName, "Step event name");
+		assertEquals(EventUtils.getTimestamp(stepEvent.getId().getStartTimestamp()), procStepStart, "Step event start timestamp");
 		
 		Event actionEvent = getFirstEvent(it.next());
 		assertEquals(actionEvent.getName(), 
@@ -173,12 +179,14 @@ public class Th2TestExecutionHandlerTest
 		String testMatrixName = "test_matrix",
 				anotherMatrixName = "another_matrix",
 				step1Name = "step1",
-				step2Name = "step2";
+				step2Name = "step2",
+				step3Name = "step3";
 		Matrix testMatrix = createMatrix(testMatrixName),
 				anotherMatrix = createMatrix(anotherMatrixName);
 		Collection<String> matrices = Arrays.asList(testMatrixName, anotherMatrixName);
 		Step step1 = createStep(step1Name),
-				step2 = createStep(step2Name);
+				step2 = createStep(step2Name),
+				step3 = createStep(step3Name);
 		
 		try (TestExecutionHandler handler = new Th2TestExecutionHandler("main", router, 
 				new EventFactory(config), 
@@ -197,7 +205,11 @@ public class Th2TestExecutionHandlerTest
 			Instant step2Start = Instant.now();
 			handler.onGlobalStepStart(new StepMetadata(step2Name, step2Start));
 			onAction(createSetStatic("id2", anotherMatrix, step2, null), handler);
-			onAction(createSetStatic("id5", testMatrix, step2, null), handler);
+			handler.onGlobalStepEnd();
+			
+			Instant step3Start = Instant.now();
+			handler.onGlobalStepStart(new StepMetadata(step3Name, step3Start));
+			onAction(createSetStatic("id5", testMatrix, step3, null), handler);
 			handler.onGlobalStepEnd();
 			
 			handler.onTestEnd();
@@ -205,8 +217,8 @@ public class Th2TestExecutionHandlerTest
 		
 		List<EventBatch> stored = router.getSent();
 		//19 events = scheduler start + 2 matrices 
-		//  + step for each matrix + 2 actions + parameters of each action + status of each action
-		//  + step for each matrix + 2 actions + parameters of each action + status of each action
+		//  + 2 steps for testMatrix + 2 actions + parameters of each action + status of each action
+		//  + 2 steps for anotherMatrix + 2 actions + parameters of each action + status of each action
 		assertEquals(stored.size(), 19, "Number of stored events");
 		
 		Iterator<EventBatch> it = stored.iterator();
@@ -218,40 +230,38 @@ public class Th2TestExecutionHandlerTest
 		assertEquals(anotherMatrixEvent.getParentId(), schedulerEvent.getId(), "Parent of "+anotherMatrixName);
 		
 		Event testMatrixStep1Event = getFirstEvent(it.next()),
-				anotherMatrixStep1Event = getFirstEvent(it.next());
-		assertEquals(testMatrixStep1Event.getParentId(), testMatrixEvent.getId(), "Parent of "+step1Name+" from "+testMatrixName);
-		assertEquals(anotherMatrixStep1Event.getParentId(), anotherMatrixEvent.getId(), "Parent of "+step1Name+" from "+anotherMatrixName);
-		
-		Event testMatrixAction1Event = getFirstEvent(it.next()),
+				testMatrixAction1Event = getFirstEvent(it.next()),
 				testMatrixAction1StatusEvent = getFirstEvent(it.next()),
 				testMatrixAction1ResultEvent = getFirstEvent(it.next());
+		assertEquals(testMatrixStep1Event.getParentId(), testMatrixEvent.getId(), "Parent of "+step1Name+" from "+testMatrixName);
 		assertEquals(testMatrixAction1Event.getParentId(), testMatrixStep1Event.getId(), "Parent of first action from "+testMatrixName);
 		assertEquals(testMatrixAction1StatusEvent.getParentId(), testMatrixAction1Event.getId(), "Parent of status of first action from "+testMatrixName);
 		assertEquals(testMatrixAction1ResultEvent.getParentId(), testMatrixAction1Event.getId(), "Parent of result of first action from "+testMatrixName);
 		
-		Event anotherMatrixAction1Event = getFirstEvent(it.next()),
+		Event anotherMatrixStep1Event = getFirstEvent(it.next()),
+				anotherMatrixAction1Event = getFirstEvent(it.next()),
 				anotherMatrixAction1StatusEvent = getFirstEvent(it.next()),
 				anotherMatrixAction1ResultEvent = getFirstEvent(it.next());
+		assertEquals(anotherMatrixStep1Event.getParentId(), anotherMatrixEvent.getId(), "Parent of "+step1Name+" from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction1Event.getParentId(), anotherMatrixStep1Event.getId(), "Parent of first action from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction1StatusEvent.getParentId(), anotherMatrixAction1Event.getId(), "Parent of status of first action from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction1ResultEvent.getParentId(), anotherMatrixAction1Event.getId(), "Parent of result of first action from "+anotherMatrixName);
 		
-		Event testMatrixStep2Event = getFirstEvent(it.next()),
-				anotherMatrixStep2Event = getFirstEvent(it.next());
-		assertEquals(testMatrixStep2Event.getParentId(), testMatrixEvent.getId(), "Parent of "+step2Name+" from "+testMatrixName);
-		assertEquals(anotherMatrixStep2Event.getParentId(), anotherMatrixEvent.getId(), "Parent of "+step2Name+" from "+anotherMatrixName);
-		
-		Event anotherMatrixAction2Event = getFirstEvent(it.next()),
+		Event anotherMatrixStep2Event = getFirstEvent(it.next()),
+				anotherMatrixAction2Event = getFirstEvent(it.next()),
 				anotherMatrixAction2StatusEvent = getFirstEvent(it.next()),
 				anotherMatrixAction2ResultEvent = getFirstEvent(it.next());
+		assertEquals(anotherMatrixStep2Event.getParentId(), anotherMatrixEvent.getId(), "Parent of "+step2Name+" from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction2Event.getParentId(), anotherMatrixStep2Event.getId(), "Parent of second action from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction2StatusEvent.getParentId(), anotherMatrixAction2Event.getId(), "Parent of status of second action from "+anotherMatrixName);
 		assertEquals(anotherMatrixAction2ResultEvent.getParentId(), anotherMatrixAction2Event.getId(), "Parent of result of second action from "+anotherMatrixName);
 		
-		Event testMatrixAction2Event = getFirstEvent(it.next()),
+		Event testMatrixStep3Event = getFirstEvent(it.next()),
+				testMatrixAction2Event = getFirstEvent(it.next()),
 				testMatrixAction2StatusEvent = getFirstEvent(it.next()),
 				testMatrixAction2ResultEvent = getFirstEvent(it.next());
-		assertEquals(testMatrixAction2Event.getParentId(), testMatrixStep2Event.getId(), "Parent of second action from "+testMatrixName);
+		assertEquals(testMatrixStep3Event.getParentId(), testMatrixEvent.getId(), "Parent of "+step3Name+" from "+testMatrixName);
+		assertEquals(testMatrixAction2Event.getParentId(), testMatrixStep3Event.getId(), "Parent of second action from "+testMatrixName);
 		assertEquals(testMatrixAction2StatusEvent.getParentId(), testMatrixAction2Event.getId(), "Parent of status of second action from "+testMatrixName);
 		assertEquals(testMatrixAction2ResultEvent.getParentId(), testMatrixAction2Event.getId(), "Parent of result of second action from "+testMatrixName);
 	}
