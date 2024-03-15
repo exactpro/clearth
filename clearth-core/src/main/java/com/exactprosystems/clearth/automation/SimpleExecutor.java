@@ -50,12 +50,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
-public abstract class Executor extends Thread
+public abstract class SimpleExecutor extends Thread implements IExecutor
 {
 	protected static final String format = "HH:mm:ss",
 			REPORTDIR_COMPLETED = "completed",
@@ -98,8 +99,9 @@ public abstract class Executor extends Thread
 
 	private Timer sleepTimer = null;
 	private volatile long startTimeStep = 0L;
+	private Consumer<SimpleExecutor> onFinish;
 
-	public Executor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
+	public SimpleExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
 			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions)
 	{
 		super(scheduler.getName());
@@ -410,12 +412,14 @@ public abstract class Executor extends Thread
 				}
 			
 			//Let scheduler know about execution end so that the scheduler can free this thread's resources.
-			scheduler.executorFinished();
+			if (onFinish != null)
+				onFinish.accept(this);
 
 			clearMatricesContexts();
 			clearGlobalContexts();
 
 			this.matrices.clear();
+			
 			clearSteps();
 
 			if (sleepTimer != null) {
@@ -426,7 +430,7 @@ public abstract class Executor extends Thread
 			Utils.closeResource(executionHandler);
 		}
 	}
-
+	
 	private void setOutputPaths()
 	{
 		specificDir = scheduler.getForUser() + "/" + scheduler.getName() + "/" + df.format(started) + "/";
@@ -435,6 +439,10 @@ public abstract class Executor extends Thread
 		actionsReportsDir = reportsDir + REPORTDIR_ACTIONS + "/";
 	}
 	
+	public void setOnFinish(Consumer<SimpleExecutor> consumer)
+	{
+		onFinish = consumer;
+	}
 	
 	protected void stepStarted(Step step)
 	{
@@ -475,8 +483,6 @@ public abstract class Executor extends Thread
 	protected void clearSteps()
 	{
 		steps.forEach(Step::clearActions);
-		if (scheduler.executor != null) // We can't clear steps if it is executor created in seqExec
-			steps.clear();
 	}
 	
 	
@@ -693,8 +699,8 @@ public abstract class Executor extends Thread
 		}
 		return stepImpl;
 	}
-
-
+	
+	@Override
 	public List<Step> getSteps()
 	{
 		return steps;
@@ -720,6 +726,7 @@ public abstract class Executor extends Thread
 		return globalContext.isWeekendHoliday();
 	}
 	
+	@Override
 	public Map<String, Boolean> getHolidays()
 	{
 		return globalContext.getHolidays();
@@ -732,7 +739,7 @@ public abstract class Executor extends Thread
 		return handledIdStorage.getMatrixId(matrixName);
 	}
 	
-
+	@Override
 	public void interruptExecution() throws AutomationException
 	{
 		interrupted.set(true);
@@ -767,6 +774,7 @@ public abstract class Executor extends Thread
 		}
 	}
 
+	@Override
 	public void pauseExecution()
 	{
 		synchronized (suspension)
@@ -785,37 +793,43 @@ public abstract class Executor extends Thread
 		}
 	}
 	
-	
+	@Override
 	public boolean isExecutionInterrupted()
 	{
 		return interrupted.get();
 	}
 
+	@Override
 	public boolean isTerminated()
 	{
 		return terminated.get();
 	}
 
+	@Override
 	public Step getCurrentStep()
 	{
 		return currentStep;
 	}
 	
+	@Override
 	public boolean isCurrentStepIdle()
 	{
 		return idle;
 	}
 
+	@Override
 	public boolean isSuspended()
 	{
 		return suspension.isSuspended();
 	}
 	
+	@Override
 	public boolean isReplayEnabled()
 	{
 		return suspension.isReplayStep();
 	}
 
+	@Override
 	public void continueExecution()
 	{
 		if (paused.get())
@@ -832,6 +846,7 @@ public abstract class Executor extends Thread
 		}
 	}
 	
+	@Override
 	public void replayStep()
 	{
 		synchronized (suspension)
@@ -842,7 +857,7 @@ public abstract class Executor extends Thread
 		}
 	}
 	
-	
+	@Override
 	public boolean isFailover()
 	{
 		return failoverStatus.failover;
@@ -854,6 +869,7 @@ public abstract class Executor extends Thread
 		failoverStatus.notify();
 	}
 	
+	@Override
 	public void tryAgainMain()
 	{
 		synchronized (failoverStatus)
@@ -863,6 +879,7 @@ public abstract class Executor extends Thread
 		}
 	}
 	
+	@Override
 	public void tryAgainAlt()
 	{
 		synchronized (failoverStatus)
@@ -872,6 +889,7 @@ public abstract class Executor extends Thread
 		}
 	}
 	
+	@Override
 	public int getFailoverActionType()
 	{
 		if (!failoverStatus.failover)
@@ -880,6 +898,7 @@ public abstract class Executor extends Thread
 		return failoverStatus.actionType;
 	}
 	
+	@Override
 	public int getFailoverReason()
 	{
 		if (!failoverStatus.failover)
@@ -888,6 +907,7 @@ public abstract class Executor extends Thread
 		return failoverStatus.reason;
 	}
 	
+	@Override
 	public String getFailoverReasonString()
 	{
 		if (!failoverStatus.failover)
@@ -896,6 +916,7 @@ public abstract class Executor extends Thread
 		return failoverStatus.reasonString;
 	}
 	
+	@Override
 	public String getFailoverConnectionName()
 	{
 		if (!failoverStatus.failover)
@@ -904,6 +925,7 @@ public abstract class Executor extends Thread
 		return failoverStatus.connectionName;
 	}
 	
+	@Override
 	public void setFailoverRestartAction(boolean needRestart)
 	{
 		synchronized (failoverStatus)
@@ -913,6 +935,7 @@ public abstract class Executor extends Thread
 		}
 	}
 	
+	@Override
 	public void setFailoverSkipAction(boolean needSkipAction)
 	{
 		synchronized (failoverStatus)
@@ -1002,11 +1025,13 @@ public abstract class Executor extends Thread
 	}
 	
 	
+	@Override
 	public String getReportsDir()
 	{
 		return reportsDir;
 	}
 	
+	@Override
 	public String getCompletedReportsDir()
 	{
 		return completedReportsDir;
@@ -1256,6 +1281,7 @@ public abstract class Executor extends Thread
 		return matrSteps;
 	}
 	
+	@Override
 	public void makeCurrentReports(String pathToStoreReports)
 	{
 		try
@@ -1268,6 +1294,7 @@ public abstract class Executor extends Thread
 		}
 	}
 	
+	@Override
 	public void copyActionReports (File toDir)
 	{
 		try
@@ -1300,11 +1327,13 @@ public abstract class Executor extends Thread
 		}
 	}
 	
+	@Override
 	public ReportsInfo getLastReportsInfo()
 	{
 		return lastReportsInfo;
 	}
 	
+	@Override
 	public void clearLastReportsInfo()
 	{
 		this.lastReportsInfo = null;

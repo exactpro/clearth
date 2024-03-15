@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -55,7 +55,7 @@ public abstract class ExecutorState
 	{
 	}
 
-	public ExecutorState(Executor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
+	public ExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
 	{
 		for (Step step : executor.getSteps())
 			this.steps.add(stepFactory.createStepState(step));
@@ -80,7 +80,7 @@ public abstract class ExecutorState
 
 	protected abstract MatrixState createMatrixState(Matrix matrix);
 
-	protected abstract void initExecutor(Executor executor);
+	protected abstract void initExecutor(SimpleExecutor executor);
 
 	protected abstract ExecutorStateInfo createStateInfo();
 
@@ -103,8 +103,8 @@ public abstract class ExecutorState
 	protected abstract Class[] getAllowedClasses();
 
 
-	public Executor executorFromState(Scheduler scheduler, ExecutorFactory executorFactory, Date businessDay,
-	                                  Date baseTime, String startedByUser)
+	public SimpleExecutor executorFromState(Scheduler scheduler, ExecutorFactory executorFactory, Date businessDay,
+			Date baseTime, String startedByUser)
 			throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
 			InvocationTargetException, NoSuchMethodException, AutomationException, DataHandlingException
 	{
@@ -170,7 +170,7 @@ public abstract class ExecutorState
 				executorFactory.createGlobalContext(businessDay, baseTime, this.weekendHoliday, this.holidays,
 						startedByUser, executionHandler);
 
-		Executor result = executorFactory.createExecutor(scheduler, steps, matrices, globalContext, preparableActions);
+		SimpleExecutor result = executorFactory.createExecutor(scheduler, steps, matrices, globalContext, preparableActions);
 		result.setFixedIds(this.fixedIDs);
 		result.setStarted(this.started);
 		result.setEnded(this.ended);

@@ -392,7 +392,7 @@ class TestingExecutorFactory extends DefaultExecutorFactory
 	}
 
 	@Override
-	public Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser,
+	public SimpleExecutor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser,
 			Map<String, Preparable> preparableActions, TestExecutionHandler executionHandler)
 	{
 		GlobalContext globalContext =
@@ -405,14 +405,14 @@ class TestingExecutorFactory extends DefaultExecutorFactory
 	}
 
 	@Override
-	public Executor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices,
+	public SimpleExecutor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices,
 			GlobalContext globalContext, Map<String, Preparable> preparableActions)
 	{
 		return new TestingExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions);
 	}
 }
 
-class TestingExecutor extends DefaultExecutor
+class TestingExecutor extends DefaultSimpleExecutor
 {
 	public TestingExecutor(Scheduler scheduler, List<Step> steps,
 			List<Matrix> matrices, GlobalContext globalContext,

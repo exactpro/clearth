@@ -87,26 +87,26 @@ public class DefaultScheduler extends Scheduler
 	}
 
 	@Override
-	protected ExecutorState createExecutorState(Executor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
+	protected ExecutorState createExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
 	{
 		return new DefaultExecutorState(executor, stepFactory, reportsInfo);
 	}
 
 	
 	@Override
-	protected void initExecutor(Executor executor)
+	protected void initExecutor(SimpleExecutor executor)
 	{
 		//Nothing to do here
 	}
-
+	
 	@Override
 	protected void initSequentialExecutor(SequentialExecutor executor)
 	{
 		//Nothing to do here
 	}
-
+	
 	@Override
-	protected void initSchedulerOnRestore(Executor executor)
+	protected void initSchedulerOnRestore(SimpleExecutor executor)
 	{
 		//Nothing to do here
 	}

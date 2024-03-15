@@ -77,8 +77,7 @@ public abstract class Scheduler
 	protected List<Matrix> matrices = new ArrayList<Matrix>();
 	protected SchedulerStatus status = new SchedulerStatus();
 	protected boolean sequentialRun = false;
-	protected Executor executor = null;
-	protected SequentialExecutor seqExec = null;
+	protected IExecutor executor = null;
 	protected Map<String, List<ActionGeneratorMessage>> matricesErrors = null;
 	protected Date businessDay = new Date(),
 			baseTime = null;
@@ -141,11 +140,11 @@ public abstract class Scheduler
 	protected abstract ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException;
 	protected abstract void saveStateInfo(File destDir, ExecutorStateInfo stateInfo) throws IOException;
 	protected abstract ExecutorState createExecutorState(File sourceDir) throws IOException;
-	protected abstract ExecutorState createExecutorState(Executor executor, StepFactory stepFactory, ReportsInfo reportsInfo);
+	protected abstract ExecutorState createExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo);
 	
-	protected abstract void initExecutor(Executor executor);
+	protected abstract void initExecutor(SimpleExecutor executor);
 	protected abstract void initSequentialExecutor(SequentialExecutor executor);
-	protected abstract void initSchedulerOnRestore(Executor executor);
+	protected abstract void initSchedulerOnRestore(SimpleExecutor executor);
 	
 	
 	/* Properties control routines */
@@ -810,29 +809,21 @@ public abstract class Scheduler
 	
 	synchronized public boolean isRunning()
 	{
-		return ((executor!=null) && (!executor.isTerminated())) || ((seqExec!=null) && (!seqExec.isTerminated()));
+		return (executor != null && !executor.isTerminated());
 	}
 	
 	synchronized public boolean isSuspended()
 	{
 		if (!isRunning())
 			return false;
-		
-		if (!sequentialRun)
-			return executor.isSuspended();
-		else
-			return seqExec.isSuspended();
+		return executor.isSuspended();
 	}
 	
 	public boolean isReplayEnabled()
 	{
 		if (!isRunning())
 			return false;
-		
-		if (!sequentialRun)
-			return executor.isReplayEnabled();
-		else
-			return seqExec.isReplayEnabled();
+		return executor.isReplayEnabled();
 	}
 	
 	public boolean isSequentialRun()
@@ -844,11 +835,7 @@ public abstract class Scheduler
 	{
 		if (!isRunning())
 			return true;
-		
-		if (!sequentialRun)
-			return executor.isExecutionInterrupted();
-		else
-			return seqExec.isExecutionInterrupted();
+		return executor.isExecutionInterrupted();
 	}
 
 	public boolean isSuccessful()
@@ -915,9 +902,11 @@ public abstract class Scheduler
 			doBeforeStartExecution();
 			
 			TestExecutionHandler executionHandler = ClearThCore.getInstance().getDataHandlersFactory().createTestExecutionHandler(getName());
-			executor = executorFactory.createExecutor(this, matrices, userName, preparableActions, executionHandler);
+			SimpleExecutor simpleExecutor = executorFactory.createExecutor(this, matrices, userName, preparableActions, executionHandler);
 //			executor.globalContext.setLoadedContext(GlobalContext.ACTIONS_MAPPING, actionsMapping);
-			initExecutor(executor);
+			simpleExecutor.setOnFinish((x) -> this.executorFinished());
+			initExecutor(simpleExecutor);
+			executor = simpleExecutor;
 			executor.start();
 			
 			waitAfterExecutionStarted();
@@ -999,9 +988,11 @@ public abstract class Scheduler
 			updateLinkedMatrices();
 
 			Map<String, Preparable> preparableActions = new HashMap<String, Preparable>();
-			seqExec = createSequentialExecutor(this, userName, preparableActions);
-			initSequentialExecutor(seqExec);
-			seqExec.start();
+			SequentialExecutor sequentialExecutor = createSequentialExecutor(this, userName, preparableActions);
+			sequentialExecutor.setOnFinish((x) -> this.executorFinished());
+			initSequentialExecutor(sequentialExecutor);
+			executor = sequentialExecutor;
+			executor.start();
 			sequentialRun = true;
 		}
 		catch (AutomationException e)
@@ -1039,15 +1030,17 @@ public abstract class Scheduler
 		sequentialRun = false;
 		status.clear();
 		ExecutorState es = createExecutorState(schedulerData.getStateDir());
-		executor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
-		executor.setRestored(true);
-		executor.setStoredActionReports(schedulerData.getRepDir());
+		SimpleExecutor simpleExecutor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
+		simpleExecutor.setRestored(true);
+		simpleExecutor.setStoredActionReports(schedulerData.getRepDir());
+		simpleExecutor.setOnFinish((x) -> this.executorFinished());
 		
-		steps = executor.getSteps();
-		matrices = executor.getMatrices();
-		holidays = executor.getHolidays();
-		weekendHoliday = executor.isWeekendHoliday();
-		initSchedulerOnRestore(executor);
+		steps = simpleExecutor.getSteps();
+		matrices = simpleExecutor.getMatrices();
+		holidays = simpleExecutor.getHolidays();
+		weekendHoliday = simpleExecutor.isWeekendHoliday();
+		initSchedulerOnRestore(simpleExecutor);
+		executor = simpleExecutor;
 		executor.start();
 		
 		return true;
@@ -1055,16 +1048,18 @@ public abstract class Scheduler
 	
 	synchronized public void stop() throws AutomationException
 	{
-		if ((!isRunning()) || (isInterrupted()))
+		if (!isRunning() || isInterrupted())
 			return;
-
+		
 		if (!sequentialRun)
 		{
-			interruptSqlStatements(executor.globalContext);
+			SimpleExecutor simpleExecutor = (SimpleExecutor) executor;
+			interruptSqlStatements(simpleExecutor.globalContext);
 			executor.interruptExecution();
 		}
 		else
 		{
+			SequentialExecutor seqExec = (SequentialExecutor) executor;
 			if (seqExec.currentExecutor != null)
 				interruptSqlStatements(seqExec.currentExecutor.globalContext);
 			
@@ -1073,7 +1068,6 @@ public abstract class Scheduler
 			else
 				seqExec.interruptWholeExecution();
 		}
-
 		stoppedByUser.set(true);
 //		matrices.clear();
 	}
@@ -1098,43 +1092,24 @@ public abstract class Scheduler
 	
 	synchronized public void pause() throws AutomationException
 	{
-		if ((!isRunning()) || (isInterrupted()))
+		if (!isRunning() || isInterrupted())
 			return;
-		
-		if (!sequentialRun)
-		{
-			executor.pauseExecution();
-		}
-		else
-		{
-			seqExec.pauseExecution();
-		}
+		executor.pauseExecution();
 	}
 	
 	synchronized public void continueExecution()
 	{
 		if (!isSuspended())
 			return;
-		
-		if (!sequentialRun) {
-			executor.clearLastReportsInfo();
-			executor.continueExecution();
-		}
-		else {
-			seqExec.clearLastReportInfo();
-			seqExec.continueExecution();
-		}
+		executor.clearLastReportsInfo();
+		executor.continueExecution();
 	}
 	
 	synchronized public void replayStep()
 	{
 		if (!isSuspended())
 			return;
-		
-		if (!sequentialRun)
-			executor.replayStep();
-		else
-			seqExec.replayStep();
+		executor.replayStep();
 	}
 	
 	
@@ -1144,95 +1119,61 @@ public abstract class Scheduler
 	{
 		if (!isRunning())
 			return false;
-		
-		if (!sequentialRun)
-			return executor.isFailover();
-		else
-			return seqExec.isFailover();
+		return executor.isFailover();
 	}
 	
 	public void tryAgainMain()
 	{
 		if (isFailover())
-			if (!sequentialRun)
-				executor.tryAgainMain();
-			else
-				seqExec.tryAgainMain();
+			executor.tryAgainMain();
 	}
 	
 	public void tryAgainAlt()
 	{
 		if (isFailover())
-			if (!sequentialRun)
-				executor.tryAgainAlt();
-			else
-				seqExec.tryAgainAlt();
+			executor.tryAgainAlt();
 	}
 	
 	public int getFailoverActionType()
 	{
 		if (!isFailover())
 			return ActionType.NONE;
-		
-		if (!sequentialRun)
-			return executor.getFailoverActionType();
-		else
-			return seqExec.getFailoverActionType();
+		return executor.getFailoverActionType();
 	}
 	
 	public int getFailoverReason()
 	{
 		if (!isFailover())
 			return FailoverReason.NONE;
-		
-		if (!sequentialRun)
-			return executor.getFailoverReason();
-		else
-			return seqExec.getFailoverReason();
+		return executor.getFailoverReason();
 	}
 	
 	public String getFailoverReasonString()
 	{
 		if (!isFailover())
 			return null;
-		
-		if (!sequentialRun)
-			return executor.getFailoverReasonString();
-		else
-			return seqExec.getFailoverReasonString();
+		return executor.getFailoverReasonString();
 	}
 	
 	public String getFailoverConnectionName()
 	{
 		if (!isFailover())
 			return null;
-		
-		if (!sequentialRun)
-			return executor.getFailoverConnectionName();
-		else
-			return seqExec.getFailoverConnectionName();
+		return executor.getFailoverConnectionName();
 	}
 	
 	public void setFailoverRestartAction(boolean needRestart)
 	{
 		if (!isFailover())
 			return;
-
-		if (!sequentialRun)
-			executor.setFailoverRestartAction(needRestart);
-		else
-			seqExec.setFailoverRestartAction(needRestart);
+		executor.setFailoverRestartAction(needRestart);
 	}
 	
 	public void setFailoverSkipAction(boolean needSkipAction)
 	{
 		if (!isFailover())
 			return;
-		
-		if (!sequentialRun)
-			executor.setFailoverSkipAction(needSkipAction);
-		else
-			seqExec.setFailoverSkipAction(needSkipAction);
+		executor.setFailoverSkipAction(needSkipAction);
 	}
 	
 	public void addConnectionToIgnoreFailuresByRun(String connectionName)
@@ -1257,7 +1198,7 @@ public abstract class Scheduler
 		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
 		String repDir = getReportsDir()+"current_"+df.format(new Date())+"/";
 		ReportsInfo repInfo = makeCurrentReports(repDir, true);
-		ExecutorState es = createExecutorState(executor, stepFactory, repInfo);
+		ExecutorState es = createExecutorState((SimpleExecutor) executor, stepFactory, repInfo);
 		es.save(schedulerData.getStateDir());
 		copyActionReport(schedulerData.getRepDir());
 		
@@ -1385,30 +1326,21 @@ public abstract class Scheduler
 	{
 		if (!isRunning())
 			return null;
-		
-		if (!sequentialRun)
-			return executor.getCurrentStep();
-		else
-			return seqExec.getCurrentStep();
+		return executor.getCurrentStep();
 	}
 	
 	public boolean isCurrentStepIdle()
 	{
 		if (!isRunning())
 			return false;
-		
-		if (!sequentialRun)
-			return executor.isCurrentStepIdle();
-		else
-			return seqExec.isCurrentStepIdle();
+		return executor.isCurrentStepIdle();
 	}
 	
 	public String getCurrentMatrix()
 	{
-		if (sequentialRun)
-			return seqExec.getCurrentMatrix();
-		else
+		if (!sequentialRun)
 			return null;
+		return ((SequentialExecutor)executor).getCurrentMatrix();
 	}
 	
 	public List<Step> getSteps()
@@ -1478,18 +1410,12 @@ public abstract class Scheduler
 	
 	public String getReportsDir()
 	{
-		if (!sequentialRun)
-			return executor.getReportsDir();
-		else
-			return seqExec.getReportsDir();
+		return executor.getReportsDir();
 	}
 	
 	public String getCompletedReportsDir()
 	{
-		if (!sequentialRun)
-			return executor.getCompletedReportsDir();
-		else
-			return seqExec.getCompletedReportsDir();
+		return executor.getCompletedReportsDir();
 	}
 	
 	public ExecutorStateInfo getStateInfo()
@@ -1516,43 +1442,20 @@ public abstract class Scheduler
 	
 	synchronized public void copyActionReport(File pathToStoreReports)
 	{
-		if (!sequentialRun)
-		{
-			executor.copyActionReports(pathToStoreReports);
-		}
-		else
-		{
-			seqExec.copyActionReports(pathToStoreReports);
-		}
+		executor.copyActionReports(pathToStoreReports);
 	}
 	
 	synchronized public ReportsInfo makeCurrentReports(String pathToStoreReports, boolean reuseReports)
 	{
-		if (!sequentialRun)
-		{
-			ReportsInfo reportsInfo = executor.getLastReportsInfo();
-			if (!reuseReports || reportsInfo == null || !Files.isDirectory(Path.of(reportsInfo.getPath())))
-				executor.makeCurrentReports(pathToStoreReports);
-			return executor.getLastReportsInfo();
-		}
-		else
-		{
-			ReportsInfo reportsInfo = seqExec.getLastReportInfo();
-			if (!reuseReports || reportsInfo == null || !Files.isDirectory(Path.of(reportsInfo.getPath())))
-				seqExec.makeCurrentReport(pathToStoreReports);
-			return seqExec.getLastReportInfo();
-		}
+		ReportsInfo reportsInfo = executor.getLastReportsInfo();
+		if (!reuseReports || reportsInfo == null || !Files.isDirectory(Path.of(reportsInfo.getPath())))
+			executor.makeCurrentReports(pathToStoreReports);
+		return executor.getLastReportsInfo();
 	}
-	
 	
 	synchronized protected void executorFinished()
 	{
 		executor = null;
-	}
-
-	synchronized protected void seqExecutorFinished()
-	{
-		seqExec = null;
 	}
 
 	public StepFactory getStepFactory()
@@ -1579,8 +1482,8 @@ public abstract class Scheduler
 
 	public String getActionReportsDir()
 	{
-		if (executor != null)
-			return executor.getActionsReportsDir();
+		if (executor != null && !sequentialRun)
+			return ((SimpleExecutor)executor).getActionsReportsDir();
 		return "";
 	}
 
@@ -1603,7 +1506,8 @@ public abstract class Scheduler
 		init();
 	}
 
-	public Executor getExecutor() {
+	public IExecutor getExecutor()
+	{
 		return executor;
 	}
 	

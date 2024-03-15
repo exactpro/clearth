@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,13 +22,14 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 
-public abstract class SequentialExecutor extends Thread
+public abstract class SequentialExecutor extends Thread implements IExecutor
 {
 	protected final ExecutorFactory executorFactory;
 	protected final Scheduler scheduler;
@@ -42,7 +43,8 @@ public abstract class SequentialExecutor extends Thread
 	protected boolean terminated = false, interrupted = false;
 	protected final Object ceMonitor = new Object(), executionMonitor = new Object();
 	protected String currentMatrix = null;
-	protected Executor currentExecutor = null;
+	protected SimpleExecutor currentExecutor = null;
+	protected Consumer<SequentialExecutor> onFinish;
 	
 	public SequentialExecutor(ExecutorFactory executorFactory, Scheduler scheduler, String startedByUser,
 			Map<String, Preparable> preparableActions)
@@ -61,7 +63,7 @@ public abstract class SequentialExecutor extends Thread
 	}
 	
 	protected abstract Logger getLogger();
-	protected abstract void initExecutor(Executor executor);
+	protected abstract void initExecutor(SimpleExecutor executor);
 	
 	@Override
 	public void run()
@@ -137,12 +139,21 @@ public abstract class SequentialExecutor extends Thread
 			{
 				currentExecutor = null;
 			}
-			scheduler.seqExecutorFinished();
+			
+			if (onFinish != null)
+				onFinish.accept(this);
+			
 			clearSteps();
 		}
 	}
 	
-
+	
+	public void setOnFinish(Consumer<SequentialExecutor> consumer)
+	{
+		onFinish = consumer;
+	}
+	
+	
 	public Scheduler getScheduler()
 	{
 		return scheduler;
@@ -154,7 +165,7 @@ public abstract class SequentialExecutor extends Thread
 		return startedByUser;
 	}
 
-
+	@Override
 	public List<Step> getSteps()
 	{
 		return steps;
@@ -170,17 +181,19 @@ public abstract class SequentialExecutor extends Thread
 		return businessDay;
 	}
 
+	@Override
 	public Map<String, Boolean> getHolidays()
 	{
 		return holidays;
 	}
 
-
+	@Override
 	public boolean isTerminated()
 	{
 		return terminated;
 	}
 
+	@Override
 	public void interruptExecution() throws AutomationException
 	{
 		synchronized (ceMonitor)
@@ -202,12 +215,14 @@ public abstract class SequentialExecutor extends Thread
 			interrupt();
 		}
 	}
-
+	
+	@Override
 	public boolean isExecutionInterrupted()
 	{
 		return interrupted;
 	}
 	
+	@Override
 	public void pauseExecution() {
 		
 		synchronized (ceMonitor)
@@ -218,6 +233,7 @@ public abstract class SequentialExecutor extends Thread
 		
 	}
 	
+	@Override
 	public void continueExecution()
 	{
 		synchronized (ceMonitor)
@@ -227,6 +243,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public void replayStep()
 	{
 		synchronized (ceMonitor)
@@ -236,6 +253,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public Step getCurrentStep()
 	{
 		synchronized (ceMonitor)
@@ -247,6 +265,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public boolean isCurrentStepIdle()
 	{
 		synchronized (ceMonitor)
@@ -258,6 +277,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public boolean isSuspended()
 	{
 		synchronized (ceMonitor)
@@ -269,6 +289,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public boolean isReplayEnabled()
 	{
 		synchronized (ceMonitor)
@@ -281,6 +302,7 @@ public abstract class SequentialExecutor extends Thread
 	}
 	
 	
+	@Override
 	public boolean isFailover()
 	{
 		synchronized (ceMonitor)
@@ -292,6 +314,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public void tryAgainMain()
 	{
 		synchronized (ceMonitor)
@@ -301,6 +324,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public void tryAgainAlt()
 	{
 		synchronized (ceMonitor)
@@ -310,6 +334,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public int getFailoverActionType()
 	{
 		synchronized (ceMonitor)
@@ -320,6 +345,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public int getFailoverReason()
 	{
 		synchronized (ceMonitor)
@@ -330,6 +356,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public String getFailoverReasonString()
 	{
 		synchronized (ceMonitor)
@@ -340,6 +367,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public String getFailoverConnectionName()
 	{
 		synchronized (ceMonitor)
@@ -350,6 +378,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public void setFailoverRestartAction(boolean needRestart)
 	{
 		synchronized (ceMonitor)
@@ -360,6 +389,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public void setFailoverSkipAction(boolean needSkipAction)
 	{
 		synchronized (ceMonitor)
@@ -370,7 +400,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
-	
+	@Override
 	public String getReportsDir()
 	{
 		synchronized (ceMonitor)
@@ -382,6 +412,7 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
+	@Override
 	public String getCompletedReportsDir()
 	{
 		synchronized (ceMonitor)
@@ -393,7 +424,8 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
-	public ReportsInfo getLastReportInfo()
+	@Override
+	public ReportsInfo getLastReportsInfo()
 	{
 		synchronized (ceMonitor)
 		{
@@ -404,7 +436,8 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
-	public void clearLastReportInfo()
+	@Override
+	public void clearLastReportsInfo()
 	{
 		synchronized (ceMonitor)
 		{
@@ -413,7 +446,8 @@ public abstract class SequentialExecutor extends Thread
 		}
 	}
 	
-	public void makeCurrentReport(String pathToStoreReports)
+	@Override
+	public void makeCurrentReports(String pathToStoreReports)
 	{
 		synchronized (ceMonitor)
 		{
@@ -427,6 +461,7 @@ public abstract class SequentialExecutor extends Thread
 		return currentMatrix;
 	}
 
+	@Override
 	public void copyActionReports(File pathToStoreReports) {
 		synchronized (ceMonitor)
 		{
@@ -439,7 +474,5 @@ public abstract class SequentialExecutor extends Thread
 	protected void clearSteps()
 	{
 		steps.forEach(Step::clearActions);
-		if (scheduler.seqExec != null)
-			steps.clear();
 	}
 }

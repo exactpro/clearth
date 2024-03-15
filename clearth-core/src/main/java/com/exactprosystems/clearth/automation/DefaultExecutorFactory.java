@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -34,22 +34,22 @@ public class DefaultExecutorFactory extends ExecutorFactory
 	}
 
 	@Override
-	public Executor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser, Map<String, Preparable> preparableActions, 
+	public SimpleExecutor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser, Map<String, Preparable> preparableActions,
 			TestExecutionHandler executionHandler)
 	{
 		GlobalContext globalContext = 
 				createGlobalContext(scheduler.getBusinessDay(), scheduler.getBaseTime(), scheduler.isWeekendHoliday(), scheduler.getHolidays(), startedByUser, executionHandler);
 		if (scheduler.isTestMode())
 			globalContext.setLoadedContext(GlobalContext.TEST_MODE, true);
-		Executor result = new DefaultExecutor(scheduler, scheduler.getSteps(), matrices, 
+		SimpleExecutor result = new DefaultSimpleExecutor(scheduler, scheduler.getSteps(), matrices,
 				globalContext, createFailoverStatus(), preparableActions);
 		return result;
 	}
 	
 	@Override
-	public Executor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext, Map<String, Preparable> preparableActions)
+	public SimpleExecutor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext, Map<String, Preparable> preparableActions)
 	{
-		Executor result = new DefaultExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions);
+		SimpleExecutor result = new DefaultSimpleExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions);
 		return result;
 	}
 	

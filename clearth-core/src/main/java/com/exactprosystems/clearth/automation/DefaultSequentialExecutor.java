@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,7 +39,7 @@ public class DefaultSequentialExecutor extends SequentialExecutor
 	}
 	
 	@Override
-	protected void initExecutor(Executor executor)
+	protected void initExecutor(SimpleExecutor executor)
 	{
 	}
 }

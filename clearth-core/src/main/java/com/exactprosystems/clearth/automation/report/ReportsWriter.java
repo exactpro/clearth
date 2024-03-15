@@ -18,7 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report;
 
-import com.exactprosystems.clearth.automation.Executor;
+import com.exactprosystems.clearth.automation.SimpleExecutor;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.report.html.HtmlReport;
@@ -41,12 +41,12 @@ public class ReportsWriter
 {
 	private static final Logger logger = LoggerFactory.getLogger(ReportsWriter.class);
 	
-	private final Executor executor;
+	private final SimpleExecutor executor;
 	
 	private final String reportsPath;
 	private final String actionsReportsPath;
 	
-	public ReportsWriter(Executor executor, String reportsPath, String actionsReportsPath)
+	public ReportsWriter(SimpleExecutor executor, String reportsPath, String actionsReportsPath)
 	{
 		this.executor = executor;
 		this.reportsPath = reportsPath;
@@ -54,7 +54,7 @@ public class ReportsWriter
 	}
 	
 	
-	public Executor getExecutor()
+	public SimpleExecutor getExecutor()
 	{
 		return executor;
 	}

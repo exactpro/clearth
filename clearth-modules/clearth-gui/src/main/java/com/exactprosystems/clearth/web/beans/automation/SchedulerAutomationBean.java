@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,10 +18,7 @@
 
 package com.exactprosystems.clearth.web.beans.automation;
 
-import com.exactprosystems.clearth.automation.Executor;
-import com.exactprosystems.clearth.automation.Matrix;
-import com.exactprosystems.clearth.automation.Scheduler;
-import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
@@ -209,7 +206,7 @@ public class SchedulerAutomationBean extends ClearThBean {
 
 	public boolean isRunning(Step step)
 	{
-		Executor exec = selectedScheduler().getExecutor();
+		IExecutor exec = selectedScheduler().getExecutor();
 		if (exec != null)
 		{
 			Step currentStep = exec.getCurrentStep();
@@ -227,16 +224,23 @@ public class SchedulerAutomationBean extends ClearThBean {
 	
 	public long getStartTime()
 	{
-		Executor exec = selectedScheduler().getExecutor();
-		if (exec != null)
-			return Math.max(0, (exec.getStartTimeStep() - System.currentTimeMillis()) / 1000);
+		if (!isSequentialRun())
+		{
+			SimpleExecutor exec = (SimpleExecutor) selectedScheduler().getExecutor();
+			long startTime;
+			if (exec != null && ((startTime = exec.getStartTimeStep()) != 0L))
+				return Math.max(0, (startTime - System.currentTimeMillis()) / 1000);
+		}
 		return 0L;
 	}
 
 
 	public void skipStepWaiting()
 	{
-		Executor exec = selectedScheduler().getExecutor();
+		if (isSequentialRun())
+			return;
+		
+		SimpleExecutor exec = (SimpleExecutor) selectedScheduler().getExecutor();
 		if (exec != null) {
 			exec.skipWaitingStep();
 			exec.continueExecution();
@@ -244,10 +248,15 @@ public class SchedulerAutomationBean extends ClearThBean {
 		}
 	}
 
-	public boolean isWaitingForStep() {
-		Executor exec = selectedScheduler().getExecutor();
-		if (exec != null) {
-			return exec.isSuspensionTimeout();
+	public boolean isWaitingForStep()
+	{
+		if (!isSequentialRun())
+		{
+			SimpleExecutor exec = (SimpleExecutor) selectedScheduler().getExecutor();
+			if (exec != null)
+			{
+				return exec.isSuspensionTimeout();
+			}
 		}
 		return false;
 	}

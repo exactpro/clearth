@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,11 +30,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultExecutor extends Executor
+public class DefaultSimpleExecutor extends SimpleExecutor
 {
-	private static final Logger logger = LoggerFactory.getLogger(DefaultExecutor.class);
+	private static final Logger logger = LoggerFactory.getLogger(DefaultSimpleExecutor.class);
 	
-	public DefaultExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
+	public DefaultSimpleExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
 			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions)
 	{
 		super(scheduler, steps, matrices, globalContext, failoverStatus, preparableActions);

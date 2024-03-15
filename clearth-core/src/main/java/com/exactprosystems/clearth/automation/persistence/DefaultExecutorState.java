@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,7 +39,7 @@ public class DefaultExecutorState extends ExecutorState
 			DefaultActionState.class};
 
 
-	public DefaultExecutorState(Executor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
+	public DefaultExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
 	{
 		super(executor, stepFactory, reportsInfo);
 	}
@@ -57,7 +57,7 @@ public class DefaultExecutorState extends ExecutorState
 	}
 	
 	@Override
-	protected void initExecutor(Executor executor)
+	protected void initExecutor(SimpleExecutor executor)
 	{
 		//Nothing to do here
 	}

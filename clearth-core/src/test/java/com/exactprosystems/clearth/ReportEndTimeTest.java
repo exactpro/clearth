@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,7 +39,7 @@ public class ReportEndTimeTest
 {
 	private static final String SCHEDULER_NAME = "reportChecker", USER_NAME = "ReportChecker";
 	private static Scheduler scheduler;
-	private static Executor executor;
+	private static SimpleExecutor executor;
 	private static Step firstStep, secondStep, thirdStep;
 	private static ApplicationManager clearThManager;
 	private static final long START_IN_MILLIS = 1605081600000L;
@@ -95,7 +95,7 @@ public class ReportEndTimeTest
 	@Test
 	public void testExecutorThatIsEnded()
 	{
-		Executor testExecutor = spy(executor);
+		SimpleExecutor testExecutor = spy(executor);
 		List<Step> steps = new ArrayList<>();
 		steps.add(firstStep);
 		steps.add(secondStep);
@@ -113,7 +113,7 @@ public class ReportEndTimeTest
 		List<Step> steps = new ArrayList<>();
 		steps.add(firstStep);
 		steps.add(thirdStep);
-		Executor testExecutor = spy(executor);
+		SimpleExecutor testExecutor = spy(executor);
 		when(testExecutor.getSteps()).thenReturn(steps);
 
 		Date actual = testExecutor.getReportEndTime();
@@ -126,7 +126,7 @@ public class ReportEndTimeTest
 		List<Step> steps = new ArrayList<>();
 		steps.add(firstStep);
 		steps.add(secondStep);
-		Executor testExecutor = spy(executor);
+		SimpleExecutor testExecutor = spy(executor);
 		when(testExecutor.getSteps()).thenReturn(steps);
 
 		Date actual = testExecutor.getReportEndTime();

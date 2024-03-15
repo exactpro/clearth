@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,7 +19,7 @@
 package com.exactprosystems.clearth.web.beans;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.automation.Executor;
+import com.exactprosystems.clearth.automation.SimpleExecutor;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.MatrixData;
 import com.exactprosystems.clearth.automation.Scheduler;
@@ -65,7 +65,7 @@ public class ReportBean
 			return;
 		
 		File actionsReports = new File(ClearThCore.appRootRelative(scheduler.getActionReportsDir()));
-		Map<String, List<String>> matricesSteps = Executor.getStepsByMatricesMap(actionsReports);
+		Map<String, List<String>> matricesSteps = SimpleExecutor.getStepsByMatricesMap(actionsReports);
 		changeNamesForLinkedMatrices(matricesSteps, scheduler);
 		
 		RealTimeReport report;
