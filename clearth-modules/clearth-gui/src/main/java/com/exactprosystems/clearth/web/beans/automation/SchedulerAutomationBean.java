@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
@@ -295,6 +296,9 @@ public class SchedulerAutomationBean extends ClearThBean {
 	{
 		return selectedScheduler().getBusinessDay();
 	}
-
-
+	
+	public ReportsConfig getSchedulerReportsConfig()
+	{
+		return selectedScheduler().getCurrentReportsConfig();
+	}
 }

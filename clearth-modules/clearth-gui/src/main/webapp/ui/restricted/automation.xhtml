@@ -98,6 +98,10 @@
 				<h:outputText value="#{automationSchedulerBean.schedulerBaseTime}" rendered="#{automationSchedulerBean.schedulerBaseTime != null}">
 					<f:convertDateTime pattern="HH:mm:ss"/>
 				</h:outputText>
+				&#160;
+				<ui:param name="schedulerDisabledReports" value="#{automationSchedulerBean.schedulerReportsConfig.disabledReports}" />
+				<h:outputText value="Disabled reports: #{schedulerDisabledReports}" 
+						rendered="#{schedulerDisabledReports != null}" style="color: #d74242" />
 				<br />
 				<div class="upperContainer controlButtons">
 					<div class="upperLeftContainer">
@@ -370,6 +374,16 @@
 							<p:commandButton value="Setup" oncomplete="PF('connectionsToIgnoreFailuresDialog').show();"
 											 update=":ConnectionsToIgnoreFailuresDialog" disabled="#{automationSchedulerBean.running}" />
 						</p:outputPanel>
+					</h:form>
+					
+					<h:form id="ReportsConfig" style="margin-top: 10px;">
+						<p:commandButton value="Reports" icon="ui-icon-gear"
+								actionListener="#{automationConfigBean.prepareReportsConfigToEdit}"
+								oncomplete="PF('reportsConfigDialog').show();" />
+						<ui:param name="configDisabledReports" value="#{automationConfigBean.reportsConfig.disabledReports}" />
+						&#160;
+						<h:outputText value="Disabled reports: #{configDisabledReports}" 
+								rendered="#{configDisabledReports != null}" style="color: #d74242" />
 					</h:form>
 				</div>
 				
@@ -1636,7 +1650,32 @@
 								 type="button"/>
 			</h:form>
 		</p:confirmDialog>
-
+		
+		<p:dialog header="Reports configuration" widgetVar="reportsConfigDialog"
+				resizable="false" id="reportsConfigDlg" width="230" closeOnEscape="true" modal="#{guiBean.modalDialog}">
+			<h:form id="ReportsConfigDialog">
+				<ui:param name="rc" value="#{automationConfigBean.reportsConfigToEdit}" />
+				<h:panelGrid id="display" columns="2" cellpadding="4" style="margin: 0 auto;">
+					<h:outputText value="HTML report:" />
+					<p:selectBooleanCheckbox value="#{rc.completeHtmlReport}" />
+					<h:outputText value="'Only failed' HTML report:" />
+					<p:selectBooleanCheckbox value="#{rc.failedHtmlReport}" />
+					<h:outputText value="JSON report:" />
+					<p:selectBooleanCheckbox value="#{rc.completeJsonReport}" />
+				</h:panelGrid>
+				<p:outputPanel layout="block" style="margin-top: 10px; text-align: right">
+					<p:commandButton value="OK" update=":ReportsConfig :Growl"
+							actionListener="#{automationConfigBean.saveReportsConfig}"
+							oncomplete="PF('reportsConfigDialog').hide();"
+							icon="ui-icon-check" />
+					<p:commandButton value="Cancel"
+							onclick="PF('reportsConfigDialog').hide();"
+							icon="ui-icon-close"
+							type="button" />
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+		
 		<!-- Timer -->
 		<h:form id="ExecutionTimer">
 			<p:poll interval="1" update=":Start :Stop :Pause :SchedulerStatus :SchedulerSteps :History :Suspended :suspendedDlg :ConnectionFailure :connectionFailureDlg :Realtime :ReportsDialog"

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,6 +21,8 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.SchedulerData;
+import com.exactprosystems.clearth.automation.report.ModifiableReportsConfig;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
@@ -37,7 +39,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ConfigurationAutomationBean extends ClearThBean {
 	
@@ -46,6 +47,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	protected final Date emptyBaseTime;
 
 	protected Date holidayDate;
+	protected ModifiableReportsConfig reportsConfigToEdit;
 	
 	protected final AutomationStepsManagement stepsManagement;
 	
@@ -252,10 +254,10 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		this.holidayDate = holidayDate;
 	}
 
-	public void toggleHoliday(SelectEvent event)
+	public void toggleHoliday(SelectEvent<Date> event)
 	{
-		Date d = (Date) event.getObject();
-		if (d==null)
+		Date d = event.getObject();
+		if (d == null)
 			return;
 
 		try
@@ -368,6 +370,35 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		catch (IOException e)
 		{
 			WebUtils.logAndGrowlException("Could not save selected connections to ignore failures", e, getLogger());
+		}
+	}
+	
+	
+	public ReportsConfig getReportsConfig()
+	{
+		return selectedScheduler().getReportsConfig();
+	}
+	
+	public void prepareReportsConfigToEdit()
+	{
+		reportsConfigToEdit = new ModifiableReportsConfig(getReportsConfig());
+	}
+	
+	public ModifiableReportsConfig getReportsConfigToEdit()
+	{
+		return reportsConfigToEdit;
+	}
+	
+	public void saveReportsConfig()
+	{
+		try
+		{
+			selectedScheduler().setReportsConfig(reportsConfigToEdit);
+			MessageUtils.addInfoMessage("Success", "Reports configuration has been saved");
+		}
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Could not save reports configuration", e, getLogger());
 		}
 	}
 	

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.DateTimeUtils;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
@@ -31,6 +32,7 @@ import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
@@ -64,6 +66,7 @@ public abstract class SchedulerData
 			MATRICES_FILENAME = "matrices.csv",
 			STEP_INFO_DATA_FILENAME = "executed_steps.csv",
 			CONFIGDATA_FILENAME = "configdata.cfg",
+			REPORTS_CONFIG_FILENAME = "reports.cfg",
 			NAME = "Name",
 			MATRIX = "Matrix",
 			UPLOADED = "Uploaded",
@@ -81,7 +84,9 @@ public abstract class SchedulerData
 	private final String forUser, name, matricesDir, launchesName, configName, baseTimeName, weekendHolidayName,
 			holidaysName, ignoreAllConnectionsFailuresName, connectionsToIgnoreFailuresName, matricesName, configDataName;
 
-	private final Path businessDayFilePath, executedStepsDataFilePath;
+	private final Path businessDayFilePath,
+			executedStepsDataFilePath,
+			reportsConfigFilePath;
 
 	private final StepFactory stepFactory;
 	private final XmlSchedulerLaunches launches;
@@ -99,6 +104,7 @@ public abstract class SchedulerData
 	private final File repDir;
 	private final File schedulerDir;
 	private final ExecutedMatricesData executedMatricesData;
+	private ReportsConfig reportsConfig;
 	private List<StepData> executedStepsData;
 
 
@@ -124,6 +130,7 @@ public abstract class SchedulerData
 		connectionsToIgnoreFailuresName = getConnectionsToIgnoreFailuresName(cfgDir, name);
 		matricesName = getMatricesName(cfgDir, name);
 		configDataName = getConfigDataName(cfgDir, name);
+		reportsConfigFilePath = getReportsConfigFilePath(cfgDir, name);
 		this.stepFactory = stepFactory;
 		
 		File launchesFile = new File(launchesName);
@@ -147,6 +154,7 @@ public abstract class SchedulerData
 		repDir = new File(getReportsDirName(cfgDir, name));
 
 		executedMatricesData = new ExecutedMatricesData(lastExecutedDataDir);
+		reportsConfig = loadReportsConfig();
 	}
 
 	public abstract String[] getConfigHeader();
@@ -210,6 +218,11 @@ public abstract class SchedulerData
 	public static String getConfigDataName(String configsRoot, String schedulerName)
 	{
 		return configsRoot+schedulerName+File.separator+CONFIGDATA_FILENAME;
+	}
+	
+	public static Path getReportsConfigFilePath(String configsRoot, String schedulerName)
+	{
+		return Paths.get(configsRoot, schedulerName, REPORTS_CONFIG_FILENAME);
 	}
 	
 	public static String getStateDirName(String configsRoot, String schedulerName)
@@ -757,7 +770,7 @@ public abstract class SchedulerData
 	{
 		return loadMatrices(matricesName, matricesDir);
 	}
-
+	
 	public void loadExecutedMatrices() throws IOException
 	{
 		executedMatricesData.loadExecutedMatrices();
@@ -771,6 +784,30 @@ public abstract class SchedulerData
 	public void saveMatrices() throws IOException
 	{
 		saveMatrices(matricesName, matrices);
+	}
+	
+	
+	public static ReportsConfig loadReportsConfig(Path file) throws IOException
+	{
+		if (!Files.isRegularFile(file))
+			return new ReportsConfig(true, true, true);
+		
+		throw new NotImplementedException("Loading is not implemented");
+	}
+	
+	public static void saveReportsConfig(ReportsConfig config, Path file) throws IOException
+	{
+		throw new NotImplementedException("Saving is not implemented");
+	}
+	
+	public ReportsConfig loadReportsConfig() throws IOException
+	{
+		return loadReportsConfig(reportsConfigFilePath);
+	}
+	
+	public void saveReportsConfig() throws IOException
+	{
+		saveReportsConfig(reportsConfig, reportsConfigFilePath);
 	}
 	
 	
@@ -966,6 +1003,16 @@ public abstract class SchedulerData
 	public List<MatrixData> getMatrices()
 	{
 		return matrices;
+	}
+	
+	public ReportsConfig getReportsConfig()
+	{
+		return reportsConfig;
+	}
+	
+	public void setReportsConfig(ReportsConfig reportsConfig)
+	{
+		this.reportsConfig = new ReportsConfig(reportsConfig);
 	}
 	
 	

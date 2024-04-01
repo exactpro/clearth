@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.ReportException;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.automation.report.ReportsWriter;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
@@ -75,6 +76,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	protected final TestExecutionHandler executionHandler;
 	protected final ActionExecutor actionExecutor;
 	protected final List<StepData> stepData;
+	protected final ReportsConfig reportsConfig;
 
 	private HandledTestExecutionIdStorage handledIdStorage;
 	private Map<String, String> fixedIds = null;  //Contains action IDs fixed for MVEL so that they can start with digits or underscores
@@ -117,6 +119,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		this.executionHandler = globalContext.getExecutionHandler();
 		this.actionExecutor = createActionExecutor();
 		this.stepData = new ArrayList<>(steps.size());
+		this.reportsConfig = new ReportsConfig(scheduler.getCurrentReportsConfig());
 	}
 
 	protected abstract Logger getLogger();
@@ -738,6 +741,12 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			return null;
 		return handledIdStorage.getMatrixId(matrixName);
 	}
+	
+	public ReportsConfig getReportsConfig()
+	{
+		return reportsConfig;
+	}
+	
 	
 	@Override
 	public void interruptExecution() throws AutomationException

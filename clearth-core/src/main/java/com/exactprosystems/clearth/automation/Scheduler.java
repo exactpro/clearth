@@ -30,6 +30,7 @@ import com.exactprosystems.clearth.automation.matrix.linked.MatrixProviderHolder
 import com.exactprosystems.clearth.automation.persistence.ExecutorState;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.StepState;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.automation.steps.Default;
 import com.exactprosystems.clearth.data.DataHandlingException;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
@@ -83,6 +84,7 @@ public abstract class Scheduler
 			baseTime = null;
 	protected boolean weekendHoliday = false;
 	protected Map<String, Boolean> holidays = new HashMap<String, Boolean>();
+	protected ReportsConfig reportsConfig = new ReportsConfig(true, true, true);
 	protected Set<String> connectionsToIgnoreFailuresByRun = new HashSet<>();
 	protected ExecutorStateInfo stateInfo;
 	protected boolean testMode;
@@ -363,6 +365,19 @@ public abstract class Scheduler
 			throw new IOException(msg, e);
 		}
 		
+		init();
+	}
+	
+	
+	public ReportsConfig getReportsConfig()
+	{
+		return schedulerData.getReportsConfig();
+	}
+	
+	synchronized public void setReportsConfig(ReportsConfig reportsConfig) throws IOException
+	{
+		schedulerData.setReportsConfig(reportsConfig);
+		schedulerData.saveReportsConfig();
 		init();
 	}
 	
@@ -864,6 +879,7 @@ public abstract class Scheduler
 			businessDay = schedulerData.loadBusinessDay();
 			baseTime = schedulerData.loadBaseTime();
 			weekendHoliday = schedulerData.loadWeekendHoliday();
+			reportsConfig = schedulerData.loadReportsConfig();
 			stoppedByUser.set(false);
 			initEx();
 		}
@@ -1039,6 +1055,7 @@ public abstract class Scheduler
 		matrices = simpleExecutor.getMatrices();
 		holidays = simpleExecutor.getHolidays();
 		weekendHoliday = simpleExecutor.isWeekendHoliday();
+		reportsConfig = simpleExecutor.getReportsConfig();
 		initSchedulerOnRestore(simpleExecutor);
 		executor = simpleExecutor;
 		executor.start();
@@ -1398,6 +1415,11 @@ public abstract class Scheduler
 		return holidays;
 	}
 	
+	public ReportsConfig getCurrentReportsConfig()
+	{
+		return reportsConfig;
+	}
+	
 	public String getConfigFileName()
 	{
 		return schedulerData.getConfigFileName();
@@ -1503,6 +1525,7 @@ public abstract class Scheduler
 		schedulerData.loadHolidays(schedulerData.getHolidays());
 		schedulerData.setIgnoreAllConnectionsFailures(schedulerData.loadIgnoreAllConnectionsFailures());
 		schedulerData.setConnectionsToIgnoreFailures(schedulerData.loadConnectionsToIgnoreFailures());
+		schedulerData.setReportsConfig(schedulerData.loadReportsConfig());
 		init();
 	}
 
