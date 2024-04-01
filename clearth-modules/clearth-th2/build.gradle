@@ -6,7 +6,7 @@ repositories {
 }
 
 ext {
-	nettyVersion = '4.1.100.Final'
+	nettyVersion = '4.1.108.Final'
 }
 
 configurations.all {
@@ -17,11 +17,11 @@ configurations.all {
 
 dependencies {
 	//Core decides what logging implementation to use. So, excluding dependencies of th2-common
-	api ('com.exactpro.th2:common:5.7.0-dev') {
+	api ('com.exactpro.th2:common:5.10.0-dev') {
 		exclude (group: 'org.apache.logging.log4j')
 		exclude (group: 'org.slf4j')
 	}
-	api ('com.exactpro.th2:grpc-check1:4.3.1-dev') {
+	api ('com.exactpro.th2:grpc-check1:4.4.0-dev') {
 		exclude (group: 'org.apache.logging.log4j')
 		exclude (group: 'org.slf4j')
 	}
