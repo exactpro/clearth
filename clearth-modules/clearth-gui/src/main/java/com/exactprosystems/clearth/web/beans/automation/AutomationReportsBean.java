@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -101,17 +101,27 @@ public class AutomationReportsBean extends ClearThBean
 
 	public String getLastLaunchReportUrl()
 	{
-		XmlMatrixInfo lastLaunchInfo = getLastLaunch().getMatricesInfo().get(0);
-		return getReportPath(getLastLaunch().getReportsPath(), lastLaunchInfo.getFileName(), ActionReportWriter.HTML_REPORT_NAME);
+		return getLastReportPath(ActionReportWriter.HTML_REPORT_NAME);
+	}
+	
+	public String getLastLaunchFailedReportUrl()
+	{
+		return getLastReportPath(ActionReportWriter.HTML_FAILED_REPORT_NAME);
 	}
 
 	public String getLastLaunchJsonReportUrl()
 	{
-		XmlMatrixInfo lastLaunchInfo = getLastLaunch().getMatricesInfo().get(0);
-		return getReportPath(getLastLaunch().getReportsPath(), lastLaunchInfo.getFileName(), ActionReportWriter.JSON_REPORT_NAME);
+		return getLastReportPath(ActionReportWriter.JSON_REPORT_NAME);
 	}
 
-
+	
+	protected String getLastReportPath(String reportName)
+	{
+		XmlSchedulerLaunchInfo lastLaunchInfo = getLastLaunch();
+		XmlMatrixInfo matrixInfo = lastLaunchInfo.getMatricesInfo().get(0);
+		return getReportPath(lastLaunchInfo.getReportsPath(), matrixInfo.getFileName(), reportName);
+	}
+	
 	protected String getReportPath(String reportsPath, String matrixFileName, String reportName)
 	{
 		return MessageFormat.format("{0}/{1}/{2}/{3}/{4}",                  // For example:
@@ -141,7 +151,7 @@ public class AutomationReportsBean extends ClearThBean
 	{
 		this.filteredReportsInfo = filteredReportsInfo;
 	}
-
+	
 	public void extractReportsInfo(XmlSchedulerLaunchInfo launchInfo)
 	{
 		selectedReportsInfo = new ReportsInfo();
@@ -149,6 +159,7 @@ public class AutomationReportsBean extends ClearThBean
 		selectedReportsInfo.getMatrices().addAll(launchInfo.getMatricesInfo());
 		selectedReportsInfo.setStarted(launchInfo.getStarted());
 		selectedReportsInfo.setFinished(launchInfo.getFinished());
+		selectedReportsInfo.setXmlReportsConfig(launchInfo.getReportsConfig());
 	}
 
 	public XmlSchedulerLaunches getXmlLaunches()

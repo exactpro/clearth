@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.StringOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
@@ -37,11 +38,14 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 
 public class SchedulerDataTest
 {
 	private static final Path TEST_OUTPUT = Paths.get("testOutput").resolve(SchedulerDataTest.class.getSimpleName()),
 								CFG_FILE = Paths.get("configs","config.cfg");
+	private static final String REPORTS_DIR_NAME = "schedulerReports";
+	
 	private ApplicationManager clearThManager;
 	private Path resDir;
 
@@ -117,6 +121,31 @@ public class SchedulerDataTest
 		assertEquals(actualData, expectedData);
 	}
 
+	@Test
+	public void testLoadReportsConfig() throws IOException
+	{
+		Path reportsConfigFile = resDir.resolve(REPORTS_DIR_NAME).resolve("reports.json");
+		ReportsConfig reportsConfig = SchedulerData.loadReportsConfig(reportsConfigFile);
+		
+		assertFalse(reportsConfig.isCompleteHtmlReport());
+		assertFalse(reportsConfig.isCompleteJsonReport());
+		assertFalse(reportsConfig.isFailedHtmlReport());
+	}
+	
+	@Test
+	public void testSaveReportsConfig() throws IOException
+	{
+		Path reportsConfigFile = TEST_OUTPUT.resolve(REPORTS_DIR_NAME).resolve("reports.json");
+		
+		ReportsConfig reportsConfig = new ReportsConfig(true, false, true);
+		SchedulerData.saveReportsConfig(reportsConfig, reportsConfigFile);
+		
+		String actData = FileUtils.readFileToString(reportsConfigFile.toFile(), Utils.UTF8);
+		String expData = FileUtils.readFileToString(resDir.resolve(REPORTS_DIR_NAME).resolve("expected_report.json").toFile(), Utils.UTF8);
+		
+		assertEquals(actData, expData);
+	}
+	
 	private List<MatrixData> createMatrixDataList()
 	{
 		MatrixData matrixData = new MatrixData();

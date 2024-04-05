@@ -102,6 +102,14 @@
 			<xsd:element name="Successful" type="xsd:boolean" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
+
+	<xsd:complexType name="ReportsConfig" >
+		<xsd:sequence>
+			<xsd:element name="completeHtmlReport" type="xsd:boolean" default="true"/>
+			<xsd:element name="failedHtmlReport" type="xsd:boolean" default="true"/>
+			<xsd:element name="completeJsonReport" type="xsd:boolean" default="true"/>
+		</xsd:sequence>
+	</xsd:complexType>
 	
 	<xsd:complexType name="SchedulerLaunchInfo" >
 		<xsd:sequence>
@@ -110,6 +118,7 @@
 			<xsd:element name="Interrupted" type="xsd:boolean" maxOccurs="1" />
 			<xsd:element name="Success" type="xsd:boolean" maxOccurs="1" />
 			<xsd:element name="ReportsPath" type="xsd:string" maxOccurs="1" />
+			<xsd:element name="ReportsConfig" type="ReportsConfig" />
 			<xsd:sequence>
 				<xsd:element name="MatrixInfo" type="MatrixInfo" minOccurs="0" maxOccurs="unbounded" />
 			</xsd:sequence>

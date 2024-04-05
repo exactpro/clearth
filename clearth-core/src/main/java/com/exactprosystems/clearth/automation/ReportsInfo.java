@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,7 +23,9 @@ import java.util.Date;
 import java.util.List;
 
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
+import com.exactprosystems.clearth.xmldata.XmlReportsConfig;
 import org.apache.commons.io.FilenameUtils;
 
 public class ReportsInfo
@@ -33,6 +35,7 @@ public class ReportsInfo
 	
 	private Date started;
 	private Date finished;
+	private XmlReportsConfig reportsConfig = new XmlReportsConfig();
 	
 	public ReportsInfo()
 	{
@@ -91,4 +94,28 @@ public class ReportsInfo
 	{
 		this.started = started;
 	}
+	
+
+	public void setReportsConfig(ReportsConfig reportsConfig)
+	{
+		this.reportsConfig.setCompleteHtmlReport(reportsConfig.isCompleteHtmlReport());
+		this.reportsConfig.setFailedHtmlReport(reportsConfig.isFailedHtmlReport());
+		this.reportsConfig.setCompleteJsonReport(reportsConfig.isCompleteJsonReport());
+	}
+	
+	public ReportsConfig getReportsConfig()
+	{
+		return new ReportsConfig(reportsConfig.isCompleteHtmlReport(), reportsConfig.isFailedHtmlReport(), reportsConfig.isCompleteJsonReport());
+	}
+	
+	public void setXmlReportsConfig(XmlReportsConfig reportsConfig)
+	{
+		this.reportsConfig = reportsConfig;
+	}
+	
+	public XmlReportsConfig getXmlReportsConfig()
+	{
+		return this.reportsConfig;
+	}
+
 }

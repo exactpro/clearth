@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.DateTimeUtils;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.XmlUtils;
+import com.exactprosystems.clearth.utils.JsonMarshaller;
 import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReader;
 import com.exactprosystems.clearth.utils.csv.readers.ClearThCsvReaderConfig;
 import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
@@ -32,7 +33,6 @@ import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
@@ -66,7 +66,7 @@ public abstract class SchedulerData
 			MATRICES_FILENAME = "matrices.csv",
 			STEP_INFO_DATA_FILENAME = "executed_steps.csv",
 			CONFIGDATA_FILENAME = "configdata.cfg",
-			REPORTS_CONFIG_FILENAME = "reports.cfg",
+			REPORTS_CONFIG_FILENAME = "reports.json",
 			NAME = "Name",
 			MATRIX = "Matrix",
 			UPLOADED = "Uploaded",
@@ -792,12 +792,13 @@ public abstract class SchedulerData
 		if (!Files.isRegularFile(file))
 			return new ReportsConfig(true, true, true);
 		
-		throw new NotImplementedException("Loading is not implemented");
+		return new JsonMarshaller<ReportsConfig>().unmarshal(file, ReportsConfig.class);
 	}
 	
 	public static void saveReportsConfig(ReportsConfig config, Path file) throws IOException
 	{
-		throw new NotImplementedException("Saving is not implemented");
+		Files.createDirectories(file.getParent());
+		new JsonMarshaller<ReportsConfig>().marshal(config, file);
 	}
 	
 	public ReportsConfig loadReportsConfig() throws IOException

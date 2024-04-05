@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,12 +22,15 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.actions.macro.MacroAction;
 import com.exactprosystems.clearth.automation.report.html.HtmlActionReport;
+import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
 import com.exactprosystems.clearth.utils.JsonMarshaller;
 import com.exactprosystems.clearth.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,9 +48,18 @@ public class ActionReportWriter
     		REPORT_FILENAME = "report",
     		HTML_REPORT_NAME = REPORT_FILENAME+HTML_SUFFIX,
     		JSON_REPORT_NAME = REPORT_FILENAME+JSON_SUFFIX,
-    		FAILED_SUFFIX = "_failed";
+    		FAILED_SUFFIX = "_failed",
+    		HTML_FAILED_REPORT_NAME = REPORT_FILENAME + FAILED_SUFFIX + HTML_SUFFIX;
 
 	private int actionIndex = 0;
+	private final ReportsConfig reportsConfig;
+	private final ReportTemplatesProcessor templatesProcessor;
+	
+	public ActionReportWriter(ReportsConfig reportsConfig, ReportTemplatesProcessor templatesProcessor)
+	{
+		this.reportsConfig = reportsConfig;
+		this.templatesProcessor = templatesProcessor;
+	}
 	
 	public void reset()
 	{
@@ -59,19 +71,20 @@ public class ActionReportWriter
 	 * @param action to write report for
 	 * @param actionsReportsDir path to directory with execution reports data. Action report file will be located in it
 	 * @param stepFileName name of file with action reports for particular step
-	 * @param writeFailedReport if true, additional report with only failed actions will be written
 	 */
-	public void writeReport(Action action, String actionsReportsDir, String stepFileName, boolean writeFailedReport)
+	public void writeReport(Action action, String actionsReportsDir, String stepFileName)
 	{
 		incActionIndex();
 		if (action.getResult() != null)
 			action.getResult().processDetails(getReportDir(actionsReportsDir, action), action);
 
-		writeHtmlActionReport(action, actionsReportsDir, stepFileName, false);
-		if (writeFailedReport)
+		if (reportsConfig.isCompleteHtmlReport())
+			writeHtmlActionReport(action, actionsReportsDir, stepFileName, false);
+		if (reportsConfig.isFailedHtmlReport() && !action.isPassed())
 			writeHtmlActionReport(action, actionsReportsDir, stepFileName, true);
 
-		writeJsonActionReport(action, actionsReportsDir, stepFileName);
+		if (reportsConfig.isCompleteJsonReport())
+			writeJsonActionReport(action, actionsReportsDir, stepFileName);
 	}
 
 	protected void writeJsonActionReport(Action action, String actionsReportsDir, String actionsReportFile)
@@ -189,11 +202,21 @@ public class ActionReportWriter
 		return actionsReports;
 	}
 
-    private String getJsonStepReportPath(String actionsReportsDir, String matrixFileName, String stepReportFile)
-    {
-        stepReportFile = stepReportFile + JSON_SUFFIX;
-        return rootRelative(Paths.get(actionsReportsDir, matrixFileName, stepReportFile).toString());
-    }
+	private String getJsonStepReportPath(String actionsReportsDir, String matrixFileName, String stepReportFile)
+	{
+		Path reportDir = Path.of(actionsReportsDir, matrixFileName);
+		try
+		{
+			if (!Files.exists(reportDir))
+				Files.createDirectories(reportDir);
+		}
+		catch (IOException e)
+		{
+			getLogger().error("Could not create directories", e);
+		}
+		
+		return rootRelative(reportDir.resolve(stepReportFile + JSON_SUFFIX).toString());
+	}
 	
 	protected Logger getLogger()
 	{
@@ -242,7 +265,7 @@ public class ActionReportWriter
 	
 	protected HtmlActionReport createHtmlActionReport()
 	{
-		return new HtmlActionReport();
+		return new HtmlActionReport(templatesProcessor);
 	}
 
 	protected ActionReport createActionReport(Action action)

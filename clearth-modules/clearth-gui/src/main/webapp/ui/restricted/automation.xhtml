@@ -176,12 +176,23 @@
 								<p:dataList var="statusLine" value="#{automationSchedulerBean.status}" itemType="none" styleClass="schedulerStatus">
 									<p:column>
 										<ui:fragment rendered="#{statusLine=='Reports made' and automationReportsBean.getLastLaunch()!=null}">
-											<ui:fragment rendered="#{automationReportsBean.getLastLaunch().matricesInfo.size()==1}">
-												<a href="#{automationReportsBean.lastLaunchReportUrl}" target="_blank"><h:outputText value="#{statusLine}" style="text-decoration: underline" /></a>
+											<ui:param name="lastLaunch" value="#{automationReportsBean.getLastLaunch()}" />
+											<ui:fragment rendered="#{lastLaunch.matricesInfo.size()==1}">
+												<ui:fragment rendered="#{lastLaunch.getReportsConfig().completeHtmlReport}">
+													<a href="#{automationReportsBean.lastLaunchReportUrl}" target="_blank"><h:outputText value="#{statusLine}" style="text-decoration: underline" /></a>
+												</ui:fragment>
+												<ui:fragment rendered="#{!lastLaunch.getReportsConfig().completeHtmlReport and (lastLaunch.getReportsConfig().failedHtmlReport or lastLaunch.getReportsConfig().completeJsonReport)}">
+													<h:outputText value="#{statusLine}" />
+												</ui:fragment>
+												<ui:fragment rendered="#{lastLaunch.getReportsConfig().failedHtmlReport}">
+													<a href="#{automationReportsBean.lastLaunchFailedReportUrl}" target="_blank"><h:outputText value="(only failed)" style="text-decoration: underline" /></a>
+												</ui:fragment>
 												<br/>
-												<a href="#{automationReportsBean.lastLaunchJsonReportUrl}" target="_blank"><h:outputText value="JSON Report" style="text-decoration: underline" /></a>
-												<br/>
-												<p:commandLink value="Logs by run" ajax="false" actionListener="#{automationReportsBean.extractReportsInfo(automationReportsBean.getLastLaunch())}" style="text-decoration: underline" >
+												<ui:fragment rendered="#{lastLaunch.getReportsConfig().completeJsonReport}">
+													<a href="#{automationReportsBean.lastLaunchJsonReportUrl}" target="_blank"><h:outputText value="JSON Report" style="text-decoration: underline" /></a>
+													<br/>
+												</ui:fragment>
+												<p:commandLink value="Logs by run" ajax="false" actionListener="#{automationReportsBean.extractReportsInfo(lastLaunch)}" style="text-decoration: underline" >
 													<p:fileDownload value="#{automationReportsBean.logsBySelectedRun}" />
 												</p:commandLink>
 											</ui:fragment>
@@ -288,15 +299,34 @@
 						</p:column>
 
 						<p:column headerText="Reports" style="text-align: left;" responsivePriority="1">
+							<ui:param name="isAllReportsDisabled" value="#{!launchInfo.reportsConfig.completeHtmlReport and !launchInfo.reportsConfig.failedHtmlReport and !launchInfo.reportsConfig.completeJsonReport}" />
 							<ui:fragment rendered="#{launchInfo.matricesInfo!=null and launchInfo.matricesInfo.size()==1}">
-								<a href="#{ApplicationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.html" target="_blank"><h:outputText value="#{launchInfo.matricesInfo.get(0).name}" style="#{!launchInfo.matricesInfo.get(0).successful ? 'color: red;' : ''}" /></a>
-								&#160;
-								<a href="#{ApplicationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report_failed.html" target="_blank">(only failed)</a>
-								&#160;
-								<a href="#{ApplicationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.json" target="_blank">JSON report</a>
+								<ui:fragment rendered="#{launchInfo.reportsConfig.completeHtmlReport}">
+									<a href="#{ApplicationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.html" target="_blank"><h:outputText value="#{launchInfo.matricesInfo.get(0).name}" style="#{!launchInfo.matricesInfo.get(0).successful ? 'color: red;' : ''}" /></a>
+									&#160;
+								</ui:fragment>
+								<ui:fragment rendered="#{!launchInfo.reportsConfig.completeHtmlReport and (launchInfo.reportsConfig.failedHtmlReport or launchInfo.reportsConfig.completeJsonReport)}">
+									<h:outputText value="#{launchInfo.matricesInfo.get(0).name}" style="#{!launchInfo.matricesInfo.get(0).successful ? 'color: red;' : ''}" />
+									&#160;
+								</ui:fragment>
+								<ui:fragment rendered="#{launchInfo.reportsConfig.failedHtmlReport}">
+									<a href="#{ApplicationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report_failed.html" target="_blank">(only failed)</a>
+									&#160;
+								</ui:fragment>
+								<ui:fragment rendered="#{launchInfo.reportsConfig.completeJsonReport}">
+									<a href="#{ApplicationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.json" target="_blank">(JSON report)</a>
+								</ui:fragment>
+								<ui:fragment rendered="#{isAllReportsDisabled}">
+									<h:outputText value="All reports were disabled" />
+								</ui:fragment>
 							</ui:fragment>
 							<ui:fragment rendered="#{launchInfo.matricesInfo==null or launchInfo.matricesInfo.size()!=1}">
-								<p:commandLink value="Show reports" actionListener="#{automationReportsBean.extractReportsInfo(launchInfo)}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" rendered="#{launchInfo.reportsPath!=null}" />
+								<ui:fragment rendered="#{!isAllReportsDisabled}">
+									<p:commandLink value="Show reports" actionListener="#{automationReportsBean.extractReportsInfo(launchInfo)}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" rendered="#{launchInfo.reportsPath!=null}" />
+								</ui:fragment>
+								<ui:fragment rendered="#{isAllReportsDisabled}">
+									<h:outputText value="All reports were disabled" />
+								</ui:fragment>
 							</ui:fragment>
 						</p:column>
 					</p:dataTable>
@@ -379,7 +409,8 @@
 					<h:form id="ReportsConfig" style="margin-top: 10px;">
 						<p:commandButton value="Reports" icon="ui-icon-gear"
 								actionListener="#{automationConfigBean.prepareReportsConfigToEdit}"
-								oncomplete="PF('reportsConfigDialog').show();" />
+								oncomplete="PF('reportsConfigDialog').show();"
+								update=":ReportsConfigDialog"/>
 						<ui:param name="configDisabledReports" value="#{automationConfigBean.reportsConfig.disabledReports}" />
 						&#160;
 						<h:outputText value="Disabled reports: #{configDisabledReports}" 
@@ -1190,11 +1221,22 @@
 						<f:facet name="filter">
 							<p:inputText onkeyup="PF('reportsTable').filter();" style="width: 670px;" placeholder="Search by RegEx"/>
 						</f:facet>
-						<a href="#{ApplicationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report.html" target="_blank"><h:outputText value="#{matrixInfo.name}" style="#{!matrixInfo.successful ? 'color: red;' : ''}" /></a>
-						&#160;
-						<a href="#{ApplicationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report_failed.html" target="_blank">(only failed)</a>
-						&#160;
-						<a href="#{ApplicationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report.json" target="_blank">JSON report</a>
+						<ui:param name="reportsConfig" value="#{automationReportsBean.selectedReportsInfo.reportsConfig}" />
+						<ui:fragment rendered="#{reportsConfig.completeHtmlReport}">
+							<a href="#{ApplicationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report.html" target="_blank"><h:outputText value="#{matrixInfo.name}" style="#{!matrixInfo.successful ? 'color: red;' : ''}" /></a>
+							&#160;
+						</ui:fragment>
+						<ui:fragment rendered="#{!reportsConfig.completeHtmlReport and (reportsConfig.failedHtmlReport or reportsConfig.completeJsonReport)}">
+							<h:outputText value="#{matrixInfo.name}" style="#{!matrixInfo.successful ? 'color: red;' : ''}" />
+							&#160;
+						</ui:fragment>
+						<ui:fragment rendered="#{reportsConfig.failedHtmlReport}">
+							<a href="#{ApplicationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report_failed.html" target="_blank">(only failed)</a>
+							&#160;
+						</ui:fragment>
+						<ui:fragment rendered="#{reportsConfig.completeJsonReport}">
+							<a href="#{ApplicationBean.appContextPath}/reports/#{automationReportsBean.selectedReportsInfo.relativeUri}/#{matrixInfo.fileName}/report.json" target="_blank">(JSON report)</a>
+						</ui:fragment>
 					</p:column>
 					<p:column headerText="Actions done" filterBy="#{matrixInfo}" filterFunction="#{automationReportsBean.reportFilters.filterReportsInfoByState}">
 						<f:facet name="filter">

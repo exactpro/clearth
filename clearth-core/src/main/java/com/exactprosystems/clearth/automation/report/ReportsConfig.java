@@ -19,12 +19,13 @@
 package com.exactprosystems.clearth.automation.report;
 
 import com.exactprosystems.clearth.utils.CommaBuilder;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class ReportsConfig
 {
-	protected boolean completeHtmlReport,
-			failedHtmlReport,
-			completeJsonReport;
+	protected boolean completeHtmlReport = true,
+			failedHtmlReport = true,
+			completeJsonReport = true;
 	
 	public ReportsConfig()
 	{
@@ -61,7 +62,13 @@ public class ReportsConfig
 		return completeJsonReport;
 	}
 	
+	@JsonIgnore
+	public boolean isAnyReportEnabled()
+	{
+		return completeHtmlReport || failedHtmlReport || completeJsonReport;
+	}
 	
+	@JsonIgnore
 	public String getDisabledReports()
 	{
 		if (completeHtmlReport && failedHtmlReport && completeJsonReport)

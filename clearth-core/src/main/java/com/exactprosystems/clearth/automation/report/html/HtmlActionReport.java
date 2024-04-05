@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,6 +39,14 @@ public class HtmlActionReport extends ActionReport
 {
 	private static final Logger log = LoggerFactory.getLogger(HtmlActionReport.class);
 	
+	private final ReportTemplatesProcessor templatesProcessor;
+	
+	public HtmlActionReport(ReportTemplatesProcessor templatesProcessor)
+	{
+		super();
+		this.templatesProcessor = templatesProcessor;
+	}
+	
 	protected Logger getLogger()
 	{
 		return log;
@@ -75,7 +83,7 @@ public class HtmlActionReport extends ActionReport
 		processResult(action, actionsReportsDir, onlyFailed);
 		try
 		{
-			ClearThCore.getInstance().getReportTemplatesProcessor().processTemplate(out, getParameters(action, containerId), ReportTemplateFiles.ACTION);
+			templatesProcessor.processTemplate(out, getParameters(action, containerId), ReportTemplateFiles.ACTION);
 		}
 		catch (TemplateException e)
 		{

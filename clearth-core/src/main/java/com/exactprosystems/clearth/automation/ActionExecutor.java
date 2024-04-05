@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -403,7 +403,7 @@ public class ActionExecutor implements Closeable
 		matrix.setStepSuccessful(stepName, false);
 		matrix.addStepStatusComment(stepName, "One or more actions CRASHED");
 		
-		reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
+		reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 		handleActionResult(action);
 	}
 	
@@ -736,7 +736,7 @@ public class ActionExecutor implements Closeable
 		if (!action.isSubaction())
 		{
 			actionToMvel(action);
-			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), !action.isPassed());
+			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 		}
 		else
 		{
@@ -744,7 +744,7 @@ public class ActionExecutor implements Closeable
 				matrixContext.getSubActionData(actionId).setSubActionData(action.getSubActionData());
 		
 			if (!action.isPassed())
-				reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
+				reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 		}
 		
 		handleActionResult(action);
@@ -815,7 +815,7 @@ public class ActionExecutor implements Closeable
 			action.setResult(actionResult);
 			variables.saveOutputParams(action);
 			
-			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName(), true);
+			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 			handleActionResult(action);
 		}
 		variables.cleanAfterAction(action);

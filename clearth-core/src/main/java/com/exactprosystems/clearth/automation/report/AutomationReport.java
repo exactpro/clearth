@@ -51,9 +51,9 @@ public class AutomationReport
 	
 	public void setExecutionTime(Date startTime, Date endTime)
 	{
-		if ((endTime != null) && (startTime != null))
+		if (endTime != null && startTime != null)
 			executionTime = Double.toString((endTime.getTime() - startTime.getTime()) / 1000.0) + " sec";
-		else if (endTime == null)
+		else if (endTime == null && startTime != null)
 			executionTime = Double.toString((new Date().getTime() - startTime.getTime()) / 1000.0) + " sec";
 		else
 			executionTime = "";

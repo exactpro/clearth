@@ -1,0 +1,117 @@
+
+	<div class="action">
+			<span class="node failed_comparison switch" onclick="showhide(this, 'Step1_action_2');">id2 - Compare2Values (FAILED)
+			</span>
+		<div class="container" id="Step1_action_2">
+	<div class="status">
+		<span class="node failed_comparison switch"  onclick="showhide(this, 'Step1_action_2_status');">Action status</span>
+		<div class="container" id="Step1_action_2_status" >
+			<table border="1" class="big-w-limited">
+				<tr>
+					<td>Status</td>
+					<td>FAILED</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+			<table class="action_data">
+				<tr>
+					<td class="params">
+						<div class="node">Input parameters</div>
+		<table border="1" frame="box" rules="all" style="margin-left:0em;">
+			<tr class="tablehead">
+				<td>Name</td>
+				<td>Value</td>
+			</tr>
+					<tr>
+						<td>Expected</td>
+							<td>1</td>
+					</tr>
+					<tr>
+						<td>Actual</td>
+							<td>2</td>
+					</tr>
+		</table>
+						<br>
+						<div class="node">Sub-actions</div>
+							<div>None</div>
+					</td>
+					<td class="comps">
+						<div class="node">Comparison table</div>
+			<table border="1" frame="box" rules="all" class="w-limited">
+				<tr class="tablehead">
+					<td>Name</td>
+					<td>Expected</td>
+					<td>Actual</td>
+					<td>Status</td>
+				</tr>
+					<tr class="comparison_line_failed">
+						<td>Value</td>
+							<td>1</td>
+						<td>2</td>
+						<td class="comparison_result failed">FAILED</td>
+					</tr>
+			</table>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<div class="action">
+			<span class="node not_executed switch" onclick="showhide(this, 'Step1_action_3');">id3 - Compare2Values (NOT EXECUTED)
+			</span>
+		<div class="container" id="Step1_action_3">
+	<div class="status">
+		<span class="node not_executed switch" style="background-image: url(hide.gif);" onclick="showhide(this, 'Step1_action_3_status');">Action status</span>
+		<div class="container" id="Step1_action_3_status" style="display: block;">
+			<table border="1" class="big-w-limited">
+				<tr>
+					<td>Status</td>
+					<td>FAILED</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+			<table class="action_data">
+				<tr>
+					<td class="params">
+						<div class="node">Input parameters</div>
+		<table border="1" frame="box" rules="all" style="margin-left:0em;">
+			<tr class="tablehead">
+				<td>Name</td>
+				<td>Value</td>
+			</tr>
+					<tr>
+						<td>Expected</td>
+							<td>1</td>
+					</tr>
+					<tr>
+						<td>Actual</td>
+							<td>1</td>
+					</tr>
+		</table>
+		<span class="switch" onclick="showhide(this, 'Step1_action_3_mainParams');">Basic parameters</span>
+		<div class="container" id="Step1_action_3_mainParams">
+			<table border="1" frame="box" rules="all" style="margin-left:0em;">
+				<tr class="tablehead">
+					<td>Name</td>
+					<td>Value</td>
+				</tr>
+					<tr>
+						<td>Execute</td>
+						<td><span class="node switch" onclick="showhide(this, 'Step1_action_3_formulaExecutable');">false<div class="container" id="Step1_action_3_formulaExecutable">@{false}</div></span></td>
+					</tr>
+			</table>
+		</div>
+						<br>
+						<div class="node">Sub-actions</div>
+							<div>None</div>
+					</td>
+					<td class="comps">
+						<div class="node">Comparison table</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>

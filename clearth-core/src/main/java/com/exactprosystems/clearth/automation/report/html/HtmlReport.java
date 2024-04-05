@@ -213,14 +213,12 @@ public class HtmlReport
 				if (!step.isExecute() || step.getFinished() == null && step.getExecutionProgress().getDone() == 0)
 					continue;
 				String stepName = step.getName();
-				String stepFileName = step.getSafeName();
+				String stepFileName = !onlyFailed ? step.getSafeName() : (step.getSafeName() + "_failed");
 				if (matrixSteps.contains(stepFileName))
 				{
 					if (!onlyFailed || step.isFailedDueToError() || !matrix.isStepSuccessful(stepName))
 					{
-						
-						File stepActionsFile = new File(actionsReportsDir,
-								matrix.getShortFileName() + File.separator + stepFileName + (onlyFailed ? "_failed" : ""));
+						File stepActionsFile = new File(actionsReportsDir, matrix.getShortFileName() + File.separator + stepFileName);
 						ReportStatus status = createStepStatus(step, matrix);
 						stepsData.add(createStepData(step, status, stepActionsFile));
 					}

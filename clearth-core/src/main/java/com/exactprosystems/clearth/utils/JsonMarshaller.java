@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -64,9 +64,9 @@ public class JsonMarshaller<T>
 		return objectMapper.writeValueAsString(obj);
 	}
 
-	public void marshal(T obj, String destPath) throws IOException
+	public void marshal(T obj, Path destPath) throws IOException
 	{
-		objectMapper.writeValue(new File(destPath), obj);
+		objectMapper.writeValue(destPath.toFile(), obj);
 	}
 
 

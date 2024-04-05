@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,6 +21,8 @@ package com.exactprosystems.clearth.automation.actions.macro;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
+import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
 
 import java.io.File;
 
@@ -29,8 +31,9 @@ public class NestedActionReportWriter extends ActionReportWriter
 	private final File reportFile;
 	private boolean writeReport = true;
 	
-	public NestedActionReportWriter(String nestedActionsReportFilePath)
+	public NestedActionReportWriter(String nestedActionsReportFilePath, ReportsConfig reportsConfig, ReportTemplatesProcessor templatesProcessor)
 	{
+		super(reportsConfig, templatesProcessor);
 		reportFile = new File(ClearThCore.rootRelative(nestedActionsReportFilePath));
 		reportFile.getParentFile().mkdirs();
 	}
@@ -42,10 +45,10 @@ public class NestedActionReportWriter extends ActionReportWriter
 	
 	
 	@Override
-	public void writeReport(Action action, String actionsReportsDir, String stepFileName, boolean writeFailedReport)
+	public void writeReport(Action action, String actionsReportsDir, String stepFileName)
 	{
 		if (writeReport || !action.isPassed())
-			super.writeReport(action, actionsReportsDir, stepFileName, false);
+			super.writeReport(action, actionsReportsDir, stepFileName);
 	}
 	
 	@Override

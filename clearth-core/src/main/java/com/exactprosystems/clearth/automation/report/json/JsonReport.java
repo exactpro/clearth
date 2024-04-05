@@ -143,7 +143,7 @@ public class JsonReport
 		boolean firstStep = true;
 		for (Step step : allSteps)
 		{
-			if (matrixStepNames.contains(step.getSafeName()))
+			if (matrixStepNames.contains(step.getSafeName() + ".json"))
 			{
 				if (firstStep)
 					firstStep = false;

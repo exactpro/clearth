@@ -90,7 +90,7 @@ public class JsonReportTest extends BasicTestNgTest
 		return new Object[][]
 				{
 						{
-								matrix1, asList(step1, step2), new HashSet<>(asList("Step1", "Step2")),
+								matrix1, asList(step1, step2), new HashSet<>(asList("Step1.json", "Step2.json")),
 								Paths.get(resourceToAbsoluteFilePath("JsonReports/CheckJsonReports1.csv")),
 								Paths.get(resourceToAbsoluteFilePath("JsonReports/CheckJsonReports1.csv/ExpectedJsonReport.json"))
 						}

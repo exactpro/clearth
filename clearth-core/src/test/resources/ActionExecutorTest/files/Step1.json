@@ -1,0 +1,94 @@
+[
+{
+  "@c" : ".ActionReport",
+  "actionId" : "id1",
+  "actionName" : "Compare2Values",
+  "timeout" : 0,
+  "status" : {
+    "passed" : true
+  },
+  "inputParams" : {
+    "Expected" : {
+      "value" : "1",
+      "specialValue" : false
+    },
+    "Actual" : {
+      "value" : "1",
+      "specialValue" : false
+    }
+  },
+  "specialParams" : { },
+  "result" : {
+    "@c" : ".results.DetailedResult",
+    "success" : true,
+    "resultDetails" : [ {
+      "param" : "Value",
+      "expected" : "1",
+      "actual" : "1",
+      "identical" : true
+    } ]
+  },
+  "subActions" : [ ]
+}
+,
+{
+  "@c" : ".ActionReport",
+  "actionId" : "id2",
+  "actionName" : "Compare2Values",
+  "timeout" : 0,
+  "status" : {
+    "passed" : false
+  },
+  "inputParams" : {
+    "Expected" : {
+      "value" : "1",
+      "specialValue" : false
+    },
+    "Actual" : {
+      "value" : "2",
+      "specialValue" : false
+    }
+  },
+  "specialParams" : { },
+  "result" : {
+    "@c" : ".results.DetailedResult",
+    "success" : false,
+    "resultDetails" : [ {
+      "param" : "Value",
+      "expected" : "1",
+      "actual" : "2",
+      "identical" : false
+    } ]
+  },
+  "subActions" : [ ]
+}
+,
+{
+  "@c" : ".ActionReport",
+  "actionId" : "id3",
+  "actionName" : "Compare2Values",
+  "timeout" : 0,
+  "formulaExecutable" : "@{false}",
+  "status" : {
+    "passed" : false,
+    "failReason" : "NOT_EXECUTED"
+  },
+  "inputParams" : {
+    "Expected" : {
+      "value" : "1",
+      "specialValue" : false
+    },
+    "Actual" : {
+      "value" : "1",
+      "specialValue" : false
+    }
+  },
+  "specialParams" : { },
+  "result" : {
+    "@c" : ".results.DefaultResult",
+    "success" : false,
+    "failReason" : "NOT_EXECUTED"
+  },
+  "subActions" : [ ]
+}
+]

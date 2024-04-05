@@ -84,7 +84,7 @@ public class DefaultSimpleExecutor extends SimpleExecutor
 	@Override
 	protected ReportsWriter initReportsWriter(String pathToStoreReports, String pathToActionsReports)
 	{
-		return new ReportsWriter(this, pathToStoreReports, pathToActionsReports);
+		return new ReportsWriter(this, pathToStoreReports, pathToActionsReports, reportsConfig);
 	}
 
 	@Override

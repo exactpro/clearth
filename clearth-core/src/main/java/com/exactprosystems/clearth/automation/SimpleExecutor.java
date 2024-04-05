@@ -117,9 +117,9 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		this.preparableActions = preparableActions;
 		this.paramsCalculator = createParamsCalculator();
 		this.executionHandler = globalContext.getExecutionHandler();
+		this.reportsConfig = new ReportsConfig(scheduler.getCurrentReportsConfig());
 		this.actionExecutor = createActionExecutor();
 		this.stepData = new ArrayList<>(steps.size());
-		this.reportsConfig = new ReportsConfig(scheduler.getCurrentReportsConfig());
 	}
 
 	protected abstract Logger getLogger();
@@ -379,10 +379,15 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			ended = Calendar.getInstance().getTime();
 
 			//Forming reports
-			status.add("Making reports...");
-			makeReports(completedReportsDir, actionsReportsDir);
-			status.add("Reports made");
-
+			String pathToStoreReports = ClearThCore.appRootRelative(completedReportsDir), //AppRootRelative because we don't want to download file, we want to see it in browser
+					pathToActionsReports = ClearThCore.appRootRelative(actionsReportsDir);
+			if (reportsConfig.isAnyReportEnabled())
+			{
+				status.add("Making reports...");
+				makeReports(pathToStoreReports, pathToActionsReports);
+				status.add("Reports made");
+			}
+			lastReportsInfo = createReportsInfo(pathToStoreReports);
 			scheduler.saveExecutedStepsData();
 
 			//Storing info about this launch to make user able to access it from GUI
@@ -597,7 +602,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	
 	protected ActionReportWriter createReportWriter()
 	{
-		return new ActionReportWriter();
+		return new ActionReportWriter(getReportsConfig(), ClearThCore.getInstance().getReportTemplatesProcessor());
 	}
 	
 	protected ActionExecutor createActionExecutor()
@@ -674,6 +679,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		launchInfo.setInterrupted(interrupted.get());
 		launchInfo.setReportsPath(specificDir + REPORTDIR_COMPLETED);
 		launchInfo.getMatricesInfo().addAll(lastReportsInfo.getMatrices());
+		launchInfo.setReportsConfig(lastReportsInfo.getXmlReportsConfig());
 		boolean successfulRun = true;
 		for (XmlMatrixInfo matrixInfo : launchInfo.getMatricesInfo())
 			if (!matrixInfo.isSuccessful())
@@ -1236,22 +1242,22 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	//FIXME: this method is not thread-safe
 	protected void makeReports(String pathToStoreReports, String pathToActionsReports) throws IOException, ReportException
 	{
-		pathToStoreReports = ClearThCore.appRootRelative(pathToStoreReports); //AppRootRelative because we don't want to download file, we want to see it in browser
-		pathToActionsReports = ClearThCore.appRootRelative(pathToActionsReports);
-		new File(pathToStoreReports).mkdirs();
+		Files.createDirectories(Path.of(pathToStoreReports));
 
 		ReportsWriter reportsWriter = initReportsWriter(pathToStoreReports, pathToActionsReports);
-
 		for (Matrix matrix : matrices)
 		{
 			List<String> stepsMatrix = getMatrixSteps(matrix.getShortFileName());
-
 			reportsWriter.buildAndWriteReports(matrix, stepsMatrix, globalContext.getStartedByUser(), executionHandler.getName());
 		}
-		
-		lastReportsInfo = new ReportsInfo();
-		lastReportsInfo.setPath(pathToStoreReports);
-		List<XmlMatrixInfo> mi = lastReportsInfo.getMatrices();
+	}
+	
+	protected ReportsInfo createReportsInfo(String pathToStoreReports)
+	{
+		ReportsInfo result = new ReportsInfo();
+		result.setPath(pathToStoreReports);
+		result.setReportsConfig(getReportsConfig());
+		List<XmlMatrixInfo> mi = result.getMatrices();
 		for (Matrix matrix : matrices)
 		{
 			XmlMatrixInfo matrixInfo = new XmlMatrixInfo();
@@ -1262,6 +1268,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			
 			mi.add(matrixInfo);
 		}
+		return result;
 	}
 	
 	/**
@@ -1295,7 +1302,9 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	{
 		try
 		{
-			makeReports(pathToStoreReports, actionsReportsDir);
+			pathToStoreReports = ClearThCore.appRootRelative(pathToStoreReports);
+			makeReports(pathToStoreReports, ClearThCore.appRootRelative(actionsReportsDir));
+			lastReportsInfo = createReportsInfo(pathToStoreReports);
 		}
 		catch (Exception e)
 		{

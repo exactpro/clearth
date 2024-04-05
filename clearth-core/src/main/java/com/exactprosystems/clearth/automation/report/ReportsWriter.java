@@ -18,10 +18,12 @@
 
 package com.exactprosystems.clearth.automation.report;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.SimpleExecutor;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.report.html.HtmlReport;
+import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
 import com.exactprosystems.clearth.automation.report.json.JsonReport;
 import com.exactprosystems.clearth.data.HandledTestExecutionId;
 import org.apache.commons.io.FileUtils;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -45,14 +48,22 @@ public class ReportsWriter
 	
 	private final String reportsPath;
 	private final String actionsReportsPath;
+	private final ReportsConfig reportsConfig;
+	private final ReportTemplatesProcessor templatesProcessor;
 	
-	public ReportsWriter(SimpleExecutor executor, String reportsPath, String actionsReportsPath)
+	public ReportsWriter(SimpleExecutor executor, String reportsPath, String actionsReportsPath, ReportsConfig reportsConfig)
+	{
+		this(executor, reportsPath, actionsReportsPath, reportsConfig, ClearThCore.getInstance().getReportTemplatesProcessor());
+	}
+	
+	public ReportsWriter(SimpleExecutor executor, String reportsPath, String actionsReportsPath, ReportsConfig reportsConfig, ReportTemplatesProcessor templatesProcessor)
 	{
 		this.executor = executor;
 		this.reportsPath = reportsPath;
 		this.actionsReportsPath = actionsReportsPath;
+		this.reportsConfig = reportsConfig;
+		this.templatesProcessor = templatesProcessor;
 	}
-	
 	
 	public SimpleExecutor getExecutor()
 	{
@@ -73,7 +84,7 @@ public class ReportsWriter
 	protected HtmlReport createHtmlReport(Matrix matrix, String pathToReport, String userName, String reportName, 
 			Date startTime, Date endTime, String testHandlerName, HandledTestExecutionId matrixExecutionId) throws IOException
 	{
-		return new HtmlReport(matrix, pathToReport, userName, reportName, startTime, endTime, testHandlerName, matrixExecutionId);
+		return new HtmlReport(matrix, pathToReport, userName, reportName, startTime, endTime, testHandlerName, matrixExecutionId, templatesProcessor);
 	}
 	
 	protected JsonReport createJsonReport(Matrix matrix, Collection<Step> allSteps, Set<String> matrixStepNames,
@@ -94,36 +105,48 @@ public class ReportsWriter
 
 		buildAndWriteHtmlReports(matrix, matrixSteps, userName, startTime, endTime,
 				testHandlerName, matrixExecutionId);
-		buildAndWriteJsonReports(matrix, matrixSteps, userName, startTime, endTime, matrixExecutionId);
+		if (reportsConfig.isCompleteJsonReport())
+			buildAndWriteJsonReports(matrix, matrixSteps, userName, startTime, endTime, matrixExecutionId);
 		copyResultDetailsDir(matrix);
 	}
 
 	protected void buildAndWriteHtmlReports(Matrix matrix, List<String> matrixSteps, String userName,
 			Date startTime, Date endTime, String testHandlerName, HandledTestExecutionId matrixExecutionId) throws IOException, ReportException
 	{
-		logger.debug("Writing HTML reports for matrix '{}'...", matrix.getName());
-		
-		HtmlReport report = createHtmlReport(matrix, reportsPath, userName, "report",
-				startTime, endTime, testHandlerName, matrixExecutionId);
-		HtmlReport report_failed = createHtmlReport(matrix, reportsPath, userName, "report_failed",
-				startTime, endTime, testHandlerName, matrixExecutionId);
+		HtmlReport report = null,
+				report_failed = null;
 		
 		File actionsReports = new File(actionsReportsPath);
-		report.writeReport(executor.getSteps(), matrixSteps, actionsReports, false);
-		report_failed.writeReport(executor.getSteps(), matrixSteps, actionsReports, true);
+		if (reportsConfig.isCompleteHtmlReport())
+		{
+			logger.debug("Writing HTML report for matrix '{}'...", matrix.getName());
+			report = createHtmlReport(matrix, reportsPath, userName, "report",
+					startTime, endTime, testHandlerName, matrixExecutionId);
+			
+			report.writeReport(executor.getSteps(), matrixSteps, actionsReports, false);
+		}
+		if (reportsConfig.isFailedHtmlReport())
+		{
+			logger.debug("Writing 'only-failed' HTML report for matrix '{}'...", matrix.getName());
+			report_failed = createHtmlReport(matrix, reportsPath, userName, "report_failed",
+					startTime, endTime, testHandlerName, matrixExecutionId);
+			
+			report_failed.writeReport(executor.getSteps(), matrixSteps, actionsReports, true);
+		}
 		
 		makeHtmlReportsEndings(report, report_failed);
 	}
 	
 	
 	protected void buildAndWriteJsonReports(Matrix matrix, List<String> matrixSteps, String userName,
-	                                        Date startTime, Date endTime, HandledTestExecutionId matrixExecutionId) throws IOException
+			Date startTime, Date endTime, HandledTestExecutionId matrixExecutionId) throws IOException
 	{
 		JsonReport report = createJsonReport(matrix, executor.getSteps(), new HashSet<>(matrixSteps),
 				userName, startTime, endTime, matrixExecutionId);
 		
 		Path reportPath = Paths.get(rootRelative(reportsPath), matrix.getShortFileName(), JSON_REPORT_NAME);
-		Path actionsReportsDir = Paths.get(rootRelative(executor.getActionsReportsDir()), matrix.getShortFileName());
+		Files.createDirectories(reportPath.getParent());
+		Path actionsReportsDir = Paths.get(rootRelative(actionsReportsPath), matrix.getShortFileName());
 		report.writeReport(reportPath, actionsReportsDir);
 	}
 

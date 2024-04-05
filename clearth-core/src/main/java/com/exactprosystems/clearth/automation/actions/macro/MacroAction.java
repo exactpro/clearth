@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,10 +18,12 @@
 
 package com.exactprosystems.clearth.automation.actions.macro;
 
+import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
 import com.exactprosystems.clearth.automation.exceptions.ResultException;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.config.SpecialActionParameters;
@@ -166,6 +168,7 @@ public class MacroAction extends Action implements Preparable
 
 	protected ActionReportWriter createReportWriter()
 	{
-		return new NestedActionReportWriter(getNestedActionsReportFilePath());
+		return new NestedActionReportWriter(getNestedActionsReportFilePath(), new ReportsConfig(true, false, true),
+				ClearThCore.getInstance().getReportTemplatesProcessor());
 	}
 }

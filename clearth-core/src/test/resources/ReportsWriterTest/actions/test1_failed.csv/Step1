@@ -1,0 +1,141 @@
+
+					<div class="action">
+						<span class="node failed_comparison switch" onclick="showhide(this, 'Step1_action_1');">id1 - TestAction (FAILED)</span>
+						<div class="container" id="Step1_action_1">
+							<div class="status">
+								<span class="node failed_comparison switch"  onclick="showhide(this, 'Step1_action_1_status');">Action status</span>
+								<div class="container" id="Step1_action_1_status" >
+									<table border="1" class="big-w-limited">
+										<tr>
+											<td>Status</td>
+											<td>FAILED</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+							<table class="action_data">
+								<tr>
+									<td class="params">
+										<div class="node">Input parameters</div>
+										<table border="1" frame="box" rules="all" style="margin-left:0em;">
+											<tr class="tablehead">
+												<td>Name</td>
+												<td>Value</td>
+											</tr>
+											<tr>
+												<td>Param1</td>
+												<td>11</td>
+											</tr>
+											<tr>
+												<td>Param2</td>
+												<td>2</td>
+											</tr>
+										</table>
+									</td>
+									<td class="comps">
+										<div class="node">Comparison table</div>
+										<table border="1" frame="box" rules="all" class="w-limited">
+											<tr class="tablehead">
+												<td>Name</td>
+												<td>Expected</td>
+												<td>Actual</td>
+												<td>Status</td>
+											</tr>
+											<tr class="comparison_line_failed">
+												<td>Param1</td>
+												<td>11</td>
+												<td>1</td>
+												<td class="comparison_result failed">FAILED</td>
+											</tr>
+											<tr class="comparison_line_passed">
+												<td>Param2</td>
+												<td>2</td>
+												<td>2</td>
+												<td class="comparison_result passed">PASSED</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+					<div class="action">
+						<span class="node passed switch" onclick="showhide(this, 'Step1_action_2');">id2 - TestAction (PASSED)</span>
+						<div class="container" id="Step1_action_2">
+							<div class="status">
+								<span class="node passed switch"  onclick="showhide(this, 'Step1_action_2_status');">Action status</span>
+								<div class="container" id="Step1_action_2_status" >
+									<table border="1" class="big-w-limited">
+										<tr>
+											<td>Status</td>
+											<td>PASSED</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+							<table class="action_data">
+								<tr>
+									<td class="params">
+										<div class="node">Input parameters</div>
+										<table border="1" frame="box" rules="all" style="margin-left:0em;">
+											<tr class="tablehead">
+												<td>Name</td>
+												<td>Value</td>
+											</tr>
+											<tr>
+												<td>Param1</td>
+												<td>1</td>
+											</tr>
+											<tr>
+												<td>Param2</td>
+												<td>2</td>
+											</tr>
+										</table>
+										<br>
+										<div class="node">Sub-actions</div>
+										<div>None</div>
+										<br>
+										<div class="node">Output parameters</div>
+										<table border="1" frame="box" rules="all" class="w-limited">
+											<tr class="tablehead">
+												<td>Name</td>
+												<td>Value</td>
+											</tr>
+											<tr>
+												<td>Param1</td>
+												<td>1</td>
+											</tr>
+											<tr>
+												<td>Param2</td>
+												<td>2</td>
+											</tr>
+										</table>
+									</td>
+									<td class="comps">
+										<div class="node">Comparison table</div>
+										<table border="1" frame="box" rules="all" class="w-limited">
+											<tr class="tablehead">
+												<td>Name</td>
+												<td>Expected</td>
+												<td>Actual</td>
+												<td>Status</td>
+											</tr>
+											<tr class="comparison_line_passed">
+												<td>Param1</td>
+												<td>1</td>
+												<td>1</td>
+												<td class="comparison_result passed">PASSED</td>
+											</tr>
+											<tr class="comparison_line_passed">
+												<td>Param2</td>
+												<td>2</td>
+												<td>2</td>
+												<td class="comparison_result passed">PASSED</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
