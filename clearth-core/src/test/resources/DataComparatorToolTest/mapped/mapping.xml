@@ -1,0 +1,10 @@
+<MappingDesc>
+	<field name="Column1" key="true">
+		<expected name="C1"/>
+		<actual name="V1"/>
+	</field>
+	<field name="Column2">
+		<expected name="C2"/>
+		<actual name="V2"/>
+	</field>
+</MappingDesc>

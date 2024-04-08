@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -51,6 +51,7 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.primarykeys.CollectionPrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.readers.BasicTableDataReader;
+import com.exactprosystems.clearth.utils.tabledata.readers.MappedTableDataReader;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.NumericStringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.StringTableRowMatcher;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
@@ -64,6 +65,13 @@ public class DataComparatorTool
 			ComparisonSettings settings) throws IOException, ParametersException, ComparisonException
 	{
 		interrupted.set(false);
+		
+		DataMapping<String> mapping = settings.getMapping();
+		if (mapping != null)
+		{
+			expectedReader = mapReader(expectedReader, mapping, true);
+			actualReader = mapReader(actualReader, mapping, false);
+		}
 		
 		IValueTransformer valueTransformer = createValueTransformer(settings);
 		ValuesComparator<String, String> valuesComp = createValuesComparator(settings, valueTransformer);
@@ -120,6 +128,11 @@ public class DataComparatorTool
 		interrupted.set(true);
 	}
 	
+	
+	protected BasicTableDataReader<String, String, ?> mapReader(BasicTableDataReader<String, String, ?> reader, DataMapping<String> mapping, boolean forExpected)
+	{
+		return new MappedTableDataReader<>(reader, mapping.getHeaderMapper(forExpected));
+	}
 	
 	protected IValueTransformer createValueTransformer(ComparisonSettings settings)
 	{

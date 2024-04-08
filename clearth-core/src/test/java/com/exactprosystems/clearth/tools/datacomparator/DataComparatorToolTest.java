@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.tools.datacomparator;
 
+import static org.testng.Assert.assertNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,9 +31,12 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.StringJoiner;
 
+import javax.xml.bind.JAXBException;
+
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.XmlUtils;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
@@ -78,7 +83,7 @@ public class DataComparatorToolTest
 		Path dirWithPassed = RES_DIR.resolve(passed);
 		ComparisonResult result = compareFiles(dirWithPassed, OUTPUT_DIR.resolve(passed), null);
 		assertCounts(result, 2, 0, 0, 0);
-		assertTextAndArchive(result.getPassedDetails(), dirWithPassed.resolve(FILE_PASSED), "Details");
+		assertPassedDetails(result, dirWithPassed);
 	}
 	
 	@Test
@@ -102,12 +107,24 @@ public class DataComparatorToolTest
 		
 		ComparisonResult result = compareFiles(dirWithFiles, OUTPUT_DIR.resolve(diff), new StringDataMapping(mapping));
 		assertCounts(result, 1, 2, 1, 1);
-		assertTextAndArchive(result.getPassedDetails(), dirWithFiles.resolve(FILE_PASSED), "Passed details");
-		assertTextAndArchive(result.getFailedDetails(), dirWithFiles.resolve(FILE_FAILED), "Failed details");
-		assertTextAndArchive(result.getNotFoundDetails(), dirWithFiles.resolve(FILE_NOT_FOUND), "Not found rows details");
-		assertTextAndArchive(result.getExtraDetails(), dirWithFiles.resolve(FILE_EXTRA), "Extra rows details");
+		assertAllDetails(result, dirWithFiles);
 		
 		assertTexts(result.getErrors().toFile(), dirWithFiles.resolve("errors.txt").toFile(), "Errors");
+	}
+	
+	@Test
+	public void mappedColumns() throws IOException, JAXBException, ParametersException, ComparisonException
+	{
+		String mapped = "mapped";
+		Path dirWithFiles = RES_DIR.resolve(mapped);
+		
+		MappingDesc mapping = XmlUtils.unmarshalObject(MappingDesc.class, dirWithFiles.resolve("mapping.xml").toString());
+		
+		ComparisonResult result = compareFiles(dirWithFiles, OUTPUT_DIR.resolve(mapped), new StringDataMapping(mapping));
+		assertCounts(result, 1, 1, 1, 1);
+		assertAllDetails(result, dirWithFiles);
+		
+		assertNull(result.getErrors(), "Errors");
 	}
 	
 	@Test
@@ -128,9 +145,10 @@ public class DataComparatorToolTest
 		ComparisonSettings settings = new ComparisonSettings(dbPath, null, new ComparisonUtils());
 		ComparisonResult result = new DataComparatorTool().compare(expectedReader, actualReader, settings);
 		
-		assertTextAndArchive(result.getPassedDetails(), resFiles.resolve(FILE_PASSED), "Passed details");
-		assertTextAndArchive(result.getFailedDetails(), resFiles.resolve(FILE_FAILED), "Failed details");
+		assertPassedDetails(result, resFiles);
+		assertFailedDetails(result, resFiles);
 	}
+	
 	
 	private DbConnection createDbConnection(Path dbPath) throws Exception
 	{
@@ -196,6 +214,34 @@ public class DataComparatorToolTest
 		soft.assertEquals(result.getNotFound(), notFound, "Not found");
 		soft.assertEquals(result.getExtra(), extra, "Extra");
 		soft.assertAll();
+	}
+	
+	private void assertPassedDetails(ComparisonResult result, Path expectedFilesDir) throws IOException
+	{
+		assertTextAndArchive(result.getPassedDetails(), expectedFilesDir.resolve(FILE_PASSED), "Passed details");
+	}
+	
+	private void assertFailedDetails(ComparisonResult result, Path expectedFilesDir) throws IOException
+	{
+		assertTextAndArchive(result.getFailedDetails(), expectedFilesDir.resolve(FILE_FAILED), "Failed details");
+	}
+	
+	private void assertNotFoundDetails(ComparisonResult result, Path expectedFilesDir) throws IOException
+	{
+		assertTextAndArchive(result.getNotFoundDetails(), expectedFilesDir.resolve(FILE_NOT_FOUND), "Not found rows details");
+	}
+	
+	private void assertExtraDetails(ComparisonResult result, Path expectedFilesDir) throws IOException
+	{
+		assertTextAndArchive(result.getExtraDetails(), expectedFilesDir.resolve(FILE_EXTRA), "Extra rows details");
+	}
+	
+	private void assertAllDetails(ComparisonResult result, Path expectedFilesDir) throws IOException
+	{
+		assertPassedDetails(result, expectedFilesDir);
+		assertFailedDetails(result, expectedFilesDir);
+		assertNotFoundDetails(result, expectedFilesDir);
+		assertExtraDetails(result, expectedFilesDir);
 	}
 	
 	private void assertTextAndArchive(Path actualArchive, Path expectedText, String kind) throws IOException
