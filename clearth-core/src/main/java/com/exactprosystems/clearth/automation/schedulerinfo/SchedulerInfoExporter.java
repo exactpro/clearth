@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -87,7 +87,7 @@ public class SchedulerInfoExporter
 	protected ReportsInfo getCurrentReportsInfo(Scheduler scheduler)
 	{
 		return scheduler.makeCurrentReports(scheduler.getReportsDir() +
-				"current_" + DATETIME_FORMAT.format(new Date()), false);
+				"current_" + DATETIME_FORMAT.format(new Date()), false, false);
 	}
 	
 	protected ReportsInfo getLastReportsInfo(Scheduler scheduler)

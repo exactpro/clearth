@@ -102,6 +102,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	private Timer sleepTimer = null;
 	private volatile long startTimeStep = 0L;
 	private Consumer<SimpleExecutor> onFinish;
+	private Set<String> currentReportsDirs = new HashSet<>();
 
 	public SimpleExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
 			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions, ReportsConfig reportsConfig)
@@ -425,6 +426,9 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			
 			clearSteps();
 
+			clearReportsTempDir(ClearThCore.appRootRelative(actionsReportsDir));
+			deleteCurrentReportsDirs();
+			
 			if (sleepTimer != null) {
 				sleepTimer.cancel();
 				sleepTimer = null;
@@ -1257,6 +1261,18 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		}
 	}
 	
+	private void clearReportsTempDir(String pathToTempReports)
+	{
+		try
+		{
+			FileUtils.deleteDirectory(new File(pathToTempReports));
+		}
+		catch (Exception e)
+		{
+			getLogger().error("Could not delete directory {}", pathToTempReports, e);
+		}
+	}
+	
 	protected ReportsInfo createReportsInfo(String pathToStoreReports)
 	{
 		ReportsInfo result = new ReportsInfo();
@@ -1303,11 +1319,14 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	}
 	
 	@Override
-	public void makeCurrentReports(String pathToStoreReports)
+	public void makeCurrentReports(String pathToStoreReports, boolean deleteAfterExecution)
 	{
 		try
 		{
 			pathToStoreReports = ClearThCore.appRootRelative(pathToStoreReports);
+			if (deleteAfterExecution)
+				currentReportsDirs.add(pathToStoreReports);
+			
 			makeReports(pathToStoreReports, ClearThCore.appRootRelative(actionsReportsDir));
 			lastReportsInfo = createReportsInfo(pathToStoreReports);
 		}
@@ -1381,7 +1400,13 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	}
 
 	public abstract List<String> getMatrixSteps(String matrixName);
-
+	
+	protected void deleteCurrentReportsDirs()
+	{
+		currentReportsDirs.forEach(this::clearReportsTempDir);
+		currentReportsDirs.clear();
+	}
+	
 	protected class UnsleepTask extends TimerTask {
 		@Override
 		public void run() {

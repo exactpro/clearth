@@ -447,12 +447,12 @@ public abstract class SequentialExecutor extends Thread implements IExecutor
 	}
 	
 	@Override
-	public void makeCurrentReports(String pathToStoreReports)
+	public void makeCurrentReports(String pathToStoreReports, boolean deleteAfterExecution)
 	{
 		synchronized (ceMonitor)
 		{
 			if (currentExecutor!=null)
-				currentExecutor.makeCurrentReports(pathToStoreReports);
+				currentExecutor.makeCurrentReports(pathToStoreReports, deleteAfterExecution);
 		}
 	}
 	

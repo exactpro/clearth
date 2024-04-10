@@ -56,7 +56,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -1212,9 +1211,8 @@ public abstract class Scheduler
 		if ((!isSuspended()) || sequentialRun)
 			return false;
 		
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
-		String repDir = getReportsDir()+"current_"+df.format(new Date())+"/";
-		ReportsInfo repInfo = makeCurrentReports(repDir, true);
+		String repDir = getReportsDir() + "current_state";
+		ReportsInfo repInfo = makeCurrentReports(repDir, false, false);
 		ExecutorState es = createExecutorState((SimpleExecutor) executor, stepFactory, repInfo);
 		es.save(schedulerData.getStateDir());
 		copyActionReport(schedulerData.getRepDir());
@@ -1467,11 +1465,12 @@ public abstract class Scheduler
 		executor.copyActionReports(pathToStoreReports);
 	}
 	
-	synchronized public ReportsInfo makeCurrentReports(String pathToStoreReports, boolean reuseReports)
+	synchronized public ReportsInfo makeCurrentReports(String pathToStoreReports, boolean reuseReports, boolean deleteAfterExecution)
 	{
 		ReportsInfo reportsInfo = executor.getLastReportsInfo();
+		
 		if (!reuseReports || reportsInfo == null || !Files.isDirectory(Path.of(reportsInfo.getPath())))
-			executor.makeCurrentReports(pathToStoreReports);
+			executor.makeCurrentReports(pathToStoreReports, deleteAfterExecution);
 		return executor.getLastReportsInfo();
 	}
 	

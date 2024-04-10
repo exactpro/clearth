@@ -57,5 +57,5 @@ public interface IExecutor
 	String getCompletedReportsDir();
 	void copyActionReports(File pathToStoreReports);
 	ReportsInfo getLastReportsInfo();
-	void makeCurrentReports(String pathToStoreReports);
+	void makeCurrentReports(String pathToStoreReports, boolean deleteAfterExecution);
 }
