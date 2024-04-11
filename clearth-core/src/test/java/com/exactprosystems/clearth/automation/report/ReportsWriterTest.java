@@ -21,14 +21,11 @@ package com.exactprosystems.clearth.automation.report;
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
-import com.exactprosystems.clearth.helpers.JsonAssert;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
-import com.exactprosystems.clearth.utils.Utils;
 import freemarker.template.TemplateModelException;
 import org.apache.commons.io.FileUtils;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -42,7 +39,6 @@ import java.util.Date;
 import java.util.List;
 
 import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
-import static com.exactprosystems.clearth.automation.SchedulerTest.IGNORED_EXPECTED_PARAMS;
 
 public class ReportsWriterTest
 {
@@ -93,7 +89,7 @@ public class ReportsWriterTest
 		List<Step> steps = Collections.singletonList(createStep(STEP));
 		
 		SimpleExecutor executor = new DefaultSimpleExecutor(scheduler, steps, Collections.emptyList(),
-				new GlobalContext(new Date(), false, Collections.emptyMap(), null, USER, null), null, null);
+				new GlobalContext(new Date(), false, Collections.emptyMap(), null, USER, null), null, null, repCfg);
 		
 		Matrix matrixFailed = createMatrix(FAILED_MATRIX_NAME, false);
 		Matrix matrixPassed = createMatrix(PASSED_MATRIX_NAME, true);

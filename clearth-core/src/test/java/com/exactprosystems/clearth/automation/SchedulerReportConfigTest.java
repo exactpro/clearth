@@ -19,7 +19,9 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ApplicationManager;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
+import com.exactprosystems.clearth.data.DataHandlingException;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.xmldata.XmlReportsConfig;
@@ -31,6 +33,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,15 +51,16 @@ public class SchedulerReportConfigTest
 			.resolve("automation").resolve("reports").toString();
 	private static final String USER = "user";
 	
-	private Path resDir;
 	private ApplicationManager clearThManager;
-	private Scheduler scheduler;
+	private Path resDir,
+			configsDir;
+	
 	@BeforeClass
 	public void init() throws Exception
 	{
 		clearThManager = new ApplicationManager();
 		resDir = Path.of(FileOperationUtils.resourceToAbsoluteFilePath(SchedulerReportConfigTest.class.getSimpleName()));
-		scheduler = createScheduler();
+		configsDir = resDir.resolve("configs");
 	}
 	
 	@AfterClass
@@ -85,6 +89,7 @@ public class SchedulerReportConfigTest
 	@Test(dataProvider = "reportsConfig")
 	public void testSchedulerReportsConfiguration(ReportsConfig reportsConfig) throws Exception
 	{
+		Scheduler scheduler = createScheduler(resDir.resolve("matrices"), configsDir.resolve("config.cfg"));
 		scheduler.setReportsConfig(reportsConfig);
 		scheduler.start(USER);
 		waitForSchedulerToStop(scheduler, 100, 5000);
@@ -92,13 +97,38 @@ public class SchedulerReportConfigTest
 		List<XmlSchedulerLaunchInfo> launchesInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
 		assertNotNull(launchesInfo, "Launches data");
 		assertFalse(launchesInfo.isEmpty());
-
+		
 		XmlSchedulerLaunchInfo currentLaunch = launchesInfo.get(0);
 		Path repOutput = Paths.get(REPORTS_DIR, currentLaunch.getReportsPath());
 		
 		assertReportsConfigs(currentLaunch.getReportsConfig(), reportsConfig);
 		checkReports(repOutput, reportsConfig);
 	}
+	
+	@Test
+	public void testReportsConfigState() throws ClearThException, IOException, AutomationException, 
+			IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, DataHandlingException
+	{
+		ReportsConfig initialConfig = new ReportsConfig(false, true, true);
+		
+		Scheduler scheduler = createScheduler(resDir.resolve("matrices_for_state"), configsDir.resolve("config_for_state.cfg"));
+		scheduler.setReportsConfig(initialConfig);
+		scheduler.start(USER);
+		
+		ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 3000);
+		scheduler.saveState();
+		scheduler.stop();
+		ApplicationManager.waitForSchedulerToStop(scheduler, 100, 2000);
+		
+		scheduler.setReportsConfig(new ReportsConfig(true, true, true));  //This new configuration should not affect reports written after restoring execution state
+		scheduler.restoreState(USER);
+		ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
+		
+		XmlSchedulerLaunchInfo currentLaunch = scheduler.getSchedulerData().getLaunches().getLaunchesInfo().get(0);
+		Path repOutput = Paths.get(REPORTS_DIR, currentLaunch.getReportsPath());
+		checkReports(repOutput, initialConfig);
+	}
+	
 	
 	private void assertReportsConfigs(XmlReportsConfig xmlReportsConfig, ReportsConfig reportsConfig)
 	{
@@ -107,12 +137,11 @@ public class SchedulerReportConfigTest
 		assertEquals(xmlReportsConfig.isCompleteJsonReport(), reportsConfig.isCompleteJsonReport());
 	}
 	
-	private Scheduler createScheduler() throws ClearThException
+	private Scheduler createScheduler(Path matricesDir, Path stepsFile) throws ClearThException
 	{
 		Scheduler scheduler = clearThManager.getScheduler(USER, USER);
-		File stepCfg = clearThManager.getSchedulerConfig(resDir.resolve("configs").resolve("config.cfg"));
-		clearThManager.loadSteps(scheduler, stepCfg);
-		clearThManager.loadMatrices(scheduler, resDir.resolve("matrices").toFile());
+		clearThManager.loadSteps(scheduler, stepsFile.toFile());
+		clearThManager.loadMatrices(scheduler, matricesDir.toFile());
 		return scheduler;
 	}
 	
@@ -133,9 +162,9 @@ public class SchedulerReportConfigTest
 			while (reportPaths.hasNext())
 			{
 				Path path = reportPaths.next();
-				assertEquals(Files.exists(path.resolve("report.json")), json);
-				assertEquals(Files.exists(path.resolve("report.html")), html);
-				assertEquals(Files.exists(path.resolve("report_failed.html")), failed_html);
+				assertEquals(Files.exists(path.resolve("report.json")), json, "Complete JSON report exists");
+				assertEquals(Files.exists(path.resolve("report.html")), html, "Complete HTML report exists");
+				assertEquals(Files.exists(path.resolve("report_failed.html")), failed_html, "Failed HTML report exists");
 			}
 		}
 	}

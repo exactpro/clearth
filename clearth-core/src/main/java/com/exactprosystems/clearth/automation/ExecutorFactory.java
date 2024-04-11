@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.exactprosystems.clearth.ValueGenerator;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public abstract class ExecutorFactory
@@ -36,7 +37,8 @@ public abstract class ExecutorFactory
 	
 	public abstract SimpleExecutor createExecutor(Scheduler scheduler, List<Matrix> matrices, String startedByUser, Map<String, Preparable> preparableActions,
 			TestExecutionHandler executionHandler);
-	public abstract SimpleExecutor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext, Map<String, Preparable> preparableActions);
+	public abstract SimpleExecutor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext, Map<String, Preparable> preparableActions,
+			ReportsConfig reportsConfig);
 	public abstract GlobalContext createGlobalContext(Date businessDay, Date baseTime, boolean weekendHoliday, Map<String, Boolean> holidays, String startedByUser,
 			TestExecutionHandler executionHandler);
 	public abstract FailoverStatus createFailoverStatus();

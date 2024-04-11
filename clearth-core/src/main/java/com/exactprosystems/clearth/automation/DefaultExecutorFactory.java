@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.ValueGenerator;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 
 public class DefaultExecutorFactory extends ExecutorFactory
@@ -42,14 +43,15 @@ public class DefaultExecutorFactory extends ExecutorFactory
 		if (scheduler.isTestMode())
 			globalContext.setLoadedContext(GlobalContext.TEST_MODE, true);
 		SimpleExecutor result = new DefaultSimpleExecutor(scheduler, scheduler.getSteps(), matrices,
-				globalContext, createFailoverStatus(), preparableActions);
+				globalContext, createFailoverStatus(), preparableActions, scheduler.getCurrentReportsConfig());
 		return result;
 	}
 	
 	@Override
-	public SimpleExecutor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext, Map<String, Preparable> preparableActions)
+	public SimpleExecutor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext, Map<String, Preparable> preparableActions,
+			ReportsConfig reportsConfig)
 	{
-		SimpleExecutor result = new DefaultSimpleExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions);
+		SimpleExecutor result = new DefaultSimpleExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions, reportsConfig);
 		return result;
 	}
 	

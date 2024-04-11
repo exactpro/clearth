@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.exactprosystems.clearth.automation.ReportsInfo;
-import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 @XStreamAlias("StateInfo")
@@ -37,7 +36,6 @@ public class ExecutorStateInfo
 	private String startedByUser;
 	private Date started, ended;
 	private ReportsInfo reportsInfo;
-	private ReportsConfig reportsConfig;
 	
 	
 	public List<StepState> getSteps()
@@ -136,16 +134,5 @@ public class ExecutorStateInfo
 	public void setReportsInfo(ReportsInfo reportsInfo)
 	{
 		this.reportsInfo = reportsInfo;
-	}
-	
-	
-	public ReportsConfig getReportsConfig()
-	{
-		return reportsConfig;
-	}
-	
-	public void setReportsConfig(ReportsConfig reportsConfig)
-	{
-		this.reportsConfig = reportsConfig;
 	}
 }

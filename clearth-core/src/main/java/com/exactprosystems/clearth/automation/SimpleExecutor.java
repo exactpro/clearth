@@ -104,7 +104,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	private Consumer<SimpleExecutor> onFinish;
 
 	public SimpleExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
-			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions)
+			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions, ReportsConfig reportsConfig)
 	{
 		super(scheduler.getName());
 		
@@ -117,7 +117,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		this.preparableActions = preparableActions;
 		this.paramsCalculator = createParamsCalculator();
 		this.executionHandler = globalContext.getExecutionHandler();
-		this.reportsConfig = new ReportsConfig(scheduler.getCurrentReportsConfig());
+		this.reportsConfig = new ReportsConfig(reportsConfig);
 		this.actionExecutor = createActionExecutor();
 		this.stepData = new ArrayList<>(steps.size());
 	}
@@ -1313,7 +1313,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	}
 	
 	@Override
-	public void copyActionReports (File toDir)
+	public void copyActionReports(File toDir)
 	{
 		try
 		{

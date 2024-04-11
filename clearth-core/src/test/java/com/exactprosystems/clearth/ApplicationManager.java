@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.config.ClearThConfiguration;
 import com.exactprosystems.clearth.config.ConfigurationException;
@@ -401,14 +402,14 @@ class TestingExecutorFactory extends DefaultExecutorFactory
 		if (scheduler.isTestMode())
 			globalContext.setLoadedContext(GlobalContext.TEST_MODE, true);
 		return new TestingExecutor(scheduler, scheduler.getSteps(), matrices,
-				globalContext, createFailoverStatus(), preparableActions);
+				globalContext, createFailoverStatus(), preparableActions, scheduler.getCurrentReportsConfig());
 	}
 
 	@Override
 	public SimpleExecutor createExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices,
-			GlobalContext globalContext, Map<String, Preparable> preparableActions)
+			GlobalContext globalContext, Map<String, Preparable> preparableActions, ReportsConfig reportsConfig)
 	{
-		return new TestingExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions);
+		return new TestingExecutor(scheduler, steps, matrices, globalContext, createFailoverStatus(), preparableActions, reportsConfig);
 	}
 }
 
@@ -417,9 +418,9 @@ class TestingExecutor extends DefaultSimpleExecutor
 	public TestingExecutor(Scheduler scheduler, List<Step> steps,
 			List<Matrix> matrices, GlobalContext globalContext,
 			FailoverStatus failoverStatus,
-			Map<String, Preparable> preparableActions)
+			Map<String, Preparable> preparableActions, ReportsConfig reportsConfig)
 	{
-		super(scheduler, steps, matrices, globalContext, failoverStatus, preparableActions);
+		super(scheduler, steps, matrices, globalContext, failoverStatus, preparableActions, reportsConfig);
 	}
 
 	@Override

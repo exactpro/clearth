@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.automation.report.ReportsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +36,9 @@ public class DefaultSimpleExecutor extends SimpleExecutor
 	private static final Logger logger = LoggerFactory.getLogger(DefaultSimpleExecutor.class);
 	
 	public DefaultSimpleExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
-			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions)
+			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions, ReportsConfig reportsConfig)
 	{
-		super(scheduler, steps, matrices, globalContext, failoverStatus, preparableActions);
+		super(scheduler, steps, matrices, globalContext, failoverStatus, preparableActions, reportsConfig);
 	}
 	
 	@Override

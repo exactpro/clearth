@@ -26,7 +26,6 @@ import java.util.*;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
-import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.data.DataHandlingException;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 import org.apache.commons.io.FileUtils;
@@ -44,7 +43,6 @@ public abstract class ExecutorState
 	public List<StepState> steps = new ArrayList<StepState>();
 	public boolean weekendHoliday = true;
 	public Map<String, Boolean> holidays = null;
-	public ReportsConfig reportsConfig = null;
 	public Date businessDay = null;
 	public String startedByUser = null;
 	public Date started = null, ended = null;
@@ -68,8 +66,7 @@ public abstract class ExecutorState
 		this.started = executor.getStarted();
 		this.ended = executor.getEnded();
 		this.reportsInfo = reportsInfo;
-		this.reportsConfig = executor.getReportsConfig();
-
+		
 		for (Matrix matrix : executor.getMatrices())
 			this.matrices.add(createMatrixState(matrix));
 		this.fixedIDs = executor.getFixedIds();
@@ -173,7 +170,7 @@ public abstract class ExecutorState
 				executorFactory.createGlobalContext(businessDay, baseTime, this.weekendHoliday, this.holidays,
 						startedByUser, executionHandler);
 
-		SimpleExecutor result = executorFactory.createExecutor(scheduler, steps, matrices, globalContext, preparableActions);
+		SimpleExecutor result = executorFactory.createExecutor(scheduler, steps, matrices, globalContext, preparableActions, reportsInfo.getReportsConfig());
 		result.setFixedIds(this.fixedIDs);
 		result.setStarted(this.started);
 		result.setEnded(this.ended);
@@ -243,7 +240,6 @@ public abstract class ExecutorState
 		stateInfo.setStarted(started);
 		stateInfo.setEnded(ended);
 		stateInfo.setReportsInfo(reportsInfo);
-		stateInfo.setReportsConfig(reportsConfig);
 		initStateInfo(stateInfo);
 		saveToXml(stateInfo, new File(destDir, STATEINFO_FILENAME), getStateInfoAnnotations());
 
@@ -269,7 +265,6 @@ public abstract class ExecutorState
 		started = stateInfo.getStarted();
 		ended = stateInfo.getEnded();
 		reportsInfo = stateInfo.getReportsInfo();
-		reportsConfig = stateInfo.getReportsConfig();
 		initFromStateInfo(stateInfo);
 
 		matrices = stateObjects.getMatrices();
