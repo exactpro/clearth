@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,11 +25,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
@@ -85,7 +81,6 @@ public class TestSchedulerRestart
 			fail("Restoring state should not throw exception: " + e.toString());
 		}
 
-		scheduler.continueExecution();
 		if (!awaitSchedulerStop(scheduler, 1000)) {
 			fail("Scheduler did not finish second and later steps in expected time");
 		}

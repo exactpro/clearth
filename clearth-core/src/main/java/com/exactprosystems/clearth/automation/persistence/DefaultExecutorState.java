@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.utils.tabledata.StringTableData;
+import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 
@@ -36,7 +38,8 @@ public class DefaultExecutorState extends ExecutorState
 			DefaultStepState.class, StepContext.class, XmlMatrixInfo.class,
 			ExecutorStateObjects.class, DefaultResultState.class, MvelVariables.class, HashSetValuedHashMap.class,
 			ExecutorState.class, ActionState.class, MatrixData.class, MatrixState.class, DefaultMatrixState.class,
-			DefaultActionState.class};
+			DefaultActionState.class,
+			StringTableData.class, TableRow.class};
 
 
 	public DefaultExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
