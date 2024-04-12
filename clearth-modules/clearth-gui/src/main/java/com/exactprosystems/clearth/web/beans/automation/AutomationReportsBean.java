@@ -28,6 +28,7 @@ import com.exactprosystems.clearth.utils.LogsExtractor;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.beans.ClearThCoreApplicationBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
+import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
@@ -218,11 +219,9 @@ public class AutomationReportsBean extends ClearThBean
 	public StreamedContent getZipCurrentReports()
 	{
 		if (selectedScheduler().isRunning())
-		{
 			makeReports();
-		}
-		return new ReportsArchiver().setFilteredData(filteredRTMatrices, filteredReportsInfo)
-				.getZipSelectedReports(true, getSelectedReportsInfo());
+		
+		return getZipReports(true);
 	}
 
 	public StreamedContent getLogsBySelectedRun()
@@ -362,24 +361,41 @@ public class AutomationReportsBean extends ClearThBean
 				PrimeFaces.current().executeScript("PF('lostLogsDlg').show();");
 				return null;
 			}
-
-			return new ReportsArchiver().setFilteredData(filteredRTMatrices, filteredReportsInfo)
-					.getZipSelectedReportsWithLogs(shortLog, getSelectedReportsInfo());
+			
+			File f = new ReportsArchiver().setFilteredData(filteredRTMatrices, filteredReportsInfo)
+					.getZipSelectedReportsWithLogs(shortLog, getSelectedReportsInfo(), UserInfoUtils.getUserName() + "_reports_logs.zip");
+			return WebUtils.downloadFile(f, "reports_logs.zip");
 		}
 		catch (IOException e)
 		{
 			WebUtils.logAndGrowlException("Could not download reports with logs", e, getLogger());
 			return null;
 		}
-
 	}
 
-	public StreamedContent getZipSelectedReports() {
-		return new ReportsArchiver().setFilteredData(filteredRTMatrices, filteredReportsInfo)
-				.getZipSelectedReports(false, getSelectedReportsInfo());
+	public StreamedContent getZipSelectedReports()
+	{
+		return getZipReports(false);
+		
 	}
 
 	public ReportFilters getReportFilters() {
 		return reportFilters;
+	}
+	
+	
+	private StreamedContent getZipReports(boolean realtimeSnapshot)
+	{
+		try
+		{
+			File f = new ReportsArchiver().setFilteredData(filteredRTMatrices, filteredReportsInfo)
+					.getZipSelectedReports(realtimeSnapshot, getSelectedReportsInfo(), UserInfoUtils.getUserName() + "_reports.zip");
+			return WebUtils.downloadFile(f, "reports.zip");
+		}
+		catch (IOException e)
+		{
+			WebUtils.logAndGrowlException("Could not download reports", e, getLogger());
+			return null;
+		}
 	}
 }

@@ -1,0 +1,86 @@
+{
+  "matrixName" : "test2_passed.csv",
+  "userName" : "user",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "TestAction",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "Param2" : {
+          "value" : "2",
+          "specialValue" : false
+        },
+        "Param1" : {
+          "value" : "1",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "resultDetails" : [ {
+          "param" : "Param1",
+          "expected" : "1",
+          "actual" : "1",
+          "identical" : true
+        }, {
+          "param" : "Param2",
+          "expected" : "2",
+          "actual" : "2",
+          "identical" : true
+        } ]
+      }
+    }
+    ,
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id2",
+      "actionName" : "TestAction",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true
+      },
+      "inputParams" : {
+        "Param2" : {
+          "value" : "2",
+          "specialValue" : false
+        },
+        "Param1" : {
+          "value" : "1",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "resultDetails" : [ {
+          "param" : "Param1",
+          "expected" : "1",
+          "actual" : "1",
+          "identical" : true
+        }, {
+          "param" : "Param2",
+          "expected" : "2",
+          "actual" : "2",
+          "identical" : true
+        } ]
+      }
+    }
+    ]
+
+  } ]
+}
