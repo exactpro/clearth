@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,7 @@
 
 package com.exactprosystems.clearth.automation.report.results;
 
+import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 
 public class DefaultResult extends Result
@@ -34,6 +35,7 @@ public class DefaultResult extends Result
 		Result r = new DefaultResult();
 		r.setSuccess(false);
 		r.setComment(comment);
+		r.setFailReason(FailReason.FAILED);
 		return r;
 	}
 	
@@ -55,6 +57,7 @@ public class DefaultResult extends Result
 	{
 		Result r = new DefaultResult();
 		r.setSuccess(true);
+		r.setFailReason(null);
 		r.setComment(comment);
 		return r;
 	}
@@ -63,6 +66,7 @@ public class DefaultResult extends Result
 	{
 		Result r = new DefaultResult();
 		r.setSuccess(true);
+		r.setFailReason(null);
 		r.setComment(comment);
 		r.setMessage(message);
 		return r;

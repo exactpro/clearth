@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -49,7 +49,7 @@ public abstract class Result implements Serializable
 	
 	private Collection<EncodedClearThMessage> linkedMessages;
 	
-	protected FailReason failReason = FailReason.FAILED;
+	protected FailReason failReason = null;
 	private FailoverException failoverData;
 
 	/* default constructor is required for all types of results to have ability to deserialize them from JSON */

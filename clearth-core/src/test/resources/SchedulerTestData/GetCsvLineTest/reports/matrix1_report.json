@@ -46,7 +46,7 @@
           "message" : null,
           "comment" : "Line found",
           "linkedMessages" : [ ],
-          "failReason" : "FAILED",
+          "failReason" : null,
           "failoverData" : null
         },
         "subActions" : [ ]
@@ -88,7 +88,7 @@
           "message" : null,
           "comment" : "Line found",
           "linkedMessages" : [ ],
-          "failReason" : "FAILED",
+          "failReason" : null,
           "failoverData" : null
         },
         "subActions" : [ ]

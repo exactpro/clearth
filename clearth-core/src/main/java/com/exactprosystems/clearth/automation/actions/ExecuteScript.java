@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.results.AttachedFilesResult;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
@@ -282,6 +283,12 @@ public class ExecuteScript extends Action {
 		result.setSuccess(success);
 		if (success && !resultCodes.isEmpty())
 			result.setSuccess(resultCodes.contains(res.result));
+		
+		if (result.isSuccess())
+			result.setFailReason(null);
+		else if (result.getFailReason() == null)
+			result.setFailReason(FailReason.FAILED);
+		
 		return result;
 	}
 

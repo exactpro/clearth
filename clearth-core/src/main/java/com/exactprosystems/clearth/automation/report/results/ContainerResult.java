@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -235,10 +235,14 @@ public class ContainerResult extends Result implements Serializable
 		{
 			if (!detail.isSuccess())
 			{
-				if (success && failReason == FailReason.FAILED // Perhaps, the first failed detail has been added and status doesn't changed yet
-						|| failReason.ordinal() > detail.getFailReason().ordinal()) // Need to obtain the worst fail reason of all details
-					failReason = detail.getFailReason();
 				success = false;
+				
+				if (detail.getFailReason() == null)
+					continue;
+				
+				 // Perhaps, the first failed detail has been added and status doesn't changed yet
+				if (failReason == null || failReason.ordinal() > detail.getFailReason().ordinal()) // Need to obtain the worst fail reason of all details
+					failReason = detail.getFailReason();
 			}
 		}
 		return success;

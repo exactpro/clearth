@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation.report;
 
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.TimeoutAwaiter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class ReportStatus
 {
 	public Date started = null, finished = null;
 	public boolean passed;
-	public FailReason failReason = FailReason.FAILED;
+	public FailReason failReason = null;
 	public List<String> comments;
 	public Throwable error;
 	public long actualTimeout;
@@ -46,6 +47,7 @@ public class ReportStatus
 		this.passed = passed;
 		this.comments = null;
 		this.error = null;
+		changeFailReason();
 	}
 	
 	public ReportStatus(boolean passed, List<String> comments)
@@ -53,6 +55,7 @@ public class ReportStatus
 		this.passed = passed;
 		this.comments = comments;
 		this.error = null;
+		changeFailReason();
 	}
 	
 	public ReportStatus(boolean passed, String comment)
@@ -64,6 +67,7 @@ public class ReportStatus
 			this.comments.add(comment);
 		}
 		this.error = null;
+		changeFailReason();
 	}
 	
 	public ReportStatus(boolean passed, List<String> comments, Throwable error)
@@ -71,6 +75,7 @@ public class ReportStatus
 		this.passed = passed;
 		this.comments = comments;
 		this.error = error;
+		changeFailReason();
 	}
 	
 	public ReportStatus(boolean passed, String comment, Throwable error)
@@ -82,6 +87,7 @@ public class ReportStatus
 			this.comments.add(comment);
 		}
 		this.error = error;
+		changeFailReason();
 	}
 	
 	public ReportStatus(Action action)
@@ -104,6 +110,7 @@ public class ReportStatus
 		else
 		{
 			this.passed = action.isPassed();
+			changeFailReason();
 		}
 		this.started = action.getStarted();
 		this.finished = action.getFinished();
@@ -111,6 +118,15 @@ public class ReportStatus
 			this.actualTimeout = ((TimeoutAwaiter) action).getAwaitedTimeout();
 		else
 			this.waitBeforeAction = action.getTimeOut();
+	}
+	
+	@JsonIgnore
+	private void changeFailReason()
+	{
+		if (passed)
+			failReason = null;
+		else if (failReason == null)
+			failReason = FailReason.FAILED;
 	}
 	
 	public Date getStarted()

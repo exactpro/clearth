@@ -54,7 +54,7 @@ public class HtmlActionReport extends ActionReport
 
 	protected boolean isStatusExpanded(ReportStatus status)
 	{
-		if (status.isPassed())
+		if (status.isPassed() || status.getFailReason() == null)
 			return false;
 
 		switch (status.getFailReason())

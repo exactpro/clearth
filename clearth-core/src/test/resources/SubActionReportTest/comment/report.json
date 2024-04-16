@@ -59,7 +59,7 @@
         "payloadFinished" : false,
         "status" : {
           "passed" : true,
-          "failReason" : "FAILED",
+          "failReason" : null,
           "comments" : null,
           "actualTimeout" : 0,
           "waitBeforeAction" : 0

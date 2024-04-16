@@ -6,7 +6,7 @@
     "async" : false,
     "status" : {
       "passed" : true,
-      "failReason" : "FAILED",
+      "failReason" : null,
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
@@ -24,7 +24,7 @@
       "waitAsyncEnd" : "NO",
       "status" : {
         "passed" : true,
-        "failReason" : "FAILED",
+        "failReason" : null,
         "comments" : null,
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -72,7 +72,7 @@
         "message" : null,
         "comment" : null,
         "linkedMessages" : [ ],
-        "failReason" : "FAILED",
+        "failReason" : null,
         "failoverData" : null,
         "resultDetails" : [ {
           "param" : "Value1",

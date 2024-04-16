@@ -21,7 +21,7 @@
       "started" : 1580126822098,
       "finished" : 1580126822208,
       "passed" : true,
-      "failReason" : "FAILED",
+      "failReason" : null,
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
@@ -144,7 +144,7 @@
       "started" : 1580126822215,
       "finished" : 1580126822265,
       "passed" : true,
-      "failReason" : "FAILED",
+      "failReason" : null,
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
