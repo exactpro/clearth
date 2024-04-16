@@ -381,12 +381,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			//Forming reports
 			String pathToStoreReports = ClearThCore.appRootRelative(completedReportsDir), //AppRootRelative because we don't want to download file, we want to see it in browser
 					pathToActionsReports = ClearThCore.appRootRelative(actionsReportsDir);
-			if (reportsConfig.isAnyReportEnabled())
-			{
-				status.add("Making reports...");
-				makeReports(pathToStoreReports, pathToActionsReports);
-				status.add("Reports made");
-			}
+			makeFinalReports(pathToStoreReports, pathToActionsReports);
 			lastReportsInfo = createReportsInfo(pathToStoreReports);
 			scheduler.saveExecutedStepsData();
 
@@ -670,7 +665,17 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 				action.prepare(globalContext, status);
 		return true;
 	}
-
+	
+	protected void makeFinalReports(String pathToStoreReports, String pathToActionsReports) throws IOException, ReportException
+	{
+		if (!reportsConfig.isAnyReportEnabled())
+			return;
+		
+		status.add("Making reports...");
+		makeReports(pathToStoreReports, pathToActionsReports);
+		status.add("Reports made");
+	}
+	
 	protected XmlSchedulerLaunchInfo buildXmlSchedulerLaunchInfo(Date finished)
 	{
 		XmlSchedulerLaunchInfo launchInfo = ClearThCore.getInstance().getSchedulerFactory().createSchedulerLaunchInfo();
