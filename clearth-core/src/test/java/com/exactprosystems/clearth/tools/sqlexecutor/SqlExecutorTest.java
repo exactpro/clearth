@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,17 +18,12 @@
 
 package com.exactprosystems.clearth.tools.sqlexecutor;
 
-import com.exactprosystems.clearth.ApplicationManager;
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
-import com.exactprosystems.clearth.connectivity.connections.storage.ClearThConnectionStorage;
 import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.ClearThException;
-import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.Utils;
 import org.apache.commons.io.FileUtils;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -40,78 +35,82 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import static org.testng.Assert.*;
+
 public class SqlExecutorTest
 {
-	private static ApplicationManager appManager;
-	private static SqlExecutor sqlExecutor;
-	private static Connection connection;
-	private static final Path RES_DIR = Paths.get("SQLExecutorTest").resolve("clearth.cfg"),
-					DB_DIR = Paths.get("testOutput").resolve(SqlExecutorTest.class.getSimpleName());
-	private static final String TYPE = "DB", DB_FILE = DB_DIR.resolve("file.db").toString(),
-					CONN_NAME = "Executor_Con";
+	private static final Path DB_DIR = Paths.get("testOutput").resolve(SqlExecutorTest.class.getSimpleName());
+	private static final String DB_FILE = DB_DIR.resolve("file.db").toString(), CONN_NAME = "Executor_Con";
+	private DbConnection connection;
 
 	@BeforeClass
-	public static void init() throws ClearThException, IOException, SettingsException, SQLException
+	public void init() throws ClearThException, IOException, SettingsException, SQLException
 	{
 		FileUtils.deleteDirectory(DB_DIR.toFile());
 		Files.createDirectories(DB_DIR);
-
-		String configFile = FileOperationUtils.resourceToAbsoluteFilePath(RES_DIR.toString());
-		appManager = new ApplicationManager(configFile);
-		sqlExecutor = new SqlExecutor();
-
 		prepareToTest();
 	}
-
+	
 	@Test
-	public void testCheckConnection() throws SQLException
+	public void testCheckConnection() throws SQLException, ConnectivityException, SettingsException
 	{
-		sqlExecutor.checkConnection(connection);
-	}
-
-	@Test
-	public void testCreateStatement() throws SQLException
-	{
-		try (PreparedStatement statement = sqlExecutor.createStatement(connection, "select * from tbl1", 0))
+		try (Connection con = connection.getConnection())
 		{
-			Assert.assertTrue(statement.execute());
+			new SqlExecutor().checkConnection(con);
+			assertFalse(con.isClosed());
 		}
 	}
 
-	@AfterClass
-	public static void dispose() throws IOException, SQLException
+	@Test
+	public void testExecuteQuery() throws SQLException, ConnectivityException, SettingsException
 	{
-		connection.close();
-
-		if (appManager != null)
-			appManager.dispose();
+		try (Connection con = connection.getConnection())
+		{
+			new SqlExecutor().executeQuery(con, "select * from tbl1", 0);
+			assertFalse(con.isClosed());
+		}
 	}
-
-	private static void prepareToTest() throws SettingsException, ConnectivityException, SQLException
+	
+	@Test
+	public void testCloseConnectionIfStatementFailed() throws SQLException, ConnectivityException, SettingsException
 	{
-		ClearThConnectionStorage connectionStorage = ClearThCore.connectionStorage();
-		DbConnection dbConnection = (DbConnection) connectionStorage.createConnection(TYPE);
+		Connection con = connection.getConnection();
+		try
+		{
+			new SqlExecutor().executeQuery(con, "select_from", 0);
+		}
+		catch (SQLException e)
+		{
+			assertFalse(con.isClosed(), "Connection is closed after error");
+		}
+		finally
+		{
+			Utils.closeResource(con);
+		}
+	}
+	
+	private void prepareToTest() throws SettingsException, ConnectivityException, SQLException
+	{
+		connection = new DbConnection();
 
-		dbConnection.setName(CONN_NAME);
-		dbConnection.getSettings().setJdbcUrl("jdbc:sqlite:" + DB_FILE);
-		dbConnection.getSettings().setInitializationQuery("select 1");
-		dbConnection.check();
-
-		connectionStorage.addConnection(dbConnection);
-
-		connection = dbConnection.getConnection();
-
+		connection.setName(CONN_NAME);
+		connection.getSettings().setJdbcUrl("jdbc:sqlite:" + DB_FILE);
+		connection.getSettings().setInitializationQuery("select 1");
+		connection.check();
+		
+		Connection con = connection.getConnection();
 		String createQuery = "create table tbl1 (id INTEGER PRIMARY KEY, param1 INTEGER, param2 INTEGER)",
-		insertQuery = "insert into tbl1 (id, param1, param2) values (1, 22, 333)";
+				insertQuery = "insert into tbl1 (id, param1, param2) values (1, 22, 333)";
 
-		try(PreparedStatement prStatement1 = connection.prepareStatement(createQuery))
+		execQuery(createQuery, con);
+		execQuery(insertQuery, con);
+	}
+	
+	private void execQuery(String query, Connection con) throws SQLException
+	{
+		try (PreparedStatement statement = con.prepareStatement(query))
 		{
-			prStatement1.execute();
-		}
-		try(PreparedStatement prStatement2 = connection.prepareStatement(insertQuery))
-		{
-			prStatement2.execute();
+			statement.execute();
 		}
 	}
-
 }

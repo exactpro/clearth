@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -54,10 +54,10 @@ public class SqlExecutor
 		CompletableFuture<StringTableData> result = CompletableFuture.supplyAsync(() -> {
 			try
 			{
-				if(transformer == null)
+				if (transformer == null)
 					return DbDataReader.read(stmt);
 				else
-					return DbDataReader.read(stmt,transformer);
+					return DbDataReader.read(stmt, transformer);
 			}
 			catch (Exception e)
 			{
@@ -65,7 +65,7 @@ public class SqlExecutor
 			}
 		});
 
-		result.whenComplete((r, e) -> handleCompletion(r, e, stmt, dbConnection));
+		result.whenComplete((r, e) -> handleCompletion(r, e, stmt));
 		return result;
 	}
 	
@@ -78,7 +78,6 @@ public class SqlExecutor
 		}
 	}
 	
-	
 	protected PreparedStatement createStatement(Connection dbConnection, String query, int maxRows) throws SQLException
 	{
 		PreparedStatement result = dbConnection.prepareStatement(query);
@@ -87,9 +86,9 @@ public class SqlExecutor
 		return result;
 	}
 	
-	protected void handleCompletion(StringTableData result, Throwable error, PreparedStatement stmt, Connection dbConnection)
+	protected void handleCompletion(StringTableData result, Throwable error, PreparedStatement stmt)
 	{
-		if (error != null && error instanceof CancellationException)
+		if (error instanceof CancellationException)
 		{
 			try
 			{
@@ -100,9 +99,7 @@ public class SqlExecutor
 				logger.error("Error while cancelling query execution", e);
 			}
 		}
-		
 		Utils.closeResource(stmt);
-		Utils.closeResource(dbConnection);
 	}
 	
 	protected String getCheckConnectionQuery(Connection dbConnection)

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,6 +25,7 @@ import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.tools.sqlexecutor.SqlExecutor;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.writers.CsvDataWriter;
@@ -109,11 +110,12 @@ public class SqlExecutorBean extends ClearThBean
 		{
 			resetResult();
 			resultFuture = executor.executeQuery(con, queryBody, getMaxRows());
-			resultFuture.whenComplete((r, e) -> handleQueryCompletion(r, e));
+			resultFuture.whenComplete((r, e) -> handleQueryCompletion(r, e, con));
 			getLogger().info("started execution of query: {}", getLimitedQueryText(queryBody));
 		}
 		catch (SQLException e)
 		{
+			Utils.closeResource(con);
 			WebUtils.logAndGrowlException("Error while preparing query", e, getLogger());
 		}
 	}
@@ -159,8 +161,10 @@ public class SqlExecutorBean extends ClearThBean
 		}
 	}
 	
-	protected void handleQueryCompletion(StringTableData result, Throwable error)
+	protected void handleQueryCompletion(StringTableData result, Throwable error, Connection con)
 	{
+		Utils.closeResource(con);
+		
 		if (error != null)
 		{
 			WebUtils.logAndGrowlException("Error while executing query", error, getLogger());
@@ -177,9 +181,8 @@ public class SqlExecutorBean extends ClearThBean
 		if (isEmpty(selectedConnection))
 			return;
 		
-		try
+		try (Connection con = getConnection(selectedConnection))
 		{
-			Connection con = getConnection(selectedConnection);
 			if (con == null)
 				return;
 			
