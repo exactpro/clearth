@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -31,6 +31,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 
 import javax.xml.bind.UnmarshalException;
 
@@ -53,7 +54,16 @@ public class DictionaryValidatorTool
 	{
 		XMLUnit.setIgnoreWhitespace(true);
 	}
-
+	
+	
+	private final Supplier<MessageParserTool> parserSupplier;
+	
+	public DictionaryValidatorTool(Supplier<MessageParserTool> parserSupplier)
+	{
+		this.parserSupplier = parserSupplier;
+	}
+	
+	
 	// errorsOutput is not part of result because method may fail with exception
 	// but other not so critical errors should be seen as well
 	public DictionaryValidationResult validateDictionary(String originalText, String textToParseFormat, String validationConfig,
@@ -92,7 +102,7 @@ public class DictionaryValidatorTool
 	protected void encodeOriginalText(DictionaryValidationResult result, String textToParseFormat,
 			List<DictionaryValidatorError> errors) throws EncodeException
 	{
-		MessageParserTool msgParser = new MessageParserTool();
+		MessageParserTool msgParser = parserSupplier.get();
 		msgParser.parseText(result.getOriginalText(), textToParseFormat);
 		
 		boolean parsingError = StringUtils.isEmpty(msgParser.getParsedText()) && !msgParser.getExceptionMap().isEmpty();

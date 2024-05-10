@@ -1,0 +1,15 @@
+<Root>
+	<Header attr="attrValue">
+		<Tag>
+			111
+		</Tag>
+	</Header>
+	<Body>
+		<Tag value="123" />
+		<Tag>
+			<SubTag>
+				000
+			</SubTag>
+		</Tag>
+	</Body>
+</Root>

@@ -98,6 +98,7 @@ subprojects {
 				def jacksonVersion = '2.16.1'
 				def cassandraVersion = '4.17.0'
 				def nettyVersion = '4.1.108.Final'
+				def bouncycastleVersion = '1.78.1'
 				
 				//common dependenices are written explicilty to force modules use correct and expected versions
 				force   'commons-codec:commons-codec:1.16.0',
@@ -120,6 +121,9 @@ subprojects {
 						"com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
 						"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}",
 						'org.apache.mina:mina-core:2.1.5',
+						"org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}",
+						"org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}",
+						"org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}",
 						
 						"org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}",
 						"org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}",

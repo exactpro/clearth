@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.tools;
 
-import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.connectivity.CodecsStorage;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessage;
 import com.exactprosystems.clearth.connectivity.iface.ICodec;
@@ -29,9 +28,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-/**
- * Created by alexander.magomedov on 11/3/16.
- */
 public class MessageParserTool
 {
 	public static final String AUTO_FORMAT = "auto";
@@ -46,10 +42,10 @@ public class MessageParserTool
 	protected ClearThMessage<?> parsedMsg;
 	protected Map<String, Exception> exceptionMap;
 
-	public MessageParserTool()
+	public MessageParserTool(CodecsStorage codecs, ICodecFactory codecFactory)
 	{
-		codecs = ClearThCore.getInstance().getCodecs();
-		codecFactory = ClearThCore.getInstance().getCodecFactory();
+		this.codecs = codecs;
+		this.codecFactory = codecFactory;
 		
 		codecName = "";
 		codec = null;

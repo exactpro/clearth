@@ -1,5 +1,11 @@
 dependencies {
-    implementation 'com.ibm.mq:com.ibm.mq.allclient:9.3.5.0'
+    implementation 'com.ibm.mq:com.ibm.mq.allclient:9.3.5.1'
+    
+    //Newer version of libraries than used by com.ibm.mq:com.ibm.mq.allclient:9.3.5.1
+    def bouncycastleVersion = '1.78.1'
+    implementation "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
+    implementation "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
+    implementation "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
     
     testImplementation "org.testng:testng:6.14.3"
 }

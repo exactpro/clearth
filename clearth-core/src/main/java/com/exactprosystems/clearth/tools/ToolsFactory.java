@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,7 +45,8 @@ public class ToolsFactory
 	
 	public MessageParserTool createMessageParserTool()
 	{
-		return new MessageParserTool();
+		ClearThCore core = ClearThCore.getInstance();
+		return new MessageParserTool(core.getCodecs(), core.getCodecFactory());
 	}
 	
 	public MessageToScriptTool createMessageToScriptTool()
@@ -74,7 +75,7 @@ public class ToolsFactory
 
 	public DictionaryValidatorTool createDictionaryValidatorTool()
 	{
-		return new DictionaryValidatorTool();
+		return new DictionaryValidatorTool(() -> createMessageParserTool());
 	}
 	
 	public DataComparatorTool createDataComparatorTool()
