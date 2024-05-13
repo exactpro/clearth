@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -93,7 +93,6 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 
 	private void refreshState(Action action)
 	{
-		action.setPayloadFinished(true);
 		action.getStep().refreshAsyncFlag(action);
 	}
 	

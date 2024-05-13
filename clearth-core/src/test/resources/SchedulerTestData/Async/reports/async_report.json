@@ -1,0 +1,71 @@
+{
+  "matrixName" : "async.csv",
+  "result" : true,
+  "description" : "",
+  "constants" : { },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true,
+      "failReason" : null,
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+    "@c" : ".ActionReport",
+    "actionId" : "id1",
+      "actionName" : "Compare2Values",
+      "timeout" : 0,
+      "async" : true,
+      "payloadFinished" : true,
+      "waitAsyncEnd" : "SCHEDULER",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "Expected" : {
+          "value" : "A",
+          "specialValue" : false
+        },
+        "Actual" : {
+          "value" : "A",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "message" : null,
+        "comment" : null,
+        "linkedMessages" : [ ],
+        "failReason" : null,
+        "failoverData" : null,
+        "resultDetails" : [ {
+          "param" : "Value",
+          "expected" : "A",
+          "actual" : "A",
+          "errorMessage" : null,
+          "identical" : true,
+          "info" : false,
+          "forCompareValue" : false
+        } ]
+      },
+      "subActions" : [ ]
+    }
+    ]
+
+  } ]
+}

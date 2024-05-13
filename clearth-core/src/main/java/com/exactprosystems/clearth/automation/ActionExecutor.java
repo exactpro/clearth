@@ -189,9 +189,6 @@ public class ActionExecutor implements Closeable
 		if (!isAsyncEnabled())
 			asyncManager = createAsyncManager();
 		
-		action.setFinished(new Date());
-		asyncManager.addAsyncAction(createAsyncActionData(action, stepContext, matrixContext));
-		
 		String waitMsg;
 		switch (action.getWaitAsyncEnd())
 		{
@@ -205,7 +202,10 @@ public class ActionExecutor implements Closeable
 		default : waitMsg = "Won't wait for this action to finish"; break;
 		}
 		
-		action.setResult(DefaultResult.passed("Action is executing asynchronously. "+waitMsg));
+		action.setResult(DefaultResult.passed("Action is executing asynchronously. " + waitMsg));
+		action.setFinished(new Date());
+		
+		asyncManager.addAsyncAction(createAsyncActionData(action, stepContext, matrixContext));
 	}
 	
 	public void callAction(Action action, StepContext stepContext, MatrixContext matrixContext) throws FailoverException
@@ -329,6 +329,7 @@ public class ActionExecutor implements Closeable
 		applyActionResult(action, false);
 		applyStepSuccess(action);
 		
+		action.setPayloadFinished(true);
 		reportWriter.updateReports(action, actionsReportsDir, action.getStep().getSafeName());
 		handleActionResult(action);
 		processActionResult(action);
@@ -403,6 +404,8 @@ public class ActionExecutor implements Closeable
 		matrix.setStepSuccessful(stepName, false);
 		matrix.addStepStatusComment(stepName, "One or more actions CRASHED");
 		
+		if (action.isAsync())
+				action.setPayloadFinished(true);
 		reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 		handleActionResult(action);
 	}
@@ -815,6 +818,8 @@ public class ActionExecutor implements Closeable
 			action.setResult(actionResult);
 			variables.saveOutputParams(action);
 			
+			if (action.isAsync())
+				action.setPayloadFinished(true);
 			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 			handleActionResult(action);
 		}

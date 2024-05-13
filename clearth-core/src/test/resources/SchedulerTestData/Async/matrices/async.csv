@@ -1,0 +1,2 @@
+#ID,#GlobalStep,#Action,#Expected,#Actual,#Async,#WaitAsyncEnd
+id1,Step1,Compare2Values,A,A,true,Scheduler
