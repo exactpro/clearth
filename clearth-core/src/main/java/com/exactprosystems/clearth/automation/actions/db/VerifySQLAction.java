@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,6 +29,7 @@ import com.exactprosystems.clearth.automation.report.results.MultiDetailedResult
 import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMapping;
 import com.exactprosystems.clearth.utils.sql.SQLUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -46,12 +47,16 @@ import static com.exactprosystems.clearth.ClearThCore.comparisonUtils;
 public class VerifySQLAction extends SelectSQLAction implements TimeoutAwaiter
 {
 	protected static final String PARAM_OUTPUTPARAMS = "OutputParams",
+			PARAM_EXPECTED_RECORDS = "ExpectedRecords",
+			PARAM_NO_DATA = "NoData",
+			PARAM_CHECK_ALL_MAPPED_VALUES = "CheckAllMappedValues",
 			USE_CP_FROM = "UseCPFrom",
 			QUERY_WITH_CP = "QueryWithCP",
 			QUERY_WITH_CP_FILE = "QueryWithCPFile";
 
 	protected int expectedRecords = -1;
-	protected boolean noData = false;
+	protected boolean noData = false,
+			checkAllMappedValues = true;
 	private boolean needRerun;
 
 	protected long awaitedTimeout;
@@ -240,7 +245,7 @@ public class VerifySQLAction extends SelectSQLAction implements TimeoutAwaiter
 				rd.setActual(actual);
 
 
-				if (param.isEmpty())
+				if (param.isEmpty() && !checkAllMappedValues)
 					rd.setIdentical(true);
 				else
 				{
@@ -584,7 +589,7 @@ public class VerifySQLAction extends SelectSQLAction implements TimeoutAwaiter
 
 
 	protected void beforeQuery(){
-		String expR = inputParams.get("ExpectedRecords");
+		String expR = inputParams.get(PARAM_EXPECTED_RECORDS);
 		//inputParams.remove("ExpectedRecords");
 		if (expR != null) {
 			try  {
@@ -597,11 +602,11 @@ public class VerifySQLAction extends SelectSQLAction implements TimeoutAwaiter
 			}
 		}
 
-		String noDataIP = inputParams.get("NoData");
+		String noDataIP = inputParams.get(PARAM_NO_DATA);
 		this.noData = !((noDataIP == null) || (noDataIP.isEmpty())
 				|| (noDataIP.equalsIgnoreCase("false")) || (noDataIP.equalsIgnoreCase("n")));
 
-
+		this.checkAllMappedValues = InputParamsUtils.getBooleanOrDefault(inputParams, PARAM_CHECK_ALL_MAPPED_VALUES, true);
 	}
 
 
