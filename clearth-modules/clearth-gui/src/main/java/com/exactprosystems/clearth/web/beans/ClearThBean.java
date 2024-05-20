@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,6 +36,15 @@ public class ClearThBean
 		initLogger();
 	}
 	
+	
+	public static String getUserAwareLoggerName(String className)
+	{
+		if (UserInfoUtils.isLoggedIn())
+			return className + " User: "+UserInfoUtils.getUserName();
+		return className;
+	}
+	
+	
 	public Logger getLogger()
 	{
 		return logger;
@@ -43,12 +52,8 @@ public class ClearThBean
 	
 	protected void initLogger()
 	{
-		String loggerName = this.getClass().getName();
-		if (UserInfoUtils.isLoggedIn())
-			loggerName += " User: "+UserInfoUtils.getUserName();
-
+		String loggerName = getUserAwareLoggerName(this.getClass().getName());
 		setLogger(loggerName);
-
 	}
 	
 	protected void setLogger(String name)

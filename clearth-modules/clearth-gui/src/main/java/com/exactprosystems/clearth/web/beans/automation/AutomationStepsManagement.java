@@ -26,12 +26,12 @@ import com.exactprosystems.clearth.automation.StepImpl;
 import com.exactprosystems.clearth.automation.steps.ParamDescription;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.StepPropsToEdit;
 import com.exactprosystems.clearth.web.misc.StepUploadHandler;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 
-import org.primefaces.context.PrimeFacesContext;
 import org.primefaces.event.FileUploadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +41,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class AutomationStepsManagement {
-
-	private static final Logger logger = LoggerFactory.getLogger(AutomationStepsManagement.class);
+public class AutomationStepsManagement
+{
+	private final Logger logger;
 
 	protected final List<Step> selectedSteps;
 	protected List<Step> originalSelectedSteps;
@@ -63,7 +61,9 @@ public class AutomationStepsManagement {
 	
 	protected ConfigurationAutomationBean configurationBean;
 
-	public AutomationStepsManagement(ConfigurationAutomationBean configurationBean) {
+	public AutomationStepsManagement(ConfigurationAutomationBean configurationBean)
+	{
+		this.logger = LoggerFactory.getLogger(ClearThBean.getUserAwareLoggerName(AutomationStepsManagement.class.getName()));
 		this.selectedSteps = new ArrayList<>();
 		this.configurationBean = configurationBean;
 		this.stepProps = createStepPropsToEdit();
