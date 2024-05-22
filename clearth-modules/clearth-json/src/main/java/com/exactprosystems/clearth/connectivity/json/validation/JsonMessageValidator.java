@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.exactprosystems.clearth.connectivity.Dictionary.msgDescWithTypeNotFoundError;
+import static com.exactprosystems.clearth.connectivity.json.JsonCodec.ROOT_TYPE_ARRAY;
 import static java.lang.String.format;
 
 public class JsonMessageValidator
@@ -74,7 +75,12 @@ public class JsonMessageValidator
 		JsonMessageDesc messageDesc = dictionary.getMessageDesc(msgType);
 		if (messageDesc == null)
 			throw new EncodeException(msgDescWithTypeNotFoundError(msgType));
-		return validateMessage(message, messageDesc.getFieldDesc(), false, null);
+		
+		List<JsonFieldDesc> fieldDescList = messageDesc.getFieldDesc();
+		if (ROOT_TYPE_ARRAY.equals(messageDesc.getRootType()) && fieldDescList.size() > 1)
+			throw new EncodeException(String.format("Message definition with type '%s' has 'rootType=\"array\"' and cannot have more than one fieldDesc.", msgType));
+		
+		return validateMessage(message, fieldDescList, false, null);
 	}
 
 	protected String validateMessage(ClearThJsonMessage message, List<JsonFieldDesc> fieldDescs, boolean inSubMsg, String rgKey)

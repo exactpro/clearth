@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -56,6 +56,7 @@ public class JsonCodec implements ICodec
 	public static final String EMPTY = "@{isEmpty}";
 	public static final String DEFAULT_CODEC_NAME = "Json";
 	public static final String DEFAULT_KEY_NAME = "MapKey";
+	public static final String ROOT_TYPE_ARRAY = "array";
 	protected final JsonDictionary dictionary;
 	protected final JsonNodeFactory jsonNodeFactory = new JsonNodeFactory(false);
 	protected final ObjectMapper objectMapper= new ObjectMapper();
@@ -418,7 +419,7 @@ public class JsonCodec implements ICodec
 	
 	protected String encodeMessage(ClearThMessage message, JsonMessageDesc messageDesc) throws EncodeException
 	{
-		ContainerNode root = jsonNodeFactory.objectNode();
+		ContainerNode root = createContainerNode(messageDesc);
 		root = preEncode(message, root, messageDesc);
 		
 		for (JsonFieldDesc fieldDesc : messageDesc.getFieldDesc())
@@ -431,6 +432,14 @@ public class JsonCodec implements ICodec
 		return jsonTreeToString(root);
 	}
 
+	protected ContainerNode createContainerNode(JsonMessageDesc messageDesc)
+	{
+		if (ROOT_TYPE_ARRAY.equals(messageDesc.getRootType()))
+			return jsonNodeFactory.arrayNode();
+		else
+			return jsonNodeFactory.objectNode();
+	}
+	
 	@SuppressWarnings("unused")
 	protected ContainerNode preEncode(ClearThMessage message, ContainerNode root, JsonMessageDesc messageDesc) throws EncodeException
 	{
@@ -508,8 +517,14 @@ public class JsonCodec implements ICodec
 		if (CollectionUtils.isEmpty(subMessages))
 			return;
 		
-		ArrayNode arrayNode = jsonNodeFactory.arrayNode();
-		addNode(parentNode, arrayNode, fieldDesc);
+		ArrayNode arrayNode;
+		if (parentNode instanceof ArrayNode)
+			arrayNode = (ArrayNode) parentNode;
+		else
+		{
+			arrayNode = jsonNodeFactory.arrayNode();
+			addNode(parentNode, arrayNode, fieldDesc);
+		}
 		
 		for (ClearThMessage subMessage : subMessages)
 			encodeSingleField(subMessage, arrayNode, fieldDesc);

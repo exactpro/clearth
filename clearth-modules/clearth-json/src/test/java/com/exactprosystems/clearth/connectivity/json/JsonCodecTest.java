@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,19 +39,20 @@ import static com.exactprosystems.clearth.utils.CollectionUtils.map;
 public class JsonCodecTest
 {
 	private final Path resourcesPath = Paths.get("src", "test", "resources"),
-			dictionaryPath = resourcesPath.resolve("dicts").resolve("dictionary.xml"),
-			messagePath = resourcesPath.resolve("messages").resolve("allTypes.json");
+			dictionaryPath = resourcesPath.resolve("dicts").resolve("dictionary.xml");
 	
 	private JsonCodec codec;
-	private String messageText;
-	private ClearThJsonMessage messageObject;
 	
 	@BeforeClass
 	public void init() throws DictionaryLoadException, IOException
 	{
 		codec = new JsonCodec(new JsonDictionary(dictionaryPath.toFile().getAbsolutePath(), null), null);
-		messageText = FileUtils.readFileToString(messagePath.toFile(), StandardCharsets.UTF_8);
-		messageObject = message(map("MsgType", "TestMessage",
+	}
+	
+	@DataProvider(name = "messages")
+	public Object[][] messageData()
+	{
+		ClearThJsonMessage messageObject = message(map("MsgType", "TestMessage",
 				"Name", "DummyName",
 				"Price", "250",
 				"Timestamp", "2023-03-27 15:30:24",
@@ -62,12 +63,8 @@ public class JsonCodecTest
 						"name", "LD1")),
 				message(map("SubMsgType", "Linked",
 						"name", "Link2"))
-			);
-	}
-
-	@DataProvider(name = "mapMessage")
-	public Object[][] mapMessageData()
-	{
+		);
+		
 		ClearThJsonMessage mapMsgObj1 = message(map("MsgType", "TestMapMessage1", "Name", "MappingMessage"),
 				message(map("SubMsgType", "Map", "key", "a", "v", "123"),
 						message(map("SubMsgType", "x", "v1", "1", "v2", "2")),
@@ -95,8 +92,16 @@ public class JsonCodecTest
 				message(map("SubMsgType", "Map", "key", "c", "v", "13", "x", "23"))
 		);
 
+		ClearThJsonMessage msgArray = message(map("MsgType", "arr"),
+				message(map("SubMsgType", "key", "dataType", "1")),
+				message(map("SubMsgType", "key", "dataType", "2"))
+		);
+
 		return new Object[][]
 				{
+					{
+						messageObject, "allTypes.json"
+					},
 					{
 						mapMsgObj1, "mapType1.json"
 					},
@@ -108,49 +113,51 @@ public class JsonCodecTest
 					},
 					{
 						mapMsgObj4, "mapType4.json"
+					},
+					{
+						msgArray, "arrType.json"
 					}
 				};
 	}
 
-	@Test(dataProvider = "mapMessage")
-	public void decodeMapMessage(ClearThJsonMessage mapMsgObject, String fileName) throws DecodeException, IOException
+	@Test(dataProvider = "messages")
+	public void decodeMessage(ClearThJsonMessage msgObject, String fileName) throws DecodeException, IOException
 	{
 		Path path = resourcesPath.resolve("messages").resolve(fileName);
 		String message = FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8);
 		ClearThJsonMessage decoded = (ClearThJsonMessage) codec.decode(message);
-		Assert.assertEquals(decoded, mapMsgObject);
+		Assert.assertEquals(decoded, msgObject);
 	}
 
-	@Test(dataProvider = "mapMessage")
-	public void encodeMapMessage(ClearThJsonMessage mapMsgObject, String fileName) throws IOException, EncodeException
+	@Test(dataProvider = "messages")
+	public void encodeMessage(ClearThJsonMessage msgObject, String fileName) throws IOException, EncodeException
 	{
 		Path path = resourcesPath.resolve("messages").resolve(fileName);
-		String encoded = codec.encode(mapMsgObject);
+		String encoded = codec.encode(msgObject);
 		String message = FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8);
 		Assert.assertEquals(encoded, message);
 	}
 
 	@Test(expectedExceptions = EncodeException.class, expectedExceptionsMessageRegExp = "Sub-message 'Map' does not have field 'key' required for encoding")
-	public void encodeMapMsgWithEmptyKeyNameParam() throws EncodeException, IOException
+	public void encodeMapMsgWithEmptyKeyNameParam() throws EncodeException
 	{
 		ClearThJsonMessage msg = message(map("MsgType", "TestMapMessage4"), message((map("SubMsgType", "Map", "v", "1", "x", "2"))));
 		codec.encode(msg);
 	}
 
-	@Test
-	public void decode() throws DecodeException
+	@Test(expectedExceptions = EncodeException.class,
+			expectedExceptionsMessageRegExp = "Message definition with type 'TestIncorrectDict' has 'rootType=\"array\"' and cannot have more than one fieldDesc.")
+	public void encodeIncorrectArrayMessageDescType() throws EncodeException
 	{
-		ClearThJsonMessage decoded = (ClearThJsonMessage) codec.decode(messageText);
-		Assert.assertEquals(decoded, messageObject);
+		ClearThJsonMessage msg = message(map("MsgType", "TestIncorrectDict"),
+				message(map("SubMsgType", "key", "dataType", "1")),
+				message(map("SubMsgType", "key", "dataType", "2")),
+				message(map("SubMsgType", "errKey", "dataType", "3")),
+				message(map("SubMsgType", "errKey", "dataType", "4"))
+		);
+		codec.encode(msg);
 	}
-	
-	@Test
-	public void encode() throws EncodeException
-	{
-		String encoded = codec.encode(messageObject);
-		Assert.assertEquals(encoded, messageText);
-	}
-	
+
 	private ClearThJsonMessage message(Map<String, String> fields, ClearThJsonMessage... subMessages)
 	{
 		return new ClearThJsonMessage(fields, subMessages.length == 0 ? null : Arrays.asList(subMessages));

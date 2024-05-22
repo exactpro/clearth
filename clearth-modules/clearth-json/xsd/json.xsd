@@ -52,6 +52,7 @@
 					<xsd:element name="fieldDesc" type="JsonFieldDesc" minOccurs="1" maxOccurs="unbounded"/>
 				</xsd:sequence>
 				<xsd:attribute name="name" type="xsd:string"/>
+				<xsd:attribute name="rootType" type="xsd:string"/>
 				<xsd:attribute name="allowUndefinedFields" type="xsd:boolean" default="false"/>
 			</xsd:extension>
 		</xsd:complexContent>

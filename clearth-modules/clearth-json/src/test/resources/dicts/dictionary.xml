@@ -65,4 +65,27 @@
 		<fieldDesc source="tag1" name="Tag1" />
 		<fieldDesc source="tag2" name="Tag2" />
 	</messageDesc>
+
+	<messageDesc name="arr" type="arr" rootType="array">
+		<typeCondition value="dataType"/>
+		<fieldDesc name="key" source="" repeat="true">
+			<fieldDesc source="key">
+				<fieldDesc source="dataType" name="dataType" />
+			</fieldDesc>
+		</fieldDesc>
+	</messageDesc>
+
+	<messageDesc type="TestIncorrectDict" rootType="array">
+		<typeCondition value="errKey"/>
+		<fieldDesc name="key" source="" repeat="true">
+			<fieldDesc source="key">
+				<fieldDesc source="dataType" name="dataType" />
+			</fieldDesc>
+		</fieldDesc>
+		<fieldDesc name="errKey" source="" repeat="true">
+			<fieldDesc source="errKey">
+				<fieldDesc source="dataType" name="dataType" />
+			</fieldDesc>
+		</fieldDesc>
+	</messageDesc>
 </JsonDictionaryDesc>
