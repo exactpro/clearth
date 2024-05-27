@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,21 +18,13 @@
 
 package com.exactprosystems.clearth.automation.persistence;
 
-import com.exactprosystems.clearth.automation.Action;
-import com.exactprosystems.clearth.automation.Matrix;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
+import java.io.IOException;
 
-@XStreamAlias("MatrixState")
-public class DefaultMatrixState extends MatrixState
+import com.exactprosystems.clearth.automation.*;
+
+public interface ExecutorStateOperator
 {
-	public DefaultMatrixState(Matrix matrix)
-	{
-		super(matrix);
-	}
-	
-	@Override
-	protected ActionState createActionState(Action action)
-	{
-		return new DefaultActionState(action);
-	}
+	void save(ExecutorState state) throws IOException;
+	ExecutorState load() throws IOException;
+	void update(ExecutorState state, Action lastExecutedAction) throws IOException;
 }

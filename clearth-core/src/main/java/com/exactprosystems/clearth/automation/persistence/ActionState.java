@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,9 +29,12 @@ import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+
 import org.apache.commons.lang.StringUtils;
 
-public abstract class ActionState
+@XStreamAlias("ActionState")
+public class ActionState
 {
 	private Class<?> actionClass = null;
 
@@ -146,10 +149,14 @@ public abstract class ActionState
 	}
 	
 	
-	protected abstract ResultState createResultState(Result result);
-//	protected abstract Action createAction() throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException;
-//	protected abstract ActionSettings createActionSettings();
-	protected abstract void initActionSettings(ActionSettings settings);
+	protected ResultState createResultState(Result result)
+	{
+		return new ResultState(result);
+	}
+	
+	protected void initActionSettings(ActionSettings settings)
+	{
+	}
 	
 	
 	public Class<?> getActionClass()

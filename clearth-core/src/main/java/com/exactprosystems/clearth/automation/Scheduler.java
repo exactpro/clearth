@@ -27,7 +27,8 @@ import com.exactprosystems.clearth.automation.exceptions.SchedulerUpdateExceptio
 import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProviderHolder;
-import com.exactprosystems.clearth.automation.persistence.ExecutorState;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateManager;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateOperator;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.StepState;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
@@ -140,8 +141,9 @@ public abstract class Scheduler
 	
 	protected abstract ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException;
 	protected abstract void saveStateInfo(File destDir, ExecutorStateInfo stateInfo) throws IOException;
-	protected abstract ExecutorState createExecutorState(File sourceDir) throws IOException;
-	protected abstract ExecutorState createExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo);
+	protected abstract ExecutorStateOperator createExecutorStateOperator(File storageDir) throws IOException;
+	protected abstract ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator) throws IOException;
+	protected abstract ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator, SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo) throws IOException;
 	
 	protected abstract void initExecutor(SimpleExecutor executor);
 	protected abstract void initSequentialExecutor(SequentialExecutor executor);
@@ -1044,7 +1046,9 @@ public abstract class Scheduler
 		
 		sequentialRun = false;
 		status.clear();
-		ExecutorState es = createExecutorState(schedulerData.getStateDir());
+		
+		ExecutorStateOperator operator = createExecutorStateOperator(schedulerData.getStateDir());
+		ExecutorStateManager es = createExecutorStateManager(operator);
 		SimpleExecutor simpleExecutor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
 		simpleExecutor.setRestored(true);
 		simpleExecutor.setStoredActionReports(schedulerData.getRepDir());
@@ -1213,8 +1217,10 @@ public abstract class Scheduler
 		
 		String repDir = getReportsDir() + "current_state";
 		ReportsInfo repInfo = makeCurrentReports(repDir, false, false);
-		ExecutorState es = createExecutorState((SimpleExecutor) executor, stepFactory, repInfo);
-		es.save(schedulerData.getStateDir());
+		
+		ExecutorStateOperator operator = createExecutorStateOperator(schedulerData.getStateDir());
+		ExecutorStateManager es = createExecutorStateManager(operator, (SimpleExecutor) executor, stepFactory, repInfo);
+		es.save();
 		copyActionReport(schedulerData.getRepDir());
 		
 		try

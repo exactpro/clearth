@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation.persistence;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +26,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 @XStreamAlias("StateObjects")
 public class ExecutorStateObjects
 {
-	private List<MatrixState> matrices = new ArrayList<MatrixState>();
+	private List<MatrixState> matrices;
 	private Map<String, String> fixedIDs = null;
 	
 	

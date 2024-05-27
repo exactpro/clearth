@@ -23,8 +23,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.exactprosystems.clearth.automation.persistence.DefaultExecutorState;
-import com.exactprosystems.clearth.automation.persistence.ExecutorState;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateManager;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateOperator;
+import com.exactprosystems.clearth.automation.persistence.FileStateOperator;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.utils.XmlUtils;
 
@@ -65,33 +66,39 @@ public class DefaultScheduler extends Scheduler
 	@Override
 	protected ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException
 	{
-		File stateInfoFile = new File(sourceDir, ExecutorState.STATEINFO_FILENAME);
+		File stateInfoFile = new File(sourceDir, FileStateOperator.STATEINFO_FILENAME);
 		if (!stateInfoFile.isFile())
 			return null;
 		
 		return (ExecutorStateInfo)XmlUtils.xmlFileToObject(stateInfoFile,
-				DefaultExecutorState.STATEINFO_ANNOTATIONS, DefaultExecutorState.ALLOWED_CLASSES);
+				FileStateOperator.STATEINFO_ANNOTATIONS, FileStateOperator.ALLOWED_CLASSES);
 	}
 
 	@Override
 	protected void saveStateInfo(File destDir, ExecutorStateInfo stateInfo) throws IOException
 	{
-		XmlUtils.objectToXmlFile(stateInfo, new File(destDir, ExecutorState.STATEINFO_FILENAME),
-				DefaultExecutorState.STATEINFO_ANNOTATIONS, DefaultExecutorState.ALLOWED_CLASSES);
+		XmlUtils.objectToXmlFile(stateInfo, new File(destDir, FileStateOperator.STATEINFO_FILENAME),
+				FileStateOperator.STATEINFO_ANNOTATIONS, FileStateOperator.ALLOWED_CLASSES);
 	}
-
+	
 	@Override
-	protected ExecutorState createExecutorState(File sourceDir) throws IOException
+	protected ExecutorStateOperator createExecutorStateOperator(File storageDir) throws IOException
 	{
-		return new DefaultExecutorState(sourceDir);
+		return new FileStateOperator(storageDir.toPath());
 	}
-
+	
 	@Override
-	protected ExecutorState createExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
+	protected ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator) throws IOException
 	{
-		return new DefaultExecutorState(executor, stepFactory, reportsInfo);
+		return new ExecutorStateManager(operator);
 	}
-
+	
+	@Override
+	protected ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator, SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo) throws IOException
+	{
+		return new ExecutorStateManager(operator, executor, stepFactory, reportsInfo);
+	}
+	
 	
 	@Override
 	protected void initExecutor(SimpleExecutor executor)

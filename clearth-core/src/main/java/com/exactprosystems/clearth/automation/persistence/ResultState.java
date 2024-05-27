@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,8 +20,11 @@ package com.exactprosystems.clearth.automation.persistence;
 
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
+import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-public abstract class ResultState
+@XStreamAlias("ResultState")
+public class ResultState
 {
 	private Class<?> resultClass = null;
 	
@@ -64,8 +67,14 @@ public abstract class ResultState
 	}
 	
 	
-	protected abstract Result createResult();
-	protected abstract void initResult(Result result);
+	protected Result createResult()
+	{
+		return new DefaultResult();
+	}
+	
+	protected void initResult(Result result)
+	{
+	}
 	
 	
 	public Class<?> getResultClass()

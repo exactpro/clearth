@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,6 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.exactprosystems.clearth.automation.persistence.DefaultStepState;
 import com.exactprosystems.clearth.automation.persistence.StepState;
 
 import java.io.IOException;
@@ -47,19 +46,19 @@ public class DefaultStepFactory extends StepFactory
 	@Override
 	public StepState createStepState()
 	{
-		return new DefaultStepState();
+		return new StepState();
 	}
 
 	@Override
 	public StepState createStepState(Step step)
 	{
-		return new DefaultStepState(step);
+		return new StepState(step);
 	}
 
 	@Override
 	public StepState createStepState(StepState stepState)
 	{
-		return new DefaultStepState(stepState);
+		return new StepState(stepState);
 	}
 	
 	@Override

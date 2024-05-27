@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,8 +27,10 @@ import java.util.Map;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-public abstract class MatrixState
+@XStreamAlias("MatrixState")
+public class MatrixState
 {
 	private String fileName = null;
 	private String name = null;
@@ -99,7 +101,10 @@ public abstract class MatrixState
 	}
 	
 	
-	protected abstract ActionState createActionState(Action action);
+	protected ActionState createActionState(Action action)
+	{
+		return new ActionState(action);
+	}
 	
 	
 	public String getFileName()

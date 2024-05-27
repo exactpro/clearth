@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,12 +19,14 @@
 package com.exactprosystems.clearth.automation.persistence;
 
 import com.exactprosystems.clearth.automation.*;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public abstract class StepState
+@XStreamAlias("StepState")
+public class StepState
 {
 	private String name = null, kind = null, startAt = null, parameter = null;
 	private boolean askForContinue = false, askIfFailed = false, execute = true;
@@ -124,7 +126,9 @@ public abstract class StepState
 	}
 	
 	
-	protected abstract void initStep(Step step);
+	protected void initStep(Step step)
+	{
+	}
 	
 	
 	public String getName()
