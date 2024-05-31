@@ -8,7 +8,7 @@
 	</#if>
 </#function>
 
-<#function getFailStatus failReason>
+<#function getFailStatus failReason='FAILED'>
 	<#switch failReason>
 		<#case "COMPARISON">
 			<#return "failed_comparison">
@@ -21,7 +21,7 @@
 	</#switch>
 </#function>
 
-<#function getFailStatusTitle failReason>
+<#function getFailStatusTitle failReason='FAILED'>
 	<#switch failReason>
 		<#case "NOT_EXECUTED">
 			<#return "NOT EXECUTED">
