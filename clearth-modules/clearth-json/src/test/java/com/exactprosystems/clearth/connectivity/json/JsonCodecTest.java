@@ -96,6 +96,8 @@ public class JsonCodecTest
 				message(map("SubMsgType", "key", "dataType", "1")),
 				message(map("SubMsgType", "key", "dataType", "2"))
 		);
+		
+		ClearThJsonMessage msgSlash= message(map("MsgType", "slash", "Node1", "aaa", "ValueText", "bbb"));
 
 		return new Object[][]
 				{
@@ -116,6 +118,9 @@ public class JsonCodecTest
 					},
 					{
 						msgArray, "arrType.json"
+					},
+					{
+						msgSlash, "slash_field.json"
 					}
 				};
 	}

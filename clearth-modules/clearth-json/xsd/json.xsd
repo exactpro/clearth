@@ -40,6 +40,7 @@
 				<xsd:attribute name="reference" type="xsd:string"/>
 				<xsd:attribute name="allowUndefinedFields" type="xsd:boolean" default="false"/>
 				<xsd:attribute name="keyName" type="xsd:string"/>
+				<xsd:attribute name="sourceIsPath" type="xsd:boolean" default="true" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>

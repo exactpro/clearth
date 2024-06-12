@@ -263,15 +263,20 @@ public class JsonCodec implements ICodec
 		if ((source == null) || (source.isEmpty()))
 			return parentNode;
 		
-		String[] sources = StringUtils.split(source, PATH_SEPARATOR);
-		JsonNode node = parentNode;
-		for (String s : sources)
+		if (fieldDesc.isSourceIsPath())
 		{
-			node = node.get(s);
-			if (node == null)
-				break;
+			String[] sources = StringUtils.split(source, PATH_SEPARATOR);
+			JsonNode node = parentNode;
+			for (String s : sources)
+			{
+				node = node.get(s);
+				if (node == null)
+					break;
+			}
+			return node;
 		}
-		return node;
+		
+		return parentNode.get(source);
 	}
 
 	protected void decodeMap(ClearThJsonMessage message, JsonNode node, JsonFieldDesc fieldDesc, boolean allowUndefinedFields) throws DecodeException
@@ -649,7 +654,7 @@ public class JsonCodec implements ICodec
 			}
 			
 			String jsonFieldName;
-			if (StringUtils.contains(source, PATH_SEPARATOR))
+			if (StringUtils.contains(source, PATH_SEPARATOR) && fieldDesc.isSourceIsPath())
 			{
 				String[] s = StringUtils.split(source, PATH_SEPARATOR);
 				jsonFieldName = s[s.length - 1];

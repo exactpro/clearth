@@ -74,7 +74,13 @@
 			</fieldDesc>
 		</fieldDesc>
 	</messageDesc>
-
+	
+	<messageDesc type="slash">
+		<typeCondition value="value/text" />
+		<fieldDesc source="node1" name="Node1" />
+		<fieldDesc source="value/text" name="ValueText" sourceIsPath="false" />
+	</messageDesc>
+	
 	<messageDesc type="TestIncorrectDict" rootType="array">
 		<typeCondition value="errKey"/>
 		<fieldDesc name="key" source="" repeat="true">
