@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -123,6 +124,21 @@ public class DataComparatorToolTest
 		ComparisonResult result = compareFiles(dirWithFiles, OUTPUT_DIR.resolve(mapped), new StringDataMapping(mapping));
 		assertCounts(result, 1, 1, 1, 1);
 		assertAllDetails(result, dirWithFiles);
+		
+		assertNull(result.getErrors(), "Errors");
+	}
+	
+	@Test
+	public void undefinedPrecision() throws IOException, JAXBException, ParametersException, ComparisonException
+	{
+		String dirName = "undefined_precision";
+		Path dirWithFiles = RES_DIR.resolve(dirName);
+		
+		MappingDesc mapping = createUndefinedPrecisionMapping();
+		
+		ComparisonResult result = compareFiles(dirWithFiles, OUTPUT_DIR.resolve(dirName), new StringDataMapping(mapping));
+		assertCounts(result, 2, 0, 0, 0);
+		assertPassedDetails(result, dirWithFiles);
 		
 		assertNull(result.getErrors(), "Errors");
 	}
@@ -256,5 +272,26 @@ public class DataComparatorToolTest
 		String expectedDetails = readTextFile(expectedFile),
 				actualDetails = readTextFile(actualFile);
 		Assert.assertEquals(actualDetails, expectedDetails, kind);
+	}
+	
+	
+	private MappingDesc createUndefinedPrecisionMapping()
+	{
+		List<FieldDesc> fields = new ArrayList<>(2);
+		
+		FieldDesc key = new FieldDesc();
+		key.setLocalName("Field1");
+		key.setKey(true);
+		fields.add(key);
+		
+		FieldDesc numeric = new FieldDesc();
+		numeric.setLocalName("Field2");
+		numeric.setNumeric(true);
+		numeric.setPrecision(null);  //Precision is explicitly set to null to trigger possible issue in comparison
+		fields.add(numeric);
+		
+		MappingDesc result = new MappingDesc();
+		result.setFields(fields);
+		return result;
 	}
 }

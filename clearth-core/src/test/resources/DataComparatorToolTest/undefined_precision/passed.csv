@@ -1,0 +1,5 @@
+Comparison name,Comparison result,Row kind,Field1,Field2
+Row #1,PASSED,EXPECTED,A,1.0
+Row #1,PASSED,ACTUAL,A,1.00000
+Row #2,PASSED,EXPECTED,B,2.0
+Row #2,PASSED,ACTUAL,B,2.00000

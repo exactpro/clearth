@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -56,6 +56,10 @@ public class NumericStringValuesComparator extends StringValuesComparator
 				BigDecimal bdExpectedValue = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(expectedValue) : expectedValue),
 						bdActualValue = new BigDecimal(bdValueTransformer != null ? bdValueTransformer.transform(actualValue) : actualValue),
 						precision = numericColumns.get(column);
+				
+				if (precision == null)
+					precision = BigDecimal.ZERO;
+				
 				return ComparisonResult.from(bdExpectedValue.subtract(bdActualValue).abs().compareTo(precision) <= 0);
 			}
 			catch (Exception e)
