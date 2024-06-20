@@ -1,0 +1,6 @@
+//Description:
+//Test with this matrix verifies that scheduler state is saved and restored successfully even if there is action related to non-existing global step
+#ID,#GlobalStep,#Action,#P1
+id1,Step1,SetStatic,V1
+id2,AbsentStep,SetStatic,V2
+id3,Step2,SetStatic,V3

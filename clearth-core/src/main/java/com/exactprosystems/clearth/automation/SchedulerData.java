@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ClearThCore;
+import com.exactprosystems.clearth.automation.persistence.StateConfig;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.DateTimeUtils;
@@ -67,6 +68,7 @@ public abstract class SchedulerData
 			STEP_INFO_DATA_FILENAME = "executed_steps.csv",
 			CONFIGDATA_FILENAME = "configdata.cfg",
 			REPORTS_CONFIG_FILENAME = "reports.json",
+			STATE_CONFIG_FILENAME = "state.json",
 			NAME = "Name",
 			MATRIX = "Matrix",
 			UPLOADED = "Uploaded",
@@ -86,7 +88,8 @@ public abstract class SchedulerData
 
 	private final Path businessDayFilePath,
 			executedStepsDataFilePath,
-			reportsConfigFilePath;
+			reportsConfigFilePath,
+			stateConfigFilePath;
 
 	private final StepFactory stepFactory;
 	private final XmlSchedulerLaunches launches;
@@ -105,6 +108,7 @@ public abstract class SchedulerData
 	private final File schedulerDir;
 	private final ExecutedMatricesData executedMatricesData;
 	private ReportsConfig reportsConfig;
+	private StateConfig stateConfig;
 	private List<StepData> executedStepsData;
 
 
@@ -131,6 +135,7 @@ public abstract class SchedulerData
 		matricesName = getMatricesName(cfgDir, name);
 		configDataName = getConfigDataName(cfgDir, name);
 		reportsConfigFilePath = getReportsConfigFilePath(cfgDir, name);
+		stateConfigFilePath = getStateConfigFilePath(cfgDir, name);
 		this.stepFactory = stepFactory;
 		
 		File launchesFile = new File(launchesName);
@@ -155,6 +160,7 @@ public abstract class SchedulerData
 
 		executedMatricesData = new ExecutedMatricesData(lastExecutedDataDir);
 		reportsConfig = loadReportsConfig();
+		stateConfig = loadStateConfig();
 	}
 
 	public abstract String[] getConfigHeader();
@@ -223,6 +229,11 @@ public abstract class SchedulerData
 	public static Path getReportsConfigFilePath(String configsRoot, String schedulerName)
 	{
 		return Paths.get(configsRoot, schedulerName, REPORTS_CONFIG_FILENAME);
+	}
+	
+	public static Path getStateConfigFilePath(String configsRoot, String schedulerName)
+	{
+		return Paths.get(configsRoot, schedulerName, STATE_CONFIG_FILENAME);
 	}
 	
 	public static String getStateDirName(String configsRoot, String schedulerName)
@@ -812,6 +823,31 @@ public abstract class SchedulerData
 	}
 	
 	
+	public static StateConfig loadStateConfig(Path file) throws IOException
+	{
+		if (!Files.isRegularFile(file))
+			return new StateConfig(false);
+		
+		return new JsonMarshaller<StateConfig>().unmarshal(file, StateConfig.class);
+	}
+	
+	public static void saveStateConfig(StateConfig config, Path file) throws IOException
+	{
+		Files.createDirectories(file.getParent());
+		new JsonMarshaller<StateConfig>().marshal(config, file);
+	}
+	
+	public StateConfig loadStateConfig() throws IOException
+	{
+		return loadStateConfig(stateConfigFilePath);
+	}
+	
+	public void saveStateConfig() throws IOException
+	{
+		saveStateConfig(stateConfig, stateConfigFilePath);
+	}
+	
+	
 	public static ConfigData loadConfigData(String fileName) throws IOException
 	{
 		Map<String, String> keyValue = KeyValueUtils.loadKeyValueFile(fileName, true);
@@ -1014,6 +1050,17 @@ public abstract class SchedulerData
 	public void setReportsConfig(ReportsConfig reportsConfig)
 	{
 		this.reportsConfig = new ReportsConfig(reportsConfig);
+	}
+	
+	
+	public StateConfig getStateConfig()
+	{
+		return stateConfig;
+	}
+	
+	public void setStateConfig(StateConfig stateConfig)
+	{
+		this.stateConfig = new StateConfig(stateConfig);
 	}
 	
 	

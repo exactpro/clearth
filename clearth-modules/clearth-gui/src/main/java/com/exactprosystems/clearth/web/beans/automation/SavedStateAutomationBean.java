@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,12 +19,14 @@
 package com.exactprosystems.clearth.web.beans.automation;
 
 import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateException;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.StepState;
 import com.exactprosystems.clearth.utils.ExceptionUtils;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 
 import java.io.IOException;
 
@@ -56,7 +58,7 @@ public class SavedStateAutomationBean extends ClearThBean {
 		{
 			selectedScheduler().modifyStepState(originalSelectedStepState, selectedStepState);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			MessageUtils.addErrorMessage("Error", ExceptionUtils.getDetailedMessage(e));
 		}
@@ -70,7 +72,14 @@ public class SavedStateAutomationBean extends ClearThBean {
 	public void setSelectedStepState(StepState selectedStepState)
 	{
 		this.originalSelectedStepState = selectedStepState;
-		this.selectedStepState = selectedScheduler().getStepFactory().createStepState(selectedStepState);
+		try
+		{
+			this.selectedStepState = selectedScheduler().createStepState(selectedStepState);
+		}
+		catch (ExecutorStateException e)
+		{
+			WebUtils.logAndGrowlException("Could not start editing step state", e, getLogger());
+		}
 	}
 
 	public ExecutorStateInfo getStateInfo()
@@ -124,7 +133,7 @@ public class SavedStateAutomationBean extends ClearThBean {
 		{
 			selectedScheduler().setStateExecute(stateExecuteAll);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			MessageUtils.addErrorMessage("Error", ExceptionUtils.getDetailedMessage(e));
 		}
@@ -144,7 +153,7 @@ public class SavedStateAutomationBean extends ClearThBean {
 		{
 			selectedScheduler().setStateAskForContinue(stateAskForContinueAll);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			MessageUtils.addErrorMessage("Error", ExceptionUtils.getDetailedMessage(e));
 		}
@@ -164,7 +173,7 @@ public class SavedStateAutomationBean extends ClearThBean {
 		{
 			selectedScheduler().setStateAskIfFailed(stateAskIfFailedAll);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			MessageUtils.addErrorMessage("Error", ExceptionUtils.getDetailedMessage(e));
 		}
@@ -190,7 +199,15 @@ public class SavedStateAutomationBean extends ClearThBean {
 
 	public void removeSavedState()
 	{
-		selectedScheduler().removeSavedState();
+		try
+		{
+			selectedScheduler().removeSavedState();
+			getLogger().info("removed saved state");
+		}
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Error while removing saved state", e, getLogger());
+		}
 	}
 
 	public boolean isStateSaved()

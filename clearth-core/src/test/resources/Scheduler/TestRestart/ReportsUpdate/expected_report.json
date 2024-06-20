@@ -1,0 +1,137 @@
+{
+  "matrixName" : "multi_pause.csv",
+  "result" : true,
+  "description" : "Test with this matrix interrupts and restores state multiple times.\r\nIt verifies that after scheduler state restoration the reports to update are taken from previously saved state\r\n",
+  "constants" : { },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true,
+      "failReason" : null,
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "P" : {
+          "value" : "V1",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "subActions" : [ ]
+    }
+    ,
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id2",
+      "actionName" : "SchedulerPause",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : { },
+      "specialParams" : { },
+      "subActions" : [ ]
+    }
+    ,
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id3",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "P" : {
+          "value" : "V2",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "subActions" : [ ]
+    }
+    ,
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id4",
+      "actionName" : "SchedulerPause",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : { },
+      "specialParams" : { },
+      "subActions" : [ ]
+    }
+    ,
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id5",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "P" : {
+          "value" : "V3",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "subActions" : [ ]
+    }
+    ]
+
+  } ]
+}

@@ -44,24 +44,6 @@ public class DefaultStepFactory extends StepFactory
 	}
 
 	@Override
-	public StepState createStepState()
-	{
-		return new StepState();
-	}
-
-	@Override
-	public StepState createStepState(Step step)
-	{
-		return new StepState(step);
-	}
-
-	@Override
-	public StepState createStepState(StepState stepState)
-	{
-		return new StepState(stepState);
-	}
-	
-	@Override
 	protected boolean validStepKindEx(String stepKind)
 	{
 		return false;

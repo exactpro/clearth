@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.automation.exceptions.FailoverException;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateUpdater;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.BinaryConverter;
 import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
@@ -489,7 +490,8 @@ public abstract class Step implements CsvDataManager
 	}
 	
 
-	public void executeActions(ActionExecutor actionExec, String actionsReportsDir, BooleanObject replay, SchedulerSuspension suspension)
+	public void executeActions(ActionExecutor actionExec, String actionsReportsDir, BooleanObject replay, SchedulerSuspension suspension, 
+			ExecutorStateUpdater<?> stateUpdater) throws Exception
 	{
 		waitForAsyncActions(actionExec, ActionExecutor::waitForBeforeStepAsyncActions);
 
@@ -522,7 +524,10 @@ public abstract class Step implements CsvDataManager
 				try
 				{
 					if (currentAction.getFinished() != null)  // If we replay the step and this action is already done
+					{
+						actionExec.getReportWriter().incActionIndex();
 						continue;
+					}
 					
 					if (paused)
 						this.pauseStep();
@@ -546,6 +551,9 @@ public abstract class Step implements CsvDataManager
 					
 					afterAction(currentAction, stepContext, matrixContext, globalContext);
 					updateByAsyncActions(actionExec);
+					
+					if (stateUpdater != null)
+						stateUpdater.update(currentAction);
 				}
 				finally
 				{

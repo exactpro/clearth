@@ -1,0 +1,13 @@
+//Description:
+//Test with this matrix interrupts and restores state multiple times.
+//It verifies that after scheduler state restoration the reports to update are taken from previously saved state
+#ID,#GlobalStep,#Action,#P
+id1,Step1,SetStatic,V1
+#ID,#GlobalStep,#Action
+id2,Step1,SchedulerPause
+#ID,#GlobalStep,#Action,#P
+id3,Step1,SetStatic,V2
+#ID,#GlobalStep,#Action
+id4,Step1,SchedulerPause
+#ID,#GlobalStep,#Action,#P
+id5,Step1,SetStatic,V3

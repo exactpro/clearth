@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.SchedulerData;
+import com.exactprosystems.clearth.automation.persistence.StateConfig;
 import com.exactprosystems.clearth.automation.report.ModifiableReportsConfig;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
@@ -399,6 +400,24 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		catch (Exception e)
 		{
 			WebUtils.logAndGrowlException("Could not save reports configuration", e, getLogger());
+		}
+	}
+	
+	
+	public boolean isAutoSaveState()
+	{
+		return selectedScheduler().getStateConfig().isAutoSave();
+	}
+	
+	public void setAutoSaveState(boolean autoSave)
+	{
+		try
+		{
+			selectedScheduler().setStateConfig(new StateConfig(autoSave));
+		}
+		catch (Exception e)
+		{
+			WebUtils.logAndGrowlException("Could not save 'Auto-save state' setting", e, getLogger());
 		}
 	}
 	

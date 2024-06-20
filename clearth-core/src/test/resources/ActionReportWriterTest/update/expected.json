@@ -1,0 +1,36 @@
+[
+{
+  "@c" : ".ActionReport",
+  "actionId" : "id1",
+  "actionName" : "TestAction",
+  "timeout" : 0,
+  "status" : {
+    "passed" : false
+  },
+  "inputParams" : {
+    "Param2" : {
+      "value" : "2",
+      "specialValue" : false
+    },
+    "Param1" : {
+      "value" : "11",
+      "specialValue" : false
+    }
+  },
+  "specialParams" : { },
+  "result" : {
+    "@c" : ".results.DetailedResult",
+    "success" : false,
+    "resultDetails" : [ {
+      "param" : "Param1",
+      "expected" : "11",
+      "actual" : "1",
+      "identical" : false
+    }, {
+      "param" : "Param2",
+      "expected" : "2",
+      "actual" : "2",
+      "identical" : true
+    } ]
+  }
+}

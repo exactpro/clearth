@@ -24,6 +24,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 @XStreamAlias("StepState")
 public class StepState
@@ -70,8 +71,8 @@ public class StepState
 		if (step.getStepContexts() != null)
 		{
 			this.stepContexts = new LinkedHashMap<String, StepContext>();
-			for (Matrix m : step.getStepContexts().keySet())
-				this.stepContexts.put(m.getName(), step.getStepContexts().get(m));
+			for (Entry<Matrix, StepContext> sc : step.getStepContexts().entrySet())
+				this.stepContexts.put(sc.getKey().getName(), sc.getValue());
 		}
 		this.statusComment = step.getStatusComment();
 		this.error = step.getError();

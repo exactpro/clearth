@@ -28,7 +28,9 @@ import com.exactprosystems.clearth.automation.matrix.linked.LocalMatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider;
 import com.exactprosystems.clearth.automation.matrix.linked.MatrixProviderHolder;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateManager;
-import com.exactprosystems.clearth.automation.persistence.ExecutorStateOperator;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateOperatorFactory;
+import com.exactprosystems.clearth.automation.persistence.StateConfig;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateException;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.StepState;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
@@ -59,6 +61,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static com.exactprosystems.clearth.automation.MatrixFileExtensions.isExtensionSupported;
 import static com.exactprosystems.clearth.automation.matrix.linked.MatrixProvider.STORED_MATRIX_PREFIX;
@@ -85,8 +88,9 @@ public abstract class Scheduler
 	protected boolean weekendHoliday = false;
 	protected Map<String, Boolean> holidays = new HashMap<String, Boolean>();
 	protected ReportsConfig reportsConfig = new ReportsConfig(true, true, true);
+	protected StateConfig stateConfig = new StateConfig(false);
 	protected Set<String> connectionsToIgnoreFailuresByRun = new HashSet<>();
-	protected ExecutorStateInfo stateInfo;
+	protected volatile ExecutorStateManager<?> stateManager;
 	protected boolean testMode;
 	private Date executorStartedTime;
 	private final AtomicBoolean stoppedByUser = new AtomicBoolean(false);
@@ -125,12 +129,12 @@ public abstract class Scheduler
 		
 		try
 		{
-			stateInfo = loadStateInfo(schedulerData.getStateDir());
+			stateManager = loadStateInfo(schedulerData.getStateDir());
 		}
 		catch (IOException e)
 		{
 			logger.error("Error while loading state info", e);
-			stateInfo = null;
+			stateManager = null;
 		}
 	}
 	
@@ -139,11 +143,9 @@ public abstract class Scheduler
 	public abstract ActionGenerator createActionGenerator(Map<String, Step> stepsMap, List<Matrix> matricesContainer, Map<String, Preparable> preparableActions);
 	public abstract SequentialExecutor createSequentialExecutor(Scheduler scheduler, String userName, Map<String, Preparable> preparableActions);
 	
-	protected abstract ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException;
-	protected abstract void saveStateInfo(File destDir, ExecutorStateInfo stateInfo) throws IOException;
-	protected abstract ExecutorStateOperator createExecutorStateOperator(File storageDir) throws IOException;
-	protected abstract ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator) throws IOException;
-	protected abstract ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator, SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo) throws IOException;
+	protected abstract ExecutorStateManager<?> loadStateInfo(File sourceDir) throws IOException;
+	protected abstract ExecutorStateOperatorFactory<?> createExecutorStateOperatorFactory(File storageDir);
+	protected abstract ExecutorStateManager<?> createExecutorStateManager(ExecutorStateOperatorFactory<?> operatorFactory);
 	
 	protected abstract void initExecutor(SimpleExecutor executor);
 	protected abstract void initSequentialExecutor(SequentialExecutor executor);
@@ -881,6 +883,7 @@ public abstract class Scheduler
 			baseTime = schedulerData.loadBaseTime();
 			weekendHoliday = schedulerData.loadWeekendHoliday();
 			reportsConfig = schedulerData.loadReportsConfig();
+			stateConfig = schedulerData.loadStateConfig();
 			stoppedByUser.set(false);
 			initEx();
 		}
@@ -920,9 +923,17 @@ public abstract class Scheduler
 			
 			TestExecutionHandler executionHandler = ClearThCore.getInstance().getDataHandlersFactory().createTestExecutionHandler(getName());
 			SimpleExecutor simpleExecutor = executorFactory.createExecutor(this, matrices, userName, preparableActions, executionHandler);
+			
+			if (stateConfig.isAutoSave())
+			{
+				ExecutorStateManager<?> es = getOrCreateStateManager();
+				simpleExecutor.setStateManager(es);
+			}
+			
 //			executor.globalContext.setLoadedContext(GlobalContext.ACTIONS_MAPPING, actionsMapping);
-			simpleExecutor.setOnFinish((x) -> this.executorFinished());
+			simpleExecutor.setOnFinish((x) -> this.simpleExecutorFinished(x));
 			initExecutor(simpleExecutor);
+			
 			executor = simpleExecutor;
 			executor.start();
 			
@@ -1006,7 +1017,7 @@ public abstract class Scheduler
 
 			Map<String, Preparable> preparableActions = new HashMap<String, Preparable>();
 			SequentialExecutor sequentialExecutor = createSequentialExecutor(this, userName, preparableActions);
-			sequentialExecutor.setOnFinish((x) -> this.executorFinished());
+			sequentialExecutor.setOnFinish((x) -> this.sequentialExecutorFinished(x));
 			initSequentialExecutor(sequentialExecutor);
 			executor = sequentialExecutor;
 			executor.start();
@@ -1047,12 +1058,25 @@ public abstract class Scheduler
 		sequentialRun = false;
 		status.clear();
 		
-		ExecutorStateOperator operator = createExecutorStateOperator(schedulerData.getStateDir());
-		ExecutorStateManager es = createExecutorStateManager(operator);
-		SimpleExecutor simpleExecutor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
-		simpleExecutor.setRestored(true);
-		simpleExecutor.setStoredActionReports(schedulerData.getRepDir());
-		simpleExecutor.setOnFinish((x) -> this.executorFinished());
+		SimpleExecutor simpleExecutor;
+		try
+		{
+			ExecutorStateManager<?> es = getOrCreateStateManager();
+			es.load();
+			
+			File storageRepDir = new File(es.getStateInfo().getReportsInfo().getActionReportsPath());
+			
+			simpleExecutor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
+			simpleExecutor.setRestored(true);
+			simpleExecutor.setStoredActionReports(storageRepDir);
+			if (stateConfig.isAutoSave())
+				simpleExecutor.setStateManager(es);
+			simpleExecutor.setOnFinish((x) -> this.simpleExecutorFinished(x));
+		}
+		catch (Exception e)
+		{
+			throw new AutomationException("Could not restore state", e);
+		}
 		
 		steps = simpleExecutor.getSteps();
 		matrices = simpleExecutor.getMatrices();
@@ -1218,111 +1242,124 @@ public abstract class Scheduler
 		String repDir = getReportsDir() + "current_state";
 		ReportsInfo repInfo = makeCurrentReports(repDir, false, false);
 		
-		ExecutorStateOperator operator = createExecutorStateOperator(schedulerData.getStateDir());
-		ExecutorStateManager es = createExecutorStateManager(operator, (SimpleExecutor) executor, stepFactory, repInfo);
-		es.save();
-		copyActionReport(schedulerData.getRepDir());
+		File storageRepDir = schedulerData.getRepDir();
+		repInfo.setActionReportsPath(storageRepDir.getAbsolutePath());
 		
 		try
 		{
-			stateInfo = loadStateInfo(schedulerData.getStateDir());
+			ExecutorStateManager<?> es = getOrCreateStateManager();
+			es.save((SimpleExecutor)executor, repInfo);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
-			stateInfo = null;
+			throw new IOException("Could not save state", e);
 		}
+		
+		copyActionReport(storageRepDir);
+		
 		return true;
 	}
 	
+	public StateConfig getStateConfig()
+	{
+		return schedulerData.getStateConfig();
+	}
 	
-	protected void saveStateInfo() throws IOException
+	synchronized public void setStateConfig(StateConfig stateConfig) throws IOException
+	{
+		schedulerData.setStateConfig(stateConfig);
+		schedulerData.saveStateConfig();
+		init();
+	}
+	
+	
+	protected void saveStepsState(ExecutorStateManager<?> es) throws IOException
 	{
 		try
 		{
-			saveStateInfo(schedulerData.getStateDir(), stateInfo);
+			es.updateSteps();
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
-			String msg = "Error while saving state info";
+			String msg = "Error while saving steps state";
 			logger.error(msg, e);
 			throw new IOException(msg, e);
 		}
 	}
 	
-	public void removeSavedState()
+	public void removeSavedState() throws IOException
 	{
+		File stateDir = schedulerData.getStateDir();
+		if (stateDir.isDirectory())
+			FileUtils.deleteDirectory(stateDir);
 		
-		try
-		{
-			File stateDir = schedulerData.getStateDir();
-			if(stateDir.isDirectory())
-				FileUtils.deleteDirectory(stateDir);
-			
-			File reportsStateDir = schedulerData.getRepDir();
-			if(reportsStateDir.isDirectory())
-				FileUtils.deleteDirectory(reportsStateDir);
-
-			stateInfo=null;
-			
-		} catch (IOException e)
-		{
-			String msg = "Error while removing saved state";
-			logger.warn(msg,e);
-		}
+		File reportsStateDir = schedulerData.getRepDir();
+		if (reportsStateDir.isDirectory())
+			FileUtils.deleteDirectory(reportsStateDir);
+		
+		stateManager = null;
 	}
 	
-	synchronized public void setStateExecute(boolean execute) throws IOException
+	synchronized public void setStateExecute(boolean execute) throws IOException, ExecutorStateException
 	{
-		if ((stateInfo==null) || (stateInfo.getSteps()==null))
+		editStepsState(step -> step.setExecute(execute));
+	}
+	
+	synchronized public void setStateAskForContinue(boolean askForContinue) throws IOException, ExecutorStateException
+	{
+		editStepsState(step -> step.setAskForContinue(askForContinue));
+	}
+	
+	synchronized public void setStateAskIfFailed(boolean stateAskIfFailed) throws IOException, ExecutorStateException
+	{
+		editStepsState(step -> step.setAskIfFailed(stateAskIfFailed));
+	}
+	
+	synchronized public void modifyStepState(StepState originalStepState, StepState newStepState) throws IOException, ExecutorStateException
+	{
+		checkCanEditState();
+		
+		ExecutorStateInfo stateInfo = stateManager.getStateInfo();
+		if (stateInfo.getSteps() == null || originalStepState.getFinished() != null)
+			return;
+		
+		stateInfo.updateStep(originalStepState, newStepState);
+		saveStepsState(stateManager);
+	}
+	
+	protected void editStepsState(Consumer<StepState> editingAction) throws ExecutorStateException, IOException
+	{
+		checkCanEditState();
+		
+		ExecutorStateInfo stateInfo = stateManager.getStateInfo();
+		if (stateInfo.getSteps() == null)
 			return;
 		
 		for (StepState step : stateInfo.getSteps())
-			if (step.getFinished()==null)  //Can change only not finished steps
-				step.setExecute(execute);
-		
-		saveStateInfo();
-	}
-	
-	synchronized public void setStateAskForContinue(boolean askForContinue) throws IOException
-	{
-		if ((stateInfo==null) || (stateInfo.getSteps()==null))
-			return;
-		
-		for (StepState step : stateInfo.getSteps())
-			if (step.getFinished()==null)  //Can change only not finished steps
-				step.setAskForContinue(askForContinue);
-		
-		saveStateInfo();
-	}
-
-	synchronized public void setStateAskIfFailed(boolean stateAskIfFailed) throws IOException
-	{
-		if ((stateInfo==null) || (stateInfo.getSteps()==null))
-			return;
-
-		for (StepState step : stateInfo.getSteps())
-			if (step.getFinished()==null)  //Can change only not finished steps
-				step.setAskIfFailed(stateAskIfFailed);
-
-		saveStateInfo();
-	}
-	
-	synchronized public void modifyStepState(StepState originalStepState, StepState newStepState) throws IOException
-	{
-		if ((stateInfo==null) || (stateInfo.getSteps()==null) || (originalStepState.getFinished()!=null))
-			return;
-		
-		List<StepState> steps = stateInfo.getSteps();
-		
-		int stepIndex = steps.indexOf(originalStepState);
-		if (stepIndex < 0)
 		{
-			logger.error("Cannot find step to modify: " + originalStepState.getName());
-			throw new IOException("Cannot find step to modify");
+			if (step.getFinished() == null)  //Can edit only not finished steps
+				editingAction.accept(step);
 		}
 		
-		steps.set(stepIndex, newStepState);
-		saveStateInfo();
+		saveStepsState(stateManager);
+	}
+	
+	private void checkCanEditState() throws ExecutorStateException
+	{
+		if (stateManager == null)
+			throw new ExecutorStateException("No saved state available");
+		
+		if (isRunning())
+			throw new ExecutorStateException("Cannot edit state when scheduler is running");
+	}
+	
+	private ExecutorStateManager<?> getOrCreateStateManager() throws IOException
+	{
+		if (stateManager != null)
+			return stateManager;
+		
+		stateManager = createExecutorStateManager(createExecutorStateOperatorFactory(schedulerData.getStateDir()));
+		return stateManager;
 	}
 	
 	
@@ -1424,6 +1461,11 @@ public abstract class Scheduler
 		return reportsConfig;
 	}
 	
+	public StateConfig getCurrentStateConfig()
+	{
+		return stateConfig;
+	}
+	
 	public String getConfigFileName()
 	{
 		return schedulerData.getConfigFileName();
@@ -1446,9 +1488,17 @@ public abstract class Scheduler
 	
 	public ExecutorStateInfo getStateInfo()
 	{
-		return stateInfo;
+		return stateManager != null ? stateManager.getStateInfo() : null;
 	}
-
+	
+	public StepState createStepState(StepState stepState) throws ExecutorStateException
+	{
+		if (stateManager == null)
+			throw new ExecutorStateException("Cannot create new step state: no saved state available");
+		
+		return stateManager.createStepState(stepState);
+	}
+	
 	public boolean isTestMode()
 	{
 		return testMode;
@@ -1480,11 +1530,37 @@ public abstract class Scheduler
 		return executor.getLastReportsInfo();
 	}
 	
-	synchronized protected void executorFinished()
+	
+	synchronized protected void simpleExecutorFinished(SimpleExecutor simpleExecutor)
+	{
+		//If scheduler has auto-save state enabled and execution went till the end without fatal errors and interruptions,
+		//saved state has all actions as finished and restoring state doesn't make sense.
+		//Thus, removing saved state
+		if (simpleExecutor.isAutoSaveState() && simpleExecutor.getEnded() != null && !simpleExecutor.isExecutionInterrupted())
+		{
+			try
+			{
+				removeSavedState();
+			}
+			catch (Exception e)
+			{
+				logger.error("Error while removing saved state after scheduler execution end", e);
+			}
+		}
+		resetExecutor();
+	}
+	
+	synchronized protected void sequentialExecutorFinished(SequentialExecutor sequentialExecutor)
+	{
+		resetExecutor();
+	}
+	
+	private void resetExecutor()
 	{
 		executor = null;
 	}
-
+	
+	
 	public StepFactory getStepFactory()
 	{
 		return stepFactory;

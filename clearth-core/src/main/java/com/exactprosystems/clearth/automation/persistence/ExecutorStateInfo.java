@@ -18,12 +18,16 @@
 
 package com.exactprosystems.clearth.automation.persistence;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.exactprosystems.clearth.automation.ReportsInfo;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 @XStreamAlias("StateInfo")
 public class ExecutorStateInfo
@@ -37,15 +41,42 @@ public class ExecutorStateInfo
 	private Date started, ended;
 	private ReportsInfo reportsInfo;
 	
+	@XStreamOmitField
+	private Map<String, StepState> stepsByName;
 	
 	public List<StepState> getSteps()
 	{
-		return steps;
+		return steps != null ? Collections.unmodifiableList(steps) : Collections.emptyList();
 	}
 	
 	public void setSteps(List<StepState> steps)
 	{
+		if (steps == null)
+		{
+			this.steps = null;
+			stepsByName = null;
+			return;
+		}
+		
 		this.steps = steps;
+		stepsByName = steps.stream().collect(Collectors.toMap(StepState::getName, Function.identity()));
+	}
+	
+	public StepState getStep(String name)
+	{
+		return stepsByName.get(name);
+	}
+	
+	
+	public void updateStep(StepState originalStep, StepState updatedStep) throws ExecutorStateException
+	{
+		int stepIndex = steps.indexOf(originalStep);
+		if (stepIndex < 0)
+			throw new ExecutorStateException("Cannot find step to modify");
+		
+		steps.set(stepIndex, updatedStep);
+		stepsByName.remove(originalStep.getName());
+		stepsByName.put(updatedStep.getName(), updatedStep);
 	}
 	
 	

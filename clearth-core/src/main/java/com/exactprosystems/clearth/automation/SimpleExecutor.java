@@ -21,6 +21,8 @@ package com.exactprosystems.clearth.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateManager;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateUpdater;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.automation.report.ReportException;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
@@ -103,6 +105,8 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	private volatile long startTimeStep = 0L;
 	private Consumer<SimpleExecutor> onFinish;
 	private Set<String> currentReportsDirs = new HashSet<>();
+	private ExecutorStateManager<?> stateManager;
+	private ExecutorStateUpdater<?> stateUpdater;
 
 	public SimpleExecutor(Scheduler scheduler, List<Step> steps, List<Matrix> matrices, GlobalContext globalContext,
 			FailoverStatus failoverStatus, Map<String, Preparable> preparableActions, ReportsConfig reportsConfig)
@@ -172,13 +176,30 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			
 			if (!restored)
 			{
+				if (isAutoSaveState())
+				{
+					status.add("Saving initial state...");
+					stateUpdater = stateManager.saveBeforeUpdates(this, createReportsInfo(null));
+				}
+				else
+					stateUpdater = null;
+				
 				for (Step step : steps)
 					step.init();
 				
 				storeStepNames();
 			}
 			else
+			{
 				restoreActionsReports();
+				if (isAutoSaveState())
+				{
+					stateUpdater = stateManager.createStateUpdater();
+					stateUpdater.updateActionReportsPath(actionsReportsDir);
+				}
+				else
+					stateUpdater = null;
+			}
 
 			for (Matrix matrix : matrices)
 				evaluateMatrixInfo(matrix);
@@ -278,7 +299,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 						}
 						
 						//Need to "execute actions" even if step is not executable, because actions may need to set some parameters referenced by further actions
-						step.executeActions(actionExecutor, actionsReportsDir, replay, suspension);
+						step.executeActions(actionExecutor, actionsReportsDir, replay, suspension, stateUpdater);
 						
 						if (interrupted.get())
 						{
@@ -323,6 +344,9 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 								}
 							}
 						}
+						
+						if (stateUpdater != null)
+							stateUpdater.update(step);
 						
 						if ((stepResult!=null) && (stepResult.getError()!=null) && (stepResult.getError() instanceof InterruptedException))
 							interrupted.set(true);
@@ -403,9 +427,11 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		}
 		finally
 		{
+			Utils.closeResource(stateUpdater);
+			
 			terminated.set(true);
 			handleExecutionEnd();
-
+			
 			//Disposing all connections
 			disposeConnections();
 
@@ -423,16 +449,15 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			clearGlobalContexts();
 
 			this.matrices.clear();
-			
 			clearSteps();
-
-			clearReportsTempDir(ClearThCore.appRootRelative(actionsReportsDir));
-			deleteCurrentReportsDirs();
+			
+			deleteTempReports();
 			
 			if (sleepTimer != null) {
 				sleepTimer.cancel();
 				sleepTimer = null;
 			}
+			
 			Utils.closeResource(actionExecutor);
 			Utils.closeResource(executionHandler);
 		}
@@ -449,6 +474,16 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	public void setOnFinish(Consumer<SimpleExecutor> consumer)
 	{
 		onFinish = consumer;
+	}
+	
+	public boolean isAutoSaveState()
+	{
+		return stateManager != null;
+	}
+	
+	public void setStateManager(ExecutorStateManager<?> stateManager)
+	{
+		this.stateManager = stateManager;
 	}
 	
 	protected void stepStarted(Step step)
@@ -1277,6 +1312,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	{
 		ReportsInfo result = new ReportsInfo();
 		result.setPath(pathToStoreReports);
+		result.setActionReportsPath(actionsReportsDir);
 		result.setReportsConfig(getReportsConfig());
 		List<XmlMatrixInfo> mi = result.getMatrices();
 		for (Matrix matrix : matrices)
@@ -1362,10 +1398,32 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		{
 			FileUtils.copyDirectory(storedActionsReportsDir,
 					new File(ClearThCore.appRootRelative(actionsReportsDir)));
+			updateUnfinishedStepReports();
 		}
 		else
 		{
 			getLogger().warn("Stored actions reports were not found. Directory {} does not exist", storedActionsReportsDir);
+		}
+	}
+	
+	protected void updateUnfinishedStepReports() throws IOException
+	{
+		ActionReportWriter reportWriter = new ActionReportWriter(reportsConfig, null);
+		for (Step step : steps)
+		{
+			if (step.getStarted() == null || step.isEnded())
+				continue;
+			
+			for (Action action : step.getActions())
+			{
+				if (action.getFinished() == null)
+				{
+					//Action is not finished, i.e. it will be first action to execute after state restoration
+					//Step report files of action's matrix should be prepared to be updated with next executed actions
+					reportWriter.prepareReportsToUpdate(actionsReportsDir, action.getMatrix().getShortFileName(), step.getSafeName());
+					break;
+				}
+			}
 		}
 	}
 	
@@ -1400,6 +1458,14 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	}
 
 	public abstract List<String> getMatrixSteps(String matrixName);
+	
+	protected void deleteTempReports()
+	{
+		//If auto-save state is on, action reports should be kept because they are used when state is restored
+		if (!isAutoSaveState())
+			clearReportsTempDir(ClearThCore.appRootRelative(actionsReportsDir));
+		deleteCurrentReportsDirs();
+	}
 	
 	protected void deleteCurrentReportsDirs()
 	{

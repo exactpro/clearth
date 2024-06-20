@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
@@ -32,13 +33,15 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 @XStreamAlias("MatrixState")
 public class MatrixState
 {
-	private String fileName = null;
-	private String name = null;
+	private String fileName = null,
+			name = null,
+			description = null;
 	
 	private transient List<ActionState> actions = new ArrayList<ActionState>();
 	private transient MvelVariables mvelVars;
 	private Map<String, Boolean> stepSuccess = null;
 	private Map<String, List<String>> stepStatusComments = null;
+	private Map<String, String> constants;
 	
 	private Date started;
 	private int actionsDone = 0;
@@ -52,16 +55,18 @@ public class MatrixState
 	{
 	}
 	
-	public MatrixState(Matrix matrix)
+	public MatrixState(Matrix matrix, Function<Action, ActionState> actionToState)
 	{
 		this.fileName = matrix.getFileName();
 		this.name = matrix.getName();
+		this.description = matrix.getDescription();
 		
 		for (Action action : matrix.getActions())
-			this.actions.add(createActionState(action));
+			this.actions.add(actionToState.apply(action));
 		this.mvelVars = matrix.getMvelVars();
 		this.stepSuccess = matrix.getStepSuccess();
 		this.stepStatusComments = matrix.getStepStatusComments();
+		this.constants = matrix.getConstants();
 		
 		this.started = matrix.getStarted();
 		this.actionsDone = matrix.getActionsDone();
@@ -78,6 +83,7 @@ public class MatrixState
 		
 		result.setFileName(this.fileName);
 		result.setName(this.name);
+		result.setDescription(this.description);
 		
 		if (this.actions!=null)
 			for (ActionState actionState : this.actions)
@@ -89,6 +95,8 @@ public class MatrixState
 		result.setMvelVars(this.mvelVars);
 		result.setStepSuccess(this.stepSuccess);
 		result.setStepStatusComments(this.stepStatusComments);
+		if (this.constants != null)
+			result.getConstants().putAll(this.constants);
 		
 		result.setStarted(this.started);
 		result.setActionsDone(this.actionsDone);
@@ -98,12 +106,6 @@ public class MatrixState
 		result.setMatrixData(matrixData);
 		
 		return result;
-	}
-	
-	
-	protected ActionState createActionState(Action action)
-	{
-		return new ActionState(action);
 	}
 	
 	
@@ -204,12 +206,48 @@ public class MatrixState
 	{
 		this.context = context;
 	}
-
-	public String getName() {
+	
+	
+	public MatrixData getMatrixData()
+	{
+		return matrixData;
+	}
+	
+	public void setMatrixData(MatrixData matrixData)
+	{
+		this.matrixData = matrixData;
+	}
+	
+	
+	public String getName()
+	{
 		return name;
 	}
-
-	public void setName(String name) {
+	
+	public void setName(String name)
+	{
 		this.name = name;
+	}
+	
+	
+	public String getDescription()
+	{
+		return description;
+	}
+	
+	public void setDescription(String description)
+	{
+		this.description = description;
+	}
+	
+	
+	public Map<String, String> getConstants()
+	{
+		return constants;
+	}
+	
+	public void setConstants(Map<String, String> constants)
+	{
+		this.constants = constants;
 	}
 }

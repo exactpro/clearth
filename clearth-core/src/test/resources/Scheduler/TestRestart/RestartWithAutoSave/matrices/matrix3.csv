@@ -1,0 +1,6 @@
+//Description:
+//Test with this matrix verifies that scheduler restored after pause still has all actions, including action from non-executable global step
+#ID,#GlobalStep,#Action,#P1
+id1,Step1,SetStatic,V1
+id2,NonExecutableStep,SetStatic,V2
+id3,Step2,SetStatic,@{id2.P1}

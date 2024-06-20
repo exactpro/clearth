@@ -89,6 +89,9 @@
 		<p:outputPanel id="Container">
 			<!-- Scheduler -->
 			<p:outputPanel rendered="#{automationBean.activeTab==0}">
+				<ui:param name="autoSave" value="#{automationSchedulerBean.schedulerStateConfig.autoSave}" />
+				<ui:param name="stateSaved" value="#{automationStateBean.stateInfo != null}" />
+				<ui:param name="autoSaveAndStateSaved" value="#{autoSave and stateSaved}" />
 				<h:outputText value="Business day: " />
 				<h:outputText value="#{automationSchedulerBean.schedulerBusinessDay}">
 					<f:convertDateTime pattern="dd.MM.yyyy"/>
@@ -99,6 +102,8 @@
 					<f:convertDateTime pattern="HH:mm:ss"/>
 				</h:outputText>
 				&#160;
+				<h:outputText value="Auto-save state is #{autoSave ? 'on' : 'off'}" />
+				&#160;
 				<ui:param name="schedulerDisabledReports" value="#{automationSchedulerBean.schedulerReportsConfig.disabledReports}" />
 				<h:outputText value="Disabled reports: #{schedulerDisabledReports}" 
 						rendered="#{schedulerDisabledReports != null}" style="color: #d74242" />
@@ -107,12 +112,16 @@
 					<div class="upperLeftContainer">
 						<h:form id="Start" style="float: left;">
 							<p:outputPanel rendered="#{automationSchedulerBean.interrupted}">
-								<p:commandButton value="Start" ajax="false" actionListener="#{automationSchedulerBean.start}" action="automation?faces-redirect=true" icon="ui-icon-play" />
+								<p:commandButton value="Start" rendered="#{autoSaveAndStateSaved}" oncomplete="PF('startWithAutoSaveDialog').show()" icon="ui-icon-play" />
+								<p:commandButton value="Start" rendered="#{!autoSaveAndStateSaved}"
+										ajax="false" actionListener="#{automationSchedulerBean.start}" action="automation?faces-redirect=true" icon="ui-icon-play" />
 								&#160;
 								<p:commandButton value="Start sequential run" ajax="false" actionListener="#{automationSchedulerBean.startSequential}" action="automation?faces-redirect=true" icon="ui-icon-arrowthickstop-1-e" />
 								<c:if test="${automationStateBean.stateSaved}">
 									&#160;
-									<p:commandButton value="Restore state" ajax="false" actionListener="#{automationStateBean.restoreState}" action="automation?faces-redirect=true" icon="ui-icon-arrowreturnthick-1-w" />
+									<p:commandButton value="Restore state" rendered="#{autoSaveAndStateSaved}" oncomplete="PF('restoreWithAutoSaveDialog').show()" icon="ui-icon-arrowreturnthick-1-w" />
+									<p:commandButton value="Restore state" rendered="#{!autoSaveAndStateSaved}"
+											ajax="false" actionListener="#{automationStateBean.restoreState}" action="automation?faces-redirect=true" icon="ui-icon-arrowreturnthick-1-w" />
 								</c:if>
 							</p:outputPanel>
 						</h:form>
@@ -424,6 +433,12 @@
 						<h:outputText value="Disabled reports: #{configDisabledReports}" 
 								rendered="#{configDisabledReports != null}" style="color: #d74242" />
 					</h:form>
+					
+					<h:form id="StateConfig" style="margin-top: 10px">
+						<p:selectBooleanCheckbox value="#{automationConfigBean.autoSaveState}" itemLabel="Auto-save state" style="margin-top: 2px;">
+							<p:ajax update=":Growl" />
+						</p:selectBooleanCheckbox>
+					</h:form>
 				</div>
 				
 				<h:form id="ConfigFile" style="vertical-align:bottom;">
@@ -715,7 +730,8 @@
 							<p:commandButton value="Remove saved state" title="Remove" oncomplete="PF('removeSavedStateDialog').show();" icon="ui-icon-trash"/>
 						</div>
 						<div class="upperLeftContainer">
-							<p:commandButton value="Reports" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" icon="ui-icon-note">
+							<p:commandButton value="Reports" update=":ReportsDialog" rendered="#{automationStateBean.stateInfo.reportsInfo.reportsAvailable}"
+									oncomplete="PF('reportsDialog').show();" icon="ui-icon-note">
 								<f:setPropertyActionListener value="#{automationStateBean.stateInfo.reportsInfo}" target="#{automationReportsBean.selectedReportsInfo}" />
 							</p:commandButton>
 							<p:commandButton value="Matrices" update=":StateMatricesDialog" oncomplete="PF('stateMatricesDialog').show();"/>
@@ -1690,7 +1706,7 @@
 			</h:form>
 		</p:dialog>
 		<!-- Stop scheduler dialog -->
-		<p:confirmDialog header="Stop execution" message="Are sure you wish to stop scheduler execution?"
+		<p:confirmDialog header="Stop execution" message="Are you sure you wish to stop scheduler execution?"
 						 width="340" severity="alert" widgetVar="stopSchedulerDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}" >
 			<h:form id="StopSchedulerDialog">
 				<p:commandButton value="Yes"
@@ -1729,9 +1745,36 @@
 			</h:form>
 		</p:dialog>
 		
+		<p:confirmDialog header="Start execution with auto-save state" width="400" severity="alert" widgetVar="startWithAutoSaveDialog"
+				closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+			<f:facet name="message">
+				<h:outputText value="Are you sure you wish to start scheduler execution with auto-save state enabled?"/>
+				<br/>
+				<h:outputText value="Already saved scheduler state will be overwritten during the execution."/>
+			</f:facet>
+			<h:form id="StartWithAutoSaveDialog">
+				<p:commandButton value="Yes" ajax="false" actionListener="#{automationSchedulerBean.start}" action="automation?faces-redirect=true" icon="ui-icon-play" />
+				<p:commandButton value="No" onclick="PF('startWithAutoSaveDialog').hide();" type="button"/>
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:confirmDialog header="Resume execution with auto-save state" width="400" severity="alert" widgetVar="restoreWithAutoSaveDialog"
+				closeOnEscape="true" modal="#{guiBean.modalDialog}" >
+			<f:facet name="message">
+				<h:outputText value="Are you sure you wish to resume scheduler execution with auto-save state enabled?"/>
+				<br/>
+				<h:outputText value="Already saved scheduler state will be updated during the execution."/>
+			</f:facet>
+			<h:form id="RestoreWithAutoSaveDialog">
+				<p:commandButton value="Yes" ajax="false" actionListener="#{automationStateBean.restoreState}" action="automation?faces-redirect=true" icon="ui-icon-arrowreturnthick-1-w" />
+				<p:commandButton value="No" onclick="PF('restoreWithAutoSaveDialog').hide();" type="button"/>
+			</h:form>
+		</p:confirmDialog>
+		
 		<!-- Timer -->
 		<h:form id="ExecutionTimer">
-			<p:poll interval="1" update=":Start :Stop :Pause :SchedulerStatus :SchedulerSteps :History :Suspended :suspendedDlg :ConnectionFailure :connectionFailureDlg :Realtime :ReportsDialog"
+			<p:poll interval="1" update=":Start :Stop :Pause :SchedulerStatus :SchedulerSteps :History :Suspended :suspendedDlg :ConnectionFailure :connectionFailureDlg
+							:AutomationMenu :Realtime :ReportsDialog"
 					widgetVar="schedulerPoll"
 					autoStart="#{automationSchedulerBean.running}"
 					listener="#{automationBean.onTimer}" stop="#{!automationSchedulerBean.running or automationSchedulerBean.suspended or automationSchedulerBean.failover}"

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,8 +18,6 @@
 
 package com.exactprosystems.clearth.automation;
 
-import com.exactprosystems.clearth.automation.persistence.StepState;
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -28,10 +26,6 @@ public abstract class StepFactory
 	public abstract Step createStep();
 	public abstract Step createStep(String name, String kind, String startAt, StartAtType startAtType, boolean waitNextDay, String parameter, boolean askForContinue, boolean askIfFailed, boolean execute, String comment);
 	public abstract Step createStep(Map<String, String> record) throws IOException;
-	
-	public abstract StepState createStepState();
-	public abstract StepState createStepState(Step step);
-	public abstract StepState createStepState(StepState stepState);
 	
 	protected abstract boolean validStepKindEx(String stepKind);
 	

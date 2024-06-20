@@ -170,6 +170,16 @@ public class ActionState
 	}
 	
 	
+	public Set<String> getMatrixInputParams()
+	{
+		return matrixInputParams;
+	}
+	
+	public void setMatrixInputParams(Set<String> matrixInputParams)
+	{
+		this.matrixInputParams = matrixInputParams;
+	}
+	
 	public Map<String, String> getInputParams()
 	{
 		return inputParams;
@@ -287,6 +297,17 @@ public class ActionState
 	}
 	
 	
+	public boolean isSuspendIfFailed()
+	{
+		return suspendIfFailed;
+	}
+	
+	public void setSuspendIfFailed(boolean suspendIfFailed)
+	{
+		this.suspendIfFailed = suspendIfFailed;
+	}
+	
+	
 	public long getTimeout()
 	{
 		return timeout;
@@ -339,6 +360,50 @@ public class ActionState
 	public void setIdInTemplate(String idInTemplate)
 	{
 		this.idInTemplate = idInTemplate;
+	}
+	
+	
+	public String getFormulaExecutable()
+	{
+		return formulaExecutable;
+	}
+	
+	public void setFormulaExecutable(String formulaExecutable)
+	{
+		this.formulaExecutable = formulaExecutable;
+	}
+	
+	
+	public String getFormulaInverted()
+	{
+		return formulaInverted;
+	}
+	
+	public void setFormulaInverted(String formulaInverted)
+	{
+		this.formulaInverted = formulaInverted;
+	}
+	
+	
+	public String getFormulaComment()
+	{
+		return formulaComment;
+	}
+	
+	public void setFormulaComment(String formulaComment)
+	{
+		this.formulaComment = formulaComment;
+	}
+	
+	
+	public String getFormulaTimeout()
+	{
+		return formulaTimeout;
+	}
+	
+	public void setFormulaTimeout(String formulaTimeout)
+	{
+		this.formulaTimeout = formulaTimeout;
 	}
 
 

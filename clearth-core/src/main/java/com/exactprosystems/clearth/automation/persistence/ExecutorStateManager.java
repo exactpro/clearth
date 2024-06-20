@@ -18,51 +18,59 @@
 
 package com.exactprosystems.clearth.automation.persistence;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.data.DataHandlingException;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
+import com.exactprosystems.clearth.utils.Pair;
 
-public class ExecutorStateManager
+public class ExecutorStateManager<C extends ExecutorStateContext>
 {
-	private final ExecutorStateOperator operator;
-	private final ExecutorState state;
+	private static final Logger logger = LoggerFactory.getLogger(ExecutorStateManager.class);
 	
-	public ExecutorStateManager(ExecutorStateOperator operator, SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
-	{
-		this.operator = operator;
-		this.state = createExecutorState(executor, stepFactory, reportsInfo);
-	}
+	private final ExecutorStateOperatorFactory<C> operatorFactory;
+	private ExecutorStateInfo stateInfo;
+	private C context;
 	
-	public ExecutorStateManager(ExecutorStateOperator operator) throws IOException
+	public ExecutorStateManager(ExecutorStateOperatorFactory<C> operatorFactory)
 	{
-		this.operator = operator;
-		this.state = operator.load();
+		this.operatorFactory = operatorFactory;
 	}
 	
 	
-	protected ExecutorState createExecutorState(SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo)
+	public ExecutorStateInfo getStateInfo()
 	{
-		return new ExecutorState(executor, stepFactory, reportsInfo);
-	}
-	
-	protected void initExecutor(SimpleExecutor executor)
-	{
+		return stateInfo;
 	}
 	
 	public SimpleExecutor executorFromState(Scheduler scheduler, ExecutorFactory executorFactory, Date businessDay, Date baseTime, String startedByUser)
 			throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException, AutomationException, DataHandlingException
+			InvocationTargetException, NoSuchMethodException, AutomationException, DataHandlingException, ExecutorStateException, IOException
 	{
+		if (stateInfo == null)
+			throw new ExecutorStateException("No state info available");
+		
 		Map<String, Preparable> preparableActions = new HashMap<>();
 		
-		ExecutorStateInfo stateInfo = state.getStateInfo();
-		ExecutorStateObjects stateObjects = state.getStateObjects();
+		ExecutorStateObjects stateObjects;
+		try (ExecutorStateOperator<C> operator = operatorFactory.createOperator())
+		{
+			stateObjects = operator.loadStateObjects(context);
+		}
+		catch (Exception e)
+		{
+			throw new IOException("Error while loading state details", e);
+		}
 		
 		List<Step> steps = null;
 		Map<Step, Map<String, StepContext>> allStepContexts = null;
@@ -134,13 +142,169 @@ public class ExecutorStateManager
 		return result;
 	}
 	
-	public void save() throws IOException
+	public void save(SimpleExecutor executor, ReportsInfo reportsInfo) throws IOException
 	{
-		operator.save(state);
+		try (ExecutorStateOperator<C> operator = operatorFactory.createOperator())
+		{
+			save(executor, reportsInfo, operator);
+		}
+		catch (Exception e)
+		{
+			throw new IOException("Error while saving state", e);
+		}
 	}
 	
-	public void update(Action lastExecutedAction) throws IOException
+	public ExecutorStateUpdater<C> saveBeforeUpdates(SimpleExecutor executor, ReportsInfo reportsInfo) throws IOException
 	{
-		operator.update(state, lastExecutedAction);
+		ExecutorStateOperator<C> operator = operatorFactory.createOperator();
+		try
+		{
+			save(executor, reportsInfo, operator);
+		}
+		catch (Exception e)
+		{
+			try
+			{
+				operator.close();
+			}
+			catch (Exception e1)
+			{
+				e.addSuppressed(e1);
+			}
+			throw e;
+		}
+		
+		return createExecutorStateUpdater(stateInfo, context, operator);
+	}
+	
+	public ExecutorStateUpdater<C> createStateUpdater() throws IOException
+	{
+		return createExecutorStateUpdater(stateInfo, context, operatorFactory.createOperator());
+	}
+	
+	public void load() throws IOException
+	{
+		logger.info("Loading state info");
+		
+		Pair<ExecutorStateInfo, C> loaded;
+		try (ExecutorStateOperator<C> operator = operatorFactory.createOperator())
+		{
+			loaded = operator.loadStateInfo();
+		}
+		catch (Exception e)
+		{
+			throw new IOException("Error while loading state", e);
+		}
+		
+		stateInfo = loaded.getFirst();
+		context = loaded.getSecond();
+	}
+	
+	public void updateSteps() throws IOException, ExecutorStateException
+	{
+		logger.info("Updating state of steps");
+		
+		if (stateInfo == null)
+			throw new ExecutorStateException("No state info to update");
+		
+		try (ExecutorStateOperator<C> operator = operatorFactory.createOperator())
+		{
+			operator.updateSteps(stateInfo, context);
+		}
+		catch (Exception e)
+		{
+			throw new IOException("Error while updating steps", e);
+		}
+	}
+	
+	
+	protected void initExecutor(SimpleExecutor executor)
+	{
+	}
+	
+	
+	protected ExecutorStateInfo createStateInfo()
+	{
+		return new ExecutorStateInfo();
+	}
+	
+	protected ExecutorStateObjects createStateObjects()
+	{
+		return new ExecutorStateObjects();
+	}
+	
+	protected MatrixState createMatrixState(Matrix matrix)
+	{
+		return new MatrixState(matrix, a -> createActionState(a));
+	}
+	
+	public StepState createStepState()
+	{
+		return new StepState();
+	}
+	
+	public StepState createStepState(Step step)
+	{
+		return new StepState(step);
+	}
+	
+	public StepState createStepState(StepState stepState)
+	{
+		return new StepState(stepState);
+	}
+	
+	protected ActionState createActionState(Action action)
+	{
+		return new ActionState(action);
+	}
+	
+	protected ExecutorStateUpdater<C> createExecutorStateUpdater(ExecutorStateInfo stateInfo, C context, ExecutorStateOperator<C> operator)
+	{
+		return new ExecutorStateUpdater<>(stateInfo, context, operator,
+				step -> createStepState(step),
+				action -> createActionState(action));
+	}
+	
+	protected void init(ExecutorStateInfo stateInfo, SimpleExecutor executor, ReportsInfo reportsInfo)
+	{
+		List<StepState> steps = executor.getSteps().stream()
+				.map(s -> createStepState(s))
+				.collect(Collectors.toList());
+		
+		List<String> matricesNames = executor.getMatrices().stream()
+				.map(m -> new File(m.getFileName()).getName())
+				.collect(Collectors.toList());
+		
+		stateInfo.setSteps(steps);
+		stateInfo.setMatrices(matricesNames);
+		stateInfo.setWeekendHoliday(executor.isWeekendHoliday());
+		stateInfo.setHolidays(executor.getHolidays());
+		stateInfo.setBusinessDay(executor.getBusinessDay());
+		stateInfo.setStartedByUser(executor.getStartedByUser());
+		stateInfo.setStarted(executor.getStarted());
+		stateInfo.setEnded(executor.getEnded());
+		stateInfo.setReportsInfo(reportsInfo);
+	}
+	
+	protected void init(ExecutorStateObjects stateObjects, SimpleExecutor executor)
+	{
+		List<MatrixState> matrices = executor.getMatrices().stream()
+				.map(m -> createMatrixState(m))
+				.collect(Collectors.toList());
+		
+		stateObjects.setMatrices(matrices);
+		stateObjects.setFixedIDs(executor.getFixedIds());
+	}
+	
+	private void save(SimpleExecutor executor, ReportsInfo reportsInfo, ExecutorStateOperator<C> operator) throws IOException
+	{
+		logger.info("Saving state of '{}'", executor.getName());
+		
+		stateInfo = createStateInfo();
+		ExecutorStateObjects stateObjects = createStateObjects();
+		init(stateInfo, executor, reportsInfo);
+		init(stateObjects, executor);
+		
+		context = operator.save(stateInfo, stateObjects);
 	}
 }

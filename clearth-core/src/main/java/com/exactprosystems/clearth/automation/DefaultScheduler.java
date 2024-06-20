@@ -20,14 +20,14 @@ package com.exactprosystems.clearth.automation;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateManager;
-import com.exactprosystems.clearth.automation.persistence.ExecutorStateOperator;
-import com.exactprosystems.clearth.automation.persistence.FileStateOperator;
-import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
-import com.exactprosystems.clearth.utils.XmlUtils;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateOperatorFactory;
+import com.exactprosystems.clearth.automation.persistence.db.DbStateOperator;
+import com.exactprosystems.clearth.automation.persistence.db.DbStateOperatorFactory;
 
 public class DefaultScheduler extends Scheduler
 {
@@ -64,39 +64,29 @@ public class DefaultScheduler extends Scheduler
 	
 	
 	@Override
-	protected ExecutorStateInfo loadStateInfo(File sourceDir) throws IOException
+	protected ExecutorStateManager<?> loadStateInfo(File sourceDir) throws IOException
 	{
-		File stateInfoFile = new File(sourceDir, FileStateOperator.STATEINFO_FILENAME);
+		File stateInfoFile = new File(sourceDir, DbStateOperator.STATEINFO_FILENAME);
 		if (!stateInfoFile.isFile())
 			return null;
 		
-		return (ExecutorStateInfo)XmlUtils.xmlFileToObject(stateInfoFile,
-				FileStateOperator.STATEINFO_ANNOTATIONS, FileStateOperator.ALLOWED_CLASSES);
-	}
-
-	@Override
-	protected void saveStateInfo(File destDir, ExecutorStateInfo stateInfo) throws IOException
-	{
-		XmlUtils.objectToXmlFile(stateInfo, new File(destDir, FileStateOperator.STATEINFO_FILENAME),
-				FileStateOperator.STATEINFO_ANNOTATIONS, FileStateOperator.ALLOWED_CLASSES);
+		ExecutorStateOperatorFactory<?> operatorFactory = createExecutorStateOperatorFactory(sourceDir);
+		ExecutorStateManager<?> es = createExecutorStateManager(operatorFactory);
+		es.load();
+		return es;
 	}
 	
 	@Override
-	protected ExecutorStateOperator createExecutorStateOperator(File storageDir) throws IOException
+	protected ExecutorStateOperatorFactory<?> createExecutorStateOperatorFactory(File storageDir)
 	{
-		return new FileStateOperator(storageDir.toPath());
+		Path stateFile = storageDir.toPath().resolve(DbStateOperator.STATEINFO_FILENAME);
+		return new DbStateOperatorFactory(stateFile);
 	}
 	
 	@Override
-	protected ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator) throws IOException
+	protected ExecutorStateManager<?> createExecutorStateManager(ExecutorStateOperatorFactory<?> operatorFactory)
 	{
-		return new ExecutorStateManager(operator);
-	}
-	
-	@Override
-	protected ExecutorStateManager createExecutorStateManager(ExecutorStateOperator operator, SimpleExecutor executor, StepFactory stepFactory, ReportsInfo reportsInfo) throws IOException
-	{
-		return new ExecutorStateManager(operator, executor, stepFactory, reportsInfo);
+		return new ExecutorStateManager<>(operatorFactory);
 	}
 	
 	

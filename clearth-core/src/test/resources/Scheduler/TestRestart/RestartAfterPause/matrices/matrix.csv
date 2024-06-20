@@ -1,0 +1,12 @@
+//Description:
+//Test with this matrix verifies that scheduler restored after pause still has all actions
+#ID,#GlobalStep,#Action,#FileName
+id1,Step1,LoadDataFromCsvFile,clearth-core/src/test/resources/Scheduler/TestRestart/RestartAfterPause/file.csv
+#ID,#GlobalStep,#Action,#KeyFields,#C1,#C2
+id2,Step1,VerifyCsvRecord,C1,A,B
+#ID,#GlobalStep,#Action
+id3,Step1,SchedulerPause
+#ID,#GlobalStep,#Action,#KeyFields,#C1,#C2
+id4,Step1,VerifyCsvRecord,C1,B,C
+#ID,#GlobalStep,#Action
+id5,Step2,NoMoreCsvRecords

@@ -32,6 +32,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,7 +87,23 @@ public class ActionReportWriter
 		if (reportsConfig.isCompleteJsonReport())
 			writeJsonActionReport(action, actionsReportsDir, stepFileName);
 	}
-
+	
+	/**
+	 * Updates report files to allow addition of data to them
+	 * @param actionsReportsDir path to directory with execution reports data
+	 * @param matrixReportsDir name of directory with action reports for particular matrix
+	 * @param stepFileName name of file with action reports for particular step
+	 * @throws IOException when report file update failed
+	 */
+	public void prepareReportsToUpdate(String actionsReportsDir, String matrixReportsDir, String stepFileName) throws IOException
+	{
+		if (!reportsConfig.isCompleteJsonReport())
+			return;
+		
+		prepareJsonReportToUpdate(actionsReportsDir, matrixReportsDir, stepFileName);
+	}
+	
+	
 	protected void writeJsonActionReport(Action action, String actionsReportsDir, String actionsReportFile)
 	{
 		String reportFilePath = getJsonStepReportPath(actionsReportsDir, action.getMatrix().getShortFileName(), actionsReportFile);
@@ -185,23 +202,6 @@ public class ActionReportWriter
 			getLogger().error("Could not rename updated report file '"+reportFile.getAbsolutePath()+"' to '"+originalReportFile.getAbsolutePath()+"'");
 	}
 
-	private List<ActionReport> getStepActionsReports(String destPath)
-	{
-		List<ActionReport> actionsReports = new ArrayList<ActionReport>();
-
-		if (new File(destPath).exists())
-			try
-			{
-				actionsReports = new JsonMarshaller<List<ActionReport>>().unmarshal(Paths.get(destPath));
-			}
-			catch (IOException e)
-			{
-				getLogger().error("Cannot load written reports to append current action report", e);
-			}
-
-		return actionsReports;
-	}
-
 	private String getJsonStepReportPath(String actionsReportsDir, String matrixFileName, String stepReportFile)
 	{
 		Path reportDir = Path.of(actionsReportsDir, matrixFileName);
@@ -223,12 +223,12 @@ public class ActionReportWriter
 		return logger;
 	}
 	
-	protected int getActionIndex()
+	public int getActionIndex()
 	{
 		return actionIndex;
 	}
 	
-	protected void incActionIndex()
+	public void incActionIndex()
 	{
 		actionIndex++;
 	}
@@ -496,5 +496,42 @@ public class ActionReportWriter
 				writer.close();
 			}
 		}
+	}
+	
+	
+	private void prepareJsonReportToUpdate(String actionsReportsDir, String matrixReportsDir, String stepFileName) throws IOException
+	{
+		File reportFile = new File(getJsonStepReportPath(actionsReportsDir, matrixReportsDir, stepFileName)),
+				tempFile = File.createTempFile(reportFile.getName()+"_", ".tmp", reportFile.getParentFile());
+		try (BufferedReader reader = new BufferedReader(new FileReader(reportFile));
+				BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile)))
+		{
+			String skipped = null,
+					line = null;
+			while ((line = reader.readLine()) != null)
+			{
+				if (skipped != null)
+				{
+					writer.write(skipped);
+					writer.newLine();
+					skipped = null;
+				}
+				
+				if (line.equals("]"))
+					skipped = line;
+				else
+				{
+					writer.write(line);
+					writer.newLine();
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			Files.delete(tempFile.toPath());
+			throw e;
+		}
+		
+		Files.move(tempFile.toPath(), reportFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,10 +20,11 @@ package com.exactprosystems.clearth.utils;
 
 import static com.exactprosystems.clearth.utils.Utils.closeResource;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -117,59 +118,43 @@ public class XmlUtils
 	
 	
 	@SuppressWarnings("rawtypes")
-	public static void objectToXmlFile(Object object, String outputFileName, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
+	public static void objectToXml(Object object, OutputStream outputStream, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
-		FileWriter writer = null;
-		try
-		{
-			writer = new FileWriter(outputFileName);
-			
-			XStream xs = new XStream();
-			if (annotatedClasses != null)
-			{
-				xs.processAnnotations(annotatedClasses);
-				xs.allowTypes(allowedClasses);
-			}
-			xs.toXML(object, writer);
-		}
-		finally
-		{
-			closeResource(writer);
-		}
+		XStream xs = new XStream();
+		if (annotatedClasses != null)
+			xs.processAnnotations(annotatedClasses);
+		if (allowedClasses != null)
+			xs.allowTypes(allowedClasses);
+		xs.toXML(object, outputStream);
 	}
 	
 	@SuppressWarnings("rawtypes")
 	public static void objectToXmlFile(Object object, File outputFile, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
-		objectToXmlFile(object, outputFile.getCanonicalPath(), annotatedClasses, allowedClasses);
+		try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outputFile)))
+		{
+			objectToXml(object, bos, annotatedClasses, allowedClasses);
+		}
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static Object xmlFileToObject(String sourceFileName, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
+	public static Object xmlToObject(InputStream inputStream, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
-		FileReader reader = null;
-		try
-		{
-			reader = new FileReader(sourceFileName);
-			
-			XStream xs = new XStream();
-			if (annotatedClasses != null)
-			{
-				xs.processAnnotations(annotatedClasses);
-				xs.allowTypes(allowedClasses);
-			}
-			return xs.fromXML(reader);
-		}
-		finally
-		{
-			closeResource(reader);
-		}
+		XStream xs = new XStream();
+		if (annotatedClasses != null)
+			xs.processAnnotations(annotatedClasses);
+		if (allowedClasses != null)
+			xs.allowTypes(allowedClasses);
+		return xs.fromXML(inputStream);
 	}
 	
 	@SuppressWarnings("rawtypes")
 	public static Object xmlFileToObject(File sourceFile, Class[] annotatedClasses, Class[] allowedClasses) throws IOException
 	{
-		return xmlFileToObject(sourceFile.getCanonicalPath(), annotatedClasses, allowedClasses);
+		try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(sourceFile)))
+		{
+			return xmlToObject(bis, annotatedClasses, allowedClasses);
+		}
 	}
 	
 	

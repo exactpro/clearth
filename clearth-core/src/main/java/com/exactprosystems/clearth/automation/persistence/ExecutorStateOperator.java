@@ -20,11 +20,17 @@ package com.exactprosystems.clearth.automation.persistence;
 
 import java.io.IOException;
 
-import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.Action;
+import com.exactprosystems.clearth.automation.Step;
+import com.exactprosystems.clearth.utils.Pair;
 
-public interface ExecutorStateOperator
+public interface ExecutorStateOperator<C extends ExecutorStateContext> extends AutoCloseable
 {
-	void save(ExecutorState state) throws IOException;
-	ExecutorState load() throws IOException;
-	void update(ExecutorState state, Action lastExecutedAction) throws IOException;
+	C save(ExecutorStateInfo stateInfo, ExecutorStateObjects stateObjects) throws IOException;
+	Pair<ExecutorStateInfo, C> loadStateInfo() throws IOException;
+	ExecutorStateObjects loadStateObjects(C context) throws IOException;
+	void update(ExecutorStateInfo stateInfo, C context, Action lastExecutedAction, ActionState actionState) throws IOException;
+	void update(ExecutorStateInfo stateInfo, C context, Step lastFinishedStep, StepState stepState) throws IOException;
+	void updateSteps(ExecutorStateInfo stateInfo, C context) throws IOException;
+	void updateStateInfo(ExecutorStateInfo stateInfo, C context) throws IOException;
 }

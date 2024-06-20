@@ -30,7 +30,8 @@ import org.apache.commons.io.FilenameUtils;
 
 public class ReportsInfo
 {
-	private String path;
+	private String path,
+			actionReportsPath;
 	private List<XmlMatrixInfo> matrices;
 	
 	private Date started;
@@ -40,6 +41,7 @@ public class ReportsInfo
 	public ReportsInfo()
 	{
 		path = null;
+		actionReportsPath = null;
 		matrices = new ArrayList<XmlMatrixInfo>();
 	}
 	
@@ -52,6 +54,22 @@ public class ReportsInfo
 	public void setPath(String path)
 	{
 		this.path = path;
+	}
+	
+	public boolean isReportsAvailable()
+	{
+		return path != null;
+	}
+	
+	
+	public String getActionReportsPath()
+	{
+		return actionReportsPath;
+	}
+	
+	public void setActionReportsPath(String actionReportsPath)
+	{
+		this.actionReportsPath = actionReportsPath;
 	}
 	
 	
@@ -117,5 +135,4 @@ public class ReportsInfo
 	{
 		return this.reportsConfig;
 	}
-
 }

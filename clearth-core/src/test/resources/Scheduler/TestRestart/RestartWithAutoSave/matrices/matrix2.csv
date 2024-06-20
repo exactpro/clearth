@@ -1,0 +1,8 @@
+#ID,#GlobalStep,#Action,#FileName
+id1,Step1,LoadDataFromCsvFile,clearth-core/src/test/resources/Scheduler/TestRestart/RestartWithAutoSave/file2.csv
+#ID,#GlobalStep,#Action,#KeyFields,#C1,#C2,#C3
+id2,Step2,VerifyCsvRecord,C1,A,B,C
+id3,Step2,VerifyCsvRecord,C1,C,D,E
+id4,Step2,VerifyCsvRecord,C1,E,F,G
+#ID,#GlobalStep,#Action
+id5,Step3,NoMoreCsvRecords
