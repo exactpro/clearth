@@ -1,7 +1,7 @@
 plugins {
 	id 'war'
 	id 'org.gretty' version '3.1.1'
-	id 'org.owasp.dependencycheck' version '9.0.9'
+	id 'org.owasp.dependencycheck' version '10.0.2'
 }
 
 ext {
@@ -165,5 +165,5 @@ dependencyCheck {
 }
 
 wrapper {
-	gradleVersion = '8.0.1'
+	gradleVersion = '8.8'
 }

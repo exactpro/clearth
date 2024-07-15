@@ -1,7 +1,6 @@
 dependencies {
 	api project(":clearth-modules:clearth-style")
 
-	api 'javax.el:el-api:2.2'
 	api 'org.apache.myfaces.core:myfaces-api:2.3.10'
 	api 'org.apache.myfaces.core:myfaces-impl:2.3.10'
 	api 'org.primefaces:primefaces:13.0.4'

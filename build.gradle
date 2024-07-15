@@ -6,8 +6,8 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.21.0"
-		classpath 'org.owasp:dependency-check-gradle:9.0.9'
+		classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:5.2.3'
+		classpath 'org.owasp:dependency-check-gradle:10.0.2'
 	}
 }
 
@@ -417,5 +417,5 @@ dependencyCheck {
 }
 
 wrapper {
-	gradleVersion = '8.0.1'
+	gradleVersion = '8.8'
 }
