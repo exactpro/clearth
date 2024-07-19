@@ -1,0 +1,43 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "broken_macro_matrix.csv",
+  "userName" : "test",
+  "result" : true,
+  "stepReports" : [{
+    "stepName" : "MacroAction",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "broken_ma",
+        "actionName" : "MacroAction",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "MacroFileName" : {
+            "value" : "clearth-core/src/test/resources/SchedulerTestData/MacroMatrix/matrices/nested-matrices/broken_nested_matrix.csv"
+          }
+        },
+        "result" : {
+          "success" : true
+        }
+      }
+      ,
+      {
+        "actionId" : "id2",
+        "actionName" : "SetStatic",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Param1" : {
+            "value" : "Value1"
+          }
+        }
+      }
+    ]
+  } ]
+}

@@ -1,0 +1,6 @@
+//Description:
+//This matrix tests the case when MacroAction results in error
+#id,#GlobalStep,#Action,#Invert,#MacroFileName
+broken_ma,MacroAction,MacroAction,true,clearth-core/src/test/resources/SchedulerTestData/MacroMatrix/matrices/nested-matrices/broken_nested_matrix.csv
+#id,#GlobalStep,#Action,#Param1
+id2,MacroAction,SetStatic,Value1

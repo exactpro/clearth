@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -36,8 +36,12 @@ public class MacroActionReport extends ActionReport
 	public MacroActionReport(MacroAction action, ActionReportWriter actionReportWriter)
 	{
 		super(action, actionReportWriter);
-		for (NestedAction nestedAction : action.getNestedActions())
-			nestedActions.add(actionReportWriter.createActionReport(nestedAction.getAction()));
+		List<NestedAction> actionNestedActions = action.getNestedActions();
+		if (actionNestedActions != null)
+		{
+			for (NestedAction na : actionNestedActions)
+				nestedActions.add(actionReportWriter.createActionReport(na.getAction()));
+		}
 	}
 	
 	public List<ActionReport> getNestedActions()
