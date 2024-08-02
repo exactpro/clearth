@@ -51,6 +51,8 @@ public interface IExecutor
 	List<Step> getSteps();
 	Map<String, Boolean> getHolidays();
 	boolean isCurrentStepIdle();
+	long getStartTimeStep();
+	void skipWaitingStep();
 	
 	void clearLastReportsInfo();
 	String getReportsDir();

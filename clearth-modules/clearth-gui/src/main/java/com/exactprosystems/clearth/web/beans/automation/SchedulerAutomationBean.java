@@ -226,23 +226,17 @@ public class SchedulerAutomationBean extends ClearThBean {
 	
 	public long getStartTime()
 	{
-		if (!isSequentialRun())
-		{
-			SimpleExecutor exec = (SimpleExecutor) selectedScheduler().getExecutor();
-			long startTime;
-			if (exec != null && ((startTime = exec.getStartTimeStep()) != 0L))
-				return Math.max(0, (startTime - System.currentTimeMillis()) / 1000);
-		}
+		IExecutor exec = selectedScheduler().getExecutor();
+		long startTime;
+		if (exec != null && ((startTime = exec.getStartTimeStep()) != 0L))
+			return Math.max(0, (startTime - System.currentTimeMillis()) / 1000);
 		return 0L;
 	}
 
 
 	public void skipStepWaiting()
 	{
-		if (isSequentialRun())
-			return;
-		
-		SimpleExecutor exec = (SimpleExecutor) selectedScheduler().getExecutor();
+		IExecutor exec = selectedScheduler().getExecutor();
 		if (exec != null) {
 			exec.skipWaitingStep();
 			exec.continueExecution();
@@ -252,15 +246,7 @@ public class SchedulerAutomationBean extends ClearThBean {
 
 	public boolean isWaitingForStep()
 	{
-		if (!isSequentialRun())
-		{
-			SimpleExecutor exec = (SimpleExecutor) selectedScheduler().getExecutor();
-			if (exec != null)
-			{
-				return exec.isSuspensionTimeout();
-			}
-		}
-		return false;
+		return selectedScheduler().isCurrentStepIdle();
 	}
 
 	public boolean isShowReportsDialog()

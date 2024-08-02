@@ -92,7 +92,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	private boolean restored = false;
 	
 	//This is used to highlight idle mode
-	private boolean idle;
+	private volatile boolean idle;
 	
 	private Date started, ended;
 	private final SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
@@ -1181,7 +1181,6 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 
 			try
 			{
-				idle = true;
 				boolean relative = step.getStartAt().startsWith("+");
 				String start = relative ? step.getStartAt().substring(1) : step.getStartAt();
 				if (start.length() == 5)
@@ -1243,6 +1242,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 				if (!disableWait)
 				{
 					getLogger().debug("Waiting for next step until {}", startTime.getTime());
+					idle = true;
 					if (sleepTimer == null)
 					{
 						sleepTimer = new Timer();
@@ -1443,12 +1443,14 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	{
 		return actionsReportsDir;
 	}
-
+	
+	@Override
 	public long getStartTimeStep() {
 		return startTimeStep;
 	}
-
-	public void skipWaitingStep()  {
+	
+	@Override
+	public void skipWaitingStep() {
 		this.startTimeStep = 0;
 		suspension.setTimeout(false);
 	}

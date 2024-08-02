@@ -280,6 +280,28 @@ public abstract class SequentialExecutor extends Thread implements IExecutor
 	}
 	
 	@Override
+	public long getStartTimeStep()
+	{
+		synchronized (ceMonitor)
+		{
+			if (currentExecutor != null)
+				return currentExecutor.getStartTimeStep();
+			else
+				return 0;
+		}
+	}
+	
+	@Override
+	public void skipWaitingStep()
+	{
+		synchronized (ceMonitor)
+		{
+			if (currentExecutor != null)
+				currentExecutor.skipWaitingStep();
+		}
+	}
+	
+	@Override
 	public boolean isSuspended()
 	{
 		synchronized (ceMonitor)
