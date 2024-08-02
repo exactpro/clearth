@@ -84,6 +84,7 @@ public abstract class SequentialExecutor extends Thread implements IExecutor
 				else
 				{
 					currentMatrix = null;
+					status.add("Pause before next matrix start...");
 					synchronized (ceMonitor)
 					{
 						currentExecutor = null;
@@ -99,7 +100,8 @@ public abstract class SequentialExecutor extends Thread implements IExecutor
 					}
 				}
 
-				currentMatrix = script.getFile().getName();
+				currentMatrix = script.getName();
+				status.add("Matrix: "+currentMatrix);
 				scheduler.prepare(steps, singleMatrixList, Collections.singletonList(script), preparableActions);
 				
 				TestExecutionHandler executionHandler = handlersFactory.createTestExecutionHandler(scheduler.getName());

@@ -110,8 +110,12 @@
 				<br />
 				<div class="upperContainer controlButtons">
 					<div class="upperLeftContainer">
+						<ui:param name="running" value="#{automationSchedulerBean.running}" />
+						<ui:param name="interrupted" value="#{automationSchedulerBean.interrupted}" />
+						<ui:param name="sequentialRun" value="#{automationSchedulerBean.sequentialRun}" />
+						<ui:param name="currentMatrix" value="#{automationSchedulerBean.currentMatrix}" />
 						<h:form id="Start" style="float: left;">
-							<p:outputPanel rendered="#{automationSchedulerBean.interrupted}">
+							<p:outputPanel rendered="#{interrupted}">
 								<p:commandButton value="Start" rendered="#{autoSaveAndStateSaved}" oncomplete="PF('startWithAutoSaveDialog').show()" icon="ui-icon-play" />
 								<p:commandButton value="Start" rendered="#{!autoSaveAndStateSaved}"
 										ajax="false" actionListener="#{automationSchedulerBean.start}" action="automation?faces-redirect=true" icon="ui-icon-play" />
@@ -126,26 +130,15 @@
 							</p:outputPanel>
 						</h:form>
 						<h:form id="Stop" style="float: left;">
-							<c:if test="#{automationSchedulerBean.running}">
+							<c:if test="#{running}">
 								<input type="hidden" id="schedulerRunning" value="true" />
-								<c:if test="#{automationSchedulerBean.sequentialRun}">
-									<c:choose>
-										<c:when test="#{automationSchedulerBean.currentMatrix!=null}">
-											<h:outputText value="Current matrix: #{automationSchedulerBean.currentMatrix}" />
-										</c:when>
-										<c:otherwise>
-											<h:outputText value="Pause before next matrix start..." />
-										</c:otherwise>
-									</c:choose>
-									<br />
-								</c:if>
 							</c:if>
-							<p:outputPanel rendered="#{!automationSchedulerBean.interrupted}">
+							<p:outputPanel rendered="#{!interrupted}">
 								<p:commandButton value="Stop" oncomplete="PF('stopSchedulerDialog').show();" icon="ui-icon-stop"/>
 							</p:outputPanel>
 						</h:form>
 						<h:form id="Pause" style="float: left;">
-							<p:outputPanel rendered="#{!automationSchedulerBean.interrupted}">
+							<p:outputPanel rendered="#{!interrupted and (!sequentialRun or currentMatrix!=null)}">
 								&#160;
 								<p:commandButton value="Pause" ajax="false" actionListener="#{automationSchedulerBean.pause}" action="automation?faces-redirect=true" icon="ui-icon-pause" />
 								&#160;
@@ -153,7 +146,7 @@
 							</p:outputPanel>
 						</h:form>
 						<h:form id="Realtime" style="float: left;">
-							<p:outputPanel rendered="#{automationSchedulerBean.running}">
+							<p:outputPanel rendered="#{running and (!sequentialRun or currentMatrix!=null)}">
 								&#160;
 								&#160;
 								<p:commandButton value="Real-time reports" update=":Realtime :rtReportsDlgForm" icon="ui-icon-note"
