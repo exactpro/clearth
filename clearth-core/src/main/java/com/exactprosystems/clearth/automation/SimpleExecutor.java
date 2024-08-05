@@ -29,6 +29,8 @@ import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.automation.report.ReportsWriter;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
+import com.exactprosystems.clearth.automation.status.LaunchInfoLine;
+import com.exactprosystems.clearth.automation.status.StringLine;
 import com.exactprosystems.clearth.automation.steps.Default;
 import com.exactprosystems.clearth.data.HandledTestExecutionIdStorage;
 import com.exactprosystems.clearth.data.HandledTestExecutionId;
@@ -178,7 +180,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			{
 				if (isAutoSaveState())
 				{
-					status.add("Saving initial state...");
+					status.addLine(new StringLine("Saving initial state..."));
 					stateUpdater = stateManager.saveBeforeUpdates(this, createReportsInfo(null));
 				}
 				else
@@ -214,7 +216,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 
 			if (!interrupted.get())
 			{
-				status.add("Executing steps and actions...");
+				status.addLine(new StringLine("Executing steps and actions..."));
 				handleExecutionStart();
 				
 				for (Step step : steps)
@@ -289,9 +291,9 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 								{
 									logger.error("Step '{}' (kind: {}) preparation failed.", step.getName(), step.getKind(), e);
 									if (e instanceof AutomationException)
-										status.add(format("Step '%s' preparation failed: %s", step.getName(), e.getMessage()));
+										status.addLine(new StringLine(format("Step '%s' preparation failed: %s", step.getName(), e.getMessage())));
 									else // RuntimeException
-										status.add(format("Internal error occurred while preparation of step '%s'. See logs for details.", step.getName()));
+										status.addLine(new StringLine(format("Internal error occurred during preparation of step '%s'. See logs for details.", step.getName())));
 									step.setFinished(Calendar.getInstance().getTime());
 									continue;
 								}
@@ -395,10 +397,10 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 				if (!interrupted.get())
 				{
 					waitForAsyncActions();
-					status.add("Execution finished");
+					status.addLine(new StringLine("Execution finished"));
 				}
 				else
-					status.add("Execution interrupted");
+					status.addLine(new StringLine("Execution interrupted"));
 			}
 			
 			ended = Calendar.getInstance().getTime();
@@ -406,24 +408,28 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			//Forming reports
 			String pathToStoreReports = ClearThCore.appRootRelative(completedReportsDir), //AppRootRelative because we don't want to download file, we want to see it in browser
 					pathToActionsReports = ClearThCore.appRootRelative(actionsReportsDir);
+			status.addLine(new StringLine("Making reports..."));
 			makeFinalReports(pathToStoreReports, pathToActionsReports);
-			lastReportsInfo = createReportsInfo(pathToStoreReports);
-			scheduler.saveExecutedStepsData();
-
+			
 			//Storing info about this launch to make user able to access it from GUI
 			Date finished = Calendar.getInstance().getTime();
-			globalContext.setFinished(finished);
-			getLogger().info("Execution of the scheduler completed now");
-			XmlSchedulerLaunchInfo launchInfo = buildXmlSchedulerLaunchInfo(finished);
-			scheduler.addLaunch(launchInfo);
+			ReportsInfo reportsInfo = createReportsInfo(pathToStoreReports);
+			XmlSchedulerLaunchInfo launchInfo = buildXmlSchedulerLaunchInfo(finished, reportsInfo);
+			status.addLine(new LaunchInfoLine(launchInfo, "Reports made"));
 			
-			status.add("Finished");
+			globalContext.setFinished(finished);
+			lastReportsInfo = reportsInfo;
+			scheduler.addLaunch(launchInfo);
+			scheduler.saveExecutedStepsData();
+			
+			getLogger().info("Execution of the scheduler completed now");
+			status.addLine(new StringLine("Finished"));
 		}
 		catch (Exception e)
 		{
 			getLogger().error("FATAL error occurred", e);
-			status.add("FATAL ERROR: "+(e instanceof ParametersException ? e.getMessage() : ExceptionUtils.getDetailedMessage(e)));
-			status.add("See log for details");
+			status.addLine(new StringLine("FATAL ERROR: "+(e instanceof ParametersException ? e.getMessage() : ExceptionUtils.getDetailedMessage(e))));
+			status.addLine(new StringLine("See log for details"));
 		}
 		finally
 		{
@@ -536,8 +542,8 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		List<String> matrixNames = matrices.stream().map(Matrix::getName).collect(Collectors.toList());
 		handledIdStorage = executionHandler.onTestStart(matrixNames, globalContext);
 		
-		status.add(String.format("ID in %s: %s", executionHandler.getName(),
-				handledIdStorage != null ? handledIdStorage.getExecutionId() : null));
+		status.addLine(new StringLine(String.format("ID in %s: %s", executionHandler.getName(),
+				handledIdStorage != null ? handledIdStorage.getExecutionId() : null)));
 	}
 	
 	protected void handleExecutionEnd()
@@ -710,20 +716,18 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 		if (!reportsConfig.isAnyReportEnabled())
 			return;
 		
-		status.add("Making reports...");
 		makeReports(pathToStoreReports, pathToActionsReports);
-		status.add("Reports made");
 	}
 	
-	protected XmlSchedulerLaunchInfo buildXmlSchedulerLaunchInfo(Date finished)
+	protected XmlSchedulerLaunchInfo buildXmlSchedulerLaunchInfo(Date finished, ReportsInfo reportsInfo)
 	{
 		XmlSchedulerLaunchInfo launchInfo = ClearThCore.getInstance().getSchedulerFactory().createSchedulerLaunchInfo();
 		launchInfo.setStarted(started);
 		launchInfo.setFinished(finished);
 		launchInfo.setInterrupted(interrupted.get());
 		launchInfo.setReportsPath(specificDir + REPORTDIR_COMPLETED);
-		launchInfo.getMatricesInfo().addAll(lastReportsInfo.getMatrices());
-		launchInfo.setReportsConfig(lastReportsInfo.getXmlReportsConfig());
+		launchInfo.getMatricesInfo().addAll(reportsInfo.getMatrices());
+		launchInfo.setReportsConfig(reportsInfo.getXmlReportsConfig());
 		boolean successfulRun = true;
 		for (XmlMatrixInfo matrixInfo : launchInfo.getMatricesInfo())
 			if (!matrixInfo.isSuccessful())
@@ -1272,7 +1276,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 				{
 					String msg = format("Step '%s': error while parsing 'Start at' parameter (%s), it must be in format '%s' with optional '+' in the beginning",
 							step.getName(), step.getStartAt(), format);
-					status.add(msg);
+					status.addLine(new StringLine(msg));
 					getLogger().warn(msg, e);
 				}
 			}

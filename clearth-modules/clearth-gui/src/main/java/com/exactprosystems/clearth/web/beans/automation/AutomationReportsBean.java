@@ -24,6 +24,8 @@ import com.exactprosystems.clearth.automation.ReportsInfo;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
+import com.exactprosystems.clearth.automation.status.LaunchInfoLine;
+import com.exactprosystems.clearth.automation.status.StatusLine;
 import com.exactprosystems.clearth.utils.LogsExtractor;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.beans.ClearThCoreApplicationBean;
@@ -99,28 +101,32 @@ public class AutomationReportsBean extends ClearThBean
 	}
 
 	/* Reports */
-
-	public String getLastLaunchReportUrl()
+	
+	public boolean isLaunchInfoLine(StatusLine statusLine)
 	{
-		return getLastReportPath(ActionReportWriter.HTML_REPORT_NAME);
+		return statusLine instanceof LaunchInfoLine;
+	}
+
+	public String getLaunchReportUrl(XmlSchedulerLaunchInfo launchInfo)
+	{
+		return getReportPath(launchInfo, ActionReportWriter.HTML_REPORT_NAME);
 	}
 	
-	public String getLastLaunchFailedReportUrl()
+	public String getLaunchFailedReportUrl(XmlSchedulerLaunchInfo launchInfo)
 	{
-		return getLastReportPath(ActionReportWriter.HTML_FAILED_REPORT_NAME);
+		return getReportPath(launchInfo, ActionReportWriter.HTML_FAILED_REPORT_NAME);
 	}
 
-	public String getLastLaunchJsonReportUrl()
+	public String getLaunchJsonReportUrl(XmlSchedulerLaunchInfo launchInfo)
 	{
-		return getLastReportPath(ActionReportWriter.JSON_REPORT_NAME);
+		return getReportPath(launchInfo, ActionReportWriter.JSON_REPORT_NAME);
 	}
 
 	
-	protected String getLastReportPath(String reportName)
+	protected String getReportPath(XmlSchedulerLaunchInfo launchInfo, String reportName)
 	{
-		XmlSchedulerLaunchInfo lastLaunchInfo = getLastLaunch();
-		XmlMatrixInfo matrixInfo = lastLaunchInfo.getMatricesInfo().get(0);
-		return getReportPath(lastLaunchInfo.getReportsPath(), matrixInfo.getFileName(), reportName);
+		XmlMatrixInfo matrixInfo = launchInfo.getMatricesInfo().get(0);
+		return getReportPath(launchInfo.getReportsPath(), matrixInfo.getFileName(), reportName);
 	}
 	
 	protected String getReportPath(String reportsPath, String matrixFileName, String reportName)

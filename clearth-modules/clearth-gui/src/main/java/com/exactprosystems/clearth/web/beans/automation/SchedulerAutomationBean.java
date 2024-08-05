@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.exceptions.NothingToStartException;
 import com.exactprosystems.clearth.automation.persistence.StateConfig;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
+import com.exactprosystems.clearth.automation.status.StatusLine;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
@@ -196,9 +197,9 @@ public class SchedulerAutomationBean extends ClearThBean {
 		selectedScheduler().setFailoverSkipAction(true);
 	}
 	
-	public List<String> getStatus()
+	public List<StatusLine> getStatus()
 	{
-		return selectedScheduler().getStatus().get();
+		return selectedScheduler().getStatus().getLines();
 	}
 
 	public boolean isStatusEmpty()

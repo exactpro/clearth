@@ -16,30 +16,36 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation;
+package com.exactprosystems.clearth.automation.status;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 
-import com.exactprosystems.clearth.automation.status.StatusLine;
-
-public class SchedulerStatus
+public class LaunchInfoLine implements StatusLine
 {
-	private List<StatusLine> lines = new ArrayList<>();
+	private final XmlSchedulerLaunchInfo info;
+	private final String label;
 	
-	public List<StatusLine> getLines()
+	public LaunchInfoLine(XmlSchedulerLaunchInfo info, String label)
 	{
-		return Collections.unmodifiableList(lines);
+		this.info = info;
+		this.label = label;
 	}
 	
-	public void addLine(StatusLine line)
+	@Override
+	public String getValue()
 	{
-		lines.add(line);
+		return label;
 	}
 	
-	public void clearLines()
+	@Override
+	public String toString()
 	{
-		lines.clear();
+		return "[started=" + info.getStarted() + ", finished=" + info.getFinished() + ", label=" + label + "]";
+	}
+	
+	
+	public XmlSchedulerLaunchInfo getInfo()
+	{
+		return info;
 	}
 }

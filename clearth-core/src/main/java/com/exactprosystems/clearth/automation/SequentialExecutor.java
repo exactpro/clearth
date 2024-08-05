@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.status.StringLine;
 import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
 
@@ -84,7 +85,7 @@ public abstract class SequentialExecutor extends Thread implements IExecutor
 				else
 				{
 					currentMatrix = null;
-					status.add("Pause before next matrix start...");
+					status.addLine(new StringLine("Pause before next matrix start..."));
 					synchronized (ceMonitor)
 					{
 						currentExecutor = null;
@@ -101,7 +102,7 @@ public abstract class SequentialExecutor extends Thread implements IExecutor
 				}
 
 				currentMatrix = script.getName();
-				status.add("Matrix: "+currentMatrix);
+				status.addLine(new StringLine("Matrix: "+currentMatrix));
 				scheduler.prepare(steps, singleMatrixList, Collections.singletonList(script), preparableActions);
 				
 				TestExecutionHandler executionHandler = handlersFactory.createTestExecutionHandler(scheduler.getName());

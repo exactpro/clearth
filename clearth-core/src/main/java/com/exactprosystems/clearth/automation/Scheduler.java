@@ -34,6 +34,7 @@ import com.exactprosystems.clearth.automation.persistence.ExecutorStateException
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.StepState;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
+import com.exactprosystems.clearth.automation.status.StringLine;
 import com.exactprosystems.clearth.automation.steps.Default;
 import com.exactprosystems.clearth.data.DataHandlingException;
 import com.exactprosystems.clearth.data.TestExecutionHandler;
@@ -908,7 +909,7 @@ public abstract class Scheduler
 		sequentialRun = false;
 		try
 		{
-			status.clear();
+			status.clearLines();
 
 			updateLinkedMatrices();
 
@@ -941,12 +942,12 @@ public abstract class Scheduler
 		}
 		catch (AutomationException e)
 		{
-			status.add(e.getMessage());
+			status.addLine(new StringLine(e.getMessage()));
 			throw e;
 		}
 		catch (DataHandlingException e)
 		{
-			status.add(e.getMessage());
+			status.addLine(new StringLine(e.getMessage()));
 			throw new AutomationException("Could not start scheduler", e);
 		}
 		catch (Exception e)
@@ -1011,7 +1012,7 @@ public abstract class Scheduler
 		sequentialRun = false;
 		try
 		{
-			status.clear();
+			status.clearLines();
 
 			updateLinkedMatrices();
 
@@ -1056,7 +1057,7 @@ public abstract class Scheduler
 			return false;
 		
 		sequentialRun = false;
-		status.clear();
+		status.clearLines();
 		
 		SimpleExecutor simpleExecutor;
 		try

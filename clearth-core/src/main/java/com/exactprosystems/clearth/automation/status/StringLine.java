@@ -16,30 +16,26 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.exactprosystems.clearth.automation;
+package com.exactprosystems.clearth.automation.status;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import com.exactprosystems.clearth.automation.status.StatusLine;
-
-public class SchedulerStatus
+public class StringLine implements StatusLine
 {
-	private List<StatusLine> lines = new ArrayList<>();
+	private final String value;
 	
-	public List<StatusLine> getLines()
+	public StringLine(String value)
 	{
-		return Collections.unmodifiableList(lines);
+		this.value = value;
 	}
 	
-	public void addLine(StatusLine line)
+	@Override
+	public String getValue()
 	{
-		lines.add(line);
+		return value;
 	}
 	
-	public void clearLines()
+	@Override
+	public String toString()
 	{
-		lines.clear();
+		return value;
 	}
 }
