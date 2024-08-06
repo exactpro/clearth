@@ -37,9 +37,13 @@ import org.slf4j.LoggerFactory;
 import com.exactpro.th2.common.event.Event.Status;
 import com.exactpro.th2.common.event.bean.Table;
 import com.exactpro.th2.common.event.bean.builder.TableBuilder;
+import com.exactpro.th2.common.grpc.ConnectionID;
 import com.exactpro.th2.common.grpc.Event;
 import com.exactpro.th2.common.grpc.EventBatch;
 import com.exactpro.th2.common.grpc.EventID;
+import com.exactpro.th2.common.grpc.MessageID;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.Direction;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageId;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.StepMetadata;
 import com.exactprosystems.clearth.automation.SubActionData;
@@ -55,6 +59,7 @@ import com.exactprosystems.clearth.data.th2.config.StorageConfig;
 import com.exactprosystems.clearth.data.th2.messages.Th2MessageId;
 import com.exactprosystems.clearth.data.th2.tables.KeyValueRow;
 import com.exactprosystems.clearth.data.th2.tables.ParamRow;
+import com.google.protobuf.Timestamp;
 
 public class EventFactory
 {
@@ -360,7 +365,8 @@ public class EventFactory
 				continue;
 			}
 			
-			event.messageID(((Th2MessageId)messageId).getId());
+			MessageId idValue = ((Th2MessageId)messageId).getId();
+			event.messageID(convertMessageId(idValue));
 		}
 	}
 	
@@ -386,5 +392,24 @@ public class EventFactory
 		if (!StringUtils.isEmpty(action.getComment()))
 			joiner.add(action.getComment());
 		return joiner.toString();
+	}
+	
+	private MessageID convertMessageId(MessageId id)
+	{
+		Instant timestamp = id.getTimestamp();
+		return MessageID.newBuilder()
+				.setBookName(bookName)
+				.setConnectionId(ConnectionID.newBuilder()
+						.setSessionAlias(id.getSessionAlias())
+						.build())
+				.setTimestamp(Timestamp.newBuilder()
+						.setSeconds(timestamp.getEpochSecond())
+						.setNanos(timestamp.getNano())
+						.build())
+				.setDirection(id.getDirection() == Direction.INCOMING
+						? com.exactpro.th2.common.grpc.Direction.FIRST
+						: com.exactpro.th2.common.grpc.Direction.SECOND)
+				.setSequence(id.getSequence())
+				.build();
 	}
 }

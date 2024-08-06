@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,7 @@
 
 package com.exactprosystems.clearth.data.th2.messages;
 
-import com.exactpro.th2.common.grpc.MessageID;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageId;
 import com.exactprosystems.clearth.data.HandledMessageId;
 import com.exactprosystems.clearth.data.th2.serialization.MessageIDSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -26,9 +26,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Th2MessageId implements HandledMessageId
 {
 	@JsonSerialize(using = MessageIDSerializer.class)  //This is used when saving message and metadata (including id) with MessageFileWriter 
-	private final MessageID id;
+	private final MessageId id;
 	
-	public Th2MessageId(MessageID id)
+	public Th2MessageId(MessageId id)
 	{
 		this.id = id;
 	}
@@ -39,7 +39,7 @@ public class Th2MessageId implements HandledMessageId
 		return id.toString();
 	}
 	
-	public MessageID getId()
+	public MessageId getId()
 	{
 		return id;
 	}

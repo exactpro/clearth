@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,15 +20,15 @@ package com.exactprosystems.clearth.data.th2.serialization;
 
 import java.io.IOException;
 
-import com.exactpro.th2.common.grpc.MessageID;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageId;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-public class MessageIDSerializer extends JsonSerializer<MessageID>
+public class MessageIDSerializer extends JsonSerializer<MessageId>
 {
 	@Override
-	public void serialize(MessageID value, JsonGenerator gen, SerializerProvider serializers) throws IOException
+	public void serialize(MessageId value, JsonGenerator gen, SerializerProvider serializers) throws IOException
 	{
 		gen.writeString(value.toString());
 	}

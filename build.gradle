@@ -96,9 +96,9 @@ subprojects {
 				
 				def kotlinVersion = '1.8.22'
 				def jacksonVersion = '2.16.1'
-				def cassandraVersion = '4.17.0'
 				def nettyVersion = '4.1.108.Final'
 				def bouncycastleVersion = '1.78.1'
+				def protobufVersion = '3.25.3'
 				
 				//common dependenices are written explicilty to force modules use correct and expected versions
 				force   'commons-codec:commons-codec:1.16.0',
@@ -115,6 +115,8 @@ subprojects {
 						'commons-logging:commons-logging:1.2',
 						'org.apache.logging.log4j:log4j-core:2.21.1',
 						'org.apache.logging.log4j:log4j-api:2.21.1',
+						'org.apache.logging.log4j:log4j-jcl:2.21.1',
+						'org.apache.logging.log4j:log4j-slf4j-impl:2.21.1',
 						"com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
 						"com.fasterxml.jackson:jackson-bom:${jacksonVersion}",
 						"com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}",
@@ -132,22 +134,14 @@ subprojects {
 						'org.jetbrains:annotations:24.1.0',
 						'com.google.guava:guava:33.0.0-jre',
 						'com.google.errorprone:error_prone_annotations:2.23.0',
-						'com.exactpro.th2:bom:4.6.0',
 						'com.squareup.okio:okio:3.8.0',
 						'com.squareup.okhttp3:okhttp:4.12.0',
 						'com.squareup.okhttp3:logging-interceptor:4.12.0',
-						'io.github.microutils:kotlin-logging:3.0.5',
-						'io.prometheus:simpleclient:0.16.0',
-						'com.exactpro.th2:grpc-service-generator:3.6.0',
-						'com.exactpro.th2:grpc-common:4.4.0-dev',
-						'io.dropwizard.metrics:metrics-core:4.1.18',
-						'com.google.protobuf:protobuf-java:3.25.3',
-						'com.google.protobuf:protobuf-java-util:3.25.3',
+						'com.exactpro.th2:grpc-common:4.5.0',
 						'com.google.code.gson:gson:2.10.1',
-						"com.datastax.oss:java-driver-core:${cassandraVersion}",
-						"com.datastax.oss:java-driver-query-builder:${cassandraVersion}",
-						"com.datastax.oss:java-driver-mapper-processor:${cassandraVersion}",
-						"com.datastax.oss:java-driver-mapper-runtime:${cassandraVersion}",
+						'org.checkerframework:checker-qual:3.41.0',
+						"com.google.protobuf:protobuf-java-util:${protobufVersion}",
+						"com.google.protobuf:protobuf-java:${protobufVersion}",
 						"io.netty:netty-all:${nettyVersion}",
 						"io.netty:netty-handler:${nettyVersion}",
 						"io.netty:netty-codec-http2:${nettyVersion}",

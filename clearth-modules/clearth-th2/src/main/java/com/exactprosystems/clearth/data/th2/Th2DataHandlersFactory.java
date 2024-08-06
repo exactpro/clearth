@@ -87,7 +87,7 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 		try
 		{
 			logger.debug("Creating message handler for '{}'", connectionName);
-			return new Th2MessageHandler(connectionName, createRawMessageBatchRouter(), storageConfig);
+			return new Th2MessageHandler(connectionName, createGroupBatchRouter(), storageConfig);
 		}
 		catch (Exception e)
 		{
@@ -113,11 +113,6 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 		{
 			throw new DataHandlingException("Error while creating test execution handler. Check th2 configuration files and whether th2 components are available", e);
 		}
-	}
-	
-	public MessageRouter<RawMessageBatch> createRawMessageBatchRouter()
-	{
-		return factory.getMessageRouterRawBatch();
 	}
 	
 	public MessageRouter<EventBatch> createEventBatchRouter()

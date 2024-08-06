@@ -29,13 +29,14 @@ import java.util.List;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.testng.asserts.SoftAssert;
 
-import com.exactpro.th2.common.grpc.ConnectionID;
-import com.exactpro.th2.common.grpc.Direction;
 import com.exactpro.th2.common.grpc.Event;
 import com.exactpro.th2.common.grpc.EventBatch;
 import com.exactpro.th2.common.grpc.EventID;
 import com.exactpro.th2.common.grpc.MessageID;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.Direction;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageId;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.ActionSettings;
 import com.exactprosystems.clearth.automation.CoreStepKind;
@@ -61,7 +62,6 @@ import com.exactprosystems.clearth.data.th2.events.EventUtils;
 import com.exactprosystems.clearth.data.th2.events.ResultSaver;
 import com.exactprosystems.clearth.data.th2.events.ResultSavingConfig;
 import com.exactprosystems.clearth.data.th2.messages.Th2MessageId;
-import com.google.protobuf.Timestamp;
 
 import static org.testng.Assert.*;
 
@@ -95,16 +95,10 @@ public class Th2TestExecutionHandlerTest
 				procStepStart,
 				now = Instant.now();
 		
-		MessageID msgId = MessageID.newBuilder()
-				.setBookName(book)
-				.setTimestamp(Timestamp.newBuilder()
-						.setSeconds(now.getEpochSecond())
-						.setNanos(now.getNano())
-						.build())
-				.setConnectionId(ConnectionID.newBuilder()
-						.setSessionAlias("Con1")
-						.build())
-				.setDirection(Direction.FIRST)
+		MessageId msgId = MessageId.builder()
+				.setTimestamp(now)
+				.setSessionAlias("Con1")
+				.setDirection(Direction.INCOMING)
 				.setSequence(100)
 				.build();
 		ClearThMessageMetadata msgMetadata = new ClearThMessageMetadata(ClearThMessageDirection.RECEIVED, now, new HashMap<>());
@@ -167,7 +161,7 @@ public class Th2TestExecutionHandlerTest
 		Event actionStatusEvent = getFirstEvent(it.next());
 		assertEquals(actionStatusEvent.getName(), "Action status", "Action status event name");
 		assertEquals(actionStatusEvent.getAttachedMessageIdsCount(), 1, "Number of attached messages");
-		assertEquals(actionStatusEvent.getAttachedMessageIds(0), msgId, "Attached message ID");
+		assertIds(actionStatusEvent.getAttachedMessageIds(0), msgId, book, "Attached message ID");
 	}
 	
 	@Test
@@ -319,5 +313,21 @@ public class Th2TestExecutionHandlerTest
 	private Event getFirstEvent(EventBatch batch)
 	{
 		return batch.getEvents(0);
+	}
+	
+	private void assertIds(MessageID actual, MessageId expected, String expectedBook, String description)
+	{
+		SoftAssert idAssert = new SoftAssert();
+		idAssert.assertEquals(actual.getBookName(), expectedBook, description+": book");
+		idAssert.assertEquals(actual.getConnectionId().getSessionAlias(), expected.getSessionAlias(), description+": session alias");
+		idAssert.assertEquals(EventUtils.getTimestamp(actual.getTimestamp()), expected.getTimestamp(), description+": timestamp");
+		idAssert.assertEquals(convertDirection(actual.getDirection()), expected.getDirection(), description+": direction");
+		idAssert.assertEquals(actual.getSequence(), expected.getSequence(), description+": sequence");
+		idAssert.assertAll();
+	}
+	
+	private Direction convertDirection(com.exactpro.th2.common.grpc.Direction direction)
+	{
+		 return direction == com.exactpro.th2.common.grpc.Direction.FIRST ? Direction.INCOMING : Direction.OUTGOING;
 	}
 }

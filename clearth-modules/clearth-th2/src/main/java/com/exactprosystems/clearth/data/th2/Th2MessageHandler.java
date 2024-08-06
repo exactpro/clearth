@@ -18,20 +18,21 @@
 
 package com.exactprosystems.clearth.data.th2;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactpro.th2.common.grpc.ConnectionID;
-import com.exactpro.th2.common.grpc.Direction;
-import com.exactpro.th2.common.grpc.MessageID;
-import com.exactpro.th2.common.grpc.RawMessage;
-import com.exactpro.th2.common.grpc.RawMessageBatch;
-import com.exactpro.th2.common.grpc.RawMessageMetadata;
 import com.exactpro.th2.common.schema.message.MessageRouter;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.Direction;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.GroupBatch;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageGroup;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageId;
+import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.RawMessage;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessageDirection;
 import com.exactprosystems.clearth.connectivity.iface.ClearThMessageMetadata;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
@@ -41,20 +42,18 @@ import com.exactprosystems.clearth.data.MessageHandlingException;
 import com.exactprosystems.clearth.data.MessageHandlingUtils;
 import com.exactprosystems.clearth.data.th2.config.StorageConfig;
 import com.exactprosystems.clearth.data.th2.messages.Th2MessageId;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Timestamp;
 
 public class Th2MessageHandler implements MessageHandler
 {
 	private static final Logger logger = LoggerFactory.getLogger(Th2MessageHandler.class);
 	
 	private final String connectionName;
-	private final MessageRouter<RawMessageBatch> router;
+	private final MessageRouter<GroupBatch> router;
 	private final AtomicLong sentMessageIndex,
 			receivedMessageIndex;
 	private final String bookName;
 	
-	public Th2MessageHandler(String connectionName, MessageRouter<RawMessageBatch> router, StorageConfig config)
+	public Th2MessageHandler(String connectionName, MessageRouter<GroupBatch> router, StorageConfig config)
 	{
 		this.connectionName = connectionName;
 		this.router = router;
@@ -77,12 +76,12 @@ public class Th2MessageHandler implements MessageHandler
 		AtomicLong sequence;
 		if (metadata.getDirection() == ClearThMessageDirection.RECEIVED)
 		{
-			d = Direction.FIRST;
+			d = Direction.INCOMING;
 			sequence = receivedMessageIndex;
 		}
 		else
 		{
-			d = Direction.SECOND;
+			d = Direction.OUTGOING;
 			sequence = sentMessageIndex;
 		}
 		
@@ -94,11 +93,11 @@ public class Th2MessageHandler implements MessageHandler
 	{
 		ClearThMessageMetadata metadata = message.getMetadata();
 		
-		MessageID id = getMessageId(metadata);
-		ByteString body = createMessageBody(message.getPayload());
+		MessageId id = getMessageId(metadata);
+		byte[] body = createMessageBody(message.getPayload());
 		RawMessage result = createMessage(id, body, metadata);
 		
-		RawMessageBatch batch = wrapMessage(result);
+		GroupBatch batch = wrapMessage(result);
 		storeMessage(batch);
 	}
 	
@@ -119,35 +118,29 @@ public class Th2MessageHandler implements MessageHandler
 		return initIndex();
 	}
 	
-	protected MessageID createMessageId(Instant timestamp, Direction direction, long sequence)
+	protected MessageId createMessageId(Instant timestamp, Direction direction, long sequence)
 	{
-		return MessageID.newBuilder()
-				.setBookName(bookName)
-				.setConnectionId(ConnectionID.newBuilder().setSessionAlias(connectionName).build())
-				.setTimestamp(Timestamp.newBuilder()
-						.setSeconds(timestamp.getEpochSecond())
-						.setNanos(timestamp.getNano())
-						.build())
+		return MessageId.builder()
+				.setSessionAlias(connectionName)
+				.setTimestamp(timestamp)
 				.setDirection(direction)
 				.setSequence(sequence)
 				.build();
 	}
 	
-	protected ByteString createMessageBody(Object body) throws MessageHandlingException
+	protected byte[] createMessageBody(Object body) throws MessageHandlingException
 	{
 		if (body instanceof String)
-			return ByteString.copyFromUtf8((String)body);
+			return ((String)body).getBytes(StandardCharsets.UTF_8);
 		else if (body instanceof byte[])
-			return ByteString.copyFrom((byte[])body);
-		return ByteString.copyFromUtf8(body.toString());
+			return (byte[])body;
+		return body.toString().getBytes(StandardCharsets.UTF_8);
 	}
 	
-	protected RawMessage createMessage(MessageID id, ByteString body, ClearThMessageMetadata metadata) throws MessageHandlingException
+	protected RawMessage createMessage(MessageId id, byte[] body, ClearThMessageMetadata metadata) throws MessageHandlingException
 	{
-		return RawMessage.newBuilder()
-				.setMetadata(RawMessageMetadata.newBuilder()
-						.setId(id)
-						.build())
+		return RawMessage.builder()
+				.setId(id)
 				.setBody(body)
 				.build();
 	}
@@ -159,12 +152,23 @@ public class Th2MessageHandler implements MessageHandler
 		return new AtomicLong(TimeUnit.SECONDS.toNanos(now.getEpochSecond()) + now.getNano());
 	}
 	
-	private RawMessageBatch wrapMessage(RawMessage message)
+	private GroupBatch wrapMessage(RawMessage message)
 	{
-		return RawMessageBatch.newBuilder().addMessages(message).build();
+		MessageId id = message.getId();
+		String sessionGroup = id.getSessionGroup(),
+				batchSession = StringUtils.isEmpty(sessionGroup) ? id.getSessionAlias() : sessionGroup,
+				book = id.getBook(),
+				batchBook = StringUtils.isEmpty(book) ? bookName : book;
+		return GroupBatch.builder()
+				.setBook(batchBook)
+				.setSessionGroup(batchSession)
+				.addGroup(MessageGroup.builder()
+						.addMessage(message)
+						.build())
+				.build();
 	}
 	
-	private void storeMessage(RawMessageBatch message) throws MessageHandlingException
+	private void storeMessage(GroupBatch message) throws MessageHandlingException
 	{
 		try
 		{
@@ -177,7 +181,7 @@ public class Th2MessageHandler implements MessageHandler
 		}
 	}
 	
-	private MessageID getMessageId(ClearThMessageMetadata metadata) throws MessageHandlingException
+	private MessageId getMessageId(ClearThMessageMetadata metadata) throws MessageHandlingException
 	{
 		HandledMessageId id = MessageHandlingUtils.getMessageId(metadata);
 		if (id == null)

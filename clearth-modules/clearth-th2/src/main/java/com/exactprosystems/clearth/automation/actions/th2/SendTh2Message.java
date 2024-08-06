@@ -20,7 +20,6 @@ package com.exactprosystems.clearth.automation.actions.th2;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import com.exactpro.th2.check1.grpc.Check1Service;
