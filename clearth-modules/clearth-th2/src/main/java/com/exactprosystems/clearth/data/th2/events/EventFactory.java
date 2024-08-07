@@ -83,10 +83,10 @@ public class EventFactory
 	private final String bookName,
 			scope;
 	
-	public EventFactory(StorageConfig config)
+	public EventFactory(String bookName, StorageConfig config)
 	{
 		EventsConfig events = config.getEvents();
-		this.bookName = config.getBook();
+		this.bookName = bookName;
 		this.scope = events != null ? events.getScope() : null;
 	}
 	

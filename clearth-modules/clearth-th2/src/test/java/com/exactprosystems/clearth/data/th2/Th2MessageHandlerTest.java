@@ -47,10 +47,10 @@ public class Th2MessageHandlerTest
 				connectionName = "con1";
 		Instant timestamp = Instant.now();
 		ClearThMessageMetadata metadata = new ClearThMessageMetadata(ClearThMessageDirection.RECEIVED, timestamp, null);
-		StorageConfig config = new StorageConfig(book, null);
+		StorageConfig config = new StorageConfig(null);
 		
 		MessageId createdId;
-		try (MessageHandler handler = new Th2MessageHandler(connectionName, new CollectingRouter<>(), config))
+		try (MessageHandler handler = new Th2MessageHandler(connectionName, new CollectingRouter<>(), book, config))
 		{
 			createdId = ((Th2MessageId)handler.createMessageId(metadata)).getId();
 		}
@@ -71,7 +71,7 @@ public class Th2MessageHandlerTest
 	@Test(description = "Tests if sent and received messages have independent sequences")
 	public void independentSequences() throws Exception
 	{
-		StorageConfig config = new StorageConfig("book1", null);
+		StorageConfig config = new StorageConfig(null);
 		ClearThMessageMetadata sentMetadata = new ClearThMessageMetadata(ClearThMessageDirection.SENT, Instant.now(), null),
 				receivedMetadata = new ClearThMessageMetadata(ClearThMessageDirection.RECEIVED, Instant.now(), null);
 		
@@ -79,7 +79,7 @@ public class Th2MessageHandlerTest
 				sent2,
 				received1,
 				received3;
-		try (MessageHandler handler = new Th2MessageHandler("con1", new CollectingRouter<>(), config))
+		try (MessageHandler handler = new Th2MessageHandler("con1", new CollectingRouter<>(), "book1", config))
 		{
 			sent1 = ((Th2MessageId)handler.createMessageId(sentMetadata)).getId();
 			received1 = ((Th2MessageId)handler.createMessageId(receivedMetadata)).getId();
@@ -97,12 +97,12 @@ public class Th2MessageHandlerTest
 	{
 		CollectingRouter<GroupBatch> router = new CollectingRouter<>();
 		
-		StorageConfig config = new StorageConfig("book1", null);
+		StorageConfig config = new StorageConfig(null);
 		String payload = "dummy message";
 		EncodedClearThMessage message = EncodedClearThMessage.newSentMessage(payload, Instant.now());
 		
 		Th2MessageId id;
-		try (MessageHandler handler = new Th2MessageHandler("con1", router, config))
+		try (MessageHandler handler = new Th2MessageHandler("con1", router, "book1", config))
 		{
 			ClearThMessageMetadata metadata = message.getMetadata();
 			id = (Th2MessageId)handler.createMessageId(metadata);

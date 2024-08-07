@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.exactpro.th2.common.grpc.EventBatch;
-import com.exactpro.th2.common.grpc.RawMessageBatch;
 import com.exactpro.th2.common.schema.factory.CommonFactory;
 import com.exactpro.th2.common.schema.grpc.router.GrpcRouter;
 import com.exactpro.th2.common.schema.message.MessageRouter;
@@ -46,7 +45,8 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 {
 	private static final Logger logger = LoggerFactory.getLogger(Th2DataHandlersFactory.class);
 	
-	public static final String FILE_RABBIT_CONFIG = "rabbitMQ.json",
+	public static final String FILE_BOX_CONFIG = "box.json",
+			FILE_RABBIT_CONFIG = "rabbitMQ.json",
 			FILE_STORAGE_CONFIG = "storage.json";
 	
 	private final StorageConfig storageConfig;
@@ -61,17 +61,18 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	public Th2DataHandlersFactory(Path configDir) throws ClearThException
 	{
 		Path rabbitConfigFile = getRabbitConfigFile(configDir);
-		if (!Files.isRegularFile(rabbitConfigFile))
-			throw new ClearThException("File with configuration to connect to th2 doesn't exist: "+rabbitConfigFile);
+		checkFileExists(rabbitConfigFile, "configuration to connect to th2");
+		
+		Path boxConfigFile = getBoxConfigFile(configDir);
+		checkFileExists(boxConfigFile, "box configuration");
 		
 		Path storageConfigFile = getStorageConfigFile(configDir);
-		if (!Files.isRegularFile(storageConfigFile))
-			throw new ClearThException("File with storage configuration doesn't exist: "+storageConfigFile);
+		checkFileExists(storageConfigFile, "storage configuration");
 		
 		storageConfig = createStorageConfig(storageConfigFile);
 		logger.info("Storage configuration: {}", storageConfig);
 		factory = createCommonFactory(configDir);
-		eventFactory = createEventFactory(storageConfig);
+		eventFactory = createEventFactory(getBook(), storageConfig);
 	}
 	
 	
@@ -87,7 +88,7 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 		try
 		{
 			logger.debug("Creating message handler for '{}'", connectionName);
-			return new Th2MessageHandler(connectionName, createGroupBatchRouter(), storageConfig);
+			return new Th2MessageHandler(connectionName, createGroupBatchRouter(), getBook(), storageConfig);
 		}
 		catch (Exception e)
 		{
@@ -133,9 +134,14 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	
 	public String getBook()
 	{
-		return storageConfig.getBook();
+		return factory.getBoxConfiguration().getBookName();
 	}
 	
+	
+	protected Path getBoxConfigFile(Path configDir)
+	{
+		return configDir.resolve(FILE_BOX_CONFIG);
+	}
 	
 	protected Path getRabbitConfigFile(Path configDir)
 	{
@@ -179,8 +185,15 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 		return new ResultSaver(eventRouter, config);
 	}
 	
-	protected EventFactory createEventFactory(StorageConfig config) throws ClearThException
+	protected EventFactory createEventFactory(String bookName, StorageConfig config) throws ClearThException
 	{
-		return new EventFactory(config);
+		return new EventFactory(bookName, config);
+	}
+	
+	
+	private void checkFileExists(Path file, String description) throws ClearThException
+	{
+		if (!Files.isRegularFile(file))
+			throw new ClearThException("File with " + description + " does not exist: "+file);
 	}
 }

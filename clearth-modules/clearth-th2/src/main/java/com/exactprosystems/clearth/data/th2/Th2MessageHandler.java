@@ -53,13 +53,13 @@ public class Th2MessageHandler implements MessageHandler
 			receivedMessageIndex;
 	private final String bookName;
 	
-	public Th2MessageHandler(String connectionName, MessageRouter<GroupBatch> router, StorageConfig config)
+	public Th2MessageHandler(String connectionName, MessageRouter<GroupBatch> router, String bookName, StorageConfig config)
 	{
 		this.connectionName = connectionName;
 		this.router = router;
 		sentMessageIndex = initSentIndex(config);
 		receivedMessageIndex = initReceivedIndex(config);
-		this.bookName = config.getBook();
+		this.bookName = bookName;
 	}
 	
 	

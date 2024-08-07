@@ -27,16 +27,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class StorageConfig
 {
-	private String book;
 	private EventsConfig events;
 	
 	public StorageConfig()
 	{
 	}
 	
-	public StorageConfig(String book, EventsConfig events)
+	public StorageConfig(EventsConfig events)
 	{
-		this.book = book;
 		this.events = events;
 	}
 	
@@ -49,19 +47,7 @@ public class StorageConfig
 	@Override
 	public String toString()
 	{
-		return "[book = " + book 
-				+ "; events: " + events + "]";
-	}
-	
-	
-	public String getBook()
-	{
-		return book;
-	}
-	
-	public void setBook(String book)
-	{
-		this.book = book;
+		return "[events: " + events + "]";
 	}
 	
 	

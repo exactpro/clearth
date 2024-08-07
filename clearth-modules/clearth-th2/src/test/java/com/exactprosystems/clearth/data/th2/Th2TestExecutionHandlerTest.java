@@ -89,7 +89,7 @@ public class Th2TestExecutionHandlerTest
 				initStepName = "Initialization",
 				procStepName = "Processing",
 				actionId = "firstAction";
-		StorageConfig config = new StorageConfig(book, new EventsConfig(scope, 100));
+		StorageConfig config = new StorageConfig(new EventsConfig(scope, 100));
 		Instant schedulerStart = Instant.ofEpochSecond(Instant.now().getEpochSecond()),  //It will be converted to Date which lacks nanoseconds and then back to Instant
 				initStepStart,
 				procStepStart,
@@ -105,7 +105,7 @@ public class Th2TestExecutionHandlerTest
 		MessageHandlingUtils.setMessageId(msgMetadata, new Th2MessageId(msgId));
 		
 		try (TestExecutionHandler handler = new Th2TestExecutionHandler(schedulerName, router, 
-				new EventFactory(config), 
+				new EventFactory(book, config), 
 				new ResultSaver(router, new ResultSavingConfig())))
 		{
 			GlobalContext gc = createGlobalContext(schedulerStart, userName, handler);
@@ -169,7 +169,7 @@ public class Th2TestExecutionHandlerTest
 	{
 		CollectingRouter<EventBatch> router = new CollectingRouter<>();
 		
-		StorageConfig config = new StorageConfig("book1", new EventsConfig("default", 100));
+		StorageConfig config = new StorageConfig(new EventsConfig("default", 100));
 		String testMatrixName = "test_matrix",
 				anotherMatrixName = "another_matrix",
 				step1Name = "step1",
@@ -183,7 +183,7 @@ public class Th2TestExecutionHandlerTest
 				step3 = createStep(step3Name);
 		
 		try (TestExecutionHandler handler = new Th2TestExecutionHandler("main", router, 
-				new EventFactory(config), 
+				new EventFactory("book1", config), 
 				new ResultSaver(router, new ResultSavingConfig())))
 		{
 			GlobalContext gc = createGlobalContext(Instant.now(), "admin", handler);

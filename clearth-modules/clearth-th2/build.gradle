@@ -66,6 +66,7 @@ task installModule {
 		installModule(clearthDir, moduleName, moduleImpl,
 				[
 					{ putDataHandlersFactory(clearthDir, 'com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory') },
+					{ putFile("th2/box.json", installationDir, clearthCfgDir) },
 					{ putFile("th2/storage.json", installationDir, clearthCfgDir) },
 					{ putFile("th2/mq.json", installationDir, clearthCfgDir) },
 					{ putFile("th2/rabbitMQ.json", installationDir, clearthCfgDir) },

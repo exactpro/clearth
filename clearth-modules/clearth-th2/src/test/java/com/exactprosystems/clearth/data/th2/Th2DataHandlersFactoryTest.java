@@ -60,4 +60,12 @@ public class Th2DataHandlersFactoryTest
 		{
 		}
 	}
+	
+	@Test(expectedExceptions = ClearThException.class, expectedExceptionsMessageRegExp = ".*box\\.json.*")
+	public void noBoxConfig() throws Exception
+	{
+		try (DataHandlersFactory factory = new Th2DataHandlersFactory(Paths.get("src", "test", "resources", "noBoxConfig")))
+		{
+		}
+	}
 }
