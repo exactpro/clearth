@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.automation.persistence;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.Step;
@@ -32,5 +33,6 @@ public interface ExecutorStateOperator<C extends ExecutorStateContext> extends A
 	void update(ExecutorStateInfo stateInfo, C context, Action lastExecutedAction, ActionState actionState) throws IOException;
 	void update(ExecutorStateInfo stateInfo, C context, Step lastFinishedStep, StepState stepState) throws IOException;
 	void updateSteps(ExecutorStateInfo stateInfo, C context) throws IOException;
+	void updateMatrices(ExecutorStateInfo stateInfo, C context, Collection<MatrixState> matrixStates) throws IOException;
 	void updateStateInfo(ExecutorStateInfo stateInfo, C context) throws IOException;
 }

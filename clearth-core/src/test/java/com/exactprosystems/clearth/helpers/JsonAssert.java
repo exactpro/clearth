@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -53,7 +53,7 @@ public class JsonAssert
 
 		SoftAssertions assertions = new SoftAssertions();
 		Stack<String> path = new Stack<>();
-		path.push(expectedReport.getName());
+		path.push(actualReport.toString());
 		compareTrees(assertions, expectedNodes, actualNodes, path);
 		assertions.assertAll();
 	}

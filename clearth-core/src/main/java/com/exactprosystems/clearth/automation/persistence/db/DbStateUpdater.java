@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.exactprosystems.clearth.automation.persistence.ActionState;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateException;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
+import com.exactprosystems.clearth.automation.persistence.MatrixState;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.Step;
@@ -57,7 +59,9 @@ public class DbStateUpdater
 			updateStepSuccess,
 			updateStepStatusComments,
 			updateAction,
-			updateStepFlags;
+			updateStepProperties,
+			updateMatrixInState,
+			removeActions;
 	
 	public DbStateUpdater(QueryHelper helper, Class[] allowedClasses, DbStateSaver saver)
 	{
@@ -168,7 +172,7 @@ public class DbStateUpdater
 			for (StepState step : steps)
 			{
 				int stepId = context.getStepId(step.getName());
-				updateStepFlags(step, stepId);
+				updateStepProperties(step, stepId);
 			}
 			
 			helper.commitTransaction();
@@ -211,6 +215,47 @@ public class DbStateUpdater
 		}
 	}
 	
+	public void updateMatrices(DbStateContext context, Collection<MatrixState> matrixStates) throws ExecutorStateException
+	{
+		prepareQueriesIfNeeded();
+		
+		try
+		{
+			helper.startTransaction();
+		}
+		catch (Exception e)
+		{
+			throw new ExecutorStateException("Could not start transaction", e);
+		}
+		
+		DateFormat timestampFormat = DbStateUtils.createTimestampFormat();
+		try
+		{
+			for (MatrixState m : matrixStates)
+			{
+				updateMatrixInState(m, timestampFormat, context);
+				updateActionsInState(m, context);
+			}
+			
+			helper.commitTransaction();
+		}
+		catch (Exception e)
+		{
+			try
+			{
+				helper.rollbackTransaction();
+			}
+			catch (SQLException e1)
+			{
+				e.addSuppressed(e1);
+			}
+			
+			if (e instanceof ExecutorStateException)
+				throw (ExecutorStateException)e;
+			throw new ExecutorStateException("Error while updating matrix states", e);
+		}
+	}
+	
 	
 	private void prepareQueriesIfNeeded() throws ExecutorStateException
 	{
@@ -242,7 +287,9 @@ public class DbStateUpdater
 					"comment", "executable", "inverted", "done", "passed",
 					"result", "started", "finished"));
 			
-			updateStepFlags = helper.prepareUpdate(TABLE_STEPS, COLUMN_STEP_ID, Arrays.asList("askForContinue", "askIfFailed", "execute"));
+			updateStepProperties = helper.prepareUpdate(TABLE_STEPS, COLUMN_STEP_ID, Arrays.asList("askForContinue", "askIfFailed", "execute", "startAt"));
+			updateMatrixInState = helper.prepareUpdate(TABLE_MATRICES, COLUMN_MATRIX_ID, Arrays.asList("description", "constants", "mvelVars", "uploadDate"));
+			removeActions = helper.prepare("delete from "+TABLE_ACTIONS+" where "+COLUMN_MATRIX_ID+" = ?");
 		}
 		catch (Exception e)
 		{
@@ -433,20 +480,66 @@ public class DbStateUpdater
 	}
 	
 	
-	private void updateStepFlags(StepState step, int stepId) throws ExecutorStateException
+	private void updateStepProperties(StepState step, int stepId) throws ExecutorStateException
 	{
 		try
 		{
-			QueryParameterSetter.newInstance(updateStepFlags)
+			QueryParameterSetter.newInstance(updateStepProperties)
 					.setBoolean(step.isAskForContinue())
 					.setBoolean(step.isAskIfFailed())
 					.setBoolean(step.isExecute())
+					.setString(step.getStartAt())
 					.setInt(stepId);
-			helper.update(updateStepFlags);
+			helper.update(updateStepProperties);
 		}
 		catch (Exception e)
 		{
-			throw updatingException("flags of step '"+step.getName()+"'", e);
+			throw updatingException("properties of step '"+step.getName()+"'", e);
+		}
+	}
+	
+	
+	private void updateMatrixInState(MatrixState matrixState, DateFormat timestampFormat, DbStateContext context) throws ExecutorStateException
+	{
+		String matrixName = matrixState.getName();
+		
+		logger.debug("Updating state of matrix '"+matrixName+"'");
+		
+		try
+		{
+			QueryParameterSetter.newInstance(updateMatrixInState)
+					.setString(matrixState.getDescription())
+					.setBytes(DbStateUtils.saveToXml(matrixState.getConstants(), allowedClasses))
+					.setBytes(DbStateUtils.saveToXml(matrixState.getMvelVars(), allowedClasses))
+					.setString(DbStateUtils.formatTimestamp(matrixState.getMatrixData().getUploadDate(), timestampFormat))
+					.setInt(context.getMatrixId(matrixName));
+			helper.update(updateMatrixInState);
+		}
+		catch (Exception e)
+		{
+			throw updatingException("state of matrix '"+matrixName+"'", e);
+		}
+	}
+	
+	private void updateActionsInState(MatrixState matrixState, DbStateContext context) throws ExecutorStateException
+	{
+		String matrixName = matrixState.getName();
+		
+		logger.debug("Updating state of actions from matrix '"+matrixName+"'");
+		
+		int matrixId = context.getMatrixId(matrixName);
+		try
+		{
+			QueryParameterSetter.newInstance(removeActions)
+					.setInt(matrixId);
+			helper.update(removeActions);
+			context.removeActionIds(matrixName);
+			
+			saver.saveActions(matrixState.getActions(), matrixName, matrixId, context);
+		}
+		catch (Exception e)
+		{
+			throw updatingException("state of actions from matrix '"+matrixName+"' after matrix update", e);
 		}
 	}
 	

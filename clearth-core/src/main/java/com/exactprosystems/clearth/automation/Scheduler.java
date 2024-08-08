@@ -1273,6 +1273,12 @@ public abstract class Scheduler
 		init();
 	}
 	
+	synchronized public void saveStepsState() throws ExecutorStateException, IOException
+	{
+		checkCanEditState();
+		saveStepsState(stateManager);
+	}
+	
 	
 	protected void saveStepsState(ExecutorStateManager<?> es) throws IOException
 	{
@@ -1318,6 +1324,12 @@ public abstract class Scheduler
 	
 	synchronized public void modifyStepState(StepState originalStepState, StepState newStepState) throws IOException, ExecutorStateException
 	{
+		updateStepState(originalStepState, newStepState);
+		saveStepsState(stateManager);
+	}
+	
+	synchronized public void updateStepState(StepState originalStepState, StepState newStepState) throws ExecutorStateException
+	{
 		checkCanEditState();
 		
 		ExecutorStateInfo stateInfo = stateManager.getStateInfo();
@@ -1325,8 +1337,24 @@ public abstract class Scheduler
 			return;
 		
 		stateInfo.updateStep(originalStepState, newStepState);
-		saveStepsState(stateManager);
 	}
+	
+	synchronized public void updateMatrixStates(Collection<Matrix> updatedMatrices) throws IOException, ExecutorStateException
+	{
+		checkCanEditState();
+		
+		try
+		{
+			stateManager.updateMatrices(updatedMatrices);
+		}
+		catch (Exception e)
+		{
+			String msg = "Error while updating matrix states";
+			logger.error(msg, e);
+			throw e;
+		}
+	}
+	
 	
 	protected void editStepsState(Consumer<StepState> editingAction) throws ExecutorStateException, IOException
 	{
@@ -1350,7 +1378,7 @@ public abstract class Scheduler
 		if (stateManager == null)
 			throw new ExecutorStateException("No saved state available");
 		
-		if (isRunning())
+		if (isRunning() && !isSuspended())
 			throw new ExecutorStateException("Cannot edit state when scheduler is running");
 	}
 	

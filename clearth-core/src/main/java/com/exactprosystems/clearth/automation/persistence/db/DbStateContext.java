@@ -31,7 +31,7 @@ public class DbStateContext implements ExecutorStateContext
 			matrixIds = new HashMap<>();
 	private final Map<Integer, String> stepNames = new HashMap<>(),
 			matrixNames = new HashMap<>();
-	private final Map<ActionReference, Integer> actionsIds = new HashMap<>();
+	private final Map<String, Map<String, Integer>> matrixActionsIds = new HashMap<>();
 	private final Map<MatrixStepReference, Integer> stepContextIds = new HashMap<>(),
 			stepSuccessIds = new HashMap<>(),
 			stepStatusCommentsIds = new HashMap<>();
@@ -50,15 +50,25 @@ public class DbStateContext implements ExecutorStateContext
 	
 	public int getActionId(ActionReference actionRef) throws ExecutorStateException
 	{
-		Integer id = actionsIds.get(actionRef);
+		Map<String, Integer> actionsIds = matrixActionsIds.get(actionRef.getMatrixName());
+		if (actionsIds == null)
+			throw actionIdNotFound(actionRef);
+		
+		Integer id = actionsIds.get(actionRef.getId());
 		if (id == null)
-			throw new ExecutorStateException("No ID stored for action '"+actionRef.getId()+"' from matrix '"+actionRef.getMatrixName()+"'");
+			throw actionIdNotFound(actionRef);
 		return id;
 	}
 	
 	public void setActionId(ActionReference actionRef, int id)
 	{
-		actionsIds.put(actionRef, id);
+		matrixActionsIds.computeIfAbsent(actionRef.getMatrixName(), name -> new HashMap<>())
+				.put(actionRef.getId(), id);
+	}
+	
+	public void removeActionIds(String matrixName)
+	{
+		matrixActionsIds.remove(matrixName);
 	}
 	
 	
@@ -162,5 +172,11 @@ public class DbStateContext implements ExecutorStateContext
 	public void setStepStatusCommentsId(int matrixId, int stepId, int id)
 	{
 		stepStatusCommentsIds.put(new MatrixStepReference(matrixId, stepId), id);
+	}
+	
+	
+	private ExecutorStateException actionIdNotFound(ActionReference actionRef)
+	{
+		return new ExecutorStateException("No ID stored for action '"+actionRef.getId()+"' from matrix '"+actionRef.getMatrixName()+"'");
 	}
 }

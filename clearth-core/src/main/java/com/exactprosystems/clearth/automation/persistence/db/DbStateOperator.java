@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.automation.persistence.db;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 
@@ -29,6 +30,7 @@ import com.exactprosystems.clearth.automation.persistence.ActionState;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateObjects;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateOperator;
+import com.exactprosystems.clearth.automation.persistence.MatrixState;
 import com.exactprosystems.clearth.automation.persistence.ResultState;
 import com.exactprosystems.clearth.automation.persistence.StepState;
 import com.exactprosystems.clearth.utils.Pair;
@@ -177,6 +179,19 @@ public class DbStateOperator implements ExecutorStateOperator<DbStateContext>
 		catch (Exception e)
 		{
 			throw new IOException("Error while updating state info", e);
+		}
+	}
+	
+	@Override
+	public void updateMatrices(ExecutorStateInfo stateInfo, DbStateContext context, Collection<MatrixState> matrixStates) throws IOException
+	{
+		try
+		{
+			updater.updateMatrices(context, matrixStates);
+		}
+		catch (Exception e)
+		{
+			throw new IOException("Error while updating matrix states", e);
 		}
 	}
 	

@@ -1,0 +1,6 @@
+#ID,#GlobalStep,#Action,#P1
+id1,Step1,SetStatic,V1
+id2,Step2,SetStatic,V2
+id3,Step3,SetStatic,V3
+id4,Step4,SetStatic,V4
+id5,Step5,SetStatic,@{id90.InvalidReference}

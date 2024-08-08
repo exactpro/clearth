@@ -20,9 +20,11 @@ package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.automation.exceptions.ActionUpdateException;
 import com.exactprosystems.clearth.automation.exceptions.SchedulerUpdateException;
+import com.exactprosystems.clearth.automation.persistence.StepState;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +48,9 @@ public class SchedulerUpdater
 	
 	public void updateMatrices(List<MatrixData> updatedMatrixData) throws SchedulerUpdateException, ActionUpdateException
 	{
-		checkUpdatedMatrixFiles(updatedMatrixData);
+		Set<String> existingMatrices = scheduler.getMatrices().stream().map(Matrix::getName).collect(Collectors.toSet()),
+				matrixStates = isAutoSave() ? new HashSet<>(scheduler.getStateInfo().getMatrices()) : null;
+		checkUpdatedMatrixFiles(updatedMatrixData, existingMatrices, matrixStates);
 		
 		if (logger.isInfoEnabled())
 			logger.info("Compiling updated matrices: {}", updatedMatrixData.stream().map(MatrixData::getName).collect(Collectors.toList()));
@@ -58,30 +62,34 @@ public class SchedulerUpdater
 	public void updateSteps(List<StepData> updatedStepData) throws SchedulerUpdateException
 	{
 		Map<String, Step> existingSteps = scheduler.getSteps().stream().collect(Collectors.toMap(Step::getName, Function.identity()));
-		checkUpdatedSteps(updatedStepData, existingSteps);
+		Map<String, StepState> stepStates = isAutoSave() ? scheduler.getStateInfo().getSteps().stream().collect(Collectors.toMap(StepState::getName, Function.identity())) : null;
+		checkUpdatedSteps(updatedStepData, existingSteps, stepStates);
 		
 		if (logger.isInfoEnabled())
 			logger.info("Updating steps: {}", updatedStepData.stream().map(StepData::getName).collect(Collectors.toList()));
-		applyUpdatedSteps(updatedStepData, existingSteps);
+		applyUpdatedSteps(updatedStepData, existingSteps, stepStates);
 	}
 	
 	
-	private void checkUpdatedMatrixFiles(List<MatrixData> updatedMatrices) throws SchedulerUpdateException
+	private void checkUpdatedMatrixFiles(List<MatrixData> updatedMatrices, Set<String> existingMatrices, Set<String> matrixStates) throws SchedulerUpdateException
 	{
-		CommaBuilder errors = null;
-		Set<String> existingMatrices = scheduler.getMatrices().stream().map(Matrix::getName).collect(Collectors.toSet());
+		CommaBuilder errors = new CommaBuilder("; ");
 		for (MatrixData m : updatedMatrices)
 		{
-			if (!existingMatrices.contains(m.getName()))
+			String name = m.getName();
+			
+			if (!existingMatrices.contains(name))
 			{
-				if (errors == null)
-					errors = new CommaBuilder();
-				errors.append(m.getName());
+				errors.append("Matrix '"+name+"' is not used in the run");
+				continue;
 			}
+			
+			if (matrixStates != null && !matrixStates.contains(name))
+				errors.append("State of matrix '"+name+"' is not saved");
 		}
 		
-		if (errors != null)
-			throw new SchedulerUpdateException("The following matrices are not used in the run: "+errors.toString());
+		if (errors.length() > 0)
+			throw new SchedulerUpdateException(errors.toString());
 	}
 	
 	private List<Matrix> compileUpdatedMatrices(List<MatrixData> updatedMatrixData) throws SchedulerUpdateException
@@ -100,7 +108,7 @@ public class SchedulerUpdater
 		return updatedMatrices;
 	}
 	
-	private void applyUpdatedMatrices(List<Matrix> updatedMatrices) throws ActionUpdateException
+	private void applyUpdatedMatrices(List<Matrix> updatedMatrices) throws ActionUpdateException, SchedulerUpdateException
 	{
 		Step currentStep = scheduler.getCurrentStep();
 		Action currentAction = currentStep.getCurrentAction();
@@ -110,10 +118,22 @@ public class SchedulerUpdater
 		
 		if (!currentStep.isEnded())  //If current step is not finished yet, need to rewind its progress back to current action
 			currentStep.rewindToAction(currentAction);
+		
+		if (!isAutoSave())
+			return;
+		
+		try
+		{
+			scheduler.updateMatrixStates(updatedMatrices);
+		}
+		catch (Exception e)
+		{
+			throw new SchedulerUpdateException("Error while updating matrix states", e);
+		}
 	}
 	
 	
-	private void checkUpdatedSteps(List<StepData> updatedSteps, Map<String, Step> existingSteps) throws SchedulerUpdateException
+	private void checkUpdatedSteps(List<StepData> updatedSteps, Map<String, Step> existingSteps, Map<String, StepState> stepStates) throws SchedulerUpdateException
 	{
 		for (StepData step : updatedSteps)
 		{
@@ -125,10 +145,17 @@ public class SchedulerUpdater
 				throw new SchedulerUpdateException("Global step '"+stepName+"' is ended and cannot be updated");
 			if (!existingStep.isExecute() && step.isExecute())
 				throw new SchedulerUpdateException("Global step '"+stepName+"' is not executable and cannot be changed to executable");
+			
+			if (stepStates == null)
+				continue;
+			
+			StepState state = stepStates.get(stepName);
+			if (state == null)
+				throw new SchedulerUpdateException("State of global step '"+stepName+"' is not saved");
 		}
 	}
 	
-	private void applyUpdatedSteps(List<StepData> updatedSteps, Map<String, Step> existingSteps)
+	private void applyUpdatedSteps(List<StepData> updatedSteps, Map<String, Step> existingSteps, Map<String, StepState> stepStates) throws SchedulerUpdateException
 	{
 		for (StepData step : updatedSteps)
 		{
@@ -147,6 +174,40 @@ public class SchedulerUpdater
 				existingStep.setStartAt(step.getStartAt());
 				existingStep.setKind(step.getKind());
 			}
+			
+			if (stepStates == null)
+				continue;
+			
+			try
+			{
+				StepState originalState = stepStates.get(stepName),
+						state = scheduler.createStepState(originalState);
+				state.setAskForContinue(step.isAskForContinue());
+				state.setAskIfFailed(step.isAskIfFailed());
+				if (originalState.getStarted() == null)
+				{
+					state.setExecute(step.isExecute());
+					state.setStartAt(step.getStartAt());
+					state.setKind(step.getKind());
+				}
+				scheduler.updateStepState(originalState, state);
+			}
+			catch (Exception e)
+			{
+				throw new SchedulerUpdateException("Error while updating state of global step '"+stepName+"'", e);
+			}
+		}
+		
+		if (stepStates != null)
+		{
+			try
+			{
+				scheduler.saveStepsState();
+			}
+			catch (Exception e)
+			{
+				throw new SchedulerUpdateException("Error while saving state of global steps", e);
+			}
 		}
 	}
 	
@@ -164,5 +225,11 @@ public class SchedulerUpdater
 			result.add(copy);
 		}
 		return result;
+	}
+	
+	
+	private boolean isAutoSave()
+	{
+		return scheduler.getCurrentStateConfig().isAutoSave();
 	}
 }

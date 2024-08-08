@@ -217,6 +217,30 @@ public class ExecutorStateManager<C extends ExecutorStateContext>
 		}
 	}
 	
+	public void updateMatrices(Collection<Matrix> updatedMatrices) throws IOException, ExecutorStateException
+	{
+		if (logger.isInfoEnabled())
+			logger.info("Updating states of matrices "+updatedMatrices.stream().map(Matrix::getName).collect(Collectors.toList()));
+		
+		List<MatrixState> updatedStates = updatedMatrices.stream().map(m -> createMatrixState(m)).collect(Collectors.toList());
+		try (ExecutorStateOperator<C> operator = operatorFactory.createOperator())
+		{
+			operator.updateMatrices(stateInfo, context, updatedStates);
+		}
+		catch (IOException e)
+		{
+			throw e;
+		}
+		catch (ExecutorStateException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
+		{
+			throw new IOException("Error while updating matrix states", e);
+		}
+	}
+	
 	
 	protected void initExecutor(SimpleExecutor executor)
 	{

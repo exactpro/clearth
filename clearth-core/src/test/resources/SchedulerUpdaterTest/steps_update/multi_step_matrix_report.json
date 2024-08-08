@@ -1,5 +1,5 @@
 {
-  "matrixName" : "pausing_matrix.csv",
+  "matrixName" : "multi_step_matrix.csv",
   "stepReports" : [{
     "stepName" : "Step1",
     "stepKind" : "Default",
@@ -11,18 +11,6 @@
     {
       "@c" : ".ActionReport",
       "actionId" : "id1",
-      "actionName" : "SchedulerPause",
-      "timeout" : 0,
-      "status" : {
-        "passed" : true,
-        "comments" : null
-      },
-      "inputParams" : {
-      }
-    },
-    {
-      "@c" : ".ActionReport",
-      "actionId" : "id2",
       "actionName" : "SetStatic",
       "timeout" : 0,
       "status" : {
@@ -39,7 +27,33 @@
     ]
   },
   {
-    "stepName" : "Step3",
+    "stepName" : "Step2",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id2",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+        "P1" : {
+          "value" : "V2",
+          "specialValue" : false
+        }
+      }
+    }
+    ]
+  },
+  {
+    "stepName" : "Step4",
     "stepKind" : "Default",
     "async" : false,
     "status" : {
@@ -56,8 +70,8 @@
         "comments" : null
       },
       "inputParams" : {
-        "NewParam" : {
-          "value" : "NewValue",
+        "P1" : {
+          "value" : "V4",
           "specialValue" : false
         }
       }
@@ -65,7 +79,7 @@
     ]
   },
   {
-    "stepName" : "Step4",
+    "stepName" : "Step5",
     "stepKind" : "Default",
     "async" : false,
     "status" : {
@@ -79,12 +93,11 @@
       "timeout" : 0,
       "status" : {
         "passed" : false,
-        "comments" : [ "Could not calculate the following parameters: \r\n'AnotherParam' - Incorrect formula\r\nCheck if all references and function calls are correct and all referenced actions are successful" ]
+        "comments" : [ "Could not calculate the following parameters: \r\n'P1' - Incorrect formula\r\nCheck if all references and function calls are correct and all referenced actions are successful" ]
       },
       "inputParams" : {
-        "AnotherParam" : {
+        "P1" : {
           "value" : "@{id90.InvalidReference}",
-          "formula" : "@{id90.InvalidReference}",
           "specialValue" : false
         }
       }

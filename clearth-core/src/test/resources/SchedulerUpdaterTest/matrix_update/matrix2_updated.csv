@@ -1,0 +1,4 @@
+#ID,#GlobalStep,#Action,#Expected,#Actual
+id1,Step1,Compare2Values,A,B
+id2,Step2,Compare2Values,B,B
+id3,Step2,Compare2Values,A,A

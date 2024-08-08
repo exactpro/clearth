@@ -1,0 +1,114 @@
+{
+  "matrixName" : "matrix2.csv",
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : false
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "Compare2Values",
+      "timeout" : 0,
+      "status" : {
+        "passed" : false,
+        "failReason" : "COMPARISON",
+        "comments" : null
+      },
+      "inputParams" : {
+        "Expected" : {
+          "value" : "A",
+          "specialValue" : false
+        },
+        "Actual" : {
+          "value" : "B",
+          "specialValue" : false
+        }
+      },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : false,
+        "failReason" : "COMPARISON",
+        "resultDetails" : [ {
+          "param" : "Value",
+          "expected" : "A",
+          "actual" : "B",
+          "identical" : false
+        } ]
+      }
+    }
+    ]
+  },{
+    "stepName" : "Step2",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true
+    },
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id2",
+      "actionName" : "Compare2Values",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+        "Expected" : {
+          "value" : "B",
+          "specialValue" : false
+        },
+        "Actual" : {
+          "value" : "B",
+          "specialValue" : false
+        }
+      },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "resultDetails" : [ {
+          "param" : "Value",
+          "expected" : "B",
+          "actual" : "B",
+          "identical" : true
+        } ]
+      }
+    },
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id3",
+      "actionName" : "Compare2Values",
+      "timeout" : 0,
+      "status" : {
+        "passed" : true,
+        "comments" : null
+      },
+      "inputParams" : {
+        "Expected" : {
+          "value" : "A",
+          "specialValue" : false
+        },
+        "Actual" : {
+          "value" : "A",
+          "specialValue" : false
+        }
+      },
+      "result" : {
+        "@c" : ".results.DetailedResult",
+        "success" : true,
+        "resultDetails" : [ {
+          "param" : "Value",
+          "expected" : "A",
+          "actual" : "A",
+          "identical" : true
+        } ]
+      }
+    }
+    ]
+  } ]
+}

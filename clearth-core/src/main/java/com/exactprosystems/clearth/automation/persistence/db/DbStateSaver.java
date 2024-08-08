@@ -463,7 +463,7 @@ public class DbStateSaver
 		context.setStepStatusCommentsId(matrixId, stepId, id);
 	}
 	
-	private void saveActions(List<ActionState> actions, String matrixName, int matrixId, DbStateContext context) throws ExecutorStateException
+	protected void saveActions(List<ActionState> actions, String matrixName, int matrixId, DbStateContext context) throws ExecutorStateException
 	{
 		final int maxActions = 1000;
 		List<ActionReference> references = new ArrayList<>(maxActions+1);
