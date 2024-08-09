@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *  
@@ -151,7 +151,7 @@ public abstract class JmsClient extends BasicClearThClient
 				
 				producer.send(msg);
 				logger.debug("JMS client '{}' sent message", name);
-				return createUpdatedMessage(msg, metadata);
+				return createUpdatedMessage(payload, metadata);
 			}
 			catch (JMSException e)
 			{
