@@ -25,6 +25,7 @@ import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 
 public class StepData implements CsvDataManager
 {
@@ -196,40 +197,29 @@ public class StepData implements CsvDataManager
 				? new ActionsExecutionProgress(Integer.parseInt(progressNumerals[0]), Integer.parseInt(progressNumerals[1]))
 				: new ActionsExecutionProgress();
 	}
-
-
+	
+	
 	@Override
 	public boolean equals(Object o)
 	{
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 		
-		StepData that = (StepData) o;
-		
-		if (askForContinue != that.askForContinue)
-			return false;
-		if (askIfFailed != that.askIfFailed)
-			return false;
-		if (execute != that.execute)
-			return false;
-		if (!name.equals(that.name))
-			return false;
-		if (!kind.equals(that.kind))
-			return false;
-		return startAt.equals(that.startAt);
+		StepData stepData = (StepData) o;
+		return askForContinue == stepData.askForContinue &&
+				askIfFailed == stepData.askIfFailed &&
+				execute == stepData.execute &&
+				Objects.equals(name, stepData.name) &&
+				Objects.equals(kind, stepData.kind) &&
+				Objects.equals(startAt, stepData.startAt) &&
+				Objects.equals(started, stepData.started) &&
+				Objects.equals(finished, stepData.finished) &&
+				Objects.equals(executionProgress, stepData.executionProgress);
 	}
-
+	
 	@Override
 	public int hashCode()
 	{
-		int result = name.hashCode();
-		result = 31 * result + kind.hashCode();
-		result = 31 * result + startAt.hashCode();
-		result = 31 * result + (askForContinue ? 1 : 0);
-		result = 31 * result + (askIfFailed ? 1 : 0);
-		result = 31 * result + (execute ? 1 : 0);
-		return result;
+		return Objects.hash(name, kind, startAt, askForContinue, askIfFailed, execute, started, finished, executionProgress);
 	}
 }

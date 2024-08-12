@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -17,6 +17,8 @@
  ******************************************************************************/
 
 package com.exactprosystems.clearth.automation;
+
+import java.util.Objects;
 
 public class ActionsExecutionProgress
 {
@@ -87,5 +89,21 @@ public class ActionsExecutionProgress
 	public String toString()
 	{
 		return successful + delimiter + done;
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		
+		ActionsExecutionProgress that = (ActionsExecutionProgress) o;
+		return successful == that.successful && done == that.done;
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(successful, done);
 	}
 }

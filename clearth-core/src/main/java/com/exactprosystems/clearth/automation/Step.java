@@ -726,11 +726,6 @@ public abstract class Step implements CsvDataManager
 	@Override
 	public int hashCode()
 	{
-		int result = Objects.hashCode(stepData);
-		result = 31 * result + Objects.hashCode(parameter);
-		result = 31 * result + Objects.hashCode(comment);
-		result = 31 * result + Objects.hashCode(startAtType);
-		result = 31 * result + (waitNextDay ? 1 : 0);
-		return result;
+		return Objects.hash(parameter, comment, startAtType, waitNextDay, stepData);
 	}
 }
