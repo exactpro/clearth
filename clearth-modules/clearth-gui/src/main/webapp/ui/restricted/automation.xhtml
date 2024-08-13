@@ -178,32 +178,32 @@
 								<p:dataList var="statusLine" value="#{automationSchedulerBean.status}" itemType="none" styleClass="schedulerStatus">
 									<p:column>
 										<ui:fragment rendered="#{automationReportsBean.isLaunchInfoLine(statusLine)}">
-											<ui:param name="launchInfo" value="#{statusLine.getInfo()}" />
-											<ui:param name="reportsConfig" value="#{launchInfo.getReportsConfig()}" />
+											<ui:param name="info" value="#{statusLine.getInfo()}" />
+											<ui:param name="reportsConfig" value="#{info.getReportsConfig()}" />
 											<ui:param name="completeHtmlReport" value="#{reportsConfig == null or reportsConfig.completeHtmlReport}" />
 											<ui:param name="failedHtmlReport" value="#{reportsConfig == null or reportsConfig.failedHtmlReport}" />
 											<ui:param name="completeJsonReport" value="#{reportsConfig == null or reportsConfig.completeJsonReport}" />
-											<ui:fragment rendered="#{launchInfo.matricesInfo.size()==1}">
+											<ui:fragment rendered="#{info.matricesInfo.size()==1}">
 												<ui:fragment rendered="#{completeHtmlReport}">
-													<a href="#{automationReportsBean.getLaunchReportUrl(launchInfo)}" target="_blank"><h:outputText value="#{statusLine.value}" style="text-decoration: underline" /></a>
+													<a href="#{automationReportsBean.getLaunchReportUrl(info)}" target="_blank"><h:outputText value="#{statusLine.value}" style="text-decoration: underline" /></a>
 												</ui:fragment>
 												<ui:fragment rendered="#{!completeHtmlReport and (failedHtmlReport or completeJsonReport)}">
 													<h:outputText value="#{statusLine.value}" />
 												</ui:fragment>
 												<ui:fragment rendered="#{failedHtmlReport}">
-													<a href="#{automationReportsBean.getLaunchFailedReportUrl(launchInfo)}" target="_blank"><h:outputText value="(only failed)" style="text-decoration: underline" /></a>
+													<a href="#{automationReportsBean.getLaunchFailedReportUrl(info)}" target="_blank"><h:outputText value="(only failed)" style="text-decoration: underline" /></a>
 												</ui:fragment>
 												<br/>
 												<ui:fragment rendered="#{completeJsonReport}">
-													<a href="#{automationReportsBean.getLaunchJsonReportUrl(launchInfo)}" target="_blank"><h:outputText value="JSON Report" style="text-decoration: underline" /></a>
+													<a href="#{automationReportsBean.getLaunchJsonReportUrl(info)}" target="_blank"><h:outputText value="JSON Report" style="text-decoration: underline" /></a>
 													<br/>
 												</ui:fragment>
-												<p:commandLink value="Logs by run" ajax="false" actionListener="#{automationReportsBean.extractReportsInfo(launchInfo)}" style="text-decoration: underline" >
+												<p:commandLink value="Logs by run" ajax="false" actionListener="#{automationReportsBean.extractReportsInfo(info)}" style="text-decoration: underline" >
 													<p:fileDownload value="#{automationReportsBean.logsBySelectedRun}" />
 												</p:commandLink>
 											</ui:fragment>
-											<ui:fragment rendered="#{launchInfo.matricesInfo.size()>1}">
-												<p:commandLink value="#{statusLine.value}" actionListener="#{automationReportsBean.extractReportsInfo(launchInfo)}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" style="text-decoration: underline" />
+											<ui:fragment rendered="#{info.matricesInfo.size()>1}">
+												<p:commandLink value="#{statusLine.value}" actionListener="#{automationReportsBean.extractReportsInfo(info)}" update=":ReportsDialog" oncomplete="PF('reportsDialog').show();" style="text-decoration: underline" />
 											</ui:fragment>
 										</ui:fragment>
 										
