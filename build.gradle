@@ -275,11 +275,6 @@ task createCommitMessage {
 	}
 }
 
-task buildCoreArchieves(type: GradleBuild) {
-	tasks = ['clearth-core:build', 'clearth-core:uploadArchives',
-			 'clearth-modules:clearth-rhdata:build', 'clearth-modules:clearth-rhdata:uploadArchives']
-}
-
 project(':clearth-modules') {
 	artifactoryPublish.skip = true
 }
