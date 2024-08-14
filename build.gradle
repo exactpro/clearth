@@ -222,7 +222,7 @@ subprojects {
 			attributes('Implementation-Title': "${project.name}")
 			attributes('Implementation-Vendor': 'Exactpro Systems LLC')
 			attributes('Implementation-Vendor-Id': 'com.exactprosystems')
-			attributes('Implementation-Version': "${archiveVersion}")
+			attributes('Implementation-Version': "${archiveVersion.get()}")
 			if (versionMark != '')
 				attributes('Implementation-Version-Mark': "${versionMark}")
 			attributes('Implementation-Version-Date': getDate())
