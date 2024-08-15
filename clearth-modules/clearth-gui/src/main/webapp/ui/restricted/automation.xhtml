@@ -174,7 +174,7 @@
 						<p:outputPanel rendered="#{!automationSchedulerBean.statusEmpty}">
 							<p:commandLink value="Matrices contain errors" update=":MatricesErrorsDialog" oncomplete="PF('merrorsDialog').show();" actionListener="#{automationBean.matrixChecker.prepareIssues}"
 										   style="color: #d74242; font-size: medium; text-decoration: none; border-bottom: 1px dashed;" rendered="#{automationBean.matrixChecker.matricesHaveErrors}" />
-							<div class="tableContainer" style="max-height: 500px; margin-left: -10px;">
+							<div class="tableContainer" style="max-height: 200px; margin-left: -10px;">
 								<p:dataList var="statusLine" value="#{automationSchedulerBean.status}" itemType="none" styleClass="schedulerStatus">
 									<p:column>
 										<ui:fragment rendered="#{automationReportsBean.isLaunchInfoLine(statusLine)}">
