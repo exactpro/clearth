@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,24 +18,35 @@
 
 package com.exactprosystems.clearth.utils.tabledata.readers;
 
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
+import java.util.Collections;
 
 public class HeaderMapper<A>
 {
-	protected final Map<A, A> conversionMap;
+	protected final Map<A, Set<A>> mappedHeader;
 	
-	public HeaderMapper(Map<A, A> conversionMap)
+	public HeaderMapper(Map<A, Set<A>> mappedHeader)
 	{
-		this.conversionMap = new HashMap<>(conversionMap);
+		this.mappedHeader = new HashMap<>(mappedHeader);
 	}
 	
 	public Set<A> convert(Set<A> header)
 	{
 		Set<A> result = new LinkedHashSet<>();
-		header.forEach(h -> result.add(conversionMap.getOrDefault(h, h)));
+		header.forEach(h -> result.addAll(getValueOrDefault(h, mappedHeader)));
 		return result;
+	}
+	
+	public Map<A, Set<A>> getMappedHeader()
+	{
+		return Collections.unmodifiableMap(mappedHeader);
+	}
+	
+	private Set<A> getValueOrDefault(A key, Map<A, Set<A>> map)
+	{
+		return (map.containsKey(key)) ? map.get(key) : Set.of(key);
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.utils.tabledata.RowsListFactory;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 public class MappedTableDataReader<A, B, C extends BasicTableData<A, B>> extends BasicTableDataReader<A, B, C>
@@ -61,8 +62,16 @@ public class MappedTableDataReader<A, B, C extends BasicTableData<A, B>> extends
 	protected void fillRow(TableRow<A, B> row) throws IOException
 	{
 		TableRow<A, B> rawRow = aggregatedReader.readRow();
-		for (int i = 0; i < row.size(); i++)
-			row.setValue(i, rawRow.getValue(i));
+		Map<A, Set<A>> mappedHeader = headerMapper.getMappedHeader();
+		for (A column: rawRow.getHeader())
+		{
+			Set<A> mappedColumns = mappedHeader.get(column);
+			if (mappedColumns == null)
+				row.setValue(column, rawRow.getValue(column));
+			else
+				for (A mappedColumn : mappedColumns)
+					row.setValue(mappedColumn, rawRow.getValue(column));
+		}
 	}
 
 	@Override

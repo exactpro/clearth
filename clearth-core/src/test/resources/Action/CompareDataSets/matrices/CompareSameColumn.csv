@@ -1,0 +1,6 @@
+//Constants:
+//path=clearth-core/src/test/resources/Action/CompareDataSets/testData/CompareSameCols
+
+"#ID","#GlobalStep","#Action","#ExpectedFormat","#ActualFormat","#ExpectedSource","#ActualSource","#MappingFileName"
+"id1","Step1","CompareDataSets","CsvFile","CsvFile","@{matrix.path}/file1.csv","@{matrix.path}/file2.csv","@{matrix.path}/mapping1.xml"
+"id2","Step1","CompareDataSets","CsvFile","CsvFile","@{matrix.path}/file2.csv","@{matrix.path}/file3.csv","@{matrix.path}/mapping2.xml"

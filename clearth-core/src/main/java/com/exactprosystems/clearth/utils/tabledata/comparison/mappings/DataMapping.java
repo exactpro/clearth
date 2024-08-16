@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -32,8 +32,8 @@ import static java.util.Collections.unmodifiableSet;
 
 public abstract class DataMapping<A>
 {
-	private final Map<A, A> expectedConversionMap;
-	private final Map<A, A> actualConversionMap;
+	private final Map<A, Set<A>> expectedConversionMap;
+	private final Map<A, Set<A>> actualConversionMap;
 	private final Set<A> keyColumns;
 	private final Map<A, BigDecimal> numericColumns;
 	private final Set<A> ignoreColumns;
@@ -41,14 +41,14 @@ public abstract class DataMapping<A>
 	
 	public DataMapping(MappingDesc mappingDesc)
 	{
-		Map<A, A> expectedConversionMap = new HashMap<>();
-		Map<A, A> actualConversionMap = new HashMap<>();
+		Map<A, Set<A>> expectedConversionMap = new HashMap<>();
+		Map<A, Set<A>> actualConversionMap = new HashMap<>();
 		Set<A> keyColumns = new HashSet<>();
 		Map<A, BigDecimal> numericColumns = new HashMap<>();
 		Set<A> ignoreColumns = new HashSet<>();
 		Set<A> infoColumns = new HashSet<>();
 		
-		handleMapping(mappingDesc, expectedConversionMap, actualConversionMap, keyColumns, numericColumns, 
+		handleMapping(mappingDesc, expectedConversionMap, actualConversionMap, keyColumns, numericColumns,
 				ignoreColumns, infoColumns);
 
 		this.expectedConversionMap = unmodifiableMap(expectedConversionMap);
@@ -71,18 +71,19 @@ public abstract class DataMapping<A>
 			numericColumns.putAll(additionalNumericColumns);
 	}
 
-	protected void handleMapping(MappingDesc mappingDesc, Map<A, A> expectedConversionMap,
-	                             Map<A, A> actualConversionMap,
-	                         Set<A> keyColumns, Map<A, BigDecimal> numericColumns, Set<A> ignoredColumns, Set<A> infoColumns)
+	protected void handleMapping(MappingDesc mappingDesc, Map<A, Set<A>> expectedConversionMap, Map<A, Set<A>> actualConversionMap,
+								 Set<A> keyColumns, Map<A, BigDecimal> numericColumns, Set<A> ignoredColumns,
+								 Set<A> infoColumns)
 	{
 		for (FieldDesc fieldDesc : mappingDesc.getFields())
 		{
 			A localName = transform(fieldDesc.getLocalName());
 			A expectedName = transform(fieldDesc.getExpectedName());
 			A actualName = transform(fieldDesc.getActualName());
-
-			expectedConversionMap.put(expectedName, localName);
-			actualConversionMap.put(actualName, localName);
+			
+			expectedConversionMap.computeIfAbsent(expectedName, k -> new LinkedHashSet<>()).add(localName);
+			actualConversionMap.computeIfAbsent(actualName, k -> new LinkedHashSet<>()).add(localName);
+			
 			if (fieldDesc.isKey())
 				keyColumns.add(localName);
 			if (fieldDesc.isNumeric())

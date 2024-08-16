@@ -1,0 +1,15 @@
+<MappingDesc>
+    <field name="A" key="true">
+        <expected name="A"/>
+        <actual name="A"/>
+    </field>
+	<field name="BD">
+        <expected name="B"/>
+        <actual name="D"/>
+    </field>
+	<field name="BE">
+        <expected name="B"/>
+        <actual name="E"/>
+    </field>
+    <field name="C" ignore="true" />
+</MappingDesc>

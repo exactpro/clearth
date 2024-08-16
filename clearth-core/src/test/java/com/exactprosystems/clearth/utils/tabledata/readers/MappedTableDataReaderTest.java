@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,8 +30,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
-import static com.exactprosystems.clearth.utils.CollectionUtils.map;
 import static com.exactprosystems.clearth.utils.CollectionUtils.setOf;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -42,7 +42,7 @@ public class MappedTableDataReaderTest
 			FIRST_COL = "unchangedName1", THIRD_COL = "unchangedName2";
 	private static final Path RESOURCE_DIR = Paths.get("src", "test", "resources")
 			.resolve(MappedTableDataReaderTest.class.getSimpleName());
-	private static final Map<String, String> conversionMap = map(OLD_COL, NEW_COL);
+	private static final Map<String, Set<String>> conversionMap = Map.of(OLD_COL, Set.of(NEW_COL));
 	private static final HeaderMapper<String> headerConverter = new HeaderMapper<String>(conversionMap);
 	
 	private TableHeader<String> createHeader(String... columns)
