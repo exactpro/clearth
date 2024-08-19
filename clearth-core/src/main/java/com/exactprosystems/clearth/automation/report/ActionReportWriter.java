@@ -31,10 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.exactprosystems.clearth.ClearThCore.rootRelative;
 import static com.exactprosystems.clearth.automation.report.ReportFormat.HTML;
@@ -159,9 +156,10 @@ public class ActionReportWriter
 		if (getLogger().isDebugEnabled())
 			getLogger().debug(action.getDescForLog("Updating reports for"));
 		
-		updateHtmlReport(action, actionsReportsDir, actionsReportFile);
-		
-		updateJsonReport(action, actionsReportsDir, actionsReportFile);
+		if (reportsConfig.isCompleteHtmlReport())
+			updateHtmlReport(action, actionsReportsDir, actionsReportFile);
+		if (reportsConfig.isCompleteJsonReport())
+			updateJsonReport(action, actionsReportsDir, actionsReportFile);
 	}
 
 	protected void updateHtmlReport(Action action, String actionsReportsDir, String actionsReportFile)
@@ -172,15 +170,7 @@ public class ActionReportWriter
 				originalReportFile = getReportFile(reportDir, actionsReportFile, false);
 		if (!updateReport(originalReportFile, action, resultId, reportFile, HTML, reportDir, false))
 			return;
-		
-		if (!originalReportFile.delete())
-		{
-			getLogger().error("Could not delete original report file '"+originalReportFile.getAbsolutePath()+"'");
-			return;
-		}
-		
-		if (!reportFile.renameTo(originalReportFile))
-			getLogger().error("Could not rename updated report file '"+reportFile.getAbsolutePath()+"' to '"+originalReportFile.getAbsolutePath()+"'");
+		replaceReportFile(reportFile, originalReportFile);
 	}
 
 	protected void updateJsonReport(Action action, String actionsReportsDir, String actionsReportFile)
@@ -188,20 +178,24 @@ public class ActionReportWriter
 		String reportFilePath = getJsonStepReportPath(actionsReportsDir, action.getMatrix().getShortFileName(), actionsReportFile);
 		File reportFile = new File(reportFilePath + ".swp"),
 				originalReportFile = new File(reportFilePath);
-		if (!updateReport(originalReportFile, action, "", reportFile, JSON, 
-				getReportDir(actionsReportsDir, action), false))
+		if (!updateReport(originalReportFile, action, "", reportFile, JSON, getReportDir(actionsReportsDir, action), false))
 			return;
+		replaceReportFile(reportFile, originalReportFile);
+	}
 
+	private void replaceReportFile(File reportFile, File originalReportFile)
+	{
 		if (!originalReportFile.delete())
 		{
-			getLogger().error("Could not delete original report file '"+originalReportFile.getAbsolutePath()+"'");
+			getLogger().error("Could not delete original report file '{}'", originalReportFile.getAbsolutePath());
 			return;
 		}
 
 		if (!reportFile.renameTo(originalReportFile))
-			getLogger().error("Could not rename updated report file '"+reportFile.getAbsolutePath()+"' to '"+originalReportFile.getAbsolutePath()+"'");
+			getLogger().error("Could not rename updated report file '{}' to '{}'",
+					reportFile.getAbsolutePath(), originalReportFile.getAbsolutePath());
 	}
-
+	
 	private String getJsonStepReportPath(String actionsReportsDir, String matrixFileName, String stepReportFile)
 	{
 		Path reportDir = Path.of(actionsReportsDir, matrixFileName);
