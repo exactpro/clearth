@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -62,7 +62,7 @@ public class TestExecutionHandlerTest
 	public void init() throws ClearThException
 	{
 		dataHandlersFactory = new DummyHandlersFactory();
-		appManager = new ApplicationManager(dataHandlersFactory);
+		appManager = ApplicationManager.builder().dataHandlersFactory(dataHandlersFactory).build();
 	}
 	
 	@AfterClass

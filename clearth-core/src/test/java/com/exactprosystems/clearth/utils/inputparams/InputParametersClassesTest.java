@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -47,7 +47,9 @@ public abstract class InputParametersClassesTest
 	@BeforeClass
 	public void init() throws Exception
 	{
-		manager = new ApplicationManager(FileOperationUtils.resourceToAbsoluteFilePath(RES));
+		manager = ApplicationManager.builder()
+				.configFilePath(FileOperationUtils.resourceToAbsoluteFilePath(RES))
+				.build();
 		storage = ClearThCore.connectionStorage();
 	}
 

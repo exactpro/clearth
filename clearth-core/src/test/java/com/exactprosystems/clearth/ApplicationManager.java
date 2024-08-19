@@ -20,6 +20,7 @@ package com.exactprosystems.clearth;
 
 import com.exactprosystems.clearth.automation.*;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
+import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
 import com.exactprosystems.clearth.automation.report.results.DefaultResult;
 import com.exactprosystems.clearth.config.ClearThConfiguration;
 import com.exactprosystems.clearth.config.ConfigurationException;
@@ -59,23 +60,26 @@ import static org.mockito.Mockito.*;
 
 public class ApplicationManager
 {
-	public static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
+	public static final Path USER_DIR = Paths.get(System.getProperty("user.dir")),
+			PROJ_DIR = USER_DIR.getParent(),
+			TEST_RES_DIR = PROJ_DIR.resolve("clearth-core").resolve("src").resolve("test").resolve("resources");
 
 	public static final String ADMIN = "admin";
 	public static final String TEST_OUTPUT = "testOutput/",
-			LOGS_DIR = USER_DIR.getParent().resolve(TEST_OUTPUT).resolve("logs").toString(),
+			LOGS_DIR = PROJ_DIR.resolve(TEST_OUTPUT).resolve("logs").toString(),
 			TEST_DATA_DIR = TEST_OUTPUT + "appRoot/",
 			TEST_REPORT_DIR = TEST_OUTPUT + "SchedulerTestData/",
-			LOG_PROPERTIES_FILE_PATH = USER_DIR + "/src/test/resources/log.properties",
-			APP_ROOT = USER_DIR.getParent().resolve(TEST_DATA_DIR).toString(),
-			WEB_APP_DIR = USER_DIR.getParent().resolve("clearth-modules/clearth-gui/src/main/webapp").toString(),
+			LOG_PROPERTIES_FILE_PATH = TEST_RES_DIR.resolve("log.properties").toString(),
+			APP_ROOT = PROJ_DIR.resolve(TEST_DATA_DIR).toString(),
+			WEB_APP_DIR = PROJ_DIR.resolve("clearth-modules/clearth-gui/src/main/webapp").toString(),
 			WEB_UI_RESTRICTED = WEB_APP_DIR + "/ui/restricted/",
 			DEFAULT_REPORT_FILES_DIR = WEB_APP_DIR + "/WEB-INF/report_files/",
 			REALTIME_REPORT_DIR = APP_ROOT + "/ui/restricted/",
 			USER_SETTINGS_DIR = TEST_OUTPUT + "usersettings/",
-			USERS_LIST_FILE_PATH = USER_DIR + "/src/test/resources/users.xml",
-			GLOB_CONST_FILENAME = USER_DIR + "/src/test/resources/global_constants.cfg",
-			ENV_VARS_FILENAME = USER_DIR + "/src/test/resources/env_variables.cfg";
+			USERS_LIST_FILE_PATH = TEST_RES_DIR.resolve("users.xml").toString(),
+			GLOB_CONST_FILENAME = TEST_RES_DIR.resolve("global_constants.cfg").toString(),
+			ENV_VARS_FILENAME = TEST_RES_DIR.resolve("env_variables.cfg").toString(),
+			HTML_TEMPLATE_DIR = PROJ_DIR.resolve("cfg").resolve("templates").toString();
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -85,31 +89,21 @@ public class ApplicationManager
 			globalConstFilePath = GLOB_CONST_FILENAME;
 	private DeploymentConfig deploymentConfig;
 	private DataHandlersFactory dataHandlersFactory;
+	private ReportTemplatesProcessor templatesProcessor;
 	
 	public ApplicationManager() throws ClearThException
 	{
 		initClearThInstance();
 	}
 	
-	public ApplicationManager(DataHandlersFactory dataHandlersFactory) throws ClearThException
+	private ApplicationManager(Builder builder) throws ClearThException
 	{
-		this.dataHandlersFactory = dataHandlersFactory;
+		dataHandlersFactory = builder.dataHandlersFactory;
+		configFilePath = builder.configFilePath;
+		envVarsFilePath = builder.envVarsFilePath;
+		globalConstFilePath = builder.globalConstFilePath;
+		templatesProcessor = builder.templatesProcessor;
 		
-		initClearThInstance();
-	}
-
-	public ApplicationManager(String configFilePath) throws ClearThException
-	{
-		this.configFilePath = configFilePath;
-
-		initClearThInstance();
-	}
-
-	public ApplicationManager(String configFilePath, String envVarsFilePath, String globalConstFilePath) throws ClearThException
-	{
-		this.configFilePath = configFilePath;
-		this.envVarsFilePath = envVarsFilePath;
-		this.globalConstFilePath = globalConstFilePath;
 		initClearThInstance();
 	}
 
@@ -226,6 +220,11 @@ public class ApplicationManager
 		}
 	}
 
+	public static Builder builder()
+	{
+		return new Builder();
+	}
+	
 	public static void waitForSchedulerToStop(Scheduler scheduler, long delay, long timeout)
 	{
 		waitForSchedulerState(scheduler, delay, timeout, s -> !s.isRunning(), "stop");
@@ -277,6 +276,7 @@ public class ApplicationManager
 		when(spy.getUsersFileName()).thenReturn(USERS_LIST_FILE_PATH);
 		when(spy.getGlobalConstantsFilename()).thenReturn(globalConstFilePath);
 		when(spy.getEnvVarsFilename()).thenReturn(envVarsFilePath);
+		when(spy.getHtmlTemplatesDir()).thenReturn(HTML_TEMPLATE_DIR);
 
 		return spy;
 	}
@@ -348,6 +348,16 @@ public class ApplicationManager
 			throw new ClearThException(e);
 		}
 
+		try
+		{
+			if (templatesProcessor != null)
+				doReturn(templatesProcessor).when(core).createReportTemplatesProcessor();
+		}
+		catch (Exception e)
+		{
+			throw new ClearThException(e);
+		}
+		
 		return core;
 	}
 
@@ -382,6 +392,51 @@ public class ApplicationManager
 		deploymentConfig.init(configFiles);
 		ClearThCore application = getCoreInstance();
 		application.init(configFiles, deploymentConfig);
+	}
+	
+	
+	public static class Builder
+	{
+		private DataHandlersFactory dataHandlersFactory = null;
+		private String configFilePath = null;
+		private String envVarsFilePath = ENV_VARS_FILENAME;
+		private String globalConstFilePath = GLOB_CONST_FILENAME;
+		private ReportTemplatesProcessor templatesProcessor;
+		
+		public ApplicationManager build() throws ClearThException
+		{
+			return new ApplicationManager(this);
+		}
+		
+		public Builder dataHandlersFactory(DataHandlersFactory dataHandlersFactory)
+		{
+			this.dataHandlersFactory = dataHandlersFactory;
+			return this;
+		}
+		
+		public Builder configFilePath(String configFilePath)
+		{
+			this.configFilePath = configFilePath;
+			return this;
+		}
+		
+		public Builder envVarsFilePath(String envVarsFilePath)
+		{
+			this.envVarsFilePath = envVarsFilePath;
+			return this;
+		}
+		
+		public Builder globalConstFilePath(String globalConstFilePath)
+		{
+			this.globalConstFilePath = globalConstFilePath;
+			return this;
+		}
+		
+		public Builder templatesProcessor(ReportTemplatesProcessor templatesProcessor)
+		{
+			this.templatesProcessor = templatesProcessor;
+			return this;
+		}
 	}
 }
 

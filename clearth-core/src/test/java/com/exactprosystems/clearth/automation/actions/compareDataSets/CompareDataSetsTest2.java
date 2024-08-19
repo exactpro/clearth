@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -71,7 +71,7 @@ public class CompareDataSetsTest2
 		if(!CFG_FILE.isFile())
 			throw new FileNotFoundException("File '" + CFG_FILE.getName() + "' not found");
 
-		manager = new ApplicationManager(CFG_FILE.toString());
+		manager = ApplicationManager.builder().configFilePath(CFG_FILE.toString()).build();
 
 		ClearThConnectionStorage storage = createStorage();
 

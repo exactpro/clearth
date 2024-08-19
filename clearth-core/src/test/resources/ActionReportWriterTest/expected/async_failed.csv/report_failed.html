@@ -1,0 +1,104 @@
+
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>async_failed.csv (FAILED)</title>
+	</head>
+	<body>
+		<table width="100%" border="1" id="header">
+			<tr>
+				<td>Script: async_failed.csv</td>
+				<td width="30%">Result: <span class="failed" style="font-weight: bold;">FAILED</span></td>
+			</tr>
+			<tr>
+				<td>User: async1</td>
+			</tr>
+			<tr>
+				<td>Description: <span style="white-space: pre-wrap"></span></td>
+			</tr>
+		</table>
+		<div class="nodelist">
+			<div class="step">
+				<span class="node failed switch" onclick="showhide(this, 'cont1');">Step1 - Default (FAILED)</span>
+				<div class="container" id="cont1">
+
+	<div class="action">
+			<span class="node failed_comparison switch" onclick="showhide(this, 'Step1_action_2');">id1 - Compare2Values (FAILED)
+        	</span>
+		<div class="container" id="Step1_action_2">
+				<div class="desc">Action executed asynchronously</div>
+				<div class="desc"><span>Wait for end: </span>SCHEDULER</div>
+	<div class="status">
+		<span class="node failed_comparison switch"  onclick="showhide(this, 'Step1_action_2_status');">Action status</span>
+		<div class="container" id="Step1_action_2_status" >
+			<table border="1" class="big-w-limited">
+				<tr>
+					<td>Status</td>
+					<td>FAILED</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+			<table class="action_data">
+				<tr>
+					<td class="params">
+						<div class="node">Input parameters</div>
+		<table border="1" frame="box" rules="all" style="margin-left:0em;">
+			<tr class="tablehead">
+				<td>Name</td>
+				<td>Value</td>
+			</tr>
+					<tr>
+						<td>Expected</td>
+							<td>A</td>
+					</tr>
+					<tr>
+						<td>Actual</td>
+							<td>B</td>
+					</tr>
+		</table>
+						<br>
+						<div class="node">Sub-actions</div>
+							<div>None</div>
+					</td>
+					<td class="comps">
+						<div class="node">Comparison table</div>
+			<table border="1" frame="box" rules="all" class="w-limited">
+				<tr class="tablehead">
+					<td>Name</td>
+					<td>Expected</td>
+					<td>Actual</td>
+					<td>Status</td>
+				</tr>
+					<tr class="comparison_line_failed">
+						<td>Value</td>
+							<td>A</td>
+						<td>B</td>
+						<td class="comparison_result failed">FAILED</td>
+					</tr>
+			</table>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div class="status">
+		<span class="node failed switch"  onclick="showhide(this, 'cont1status');">Step status</span>
+		<div class="container" id="cont1status" >
+			<table border="1" class="big-w-limited">
+				<tr>
+					<td>Status</td>
+					<td>FAILED</td>
+				</tr>
+					<tr>
+						<td style="vertical-align: top;">Description</td>
+						<td>One or more actions failed</td>
+					</tr>
+			</table>
+		</div>
+	</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

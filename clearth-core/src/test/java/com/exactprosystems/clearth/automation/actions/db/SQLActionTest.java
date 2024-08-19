@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -68,7 +68,7 @@ public class SQLActionTest
 		config = RES_DIR.resolve(SCHEDULER_CFG).toFile();
 		cfgFile = RES_DIR.resolve(CTH_CFG).toFile();
 
-		appManager = new ApplicationManager(cfgFile.toString());
+		appManager = ApplicationManager.builder().configFilePath(cfgFile.toString()).build();
 		prepareToTest();
 	}
 

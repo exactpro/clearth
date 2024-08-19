@@ -18,6 +18,11 @@
 
 package com.exactprosystems.clearth.automation.report;
 
+import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.report.html.template.ReportTemplatesProcessor;
+import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
+import freemarker.template.TemplateModelException;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -28,24 +33,29 @@ import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.SettingsException;
 
-import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
+
+import static com.exactprosystems.clearth.ApplicationManager.*;
+import static com.exactprosystems.clearth.automation.report.ActionReportWriter.HTML_FAILED_REPORT_NAME;
+import static com.exactprosystems.clearth.automation.report.ActionReportWriter.HTML_REPORT_NAME;
 
 public class ActionReportWriterTest
 {
-	private static final Path RES_DIR = Path.of("src", "test", "resources", ActionReportWriterTest.class.getSimpleName()),
-			OUTPUT_DIR = USER_DIR.resolve("testOutput").resolve(ActionReportWriterTest.class.getSimpleName());
-	
+	private static final Path RES_DIR = TEST_RES_DIR.resolve(ActionReportWriterTest.class.getSimpleName()),
+			 OUTPUT_DIR = USER_DIR.resolve("testOutput").resolve(ActionReportWriterTest.class.getSimpleName());
+	private static final String USER = "async1", STEP = "Step1", ASYNC_FAILED = "async_failed.csv", ASYNC_PASSED = "async_passed.csv";
 	private ApplicationManager manager;
 	
 	@BeforeClass
-	public void init() throws ClearThException, IOException, SettingsException
+	public void init() throws ClearThException, IOException, SettingsException, TemplateModelException
 	{
-		manager = new ApplicationManager();
+		manager = builder()
+				.templatesProcessor(new ReportTemplatesProcessor(RES_DIR.resolve("templates")))
+				.build();
 	}
 	
 	@AfterClass
@@ -77,5 +87,34 @@ public class ActionReportWriterTest
 		
 		long files = Files.list(targetReport.getParent()).count();
 		Assert.assertEquals(files, 1, "Number of files in report directory");
+	}
+	
+	@Test
+	public void testReportsGenerateForAsyncActions() throws ClearThException, AutomationException, IOException
+	{
+		Scheduler scheduler = manager.getScheduler(USER, USER);
+		manager.loadSteps(scheduler, RES_DIR.resolve("config.cfg").toFile());
+		manager.loadMatrices(scheduler, RES_DIR.resolve("matrices").toFile());
+		
+		scheduler.start(USER);
+		waitForSchedulerToStop(scheduler, 100, 4000);
+		
+		List<XmlSchedulerLaunchInfo> launchesInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo();
+		Assert.assertFalse(launchesInfo == null || launchesInfo.isEmpty());
+		
+		Path expRepDir = RES_DIR.resolve("expected"),
+				actRepDir = PROJ_DIR.resolve(Path.of("testOutput", "SchedulerTestData", "automation", "reports", launchesInfo.get(0).getReportsPath()));
+		
+		assertReports(actRepDir, expRepDir, ASYNC_PASSED);
+		assertReports(actRepDir, expRepDir, ASYNC_FAILED);
+	}
+	
+	private void assertReports(Path actRepDir, Path expRepDir, String matrixName) throws IOException
+	{
+		Path actual = actRepDir.resolve(matrixName),
+				expected = expRepDir.resolve(matrixName);
+		
+		AssertReports.assertCompleteHtmlReports(actual.resolve(HTML_REPORT_NAME), expected.resolve(HTML_REPORT_NAME), true);
+		AssertReports.assertFailedHtmlReports(actual.resolve(HTML_FAILED_REPORT_NAME), expected.resolve(HTML_FAILED_REPORT_NAME), true);
 	}
 }

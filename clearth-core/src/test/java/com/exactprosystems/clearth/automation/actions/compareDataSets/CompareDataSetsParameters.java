@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -73,7 +73,9 @@ public class CompareDataSetsParameters
 		FileUtils.deleteDirectory(ACTION_RESULT_DIR_FILE);
 		Files.createDirectories(ACTION_RESULT_DIR);
 		
-		manager = new ApplicationManager(ACTION_RESOURCE_DIR.resolve("clearth.cfg").toString());
+		manager = ApplicationManager.builder()
+				.configFilePath(ACTION_RESOURCE_DIR.resolve("clearth.cfg").toString())
+				.build();
 	}
 	
 	@AfterClass

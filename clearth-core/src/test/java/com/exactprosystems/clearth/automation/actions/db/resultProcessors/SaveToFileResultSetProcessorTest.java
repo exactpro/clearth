@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -61,7 +61,9 @@ public class SaveToFileResultSetProcessorTest
 		Files.createDirectory(TEST_OUTPUT);
 
 		resDir = Paths.get(FileOperationUtils.resourceToAbsoluteFilePath(SaveToFileResultSetProcessorTest.class.getSimpleName()));
-		appManager = new ApplicationManager(resDir.resolve("clearth.cfg").toString());
+		appManager = ApplicationManager.builder()
+				.configFilePath(resDir.resolve("clearth.cfg").toString())
+				.build();
 
 		prepareTableToTest();
 	}

@@ -78,7 +78,7 @@ public class ActionReportWriter
 
 		if (reportsConfig.isCompleteHtmlReport())
 			writeHtmlActionReport(action, actionsReportsDir, stepFileName, false);
-		if (reportsConfig.isFailedHtmlReport() && !action.isPassed())
+		if (reportsConfig.isFailedHtmlReport() && (!action.isPassed() || action.isAsync()))
 			writeHtmlActionReport(action, actionsReportsDir, stepFileName, true);
 
 		if (reportsConfig.isCompleteJsonReport())
@@ -157,18 +157,20 @@ public class ActionReportWriter
 			getLogger().debug(action.getDescForLog("Updating reports for"));
 		
 		if (reportsConfig.isCompleteHtmlReport())
-			updateHtmlReport(action, actionsReportsDir, actionsReportFile);
+			updateHtmlReport(action, actionsReportsDir, actionsReportFile, false);
+		if (reportsConfig.isFailedHtmlReport())
+			updateHtmlReport(action, actionsReportsDir, actionsReportFile, true);
 		if (reportsConfig.isCompleteJsonReport())
 			updateJsonReport(action, actionsReportsDir, actionsReportFile);
 	}
 
-	protected void updateHtmlReport(Action action, String actionsReportsDir, String actionsReportFile)
+	protected void updateHtmlReport(Action action, String actionsReportsDir, String actionsReportFile, boolean onlyFailed)
 	{
 		String resultId = buildResultId(actionsReportFile);
 		File reportDir = getReportDir(actionsReportsDir, action),
 				reportFile = new File(reportDir, actionsReportFile+".swp"),
-				originalReportFile = getReportFile(reportDir, actionsReportFile, false);
-		if (!updateReport(originalReportFile, action, resultId, reportFile, HTML, reportDir, false))
+				originalReportFile = getReportFile(reportDir, actionsReportFile, onlyFailed);
+		if (!updateReport(originalReportFile, action, resultId, reportFile, HTML, reportDir, onlyFailed))
 			return;
 		replaceReportFile(reportFile, originalReportFile);
 	}
@@ -378,7 +380,8 @@ public class ActionReportWriter
 					}
 					
 					startFound = true;
-					writeActionReport(report, reportFormat, writer, action, resultId, reportDir, onlyFailed);
+					if (!onlyFailed || !action.isPassed())
+						writeActionReport(report, reportFormat, writer, action, resultId, reportDir, onlyFailed);
 				}
 				else if (!endFound)
 				{
