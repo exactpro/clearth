@@ -215,6 +215,7 @@ public class ApplicationManager
 			return list
 					.map(Path::toString)
 					.filter(s -> "csv".equalsIgnoreCase(FilenameUtils.getExtension(s)))
+					.sorted()
 					.map(File::new)
 					.collect(Collectors.toList());
 		}
