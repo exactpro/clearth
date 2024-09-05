@@ -11,6 +11,7 @@
     },
     "actionReports" :     [
       {
+        "@c" : ".MacroActionReport",
         "actionId" : "ma1",
         "actionName" : "MacroAction",
         "status" : {
@@ -32,10 +33,12 @@
           }
         },
         "result" : {
+          "@c" : ".results.DefaultResult",
           "success" : true,
           "comment" : "Nested actions executed successfully."
         },
         "nestedActions" : [ {
+          "@c" : ".ActionReport",
           "actionId" : "id0",
           "actionName" : "SetStatic",
           "status" : {
@@ -53,6 +56,7 @@
             }
           }
         }, {
+          "@c" : ".ActionReport",
           "actionId" : "id1",
           "actionName" : "Compare2Values",
           "status" : {
@@ -69,9 +73,17 @@
             }
           },
           "result" : {
-            "success" : true
+            "@c" : ".results.DetailedResult",
+            "success" : true,
+            "resultDetails" : [ {
+              "param" : "Value",
+              "expected" : "1",
+              "actual" : "1",
+              "identical" : true
+            } ]
           }
         }, {
+          "@c" : ".ActionReport",
           "actionId" : "id2",
           "actionName" : "Compare2Values",
           "status" : {
@@ -88,9 +100,17 @@
             }
           },
           "result" : {
-            "success" : true
+            "@c" : ".results.DetailedResult",
+            "success" : true,
+            "resultDetails" : [ {
+              "param" : "Value",
+              "expected" : "2",
+              "actual" : "2",
+              "identical" : true
+            } ]
           }
         }, {
+          "@c" : ".ActionReport",
           "actionId" : "id3",
           "actionName" : "Compare2Values",
           "status" : {
@@ -107,7 +127,14 @@
             }
           },
           "result" : {
-            "success" : true
+            "@c" : ".results.DetailedResult",
+            "success" : true,
+            "resultDetails" : [ {
+              "param" : "Value",
+              "expected" : "3",
+              "actual" : "3",
+              "identical" : true
+            } ]
           }
         } ]
       }
