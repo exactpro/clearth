@@ -69,6 +69,8 @@ public class ActionExecutor implements Closeable
 	private String actionsReportsDir;
 	private boolean interrupted = false;
 	
+	protected boolean saveDetailedResult = false;
+	
 	public ActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, ActionReportWriter reportWriter,
 			FailoverStatus failoverStatus, boolean ignoreAllConnectionsFailures, Set<String> connectionsToIgnoreFailures)
 	{
@@ -568,7 +570,8 @@ public class ActionExecutor implements Closeable
 		
 		if (globalContext.getLoadedContext(GlobalContext.TEST_MODE) == null)
 		{
-			result.clearDetails();
+			if (!saveDetailedResult)
+				result.clearDetails();
 			result.clearLinkedMessages();
 		}
 	}

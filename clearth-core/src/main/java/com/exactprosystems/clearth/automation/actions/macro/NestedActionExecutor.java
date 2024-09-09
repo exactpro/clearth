@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,6 +33,7 @@ public class NestedActionExecutor extends ActionExecutor
 	public NestedActionExecutor(GlobalContext globalContext, ActionParamsCalculator calculator, ActionReportWriter reportWriter)
 	{
 		super(globalContext, calculator, reportWriter, new FailoverStatus(), false, Collections.emptySet());
+		saveDetailedResult = true;
 	}
 	
 	public void executeAction(Action action, StepContext stepContext, boolean writeReport)
