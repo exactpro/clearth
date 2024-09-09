@@ -51,17 +51,23 @@ Build and publish ClearTH Core and modules to a local repository, i.e. "shared" 
 $ ./gradlew clean build publish
 ```
 
-Create a new project that will use ClearTH Core and its GUI module by executing the following command from the repository root:
+Create a new project that will use ClearTH Core and its GUI module by executing the following command from the repository root.
+
+New project will use Jetty 9.4 and, thus, JDK 11 is required to execute this command successfully.
 ```
 $ ./gradlew createProject -PnewProjectDir=../PROJECTDIR -PnewProjectName=PROJECTNAME
 ```
 
-The new project will be created in the directory adjacent to the repository root.
+Alternatively, you can create the project that will use Jetty 12 to host ClearTH, thus, JDK 17 is required:
+```
+$ ./gradlew createProject -PnewProjectDir=../PROJECTDIR -PnewProjectName=PROJECTNAME -Pserver=jetty12
+```
 
+Anyway, the new project will be created in the directory adjacent to the repository root. It will include Jetty server with needed modules installed and ready to host ClearTH.
 
 ## Starting ClearTH
 
-JDK 11 is required on ClearTH host.
+JDK 17 is required on ClearTH host if the project uses Jetty 12. Otherwise, JDK 11 is required.
 
 Navigate to the directory with your new project and execute the following command to start ClearTH within the Jetty server:
 ```

@@ -8,7 +8,9 @@ ext {
 	core_version = '@CORE_VERSION@'
 	build_version = 'build_version'
 	war_name = 'clearth.war'
-	jettyDistName = "jetty-distribution-${jetty94Version}"
+	
+	jetty_9_4 = 'jetty9.4'
+	jetty_12 = 'jetty12'
 	
 	if (project.hasProperty('revision')) {
 		build_version = revision
@@ -20,6 +22,24 @@ ext {
 	if (!project.hasProperty('knownExploitedVulnerabilitiesUrl')) {
 		knownExploitedVulnerabilitiesUrl = null
 	}
+	
+	if (!project.hasProperty('server'))
+		server = jetty_9_4
+	
+	if (server == jetty_9_4) {
+		def version = jetty94Version
+		jettyName = "jetty-distribution-${version}"
+		jettyUrl = "https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/${version}/${jettyName}.zip"
+	}
+	else if (server == jetty_12) {
+		def version = jetty12Version
+		jettyName = "jetty-home-${version}"
+		jettyUrl = "https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/${version}/${jettyName}.zip"
+	}
+	else
+		throw new GradleException("'server' must be '${jetty_9_4}' or '${jetty_12}'")
+	
+	jettyHome = 'jetty/jetty-home'
 }
 
 repositories {
@@ -70,24 +90,36 @@ gretty {
 	serverConfigFile = 'jetty94.xml'
 }
 
-task downloadJetty() {
-	def f = new File(projectDir, "jetty")
-	def jettyDistZip = new File(f, "${jettyDistName}.zip")
+task downloadJetty(type: JavaExec,
+		group: 'ClearTH',
+		dependsOn: 'downloadJettyDistribution') {
+	workingDir = file('jetty')
+	classpath = files("${jettyHome}/start.jar")
+	mainClass = 'org.eclipse.jetty.start.Main'
+	if (server == jetty_9_4)
+		args '--add-to-start=server,http,deploy,apache-jsp,websocket'
+	else if (server == jetty_12)
+		args '--add-modules=server,http,ee8-deploy,ee8-apache-jsp,ee8-websocket-javax'
+}
+
+task downloadJettyDistribution() {
+	def f = new File(projectDir, jettyHome)
+	def jettyZip = new File(f, "${jettyName}.zip")
 	
 	doLast {
-		def url = new URL("https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/${jetty94Version}/${jettyDistName}.zip")
+		def url = new URL(jettyUrl)
 		f.mkdirs()
 		
-		println 'Downloading Jetty: ' + url
-		url.withInputStream { i -> jettyDistZip.withOutputStream { it << i } }
+		println('Downloading Jetty: ' + url)
+		url.withInputStream { i -> jettyZip.withOutputStream { it << i } }
 		
-		println 'Unpacking Jetty'
+		println('Unpacking Jetty')
 		copy {
-			from zipTree(jettyDistZip)
+			from zipTree(jettyZip)
 			into f
 		}
 		
-		def unzipped = new File(f, jettyDistName)
+		def unzipped = new File(f, jettyName)
 		copy {
 			from (unzipped) {
 				exclude 'demo-base'
@@ -95,12 +127,12 @@ task downloadJetty() {
 			into f
 		}
 		
-		def work = new File(f, 'work')
+		def work = new File(projectDir, 'jetty/work')
 		println 'Creating directory ' + work
 		work.mkdirs()
 		
 		println 'Removing temporary files'
-		delete jettyDistZip
+		delete jettyZip
 		delete unzipped
 	}
 }
@@ -116,7 +148,7 @@ task runClearTH(type: JavaExec,
 		description: 'Builds WAR file, deploys it to Jetty and starts Jetty with remote debugging enabled', 
 		dependsOn: copyWar) {
 	workingDir = file('jetty')
-	classpath = files('jetty/start.jar')
+	classpath = files("${jettyHome}/start.jar")
 	mainClass = 'org.eclipse.jetty.start.Main'
 	//debug = true
 	jvmArgs '-Xdebug', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'

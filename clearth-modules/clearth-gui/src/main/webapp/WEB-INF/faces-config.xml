@@ -145,7 +145,17 @@
 			<value>#{automationBean}</value>
 		</managed-property>
 	</managed-bean>
-	
+
+	<managed-bean>
+		<managed-bean-name>schedulerInfoExportBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.automation.SchedulerInfoExportBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>automationBean</property-name>
+			<value>#{automationBean}</value>
+		</managed-property>
+	</managed-bean>
+
 <!-- End of Automation -->
 
 <!--Tools beans-->

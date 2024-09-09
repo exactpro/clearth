@@ -17,6 +17,10 @@ ext {
 	undef = 'undef'
 	sharedDir = file('shared')
 	coreXsdDir = file('clearth-core/xsd')
+	jetty_9_4 = 'jetty9.4'
+	jetty_12 = 'jetty12'
+	jetty_9_4_version = '9.4.55.v20240627'
+	jetty_12_version = '12.0.12'
 
 	if (!project.hasProperty('cth_version')) {
 		cth_version = '1.0.0-SNAPSHOT'
@@ -42,8 +46,23 @@ ext {
 		knownExploitedVulnerabilitiesUrl = null
 	}
 	
-	jettyVersion = '9.4.53.v20231009'
-	jettyDistName = "jetty-distribution-${jettyVersion}"
+	if (!project.hasProperty('server'))
+		server = jetty_9_4
+	
+	if (server == jetty_9_4) {
+		def version = jetty_9_4_version
+		jettyName = "jetty-distribution-${version}"
+		jettyUrl = "https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/${version}/${jettyName}.zip"
+	}
+	else if (server == jetty_12) {
+		def version = jetty_12_version
+		jettyName = "jetty-home-${version}"
+		jettyUrl = "https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/${version}/${jettyName}.zip"
+	}
+	else
+		throw new GradleException("'server' must be '${jetty_9_4}' or '${jetty_12}'")
+	
+	jettyHome = 'jetty/jetty-home'
 }
 
 subprojects {
@@ -285,25 +304,19 @@ task publishAll(group: 'publishing', description: 'Publishes all ClearTH compone
 
 task downloadJetty() {
 	def f = new File("${projectDir}/jetty/")
-	def jettyDistZip = new File(f, "${jettyDistName}.zip")
+	def jettyZip = new File(f, "${jettyName}.zip")
 	
-	outputs.upToDateWhen { jettyDistZip.exists() }
+	outputs.upToDateWhen { jettyZip.exists() }
 	
 	doLast {
 		copy {
-			def url = new URL("https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/${jettyVersion}/${jettyDistName}.zip")
+			def url = new URL(jettyUrl)
 			f.mkdirs()
 			println('Downloading Jetty: ' + url)
-			url.withInputStream { i -> jettyDistZip.withOutputStream { it << i } }
+			url.withInputStream { i -> jettyZip.withOutputStream { it << i } }
 			println('Unpacking Jetty')
-			from zipTree(jettyDistZip)
+			from zipTree(jettyZip)
 			into f
-			
-			def unzipped = new File(f, jettyDistName)
-			
-			def work = new File(unzipped, 'work')
-			println('Creating directory ' + work)
-			work.mkdirs()
 		}
 	}
 }
@@ -320,9 +333,31 @@ task zipTestReports(type: Zip, group: 'other', description: 'Creates archive wit
 	}
 }
 
-task createProject(type: Copy, 
+task createProject(group: 'ClearTH', 
+		description: 'Creates directory with new ClearTH-based project',
+		dependsOn: 'prepareJettyInNewProject') {
+	doLast {
+		def work = new File(newProjectDir, 'jetty/work')
+		work.mkdirs()
+	}
+}
+
+task prepareJettyInNewProject(type: JavaExec,
+		group: 'ClearTH',
+		description: 'Prepares Jetty to work in directory with new ClearTH-based project',
+		dependsOn: 'copyNewProjectFiles') {
+	workingDir = file("${newProjectDir}/jetty")
+	classpath = files("${newProjectDir}/${jettyHome}/start.jar")
+	mainClass = 'org.eclipse.jetty.start.Main'
+	if (server == jetty_9_4)
+		args '--add-to-start=server,http,deploy,apache-jsp,websocket'
+	else if (server == jetty_12)
+		args '--add-modules=server,http,ee8-deploy,ee8-apache-jsp,ee8-websocket-javax'
+}
+
+task copyNewProjectFiles(type: Copy, 
 		group: 'ClearTH', 
-		description: 'Creates directory with new ClearTH-based project', 
+		description: 'Copies files to directory of new ClearTH-based project', 
 		dependsOn: 'downloadJetty') {
 	
 	doFirst {
@@ -356,7 +391,8 @@ task createProject(type: Copy,
 	from ("${projectDir}/for_new_project") {
 		include "build.gradle"
 		include "gradle.properties"
-		filter( org.apache.tools.ant.filters.ReplaceTokens, tokens: ["JETTY_VERSION": jettyVersion.toString(),
+		filter( org.apache.tools.ant.filters.ReplaceTokens, tokens: ["JETTY_9_4_VERSION": jetty_9_4_version.toString(),
+																	 "JETTY_12_VERSION": jetty_12_version.toString(),
 																	 "CORE_SHARED_DIR": sharedDir.toString().replace('\\', '/'),
 																	 "CORE_VERSION": cth_version] )
 	}
@@ -367,10 +403,23 @@ task createProject(type: Copy,
 		exclude 'WEB-INF/faces-config.xml'
 		into "src/main/webapp/"
 	}
-	from (new File(projectDir,"jetty/jetty-distribution-${jettyVersion}")) {
+	
+	from (new File(projectDir, "jetty/${jettyName}")) {
 		exclude 'demo-base'
-		into "jetty"
+		into jettyHome
 	}
+	
+	def jettyXmlName;
+	if (server == jetty_9_4)
+		jettyXmlName = 'jetty94.xml'
+	else if (server == jetty_12)
+		jettyXmlName = 'jetty12.xml'
+	
+	from (new File(newProjectDir, "${jettyHome}/etc/")) {
+		include 'jetty.xml'
+		rename('jetty.xml', jettyXmlName)
+	}
+	
 	from (new File("${projectDir}")) {
 		include 'gradle/'
 		include 'gradlew.bat'
@@ -383,10 +432,7 @@ task createProject(type: Copy,
 		include 'log.properties'
 		into "docker"
 	}
-	from (new File("${newProjectDir}/jetty/etc/")) {
-		include 'jetty.xml'
-		rename('jetty.xml', 'jetty94.xml')
-	} 
+	
 	into newProjectDir
 }
 

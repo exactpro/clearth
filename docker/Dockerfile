@@ -1,9 +1,9 @@
-FROM jetty:9.4.50-jre11-alpine
+FROM jetty:9.4.55-jre11-alpine
 
-WORKDIR /usr/local
+WORKDIR /var/lib
 
 USER root
-RUN chown -R jetty:jetty /usr/local
+RUN chown -R jetty:jetty /var/lib
 USER jetty
 
 EXPOSE 8080
@@ -13,7 +13,7 @@ COPY --chown=jetty cfg cfg/
 COPY --chown=jetty jetty/webapps jetty/webapps/
 COPY --chown=jetty docker/log.properties cfg/log.properties
 COPY --chown=jetty docker/clearth.cfg cfg/clearth.cfg
-COPY --chown=jetty docker/start.ini jetty/start.ini
 
-WORKDIR /usr/local/jetty
-CMD ["sh", "-c", "cp -u -p ../cfg/users.xml /clearth/persistentFiles/users.xml; exec java -jar start.jar"]
+WORKDIR /var/lib/jetty
+RUN java -jar "/usr/local/jetty/start.jar" --add-to-start=server,http,deploy,apache-jsp,websocket
+CMD ["sh", "-c", "cp -u -p ../cfg/users.xml /clearth/persistentFiles/users.xml; exec java -jar /usr/local/jetty/start.jar"]
