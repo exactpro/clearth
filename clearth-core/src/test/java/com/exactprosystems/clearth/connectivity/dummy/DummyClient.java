@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *  
@@ -40,11 +40,13 @@ public class DummyClient extends BasicClearThClient
 	final BlockingQueue<Object> messagesToReceive = new LinkedBlockingQueue<>();
 	LinkedList<Object> sentMessagesHistory = new LinkedList<>();
 	private boolean needReceivedProcessorThread;
+	private String greetingMessage;
 	
 	public DummyClient(DummyMessageConnection owner) throws ConnectivityException, SettingsException
 	{
 		super(owner);
 		needReceivedProcessorThread = owner.isNeedReceiverProcessorThread();
+		greetingMessage = owner.getGreetingMessage();
 	}
 
 	@Override
@@ -82,7 +84,17 @@ public class DummyClient extends BasicClearThClient
 	@Override
 	protected void connect() throws ConnectionException, SettingsException
 	{
+		if (greetingMessage == null)
+			return;
 		
+		try
+		{
+			sendMessage(greetingMessage);
+		}
+		catch (ConnectivityException | IOException e)
+		{
+			throw new ConnectionException("Error while sending greeting message", e);
+		}
 	}
 	
 	@Override
@@ -106,7 +118,7 @@ public class DummyClient extends BasicClearThClient
 	@Override
 	protected EncodedClearThMessage doSendMessage(Object message) throws IOException, ConnectivityException
 	{
-		messagesToReceive.add(message);
+		messagesToReceive.add(createReceivedMessage(message.toString()));
 		sentMessagesHistory.add(message);
 		return null;
 	}
@@ -116,7 +128,14 @@ public class DummyClient extends BasicClearThClient
 	{
 		return doSendMessage(message.getPayload());
 	}
-
+	
+	
+	public static String createReceivedMessage(String message)
+	{
+		return "Received "+message;
+	}
+	
+	
 	private class DummyMessageReceiverThread extends MessageReceiverThread
 	{
 		public DummyMessageReceiverThread(DummyMessageConnection owner)

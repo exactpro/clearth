@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.connectivity;
 import com.exactprosystems.clearth.connectivity.connections.BasicClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.SettingsClass;
 import com.exactprosystems.clearth.utils.SettingsException;
+import com.exactprosystems.clearth.utils.javaFunction.FunctionWithException;
 
 /**
  * Minimal {@link BasicClearThMessageConnection} implementation to check its behavior 
@@ -28,11 +29,32 @@ import com.exactprosystems.clearth.utils.SettingsException;
 @SettingsClass(TestConnectionSettings.class)
 public class TestMessageConnection extends BasicClearThMessageConnection
 {
+	private final FunctionWithException<TestMessageConnection, ClearThClient, Exception> clientCreator;
+	
+	public TestMessageConnection(FunctionWithException<TestMessageConnection, ClearThClient, Exception> clientCreator)
+	{
+		this.clientCreator = clientCreator;
+	}
 
 	@Override
 	protected ClearThClient createClient() throws ConnectivityException, SettingsException
 	{
-		return new TestClearThClient(this);
+		try
+		{
+			return clientCreator.apply(this);
+		}
+		catch (ConnectivityException e)
+		{
+			throw e;
+		}
+		catch (SettingsException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
+		{
+			throw new ConnectivityException(e);
+		}
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,11 +26,11 @@ import com.exactprosystems.clearth.utils.SettingsException;
 
 import java.io.IOException;
 
-public class TestBasicClearThClient extends BasicClearThClient
+public class CountingClearThClient extends BasicClearThClient
 {
 	public static int value = 15;
 
-	public TestBasicClearThClient(ClearThMessageConnection owner) throws ConnectivityException, SettingsException
+	public CountingClearThClient(ClearThMessageConnection owner) throws ConnectivityException, SettingsException
 	{
 		super(owner);
 	}

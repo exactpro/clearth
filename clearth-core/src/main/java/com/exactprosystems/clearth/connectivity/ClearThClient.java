@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.connectivity;
 
 import com.exactprosystems.clearth.messages.PlainMessageSender;
+import com.exactprosystems.clearth.utils.SettingsException;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public interface ClearThClient extends PlainMessageSender
 	
 	MessageListener findListener(String listenerType);
 	
-	void start(boolean startListeners) throws ConnectivityException;
+	void start(boolean startListeners) throws ConnectivityException, SettingsException;
 	
 	void dispose(boolean disposeListeners) throws ConnectivityException;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -94,7 +94,7 @@ public class BasicClearThClientTest
 	@BeforeMethod
 	public void prepareConnection() throws IOException
 	{
-		con = new TestMessageConnection();
+		con = new TestMessageConnection(c -> new TestClearThClient(c));
 		con.setTypeInfo(new ConnectionTypeInfo("TestTypeInfo",
 				TestMessageConnection.class,
 				OUTPUT_ROOT));
@@ -211,20 +211,6 @@ public class BasicClearThClientTest
 		assertEquals(messages, expectedReceived);
 	}
 
-	@Test
-	public void checkCloseConnection() throws Exception
-	{
-		assertEquals(TestBasicClearThClient.value, 15);
-		try
-		{
-			TestBasicClearThClient client = new TestBasicClearThClient(con);
-		}
-		catch (Exception e)
-		{
-			assertEquals(e.getMessage(), "value = 50");
-		}
-		assertEquals(TestBasicClearThClient.value, 30);
-	}
 	
 	private void clearDirectory(Path directory) throws IOException
 	{

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *  
@@ -40,6 +40,7 @@ public class DummyMessageConnection extends BasicClearThMessageConnection
 	@XmlElement
 	private boolean autoconnect = true;
 	private boolean needReceiverProcessorThread;
+	private String greetingMessage;
 
 	public boolean isNeedReceiverProcessorThread()
 	{
@@ -93,5 +94,16 @@ public class DummyMessageConnection extends BasicClearThMessageConnection
 	protected MessageListenerFactory createListenerFactory()
 	{
 		return new CustomMessageListenerFactory();
+	}
+	
+	
+	public String getGreetingMessage()
+	{
+		return greetingMessage;
+	}
+	
+	public void setGreetingMessage(String greetingMessage)
+	{
+		this.greetingMessage = greetingMessage;
 	}
 }

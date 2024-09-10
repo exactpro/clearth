@@ -1,4 +1,4 @@
 #ID,#Globalstep,#Action,#ConnectionName,#Message
 id1,Step1,SendPlainMessage,Con1,MessageText@{time(0)}
 #ID,#Globalstep,#Action,#Timeout,#ConnectionName,#Message
-id2,Step2,ReceivePlainMessage,2000,Con1,@{pattern('MessageText.*')}
+id2,Step2,ReceivePlainMessage,2000,Con1,@{pattern('Received MessageText.*')}

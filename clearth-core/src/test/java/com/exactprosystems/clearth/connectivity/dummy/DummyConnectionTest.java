@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *  
@@ -38,10 +38,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -49,7 +48,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -138,11 +136,7 @@ public class DummyConnectionTest
 		String message = conName + " - message";
 		
 		List<String> lines = testConWithListener(conName, message, false, true);
-		
-		//first line is a metadata; second one is a message; third one is empty
-		assertEquals(3, lines.size());
-		assertEquals(message, lines.get(1));
-		assertEquals("", lines.get(2));
+		assertMessage(message, lines, "sent message");
 	}
 	
 	@Test
@@ -153,11 +147,7 @@ public class DummyConnectionTest
 		String message = conName + " - message";
 
 		List<String> lines = testConWithListener(conName, message, true, false);
-
-		//1st line is metadata, 2nd line is message itself, 3rd line is empty
-		assertEquals(3, lines.size());
-		assertEquals(message, lines.get(1));
-		assertEquals("", lines.get(2));
+		assertMessage(DummyClient.createReceivedMessage(message), lines, "received message");
 	}
 
 	@Test
@@ -171,8 +161,24 @@ public class DummyConnectionTest
 		//3 lines from receive listener, 3 from send listener; they can have different order
 		//1st and 4th line will always be the message
 		assertEquals(6, lines.size());
-		assertEquals(message, lines.get(1));
-		assertEquals(message, lines.get(4));
+		
+		String msg1 = lines.get(1),
+				msg2 = lines.get(4),
+				expected1,
+				expected2;
+		if (msg1.equals(message))
+		{
+			expected1 = message;
+			expected2 = DummyClient.createReceivedMessage(message);
+		}
+		else
+		{
+			expected1 = DummyClient.createReceivedMessage(message);
+			expected2 = message;
+		}
+		
+		assertEquals(expected1, msg1);
+		assertEquals(expected2, msg2);
 	}
 
 	private List<String> testConWithListener(String conName, String messageToSend, boolean activeForReceived, boolean activeForSent)
@@ -184,7 +190,7 @@ public class DummyConnectionTest
 		connection.setName(conName);
 		connection.setNeedReceiverProcessorThread(true);
 
-		connection.addListener(createFileListenerConfig(listenerPath, listenerName, activeForReceived,activeForSent));
+		connection.addListener(createFileListenerConfig(listenerPath, listenerName, activeForReceived, activeForSent));
 
 		connection.start();
 		connection.sendMessage(messageToSend);
@@ -232,7 +238,7 @@ public class DummyConnectionTest
 	
 	protected List<String> getFileContent(File file) throws IOException
 	{
-		return new BufferedReader(new FileReader(file)).lines().collect(Collectors.toList());
+		return FileUtils.readLines(file, StandardCharsets.UTF_8);
 	}
 	
 	@Test
@@ -245,6 +251,42 @@ public class DummyConnectionTest
 		con.start();
 		con.sendMessage(message);
 		assertEquals(message, con.getLastSentMessage());
+	}
+	
+	@Test
+	public void sendReceiveOnStartup() throws ConnectivityException, SettingsException, IOException
+	{
+		String conName = "TestMessagesOnStartup",
+				greetMsg = "Hello on startup";
+		
+		DummyMessageConnection con = createDummyCon();
+		con.setName(conName);
+		con.setNeedReceiverProcessorThread(true);
+		con.setGreetingMessage(greetMsg);
+		
+		String sendListenerName = conName + "_send_listener",
+				receiveListenerName = conName + "_receive_listener";
+		Path sendListenerPath = testingDirectory.resolve(sendListenerName + ".txt"),
+				receiveListenerPath = testingDirectory.resolve(receiveListenerName + ".txt");
+		con.addListener(createFileListenerConfig(sendListenerPath, sendListenerName, false, true));
+		con.addListener(createFileListenerConfig(receiveListenerPath, receiveListenerName, true, false));
+		
+		con.start();
+		try
+		{
+			ensureHasMessagesProcessed(() -> con.getSent());
+			ensureHasMessagesProcessed(() -> con.getReceived());
+		}
+		finally
+		{
+			con.stop();
+		}
+		
+		List<String> sentMessages = getFileContent(sendListenerPath.toAbsolutePath().toFile());
+		assertMessage(greetMsg, sentMessages, "sent message");
+		
+		List<String> receivedMessages = getFileContent(receiveListenerPath.toAbsolutePath().toFile());
+		assertMessage(DummyClient.createReceivedMessage(greetMsg), receivedMessages, "received message");
 	}
 
 	@Test
@@ -262,9 +304,9 @@ public class DummyConnectionTest
 			con.sendMessage(line1);
 			con.sendMessage(line2);
 
-			assertEquals(line3, con.pollFirstFromReceivedMessages());
-			assertEquals(line1, con.pollFirstFromReceivedMessages());
-			assertEquals(line2, con.pollFirstFromReceivedMessages());
+			assertEquals(DummyClient.createReceivedMessage(line3), con.pollFirstFromReceivedMessages());
+			assertEquals(DummyClient.createReceivedMessage(line1), con.pollFirstFromReceivedMessages());
+			assertEquals(DummyClient.createReceivedMessage(line2), con.pollFirstFromReceivedMessages());
 		}
 		finally
 		{
@@ -289,5 +331,14 @@ public class DummyConnectionTest
 		map.put("File", FileListener.class);
 		map.put("Dummy", DummyListener.class);
 		return map;
+	}
+	
+	
+	private void assertMessage(String expectedMessage, List<String> lines, String description)
+	{
+		//1st line is metadata, 2nd line is message itself, 3rd line is empty
+		assertEquals("Number of lines for "+description, 3, lines.size());
+		assertEquals("Content of "+description, expectedMessage, lines.get(1));
+		assertEquals("Line after "+description, "", lines.get(2));
 	}
 }

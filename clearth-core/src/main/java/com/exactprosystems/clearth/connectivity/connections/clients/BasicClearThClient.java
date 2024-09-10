@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -86,26 +86,6 @@ public abstract class BasicClearThClient implements ClearThClient
 		allListeners = new ArrayList<>();
 		receiveListeners = new ArrayList<>();
 		sendListeners = new ArrayList<>();
-		try
-		{
-			connect();
-		}
-		catch (Exception e)
-		{
-			logger.error("Could not init client for connection '{}', closing all opened related connections", name, e);
-			try
-			{
-				closeConnections();
-			}
-			catch (Exception e1)
-			{
-				logger.error("Error while closing related connections", e1);
-			}
-
-			Utils.closeResource(messageHandler);
-
-			throw e;
-		}
 	}
 
 	protected Path createUnhandledMessagesFilePath(String name)
@@ -219,7 +199,7 @@ public abstract class BasicClearThClient implements ClearThClient
 	}
 	
 	@Override
-	public void start(boolean startListeners) throws ConnectivityException
+	public void start(boolean startListeners) throws ConnectivityException, SettingsException
 	{
 		logger.info("Starting connection '"+name+"'");
 		logger.trace("{} : startListeners = {}; listeners = {}",
@@ -254,7 +234,9 @@ public abstract class BasicClearThClient implements ClearThClient
 			receiverThread = createReceiverThread();
 			receiverThread.start();
 		}
-
+		
+		connect();
+		
 		running = true;
 	}
 
