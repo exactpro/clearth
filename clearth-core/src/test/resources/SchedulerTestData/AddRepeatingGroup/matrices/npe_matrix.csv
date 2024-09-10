@@ -1,0 +1,10 @@
+#ID,#GlobalStep,#Action,#SubMsgType,#Field1
+id2_1,Step1,AddRepeatingGroup,SubMsg1,V1
+id2_2,Step1,AddRepeatingGroup,SubMsg1,V2
+
+#ID,#GlobalStep,#Action,#StaticValue
+id1,Step1,SetStatic,@{id2_1.Field1}
+
+#ID,#GlobalStep,#Action,#RepeatingGroups
+id2,Step1,SimpleSendMessageActionTest,"id2_1,id2_2"
+id3,Step1,SimpleSendMessageActionTest," id2_1  , id2_2 "

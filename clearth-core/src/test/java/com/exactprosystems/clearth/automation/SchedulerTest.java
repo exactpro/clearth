@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -43,8 +43,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.exactprosystems.clearth.ApplicationManager.USER_DIR;
-import static com.exactprosystems.clearth.ApplicationManager.waitForSchedulerToStop;
+import static com.exactprosystems.clearth.ApplicationManager.*;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -123,7 +122,7 @@ public class SchedulerTest
 	@BeforeClass
 	public static void startTestApplication() throws ClearThException
 	{
-		clearThManager = new ApplicationManager();
+		clearThManager = ApplicationManager.builder().actionsMappingFile(TEST_RES_DIR.resolve("actionsmapping.cfg").toString()).build();
 	}
 
 	@After

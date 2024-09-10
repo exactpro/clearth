@@ -79,14 +79,16 @@ public class ApplicationManager
 			USERS_LIST_FILE_PATH = TEST_RES_DIR.resolve("users.xml").toString(),
 			GLOB_CONST_FILENAME = TEST_RES_DIR.resolve("global_constants.cfg").toString(),
 			ENV_VARS_FILENAME = TEST_RES_DIR.resolve("env_variables.cfg").toString(),
-			HTML_TEMPLATE_DIR = PROJ_DIR.resolve("cfg").resolve("templates").toString();
+			HTML_TEMPLATE_DIR = PROJ_DIR.resolve("cfg").resolve("templates").toString(),
+			ACTIONS_MAPPING_FILENAME = "cfg/actionsmapping.cfg";
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 	private static boolean clearAppRoot = true, clearLogs = true;
 	private String configFilePath,
 			envVarsFilePath = ENV_VARS_FILENAME,
-			globalConstFilePath = GLOB_CONST_FILENAME;
+			globalConstFilePath = GLOB_CONST_FILENAME,
+			actionsMappingFile = ACTIONS_MAPPING_FILENAME;
 	private DeploymentConfig deploymentConfig;
 	private DataHandlersFactory dataHandlersFactory;
 	private ReportTemplatesProcessor templatesProcessor;
@@ -103,6 +105,7 @@ public class ApplicationManager
 		envVarsFilePath = builder.envVarsFilePath;
 		globalConstFilePath = builder.globalConstFilePath;
 		templatesProcessor = builder.templatesProcessor;
+		actionsMappingFile = builder.actionsMappingFile;
 		
 		initClearThInstance();
 	}
@@ -278,6 +281,7 @@ public class ApplicationManager
 		when(spy.getGlobalConstantsFilename()).thenReturn(globalConstFilePath);
 		when(spy.getEnvVarsFilename()).thenReturn(envVarsFilePath);
 		when(spy.getHtmlTemplatesDir()).thenReturn(HTML_TEMPLATE_DIR);
+		when(spy.getActionsMappingFileName()).thenReturn(actionsMappingFile);
 
 		return spy;
 	}
@@ -402,6 +406,7 @@ public class ApplicationManager
 		private String configFilePath = null;
 		private String envVarsFilePath = ENV_VARS_FILENAME;
 		private String globalConstFilePath = GLOB_CONST_FILENAME;
+		private String actionsMappingFile = ACTIONS_MAPPING_FILENAME;
 		private ReportTemplatesProcessor templatesProcessor;
 		
 		public ApplicationManager build() throws ClearThException
@@ -436,6 +441,12 @@ public class ApplicationManager
 		public Builder templatesProcessor(ReportTemplatesProcessor templatesProcessor)
 		{
 			this.templatesProcessor = templatesProcessor;
+			return this;
+		}
+		
+		public Builder actionsMappingFile(String actionsMappingFile)
+		{
+			this.actionsMappingFile = actionsMappingFile;
 			return this;
 		}
 	}

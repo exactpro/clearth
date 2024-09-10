@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -37,6 +37,7 @@ import java.util.*;
 import static com.exactprosystems.clearth.ClearThCore.rootRelative;
 import static com.exactprosystems.clearth.automation.ActionExecutor.*;
 import static com.exactprosystems.clearth.automation.MatrixFunctions.*;
+import static com.exactprosystems.clearth.automation.actions.MessageAction.REPEATINGGROUPS;
 import static com.exactprosystems.clearth.utils.Utils.nvl;
 import static java.nio.file.Files.exists;
 import static java.util.Collections.emptyMap;
@@ -47,7 +48,6 @@ import static org.apache.commons.lang.StringUtils.*;
 public class MvelVarsCleaningTableBuilder
 {
 	private static final Logger log = LoggerFactory.getLogger(MvelVarsCleaningTableBuilder.class);
-
 	private static final Set<String> KEYWORDS_TO_IGNORE = new HashSet<>();
 	static
 	{
@@ -152,6 +152,15 @@ public class MvelVarsCleaningTableBuilder
 				processInputFileParam(paramValue, paramName, currentId, previousActionsVars, 
 						actionIdToLastReferringIdMap);
 		}
+		if (inputParams.containsKey(REPEATINGGROUPS))
+			processParamValue(inputParams.get(REPEATINGGROUPS), currentId, actionIdToLastReferringIdMap);
+	}
+	
+	private void processParamValue(String paramValue, String currentId, Map<String, String> actionIdToLastReferringIdMap)
+	{
+		String[] refs = paramValue.split(",");
+		for (String ref : refs)
+			actionIdToLastReferringIdMap.put(ref.trim(), currentId);
 	}
 	
 	private void processBasicParams(Action action, Map<String, String> actionIdToLastReferringIdMap)

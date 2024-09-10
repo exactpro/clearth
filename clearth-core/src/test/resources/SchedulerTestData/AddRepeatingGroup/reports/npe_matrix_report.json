@@ -1,0 +1,245 @@
+{
+  "matrixName" : "npe_matrix.csv",
+  "result" : true,
+  "description" : "",
+  "constants" : { },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true,
+      "failReason" : null,
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "SetStatic",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "StaticValue" : {
+          "value" : "V1",
+          "formula" : "@{id2_1.Field1}",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "subActions" : [ ]
+    }
+    ,
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id2",
+      "actionName" : "SimpleSendMessageActionTest",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : [ ],
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "RepeatingGroups" : {
+          "value" : "id2_1,id2_2",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DefaultResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "message" : null,
+        "comment" : null,
+        "linkedMessages" : [
+          {
+            "payload": "MsgType = 'null'\r\n\r\nSub-message 'SubMsg1':\r\n  SubMsgSource = 'id2_1'\r\n  Field1 = 'V1'\r\n\r\n\r\nSub-message 'SubMsg1':\r\n  SubMsgSource = 'id2_2'\r\n  Field1 = 'V2'\r\n\r\n\r\n\r\n",
+            "metadata": {
+              "direction": "SENT",
+              "fields": null
+            }
+          } ],
+        "failReason" : null,
+        "failoverData" : null
+      },
+      "subActions" : [ {
+        "@c" : ".ActionReport",
+        "actionId" : "id2_1",
+        "actionName" : "AddRepeatingGroup",
+        "timeout" : 0,
+        "async" : false,
+        "payloadFinished" : false,
+        "status" : {
+          "started" : null,
+          "finished" : null,
+          "passed" : true,
+          "failReason" : null,
+          "comments" : null,
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "SubMsgType" : {
+            "value" : "SubMsg1",
+            "specialValue" : false
+          },
+          "Field1" : {
+            "value" : "V1",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      }, {
+        "@c" : ".ActionReport",
+        "actionId" : "id2_2",
+        "actionName" : "AddRepeatingGroup",
+        "timeout" : 0,
+        "async" : false,
+        "payloadFinished" : false,
+        "status" : {
+          "started" : null,
+          "finished" : null,
+          "passed" : true,
+          "failReason" : null,
+          "comments" : null,
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "SubMsgType" : {
+            "value" : "SubMsg1",
+            "specialValue" : false
+          },
+          "Field1" : {
+            "value" : "V2",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      } ]
+    },
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id3",
+      "actionName" : "SimpleSendMessageActionTest",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : [ ],
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "RepeatingGroups" : {
+          "value" : "id2_1  , id2_2",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DefaultResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "message" : null,
+        "comment" : null,
+        "linkedMessages" : [
+          {
+            "payload": "MsgType = 'null'\r\n\r\nSub-message 'SubMsg1':\r\n  SubMsgSource = 'id2_1'\r\n  Field1 = 'V1'\r\n\r\n\r\nSub-message 'SubMsg1':\r\n  SubMsgSource = 'id2_2'\r\n  Field1 = 'V2'\r\n\r\n\r\n\r\n",
+            "metadata": {
+              "direction": "SENT",
+              "fields": null
+            }
+          } ],
+        "failReason" : null,
+        "failoverData" : null
+      },
+      "subActions" : [ {
+        "@c" : ".ActionReport",
+        "actionId" : "id2_1",
+        "actionName" : "AddRepeatingGroup",
+        "timeout" : 0,
+        "async" : false,
+        "payloadFinished" : false,
+        "status" : {
+          "started" : null,
+          "finished" : null,
+          "passed" : true,
+          "failReason" : null,
+          "comments" : null,
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "SubMsgType" : {
+            "value" : "SubMsg1",
+            "specialValue" : false
+          },
+          "Field1" : {
+            "value" : "V1",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      }, {
+        "@c" : ".ActionReport",
+        "actionId" : "id2_2",
+        "actionName" : "AddRepeatingGroup",
+        "timeout" : 0,
+        "async" : false,
+        "payloadFinished" : false,
+        "status" : {
+          "started" : null,
+          "finished" : null,
+          "passed" : true,
+          "failReason" : null,
+          "comments" : null,
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "SubMsgType" : {
+            "value" : "SubMsg1",
+            "specialValue" : false
+          },
+          "Field1" : {
+            "value" : "V2",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      } ]
+    }
+    ]
+
+  } ]
+}

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -175,7 +175,8 @@ public class MvelVariables
 			String subId = actionIdInMatrixToIdForMvel.getOrDefault(subActionId, subActionId);
 			//noinspection unchecked
 			Map<String, Object> subVars = (Map<String, Object>) variables.get(subId);
-			subVars.put(VARKEY_ACTION, execResultParams);
+			if (subVars != null)
+				subVars.put(VARKEY_ACTION, execResultParams);
 		}
 	}
 
