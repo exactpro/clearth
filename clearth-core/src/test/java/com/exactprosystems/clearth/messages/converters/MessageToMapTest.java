@@ -152,6 +152,28 @@ public class MessageToMapTest
 				"Message body");
 	}
 	
+	@Test
+	public void testEscapingFieldsInFlatMessage() throws ConversionException
+	{
+		MessageToMap converter = new MessageToMap();
+		SimpleClearThMessage message = new SimpleClearThMessageBuilder().type("Message1")
+				.field("_id", "PlainValue1")
+				.field("SubMap_MapField1", "123")
+				.field("_SubMap_MapField2", "234")
+				.field("_SubMap_subList_1_Field1", "Value1")
+				.field("_SubMap_subList_2_Field1", "Value2")
+				.field("SubMap_subList_2_Field2", "Value3")
+				.build();
+		
+		Map<String, Object> map = converter.convert(message);
+		Assert.assertEquals(map.toString(),
+				"{id=PlainValue1, " +
+				 "SubMap={MapField1=123, " +
+						 "MapField2=234, " +
+						 "subList=[{Field1=Value1}, " +
+						 			"{Field1=Value2, " +
+						 			"Field2=Value3}]}}");
+	}
 	
 	@Test(expectedExceptions = ConversionException.class, expectedExceptionsMessageRegExp = "Invalid list index -10 .*")
 	public void invalidFlatIndex() throws ConversionException

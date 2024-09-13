@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.messages.th2;
 
 import java.time.Instant;
+import java.util.Map;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -30,6 +31,8 @@ import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.MessageId;
 import com.exactpro.th2.common.schema.message.impl.rabbitmq.transport.ParsedMessage;
 import com.exactprosystems.clearth.connectivity.iface.SimpleClearThMessage;
 import com.exactprosystems.clearth.messages.converters.ConversionException;
+
+import static org.testng.Assert.*;
 
 public class Th2MessageFactoryTest
 {
@@ -46,13 +49,7 @@ public class Th2MessageFactoryTest
 	{
 		String sessionAlias = "TestConn-1";
 		SimpleClearThMessage message = MessageTestUtils.createComplexMessage();
-		
-		EventId parentEvent = EventId.builder()
-				.setBook("Book1")
-				.setId("RootEvent")
-				.setScope("defaultScope")
-				.setTimestamp(Instant.now())
-				.build();
+		EventId parentEvent = createEventId();
 		
 		ParsedMessage th2Message = factory.createParsedMessage(message, sessionAlias, parentEvent);
 		MessageId id = th2Message.getId();
@@ -72,5 +69,54 @@ public class Th2MessageFactoryTest
 								+ "}"
 						+ "}",
 				"Message body");
+	}
+	
+	@Test
+	public void testEscapingServiceFields() throws ConversionException
+	{
+		Map<String, String> fields = Map.of("SessionAlias", "Test_1",
+				"MsgType", "NewOrderSingle",
+				"_id", "id_id",
+				"_GlobalStep", "step",
+				"_Action", "action",
+				"_RouterAttributes", "attributes",
+				"_MsgType", "msg_type");
+		
+		SimpleClearThMessage message = new SimpleClearThMessage(fields);
+		EventId parentEvent = createEventId();
+		ParsedMessage th2Message = new Th2MessageFactory().createParsedMessage(message, "Test_1", parentEvent);
+		
+		Map<String, String> map = Map.of("SessionAlias", "Test_1",
+				"id", "id_id",
+				"GlobalStep", "step",
+				"Action", "action",
+				"RouterAttributes", "attributes",
+				"MsgType", "msg_type");
+		
+		assertMaps(th2Message.getBody(), map);
+	}
+	
+	private void assertMaps(Map<String, Object> actual, Map<String, String> expected)
+	{
+		assertEquals(actual.size(), expected.size());
+		
+		for (Map.Entry<String, String> entryExp : expected.entrySet())
+		{
+			String key = entryExp.getKey(),
+					value = entryExp.getValue();
+			
+			assertTrue(actual.containsKey(key));
+			assertEquals(actual.get(key).toString(), value);
+		}
+	}
+
+	private EventId createEventId()
+	{
+		return EventId.builder()
+				.setBook("Book1")
+				.setId("RootEvent")
+				.setScope("defaultScope")
+				.setTimestamp(Instant.now())
+				.build();
 	}
 }

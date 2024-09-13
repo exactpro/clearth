@@ -37,7 +37,8 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 			KIND_MAP = "Map",
 			KIND_LIST = "List",
 			FLAT_DELIMITER = "FlatDelimiter",
-			FLAT_DELIMITER_DEFAULT = "_";
+			FLAT_DELIMITER_DEFAULT = "_",
+			ESCAPING_CHAR = "_";
 	
 	private static final Set<String> SERVICE_FIELDS = Set.of(ClearThMessage.MSGTYPE, ClearThMessage.SUBMSGTYPE, 
 			ClearThMessage.SUBMSGSOURCE, SUBMSGKIND,
@@ -84,7 +85,7 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 			if (serviceFields.contains(fn))
 				continue;
 			
-			addFieldToMap(fn, message.getField(fn), dest);
+			addFieldToMap(fn.startsWith(ESCAPING_CHAR) ? fn.substring(ESCAPING_CHAR.length()) : fn, message.getField(fn), dest);
 		}
 		
 		addSubMessages(message.getSubMessages(), dest);
