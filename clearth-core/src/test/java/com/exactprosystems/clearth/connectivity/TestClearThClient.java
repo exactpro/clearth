@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,12 +24,15 @@ import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
 import com.exactprosystems.clearth.utils.SettingsException;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Minimal {@link BasicClearThClient} implementation to check its behavior
  */
 public class TestClearThClient extends BasicClearThClient
 {
+	private AtomicInteger readCounter;
+	
 	public TestClearThClient(TestMessageConnection owner) throws ConnectivityException, SettingsException
 	{
 		super(owner);
@@ -38,6 +41,7 @@ public class TestClearThClient extends BasicClearThClient
 	@Override
 	protected void connect() throws ConnectionException, SettingsException
 	{
+		readCounter = new AtomicInteger();
 	}
 	
 	private TestConnectionSettings getStoredSettings()
@@ -61,13 +65,15 @@ public class TestClearThClient extends BasicClearThClient
 	@Override
 	protected boolean isNeedReceiverThread()
 	{
-		return true;
+		//It is created in connect() and its presence indicates that messages must be read by the connection.
+		//If connect() and isNeedReceiverThread() are called in wrong order, readCounter will be null, messages will be not read and tests will fail
+		return readCounter != null;
 	}
 	
 	@Override
 	protected MessageReceiverThread createReceiverThread()
 	{
-		return new TestReceiverThread(name, getStoredSettings().getSource(), receivedMessageQueue);
+		return new TestReceiverThread(name, getStoredSettings().getSource(), readCounter, receivedMessageQueue);
 	}
 	
 	@Override

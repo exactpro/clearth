@@ -229,13 +229,13 @@ public abstract class BasicClearThClient implements ClearThClient
 			sentProcessorThread.start();
 		}
 
+		connect();
+		
 		if (isNeedReceiverThread())
 		{
 			receiverThread = createReceiverThread();
 			receiverThread.start();
 		}
-		
-		connect();
 		
 		running = true;
 	}

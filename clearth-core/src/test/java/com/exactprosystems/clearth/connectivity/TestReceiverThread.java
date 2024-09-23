@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -20,22 +20,21 @@ package com.exactprosystems.clearth.connectivity;
 
 import com.exactprosystems.clearth.connectivity.connections.clients.MessageReceiverThread;
 import com.exactprosystems.clearth.connectivity.iface.EncodedClearThMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestReceiverThread extends MessageReceiverThread
 {
-	private static final Logger logger = LoggerFactory.getLogger(TestReceiverThread.class);
-	
+	private final AtomicInteger counter;
 	private final BlockingQueue<String> sourceQueue;
 	
-	public TestReceiverThread(String name, BlockingQueue<String> sourceQueue, BlockingQueue<EncodedClearThMessage> messageQueue)
+	public TestReceiverThread(String name, BlockingQueue<String> sourceQueue, AtomicInteger counter, BlockingQueue<EncodedClearThMessage> messageQueue)
 	{
 		super(name, null, messageQueue, 0);
 		
+		this.counter = counter;
 		this.sourceQueue = sourceQueue;
 	}
 
@@ -44,6 +43,9 @@ public class TestReceiverThread extends MessageReceiverThread
 	{
 		String msg = sourceQueue.poll(1, TimeUnit.SECONDS);
 		if (msg != null)
+		{
+			counter.incrementAndGet();
 			receivedMessageQueue.add(EncodedClearThMessage.newReceivedMessage(msg));
+		}
 	}
 }
