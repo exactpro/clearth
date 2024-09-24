@@ -5,9 +5,22 @@ repositories {
 	}
 }
 
+ext {
+	bomVersion = '4.8.0'
+}
+
+configurations {
+	all {
+		resolutionStrategy {
+			force "com.exactpro.th2:bom:${bomVersion}",
+			      'com.google.j2objc:j2objc-annotations:3.0.0'
+		}
+	}
+}
+
 dependencies {
 	//Core decides what logging implementation to use. So, excluding dependencies of th2-common
-	api platform('com.exactpro.th2:bom:4.6.1') {
+	api platform("com.exactpro.th2:bom:${bomVersion}") {
 		exclude (group: 'org.apache.logging.log4j')
 		exclude (group: 'org.slf4j')
 	}
