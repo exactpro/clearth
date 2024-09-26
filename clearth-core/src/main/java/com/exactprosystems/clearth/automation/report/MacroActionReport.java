@@ -40,7 +40,10 @@ public class MacroActionReport extends ActionReport
 		if (actionNestedActions != null)
 		{
 			for (NestedAction na : actionNestedActions)
-				nestedActions.add(actionReportWriter.createActionReport(na.getAction()));
+			{
+				if (na.isShowInReport())
+					nestedActions.add(actionReportWriter.createActionReport(na.getAction()));
+			}
 		}
 	}
 	

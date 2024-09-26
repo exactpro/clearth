@@ -1,0 +1,3 @@
+#ID,#Action,#Execute,#P1
+id1,SetStatic,true,V1
+id2,SetStatic,false,V2

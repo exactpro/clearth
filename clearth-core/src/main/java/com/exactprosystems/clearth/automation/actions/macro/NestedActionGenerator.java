@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -149,7 +149,7 @@ public class NestedActionGenerator extends ActionGenerator
 	
 	protected void setNestedActionParams(Action sourceAction, NestedAction targetAction)
 	{
-		targetAction.setShowInReport(InputParamsUtils.getBooleanOrDefault(sourceAction.getInputParams(), SHOW_IN_REPORT, true));
+		targetAction.setShowInReport(InputParamsUtils.getBooleanOrDefault(sourceAction.getInputParams(), SHOW_IN_REPORT, sourceAction.isExecutable()));
 		targetAction.setContinueIfFailed(InputParamsUtils.getBooleanOrDefault(sourceAction.getInputParams(), CONTINUE_IF_FAILED, false));
 	}
 	

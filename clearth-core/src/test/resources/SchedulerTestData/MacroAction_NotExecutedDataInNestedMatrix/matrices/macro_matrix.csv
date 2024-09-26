@@ -1,0 +1,2 @@
+#ID,#GlobalStep,#Action,#MacroFileName
+id1,Step1,MacroAction,clearth-core/src/test/resources/SchedulerTestData/MacroAction_NotExecutedDataInNestedMatrix/macro.csv

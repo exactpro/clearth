@@ -1,0 +1,80 @@
+{
+  "result" : true,
+  "description" : "",
+  "constants" : { },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true,
+      "failReason" : null,
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "@c" : ".MacroActionReport",
+      "actionId" : "id1",
+      "actionName" : "MacroAction",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : null,
+        "comments" : [ "Nested actions executed successfully." ],
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "MacroFileName" : {
+          "value" : "clearth-core/src/test/resources/SchedulerTestData/MacroAction_NotExecutedDataInNestedMatrix/macro.csv",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.DefaultResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : false,
+        "message" : null,
+        "comment" : "Nested actions executed successfully.",
+        "linkedMessages" : [ ],
+        "failReason" : null,
+        "failoverData" : null
+      },
+      "subActions" : [ ],
+      "nestedActions" : [ {
+        "@c" : ".ActionReport",
+        "actionId" : "id1",
+        "actionName" : "SetStatic",
+        "timeout" : 0,
+        "async" : false,
+        "payloadFinished" : false,
+        "waitAsyncEnd" : "NO",
+        "status" : {
+          "passed" : true,
+          "failReason" : null,
+          "comments" : null,
+          "actualTimeout" : 0,
+          "waitBeforeAction" : 0
+        },
+        "inputParams" : {
+          "P1" : {
+            "value" : "V1",
+            "specialValue" : false
+          }
+        },
+        "specialParams" : { },
+        "subActions" : [ ]
+      } ]
+    }
+    ]
+  } ]
+}
