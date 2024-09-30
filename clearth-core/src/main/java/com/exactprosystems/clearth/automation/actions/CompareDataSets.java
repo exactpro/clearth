@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -179,7 +179,9 @@ public class CompareDataSets extends Action
 	
 	protected ComparisonProcessor<String, String, PrimaryKey> createComparisonProcessor()
 	{
-		return new ComparisonProcessor<>(compConfig);
+		ComparisonProcessor<String, String, PrimaryKey> processor = new ComparisonProcessor<>(compConfig);
+		processor.setKeyColumns(compConfig.getKeyColumns());
+		return processor;
 	}
 	
 	protected KeyColumnsRowsCollector<String, String, PrimaryKey> createKeyColumnsRowsCollector() throws IOException

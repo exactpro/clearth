@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -42,6 +42,7 @@ public class ComparisonConfiguration
 	private static final String MIN_ROWS_TO_STORE_TEMPLATE = "Min%sRowsInReport",
 			MAX_ROWS_TO_STORE_TEMPLATE = "Max%sRowsInReport";
 	public static final String KEY_COLUMNS = "KeyColumns",
+			KEY_VALUES_IN_HEADER = "KeyValuesInHeader",
 			NUMERIC_COLUMNS = "NumericColumns",
 			MAPPING_FILE_NAME = "MappingFileName",
 			CHECK_DUPLICATES = "CheckDuplicates",
@@ -69,7 +70,8 @@ public class ComparisonConfiguration
 	protected DataMapping<String> dataMapping;
 	
 	protected boolean checkDuplicates,
-			listFailedColumns;
+			listFailedColumns,
+			keyValuesInHeader;
 	
 	protected int minPassedRowsToStore,
 			maxPassedRowsToStore,
@@ -110,6 +112,7 @@ public class ComparisonConfiguration
 
 		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
 		listFailedColumns = handler.getBoolean(LIST_FAILED_COLUMNS, false);
+		keyValuesInHeader = handler.getBoolean(KEY_VALUES_IN_HEADER, false);
 		
 		minPassedRowsToStore = handler.getInteger(MIN_PASSED_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT);
 		maxPassedRowsToStore = handler.getInteger(MAX_PASSED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
@@ -185,6 +188,11 @@ public class ComparisonConfiguration
 	public boolean isCheckDuplicates()
 	{
 		return checkDuplicates;
+	}
+	
+	public boolean isKeyValuesInHeader()
+	{
+		return keyValuesInHeader;
 	}
 	
 	public boolean isListFailedColumns()

@@ -1,0 +1,376 @@
+{
+  "matrixName" : "key_fields_in_comment.csv",
+  "result" : true,
+  "description" : "",
+  "constants" : {
+    "path" : "clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData2"
+  },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true,
+      "failReason" : null,
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "CompareDataSets",
+      "timeout" : 0,
+      "async" : false,
+      "payloadFinished" : false,
+      "waitAsyncEnd" : "NO",
+      "status" : {
+        "passed" : true,
+        "failReason" : "FAILED",
+        "comments" : null,
+        "actualTimeout" : 0,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : {
+        "ActualFormat" : {
+          "value" : "CsvFile",
+          "specialValue" : false
+        },
+        "ExpectedFormat" : {
+          "value" : "CsvFile",
+          "specialValue" : false
+        },
+        "ExpectedSource" : {
+          "value" : "clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData2/file1.csv",
+          "formula" : "@{matrix.path}/file1.csv",
+          "specialValue" : false
+        },
+        "KeyValuesInHeader" : {
+          "value" : "true",
+          "specialValue" : false
+        },
+        "ActualSource" : {
+          "value" : "clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData2/file2.csv",
+          "formula" : "@{matrix.path}/file2.csv",
+          "specialValue" : false
+        },
+        "MappingFileName" : {
+          "value" : "clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData2/mapping.xml",
+          "formula" : "@{matrix.path}/mapping.xml",
+          "specialValue" : false
+        }
+      },
+      "specialParams" : { },
+      "result" : {
+        "@c" : ".results.CloseableContainerResult",
+        "success" : true,
+        "crashed" : false,
+        "inverted" : true,
+        "message" : null,
+        "comment" : null,
+        "linkedMessages" : [ ],
+        "failReason" : "FAILED",
+        "failoverData" : null,
+        "details" :
+        [ {
+          "@c" : ".results.CsvDetailedResult",
+          "success" : true,
+          "crashed" : false,
+          "inverted" : false,
+          "message" : null,
+          "comment" : null,
+          "linkedMessages" : [ ],
+          "failReason" : null,
+          "failoverData" : null,
+          "maxDisplayedRowsCount" : 50,
+          "minStoredRowsCount" : -1,
+          "maxStoredRowsCount" : -1,
+          "storedRowsCount" : 2,
+          "totalRowsCount" : 2,
+          "passedRowsCount" : 2,
+          "writeCsvReportAnyway" : false,
+          "onlyFailedInHtml" : false,
+          "onlyFailedInCsv" : false,
+          "listFailedColumns" : false,
+          "name" : "Passed rows",
+          "header" : "Total rows: 2 / Displayed: 2 / Stored: 2",
+          "details" : [ {
+            "@c" : ".DetailedResult",
+            "success" : true,
+            "crashed" : false,
+            "inverted" : false,
+            "message" : null,
+            "comment" : "Row #1. A=1, BD=2",
+            "linkedMessages" : [ ],
+            "failReason" : null,
+            "failoverData" : null,
+            "resultDetails" : [ {
+              "param" : "A",
+              "expected" : "1",
+              "actual" : "1",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BD",
+              "expected" : "2",
+              "actual" : "2",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BE",
+              "expected" : "2",
+              "actual" : "2",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            } ]
+          },
+            {
+            "@c" : ".DetailedResult",
+            "success" : true,
+            "crashed" : false,
+            "inverted" : false,
+            "message" : null,
+            "comment" : "Row #2. A=2, BD=3",
+            "linkedMessages" : [ ],
+            "failReason" : null,
+            "failoverData" : null,
+            "resultDetails" : [ {
+              "param" : "A",
+              "expected" : "2",
+              "actual" : "2",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BD",
+              "expected" : "3",
+              "actual" : "3",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BE",
+              "expected" : "3",
+              "actual" : "3",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            } ]
+          } ]
+        },
+          {
+          "@c" : ".results.CsvDetailedResult",
+          "success" : false,
+          "crashed" : false,
+          "inverted" : false,
+          "message" : null,
+          "comment" : null,
+          "linkedMessages" : [ ],
+          "failReason" : "COMPARISON",
+          "failoverData" : null,
+          "maxDisplayedRowsCount" : 50,
+          "minStoredRowsCount" : -1,
+          "maxStoredRowsCount" : -1,
+          "storedRowsCount" : 1,
+          "totalRowsCount" : 1,
+          "passedRowsCount" : 0,
+          "writeCsvReportAnyway" : false,
+          "onlyFailedInHtml" : false,
+          "onlyFailedInCsv" : false,
+          "listFailedColumns" : false,
+          "name" : "Failed rows",
+          "header" : "Total rows: 1 / Displayed: 1 / Stored: 1",
+          "details" : [ {
+            "@c" : ".DetailedResult",
+            "success" : false,
+            "crashed" : false,
+            "inverted" : false,
+            "message" : null,
+            "comment" : "Row #3. A=3, BD=4",
+            "linkedMessages" : [ ],
+            "failReason" : "COMPARISON",
+            "failoverData" : null,
+            "resultDetails" : [ {
+              "param" : "A",
+              "expected" : "3",
+              "actual" : "3",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BD",
+              "expected" : "4",
+              "actual" : "4",
+              "errorMessage" : null,
+              "identical" : true,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BE",
+              "expected" : "4",
+              "actual" : "1",
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            } ]
+          } ]
+        },
+          {
+          "@c" : ".results.CsvDetailedResult",
+          "success" : false,
+          "crashed" : false,
+          "inverted" : false,
+          "message" : null,
+          "comment" : null,
+          "linkedMessages" : [ ],
+          "failReason" : "FAILED",
+          "failoverData" : null,
+          "maxDisplayedRowsCount" : 50,
+          "minStoredRowsCount" : -1,
+          "maxStoredRowsCount" : -1,
+          "storedRowsCount" : 1,
+          "totalRowsCount" : 1,
+          "passedRowsCount" : 0,
+          "writeCsvReportAnyway" : false,
+          "onlyFailedInHtml" : false,
+          "onlyFailedInCsv" : false,
+          "listFailedColumns" : false,
+          "name" : "Not found rows",
+          "header" : "Total rows: 1 / Displayed: 1 / Stored: 1",
+          "details" : [ {
+            "@c" : ".DetailedResult",
+            "success" : false,
+            "crashed" : false,
+            "inverted" : false,
+            "message" : null,
+            "comment" : "Row #4. A=8, BD=8",
+            "linkedMessages" : [ ],
+            "failReason" : "FAILED",
+            "failoverData" : null,
+            "resultDetails" : [ {
+              "param" : "A",
+              "expected" : "8",
+              "actual" : null,
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BD",
+              "expected" : "8",
+              "actual" : null,
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BE",
+              "expected" : "8",
+              "actual" : null,
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "C",
+              "expected" : "8",
+              "actual" : null,
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            } ]
+          } ]
+        },
+          {
+          "@c" : ".results.CsvDetailedResult",
+          "success" : false,
+          "crashed" : false,
+          "inverted" : false,
+          "message" : null,
+          "comment" : null,
+          "linkedMessages" : [ ],
+          "failReason" : "FAILED",
+          "failoverData" : null,
+          "maxDisplayedRowsCount" : 50,
+          "minStoredRowsCount" : -1,
+          "maxStoredRowsCount" : -1,
+          "storedRowsCount" : 1,
+          "totalRowsCount" : 1,
+          "passedRowsCount" : 0,
+          "writeCsvReportAnyway" : false,
+          "onlyFailedInHtml" : false,
+          "onlyFailedInCsv" : false,
+          "listFailedColumns" : false,
+          "name" : "Extra rows",
+          "header" : "Total rows: 1 / Displayed: 1 / Stored: 1",
+          "details" : [ {
+            "@c" : ".DetailedResult",
+            "success" : false,
+            "crashed" : false,
+            "inverted" : false,
+            "message" : null,
+            "comment" : "Row #5. A=9, BD=9",
+            "linkedMessages" : [ ],
+            "failReason" : "FAILED",
+            "failoverData" : null,
+            "resultDetails" : [ {
+              "param" : "A",
+              "expected" : null,
+              "actual" : "9",
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BD",
+              "expected" : null,
+              "actual" : "9",
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "BE",
+              "expected" : null,
+              "actual" : "9",
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            }, {
+              "param" : "C",
+              "expected" : null,
+              "actual" : null,
+              "errorMessage" : null,
+              "identical" : false,
+              "info" : false,
+              "forCompareValue" : false
+            } ]
+          } ]
+        } ],
+        "header" : null,
+        "blockView" : false,
+        "hasStatus" : true,
+        "useFailReasonColor" : false
+      },
+      "subActions" : [ ]
+    }
+    ]
+
+  } ]
+}

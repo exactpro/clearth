@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -30,6 +30,7 @@ import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.utils.tabledata.TableRow;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.IndexedTableDataComparator;
 import com.exactprosystems.clearth.utils.tabledata.comparison.dataComparators.TableDataComparator;
+import com.exactprosystems.clearth.utils.tabledata.comparison.result.ColumnComparisonDetail;
 import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonData;
 import com.exactprosystems.clearth.utils.tabledata.comparison.result.RowComparisonResultType;
 import com.exactprosystems.clearth.utils.tabledata.comparison.rowsCollectors.KeyColumnsRowsCollector;
@@ -42,9 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -65,8 +64,10 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 			DEFAULT_MAX_STORED_ROWS_COUNT = -1;
 	
 	private long lastAwaitedTimeout = 0;
-	private Map<String, CsvDetailedResult> comparisionResultDetails = new HashMap<>();
-	private boolean listFailedColumns = false;
+	private Map<String, CsvDetailedResult> comparisonResultDetails = new HashMap<>();
+	private Set<A> keyColumns;
+	private boolean listFailedColumns = false,
+					keyValuesInHeader = false;
 	
 	private int minPassedRowsToStore = DEFAULT_MIN_STORED_ROWS_COUNT,
 			maxPassedRowsToStore = DEFAULT_MAX_STORED_ROWS_COUNT,
@@ -85,6 +86,7 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	public ComparisonProcessor(ComparisonConfiguration compConfig)
 	{
 		setListFailedColumns(compConfig.isListFailedColumns());
+		setKeyValuesInHeader(compConfig.isKeyValuesInHeader());
 		
 		setMinPassedRowsToStore(compConfig.getMinPassedRowsToStore());
 		setMaxPassedRowsToStore(compConfig.getMaxPassedRowsToStore());
@@ -252,7 +254,7 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 		result.setMinStoredRowsCount(minStoredRowsCount);
 		result.setMaxStoredRowsCount(maxStoredRowsCount);
 		result.setValueHandlers(valuesComparator, valueParser);
-		comparisionResultDetails.put(header, result);
+		comparisonResultDetails.put(header, result);
 		return result;
 	}
 	
@@ -300,7 +302,7 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	                                      ValueParser<A, B> valueParser)
 	{
 		String nestedName = getResultTypeName(compResultType);
-		CsvDetailedResult nestedResult = comparisionResultDetails.get(nestedName);
+		CsvDetailedResult nestedResult = comparisonResultDetails.get(nestedName);
 		if (nestedResult == null)
 		{
 			result.addDetail(createComparisonNestedResult(nestedName, 
@@ -335,7 +337,22 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	
 	protected String getRowContainerName(RowComparisonData<A, B> compData, int rowsCount)
 	{
-		return "Row #" + rowsCount;
+		if (!keyValuesInHeader)
+			return String.format("Row #%s", rowsCount);
+		
+		StringJoiner joiner = new StringJoiner(",", String.format("Row #%s.", rowsCount), "");
+		Set<A> keyColsCopy = new HashSet<>(keyColumns);
+		
+		for (ColumnComparisonDetail<A, B> detail : compData.getCompDetails())
+		{
+			if (keyColsCopy.remove(detail.getColumn()))
+			{
+				joiner.add(String.format(" %s=%s", detail.getColumn(), detail.getExpectedValue() != null ? detail.getExpectedValue() : detail.getActualValue()));
+				if (keyColsCopy.isEmpty())
+					break;
+			}
+		}
+		return joiner.toString();
 	}
 	
 	protected DetailedResult createComparisonDetail(RowComparisonData<A, B> compData, String headerMessage)
@@ -371,6 +388,16 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	public void setListFailedColumns(boolean listFailedColumns)
 	{
 		this.listFailedColumns = listFailedColumns;
+	}
+	
+	public boolean isKeyValuesInHeader()
+	{
+		return keyValuesInHeader;
+	}
+	
+	public void setKeyValuesInHeader(boolean keyValuesInHeader)
+	{
+		this.keyValuesInHeader = keyValuesInHeader;
 	}
 	
 	
@@ -459,5 +486,15 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	public void setMaxExtraRowsToStore(int maxExtraRowsToStore)
 	{
 		this.maxExtraRowsToStore = maxExtraRowsToStore;
+	}
+	
+	public Set<A> getKeyColumns()
+	{
+		return keyColumns;
+	}
+	
+	public void setKeyColumns(Set<A> keyColumns)
+	{
+		this.keyColumns = keyColumns;
 	}
 }
