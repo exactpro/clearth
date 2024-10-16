@@ -9,7 +9,7 @@
     "async" : false,
     "status" : {
       "passed" : true,
-      "failReason" : null,
+      "failReason" : "NO",
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
@@ -27,7 +27,7 @@
       "waitAsyncEnd" : "SCHEDULER",
       "status" : {
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : null,
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -51,7 +51,7 @@
         "message" : null,
         "comment" : null,
         "linkedMessages" : [ ],
-        "failReason" : null,
+        "failReason" : "NO",
         "failoverData" : null,
         "resultDetails" : [ {
           "param" : "Value",

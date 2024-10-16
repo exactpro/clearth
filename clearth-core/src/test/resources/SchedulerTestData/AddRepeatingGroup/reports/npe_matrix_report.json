@@ -9,7 +9,7 @@
     "async" : false,
     "status" : {
       "passed" : true,
-      "failReason" : null,
+      "failReason" : "NO",
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
@@ -27,7 +27,7 @@
       "waitAsyncEnd" : "NO",
       "status" : {
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : null,
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -53,7 +53,7 @@
       "waitAsyncEnd" : "NO",
       "status" : {
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : [ ],
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -80,7 +80,7 @@
               "fields": null
             }
           } ],
-        "failReason" : null,
+        "failReason" : "NO",
         "failoverData" : null
       },
       "subActions" : [ {
@@ -94,7 +94,7 @@
           "started" : null,
           "finished" : null,
           "passed" : true,
-          "failReason" : null,
+          "failReason" : "NO",
           "comments" : null,
           "actualTimeout" : 0,
           "waitBeforeAction" : 0
@@ -122,7 +122,7 @@
           "started" : null,
           "finished" : null,
           "passed" : true,
-          "failReason" : null,
+          "failReason" : "NO",
           "comments" : null,
           "actualTimeout" : 0,
           "waitBeforeAction" : 0
@@ -151,7 +151,7 @@
       "waitAsyncEnd" : "NO",
       "status" : {
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : [ ],
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -178,7 +178,7 @@
               "fields": null
             }
           } ],
-        "failReason" : null,
+        "failReason" : "NO",
         "failoverData" : null
       },
       "subActions" : [ {
@@ -192,7 +192,7 @@
           "started" : null,
           "finished" : null,
           "passed" : true,
-          "failReason" : null,
+          "failReason" : "NO",
           "comments" : null,
           "actualTimeout" : 0,
           "waitBeforeAction" : 0
@@ -220,7 +220,7 @@
           "started" : null,
           "finished" : null,
           "passed" : true,
-          "failReason" : null,
+          "failReason" : "NO",
           "comments" : null,
           "actualTimeout" : 0,
           "waitBeforeAction" : 0

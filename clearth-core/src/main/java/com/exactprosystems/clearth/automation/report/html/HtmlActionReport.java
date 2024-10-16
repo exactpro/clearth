@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.automation.report.html;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.report.ActionReport;
+import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.ReportStatus;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.automation.report.html.template.*;
@@ -54,7 +55,7 @@ public class HtmlActionReport extends ActionReport
 
 	protected boolean isStatusExpanded(ReportStatus status)
 	{
-		if (status.isPassed() || status.getFailReason() == null)
+		if (status.isPassed() || status.getFailReason() == FailReason.NO)
 			return false;
 
 		switch (status.getFailReason())

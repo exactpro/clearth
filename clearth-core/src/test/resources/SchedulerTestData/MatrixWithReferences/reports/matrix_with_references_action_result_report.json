@@ -69,19 +69,19 @@
         },
         "inputParams" : {
           "Expected" : {
-            "value" : "null"
+            "value" : "NO"
           },
           "Actual" : {
-            "value" : "null",
-            "formula" : "@{ar2.action.failReason == null ? 'null' : ar2.action.failReason}"
+            "value" : "NO",
+            "formula" : "@{ar2.action.failReason}"
           }
         },
         "result" : {
           "success" : true,
           "resultDetails" : [ {
             "param" : "Value",
-            "expected" : "null",
-            "actual" : "null",
+            "expected" : "NO",
+            "actual" : "NO",
             "identical" : true
           } ]
         }

@@ -285,8 +285,8 @@ public class ExecuteScript extends Action {
 			result.setSuccess(resultCodes.contains(res.result));
 		
 		if (result.isSuccess())
-			result.setFailReason(null);
-		else if (result.getFailReason() == null)
+			result.setFailReason(FailReason.NO);
+		else if (result.getFailReason() == FailReason.NO)
 			result.setFailReason(FailReason.FAILED);
 		
 		return result;

@@ -42,13 +42,15 @@ public class MvelVariables
 	static
 	{
 		PASSED_ACTION_PARAMS.put(PASSED_PARAM, true);
-		PASSED_ACTION_PARAMS.put(FAIL_REASON_PARAM, null);
+		PASSED_ACTION_PARAMS.put(FAIL_REASON_PARAM, FailReason.NO);
 	}
 	public static final Map<FailReason, Map<String, Object>> FAILED_ACTION_PARAMS = new EnumMap<>(FailReason.class);
 	static
 	{
 		for (FailReason failReason : FailReason.values())
 		{
+			if (failReason.equals(FailReason.NO))
+				continue;
 			Map<String, Object> params = new HashMap<>();
 			params.put(PASSED_PARAM, false);
 			params.put(FAIL_REASON_PARAM, failReason.name());

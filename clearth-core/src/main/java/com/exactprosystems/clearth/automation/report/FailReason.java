@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,5 +24,6 @@ public enum FailReason
 	EXCEPTION,
 	COMPARISON,
 	CALCULATION,
-	NOT_EXECUTED
+	NOT_EXECUTED,
+	NO
 }

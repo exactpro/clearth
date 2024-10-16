@@ -57,7 +57,7 @@ public class DefaultResult extends Result
 	{
 		Result r = new DefaultResult();
 		r.setSuccess(true);
-		r.setFailReason(null);
+		r.setFailReason(FailReason.NO);
 		r.setComment(comment);
 		return r;
 	}
@@ -66,7 +66,7 @@ public class DefaultResult extends Result
 	{
 		Result r = new DefaultResult();
 		r.setSuccess(true);
-		r.setFailReason(null);
+		r.setFailReason(FailReason.NO);
 		r.setComment(comment);
 		r.setMessage(message);
 		return r;

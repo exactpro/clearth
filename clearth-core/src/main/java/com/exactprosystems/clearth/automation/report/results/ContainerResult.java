@@ -237,11 +237,11 @@ public class ContainerResult extends Result implements Serializable
 			{
 				success = false;
 				
-				if (detail.getFailReason() == null)
+				if (detail.getFailReason() == FailReason.NO)
 					continue;
 				
-				 // Perhaps, the first failed detail has been added and status doesn't changed yet
-				if (failReason == null || failReason.ordinal() > detail.getFailReason().ordinal()) // Need to obtain the worst fail reason of all details
+				 // Perhaps, the first failed detail has been added and status didn't change yet
+				if (failReason == FailReason.NO || failReason.ordinal() > detail.getFailReason().ordinal()) // Need to obtain the worst fail reason of all details
 					failReason = detail.getFailReason();
 			}
 		}

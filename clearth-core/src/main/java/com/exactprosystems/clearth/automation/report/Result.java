@@ -49,7 +49,7 @@ public abstract class Result implements Serializable
 	
 	private Collection<EncodedClearThMessage> linkedMessages;
 	
-	protected FailReason failReason = null;
+	protected FailReason failReason = FailReason.NO;
 	private FailoverException failoverData;
 
 	/* default constructor is required for all types of results to have ability to deserialize them from JSON */

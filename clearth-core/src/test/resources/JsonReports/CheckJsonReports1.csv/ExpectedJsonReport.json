@@ -21,7 +21,7 @@
       "started" : 1580126822098,
       "finished" : 1580126822208,
       "passed" : true,
-      "failReason" : null,
+      "failReason" : "NO",
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
@@ -38,7 +38,7 @@
         "startedBaseTime" : null,
         "finishedBaseTime" : null,
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : null,
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -62,7 +62,7 @@
         "error" : null,
         "message" : null,
         "comment" : null,
-        "failReason" : null,
+        "failReason" : "NO",
         "failoverData" : null,
         "resultDetails" : [ {
           "param" : "Value",
@@ -91,7 +91,7 @@
         "startedBaseTime" : null,
         "finishedBaseTime" : null,
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : null,
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -115,7 +115,7 @@
         "error" : null,
         "message" : null,
         "comment" : null,
-        "failReason" : null,
+        "failReason" : "NO",
         "failoverData" : null,
         "resultDetails" : [ {
           "param" : "Value",
@@ -144,7 +144,7 @@
       "started" : 1580126822215,
       "finished" : 1580126822265,
       "passed" : true,
-      "failReason" : null,
+      "failReason" : "NO",
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
@@ -161,7 +161,7 @@
         "startedBaseTime" : null,
         "finishedBaseTime" : null,
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : null,
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -193,7 +193,7 @@
         "error" : null,
         "message" : null,
         "comment" : null,
-        "failReason" : null,
+        "failReason" : "NO",
         "failoverData" : null,
         "resultDetails" : [ {
           "param" : "A",
@@ -238,7 +238,7 @@
         "startedBaseTime" : null,
         "finishedBaseTime" : null,
         "passed" : true,
-        "failReason" : null,
+        "failReason" : "NO",
         "comments" : null,
         "actualTimeout" : 0,
         "waitBeforeAction" : 0
@@ -262,7 +262,7 @@
         "error" : null,
         "message" : null,
         "comment" : null,
-        "failReason" : null,
+        "failReason" : "NO",
         "failoverData" : null,
         "resultDetails" : [ {
           "param" : "Value",

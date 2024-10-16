@@ -32,7 +32,7 @@ public class ReportStatus
 {
 	public Date started = null, finished = null;
 	public boolean passed;
-	public FailReason failReason = null;
+	public FailReason failReason = FailReason.NO;
 	public List<String> comments;
 	public Throwable error;
 	public long actualTimeout;
@@ -124,8 +124,8 @@ public class ReportStatus
 	private void changeFailReason()
 	{
 		if (passed)
-			failReason = null;
-		else if (failReason == null)
+			failReason = FailReason.NO;
+		else if (failReason == FailReason.NO)
 			failReason = FailReason.FAILED;
 	}
 	

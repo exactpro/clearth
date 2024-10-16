@@ -11,7 +11,7 @@
     "async" : false,
     "status" : {
       "passed" : true,
-      "failReason" : null,
+      "failReason" : "NO",
       "comments" : null,
       "actualTimeout" : 0,
       "waitBeforeAction" : 0
@@ -83,7 +83,7 @@
           "message" : null,
           "comment" : null,
           "linkedMessages" : [ ],
-          "failReason" : null,
+          "failReason" : "NO",
           "failoverData" : null,
           "maxDisplayedRowsCount" : 50,
           "minStoredRowsCount" : -1,
@@ -105,7 +105,7 @@
             "message" : null,
             "comment" : "Row #1. A=1, BD=2",
             "linkedMessages" : [ ],
-            "failReason" : null,
+            "failReason" : "NO",
             "failoverData" : null,
             "resultDetails" : [ {
               "param" : "A",
@@ -141,7 +141,7 @@
             "message" : null,
             "comment" : "Row #2. A=2, BD=3",
             "linkedMessages" : [ ],
-            "failReason" : null,
+            "failReason" : "NO",
             "failoverData" : null,
             "resultDetails" : [ {
               "param" : "A",
