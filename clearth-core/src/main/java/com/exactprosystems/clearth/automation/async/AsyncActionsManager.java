@@ -161,6 +161,24 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		return actionsToProcess.poll();
 	}
 	
+	/**
+	 * @return number of enqueued finished actions ready for processing
+	 */
+	public int getFinishedActionsToProcess()
+	{
+		return actionsToProcess.size();
+	}
+	
+	/**
+	 * @return timestamp of execution finish of action that will be returned by next call of {@link #getNextFinishedAction()}. 
+	 * It can be used to determine if it is time to process finished actions
+	 */
+	public Date getTimestampOfNextFinishedAction()
+	{
+		AsyncActionData a = actionsToProcess.peek();
+		return a == null ? null : a.getFinished();
+	}
+	
 	public boolean isActionFinished(AsyncActionData actionData)
 	{
 		return finishedActions.contains(actionData);

@@ -32,6 +32,13 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.ClearThCore.rootRelative;
 import static com.exactprosystems.clearth.automation.report.ReportFormat.HTML;
@@ -103,8 +110,7 @@ public class ActionReportWriter
 	
 	protected void writeJsonActionReport(Action action, String actionsReportsDir, String actionsReportFile)
 	{
-		String reportFilePath = getJsonStepReportPath(actionsReportsDir, action.getMatrix().getShortFileName(), actionsReportFile);
-		File reportFile = new File(reportFilePath);
+		File reportFile = getJsonStepReport(actionsReportsDir, action.getMatrix().getShortFileName(), actionsReportFile);
 		
 		PrintWriter writer = null;
 		try
@@ -142,45 +148,64 @@ public class ActionReportWriter
 	}
 
 	/**
-	 * Updates already written reports with actual result of asynchronous action.
-	 * @param action asynchronous action to update report
+	 * Updates already written reports with actual result of asynchronous actions.
+	 * @param actions asynchronous actions whose reports to update
 	 * @param actionsReportsDir path to directory with execution reports data. Action report file is located in it
-	 * @param actionsReportFile file with action reports to update
 	 */
-	public void updateReports(Action action, String actionsReportsDir, String actionsReportFile)
+	public void updateReports(Collection<Action> actions, String actionsReportsDir)
 	{
-		incActionIndex();
-		if (action.getResult() != null)
-			action.getResult().processDetails(getReportDir(actionsReportsDir, action), action);
+		getLogger().debug("Updating reports for {} action(s)", actions.size());
 		
-		if (getLogger().isDebugEnabled())
-			getLogger().debug(action.getDescForLog("Updating reports for"));
-		
-		if (reportsConfig.isCompleteHtmlReport())
-			updateHtmlReport(action, actionsReportsDir, actionsReportFile, false);
-		if (reportsConfig.isFailedHtmlReport())
-			updateHtmlReport(action, actionsReportsDir, actionsReportFile, true);
-		if (reportsConfig.isCompleteJsonReport())
-			updateJsonReport(action, actionsReportsDir, actionsReportFile);
+		Map<MatrixStep, Collection<ActionUpdate>> actionsByMatrixStep = prepareActionsToUpdate(actions);
+		for (Entry<MatrixStep, Collection<ActionUpdate>> group : actionsByMatrixStep.entrySet())
+		{
+			MatrixStep key = group.getKey();
+			File reportDir = getReportDir(actionsReportsDir, key.getMatrix().getShortFileName());
+			String actionsReportFile = key.getStep().getSafeName();
+			Collection<ActionUpdate> actionUpdates = group.getValue();
+			for (ActionUpdate au : actionUpdates)
+			{
+				Action action = au.getAction();
+				if (action.getResult() != null)
+					action.getResult().processDetails(reportDir, action);
+			}
+			
+			if (reportsConfig.isCompleteHtmlReport())
+				updateHtmlReport(actionUpdates, reportDir, actionsReportFile, false);
+			if (reportsConfig.isFailedHtmlReport())
+				updateHtmlReport(actionUpdates, reportDir, actionsReportFile, true);
+			if (reportsConfig.isCompleteJsonReport())
+				updateJsonReport(actionUpdates, reportDir, actionsReportFile);
+		}
 	}
-
-	protected void updateHtmlReport(Action action, String actionsReportsDir, String actionsReportFile, boolean onlyFailed)
+	
+	private Map<MatrixStep, Collection<ActionUpdate>> prepareActionsToUpdate(Collection<Action> actions)
 	{
-		String resultId = buildResultId(actionsReportFile);
-		File reportDir = getReportDir(actionsReportsDir, action),
-				reportFile = new File(reportDir, actionsReportFile+".swp"),
+		Map<MatrixStep, Collection<ActionUpdate>> result = new LinkedHashMap<>();
+		for (Action a : actions)
+		{
+			MatrixStep key = new MatrixStep(a.getMatrix(), a.getStep());
+			int index = incActionIndex();
+			ActionUpdate au = new ActionUpdate(a, index);
+			result.computeIfAbsent(key, k -> new ArrayList<>()).add(au);
+		}
+		return result;
+	}
+	
+	protected void updateHtmlReport(Collection<ActionUpdate> actions, File reportDir, String actionsReportFile, boolean onlyFailed)
+	{
+		File reportFile = new File(reportDir, actionsReportFile+".swp"),
 				originalReportFile = getReportFile(reportDir, actionsReportFile, onlyFailed);
-		if (!updateReport(originalReportFile, action, resultId, reportFile, HTML, reportDir, onlyFailed))
+		if (!updateReport(originalReportFile, actions, actionsReportFile, reportFile, HTML, reportDir, onlyFailed))
 			return;
 		replaceReportFile(reportFile, originalReportFile);
 	}
-
-	protected void updateJsonReport(Action action, String actionsReportsDir, String actionsReportFile)
+	
+	protected void updateJsonReport(Collection<ActionUpdate> actions, File reportDir, String actionsReportFile)
 	{
-		String reportFilePath = getJsonStepReportPath(actionsReportsDir, action.getMatrix().getShortFileName(), actionsReportFile);
-		File reportFile = new File(reportFilePath + ".swp"),
-				originalReportFile = new File(reportFilePath);
-		if (!updateReport(originalReportFile, action, "", reportFile, JSON, getReportDir(actionsReportsDir, action), false))
+		File reportFile = new File(reportDir, actionsReportFile+".swp"),
+				originalReportFile = getJsonStepReport(reportDir, actionsReportFile);
+		if (!updateReport(originalReportFile, actions, "", reportFile, JSON, reportDir, false))
 			return;
 		replaceReportFile(reportFile, originalReportFile);
 	}
@@ -198,20 +223,15 @@ public class ActionReportWriter
 					reportFile.getAbsolutePath(), originalReportFile.getAbsolutePath());
 	}
 	
-	private String getJsonStepReportPath(String actionsReportsDir, String matrixFileName, String stepReportFile)
+	private File getJsonStepReport(String actionsReportsDir, String matrixFileName, String stepReportFile)
 	{
-		Path reportDir = Path.of(actionsReportsDir, matrixFileName);
-		try
-		{
-			if (!Files.exists(reportDir))
-				Files.createDirectories(reportDir);
-		}
-		catch (IOException e)
-		{
-			getLogger().error("Could not create directories", e);
-		}
-		
-		return rootRelative(reportDir.resolve(stepReportFile + JSON_SUFFIX).toString());
+		File reportDir = getReportDir(actionsReportsDir, matrixFileName);
+		return getJsonStepReport(reportDir, stepReportFile);
+	}
+	
+	private File getJsonStepReport(File reportDir, String stepReportFile)
+	{
+		return new File(reportDir, stepReportFile + JSON_SUFFIX);
 	}
 	
 	protected Logger getLogger()
@@ -224,22 +244,42 @@ public class ActionReportWriter
 		return actionIndex;
 	}
 	
-	public void incActionIndex()
+	public int incActionIndex()
 	{
 		actionIndex++;
+		return actionIndex;
 	}
 	
 	
 	protected String buildResultId(String actionsReportFile)
 	{
-		return actionsReportFile+"_action_"+actionIndex;
+		return buildResultId(actionsReportFile, actionIndex);
+	}
+	
+	protected String buildResultId(String actionsReportFile, int index)
+	{
+		return actionsReportFile+"_action_"+index;
 	}
 	
 	protected File getReportDir(String actionsReportsDir, Action action)
 	{
-		File reportDir = new File(ClearThCore.appRootRelative(actionsReportsDir)+action.getMatrix().getShortFileName()+File.separator);
-		reportDir.mkdirs();
-		return reportDir;
+		return getReportDir(actionsReportsDir, action.getMatrix().getShortFileName());
+	}
+	
+	protected File getReportDir(String actionsReportsDir, String matrixShortName)
+	{
+		Path reportDir = Path.of(ClearThCore.appRootRelative(actionsReportsDir), matrixShortName);
+		try
+		{
+			if (!Files.exists(reportDir))
+				Files.createDirectories(reportDir);
+		}
+		catch (IOException e)
+		{
+			getLogger().error("Could not create directory "+reportDir, e);
+		}
+		
+		return reportDir.toFile();
 	}
 	
 	protected File getReportFile(File reportDir, String actionsReportFile, boolean onlyFailed)
@@ -345,11 +385,15 @@ public class ActionReportWriter
 		}
 	}
 	
-	protected boolean updateReport(File originalReportFile, Action action, String resultId, File updatedReportFile,
+	protected boolean updateReport(File originalReportFile, Collection<ActionUpdate> actions, String actionsReportFile, File updatedReportFile,
 								   ReportFormat reportFormat, File reportDir, boolean onlyFailed)
 	{
+		Map<String, ActionUpdate> actionsByComment = actions.stream()
+				.collect(Collectors.toMap(au -> buildAsyncActionStartComment(au.getAction(), reportFormat),
+						Function.identity()));
+		
 		boolean startFound = false,
-				endFound = false;
+				endFound = true;
 		BufferedReader reader = null;
 		PrintWriter writer = null;
 		try
@@ -359,29 +403,30 @@ public class ActionReportWriter
 			
 			//Searching for special comments to find action data.
 			//All lines between them will be skipped and thus replaced with actual action data. All other lines are kept.
-			ActionReport report = createActionReportForUpdate(action, reportFormat);
-			if (report == null)
-			{
-				getLogger().warn("Unknown report format specified for action report update");
-				return false;
-			}
-
-			String startToFind = buildAsyncActionStartComment(action, reportFormat),
-					endToFind = buildAsyncActionEndComment(action, reportFormat),
-					line;
+			
+			String line,
+					endToFind = null;
 			while ((line = reader.readLine()) != null)
 			{
 				if (!startFound)
 				{
-					if (!line.equals(startToFind))
+					ActionUpdate au = actionsByComment.remove(line);
+					if (au == null)
 					{
 						writer.println(line);
 						continue;
 					}
 					
 					startFound = true;
+					endFound = false;
+					
+					Action action = au.getAction();
+					endToFind = buildAsyncActionEndComment(action, reportFormat);
 					if (!onlyFailed || !action.isPassed())
-						writeActionReport(report, reportFormat, writer, action, resultId, reportDir, onlyFailed);
+					{
+						String resultId = buildResultId(actionsReportFile, au.getIndex());
+						writeActionReport(action, reportFormat, writer, resultId, reportDir, onlyFailed);
+					}
 				}
 				else if (!endFound)
 				{
@@ -389,19 +434,26 @@ public class ActionReportWriter
 						continue;
 					
 					endFound = true;
+					startFound = false;
 				}
 				else
 					writer.println(line);
 			}
 			
-			if (!startFound)
-				//Storing action result anyway to restore it later, if needed
-				writeActionReport(report, reportFormat, writer, action, resultId, reportDir, onlyFailed);
+			if (actionsByComment.size() > 0)
+			{
+				//Storing action results anyway to restore later, if needed
+				for (ActionUpdate au : actionsByComment.values())
+				{
+					String resultId = buildResultId(actionsReportFile, au.getIndex());
+					writeActionReport(au.getAction(), reportFormat, writer, resultId, reportDir, onlyFailed);
+				}
+			}
 		}
 		catch (IOException e)
 		{
 			logger.error("Could not write action report", e);
-			return false;  //On error report can't be updated and current report should remain intact
+			return false;  //On error the report can't be updated and current report should remain intact
 		}
 		finally
 		{
@@ -414,14 +466,14 @@ public class ActionReportWriter
 			Utils.closeResource(reader);
 		}
 		
-		if (!startFound)
-		{
-			logger.warn("Async action start not found. Report is not updated");
-			return false;
-		}
 		if (!endFound)
 		{
-			logger.warn("Async action end not found. Report is not updated not to affect other data");
+			logger.warn("Async action end not found. Report is not updated to not affect other data");
+			return false;
+		}
+		if (actionsByComment.size() > 0)
+		{
+			logger.warn("Async action start not found for {} action(s). Report is not updated", actionsByComment.size());
 			return false;
 		}
 		
@@ -434,22 +486,24 @@ public class ActionReportWriter
 		{
 			case HTML: return createHtmlActionReport();
 			case JSON: return createActionReport(action);
-			default: return null;
+			default: throw new IllegalArgumentException("Unknown report format specified for action report update: "+format);
 		}
 	}
 
-	protected void writeActionReport(ActionReport report, ReportFormat format, PrintWriter writer, Action action,
+	protected void writeActionReport(Action action, ReportFormat format, PrintWriter writer,
 									 String containerId, File reportDir, boolean onlyFailed) throws IOException
 	{
+		ActionReport report = createActionReportForUpdate(action, format);
 		switch (format)
 		{
 			case HTML:
 				((HtmlActionReport)report).write(writer, action, containerId, reportDir, onlyFailed);
 				return;
-
+			
 			case JSON:
 				String reportStr = new JsonMarshaller<ActionReport>().marshal(report);
 				writer.println(reportStr);
+				return;
 		}
 	}
 
@@ -470,8 +524,7 @@ public class ActionReportWriter
 
 	protected void completeStepJsonReport(String actionsReportsDir, String matrixFileName, String stepSafeName)
 	{
-		String stepReportPath = getJsonStepReportPath(actionsReportsDir, matrixFileName, stepSafeName);
-		File reportFile = new File(stepReportPath);
+		File reportFile = getJsonStepReport(actionsReportsDir, matrixFileName, stepSafeName);
 		if (!reportFile.isFile())
 			return;
 
@@ -498,7 +551,7 @@ public class ActionReportWriter
 	
 	private void prepareJsonReportToUpdate(String actionsReportsDir, String matrixReportsDir, String stepFileName) throws IOException
 	{
-		File reportFile = new File(getJsonStepReportPath(actionsReportsDir, matrixReportsDir, stepFileName)),
+		File reportFile = getJsonStepReport(actionsReportsDir, matrixReportsDir, stepFileName),
 				tempFile = File.createTempFile(reportFile.getName()+"_", ".tmp", reportFile.getParentFile());
 		try (BufferedReader reader = new BufferedReader(new FileReader(reportFile));
 				BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile)))

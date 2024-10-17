@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -217,19 +219,28 @@ public class ActionExecutor implements Closeable
 		action.setFinished(new Date());
 	}
 	
-	public void checkAsyncActions()
+	public void checkAsyncActions(long minimumFinishAge)
 	{
 		if (!isAsyncEnabled())
 			return;
 		
+		Date oldestFinish = asyncManager.getTimestampOfNextFinishedAction();
+		if (oldestFinish == null || new Date().getTime() - oldestFinish.getTime() < minimumFinishAge)
+			return;
+		
+		List<Action> finishedActions = null;
 		AsyncActionData a;
 		while ((a = asyncManager.getNextFinishedAction()) != null)
 		{
-			Action action = a.getAction();
-			updateAsyncActionReport(a);
-			afterAsyncAction(action);
-			cleanAfterAsyncAction(action);
+			updateActionAfterAsyncFinish(a);
+			
+			if (finishedActions == null)
+				finishedActions = new ArrayList<>();
+			finishedActions.add(a.getAction());
 		}
+		
+		if (!CollectionUtils.isEmpty(finishedActions))
+			updateAsyncActions(finishedActions);
 	}
 
 	public void waitForBeforeStepAsyncActions(String stepName) throws InterruptedException
@@ -318,30 +329,38 @@ public class ActionExecutor implements Closeable
 		return 1000;
 	}
 	
-	protected void updateAsyncActionReport(AsyncActionData actionData)
+	protected void updateActionAfterAsyncFinish(AsyncActionData actionData)
 	{
 		Action action = actionData.getAction();
-		Result result = actionData.getResult();
-		if (getLogger().isTraceEnabled())
-			getLogger().trace(action.getDescForLog("Updating report of"));
-		
 		action.setStarted(actionData.getStarted());
 		action.setFinished(actionData.getFinished());
-		action.setResult(result);
+		action.setResult(actionData.getResult());
 		applyActionResult(action, false);
 		applyStepSuccess(action);
 		
 		action.setPayloadFinished(true);
-		reportWriter.updateReports(action, actionsReportsDir, action.getStep().getSafeName());
-		handleActionResult(action);
-		processActionResult(action);
-		
-		// If asynchronous action is finished and failed, need to decrement number of successful actions for certain step
-		// because all async actions are treated as passed on start of their executions
-		if (result != null && !result.isSuccess())
-			action.getStep().getExecutionProgress().decrementSuccessful();
 	}
-
+	
+	protected void updateAsyncActions(Collection<Action> actions)
+	{
+		reportWriter.updateReports(actions, actionsReportsDir);
+		
+		for (Action action : actions)
+		{
+			handleActionResult(action);
+			processActionResult(action);
+			
+			// If asynchronous action is finished and failed, need to decrement number of successful actions for certain step
+			// because all async actions are treated as passed on start of their executions
+			Result result = action.getResult();
+			if (result != null && !result.isSuccess())
+				action.getStep().getExecutionProgress().decrementSuccessful();
+			
+			afterAsyncAction(action);
+			cleanAfterAsyncAction(action);
+		}
+	}
+	
 	/**
 	 * Update step success before it ends.
 	 */

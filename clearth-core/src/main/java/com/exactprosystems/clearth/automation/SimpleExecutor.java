@@ -665,7 +665,7 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 			}
 		}
 		
-		actionExecutor.checkAsyncActions();
+		actionExecutor.checkAsyncActions(0);
 	}
 	
 	

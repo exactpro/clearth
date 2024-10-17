@@ -466,9 +466,9 @@ public abstract class Step implements CsvDataManager
 		return stepContext;
 	}
 	
-	protected void updateByAsyncActions(ActionExecutor actionExec)
+	protected void updateByAsyncActions(ActionExecutor actionExec, long minimumFinishAge)
 	{
-		actionExec.checkAsyncActions();
+		actionExec.checkAsyncActions(minimumFinishAge);
 	}
 
 	protected void waitForAsyncActions(ActionExecutor actionExec,
@@ -486,7 +486,7 @@ public abstract class Step implements CsvDataManager
 			}
 		}
 
-		updateByAsyncActions(actionExec);
+		updateByAsyncActions(actionExec, 0);
 	}
 	
 
@@ -550,7 +550,7 @@ public abstract class Step implements CsvDataManager
 					actionExec.executeAction(currentAction, stepContext, canReplay);
 					
 					afterAction(currentAction, stepContext, matrixContext, globalContext);
-					updateByAsyncActions(actionExec);
+					updateByAsyncActions(actionExec, 1000);
 					
 					if (stateUpdater != null)
 						stateUpdater.update(currentAction);
