@@ -426,7 +426,10 @@ public class ActionExecutor implements Closeable
 		matrix.addStepStatusComment(stepName, "One or more actions CRASHED");
 		
 		if (action.isAsync())
-				action.setPayloadFinished(true);
+		{
+			action.setPayloadFinished(true);
+			action.getStep().refreshAsyncFlag(action);
+		}
 		reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 		handleActionResult(action);
 	}
@@ -841,7 +844,10 @@ public class ActionExecutor implements Closeable
 			variables.saveOutputParams(action);
 			
 			if (action.isAsync())
+			{
 				action.setPayloadFinished(true);
+				action.getStep().refreshAsyncFlag(action);
+			}
 			reportWriter.writeReport(action, actionsReportsDir, action.getStep().getSafeName());
 			handleActionResult(action);
 		}

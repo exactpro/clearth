@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import static com.exactprosystems.clearth.automation.ActionExecutor.isAsyncAction;
 
@@ -547,6 +546,8 @@ public abstract class Step implements CsvDataManager
 						continue;
 
 					//Need to "execute actions" even if step is not executable, because actions may need to set some parameters referenced by further actions
+					if (currentAction.isAsync())
+						addAsyncAction(currentAction);
 					actionExec.executeAction(currentAction, stepContext, canReplay);
 					
 					afterAction(currentAction, stepContext, matrixContext, globalContext);
@@ -592,12 +593,6 @@ public abstract class Step implements CsvDataManager
 		actions.add(action);
 		if (stepData.isExecute() && !executable && action.isExecutable())
 			executable = true;
-		if (executable && action.isAsync())
-		{
-			asyncActions.add(action);
-			if (!async)
-				async = true;
-		}
 	}
 
 	public void clearActions()
@@ -616,9 +611,9 @@ public abstract class Step implements CsvDataManager
 	{
 		clearActions();
 		this.actions.addAll(actions);
-		asyncActions.addAll(actions.stream().filter(Action::isAsync).collect(Collectors.toList()));
+		asyncActions.clear();
 		executable = stepData.isExecute() && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
-		async = !asyncActions.isEmpty();
+		async = false;
 		
 		if (actionsIterator != null)
 		{
@@ -669,6 +664,15 @@ public abstract class Step implements CsvDataManager
 	private Iterator<Action> createActionsIterator()
 	{
 		return actions.iterator();
+	}
+	
+	private void addAsyncAction(Action action)
+	{
+		synchronized (asyncActions)
+		{
+			asyncActions.add(action);
+			async = true;
+		}
 	}
 	
 	
