@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateException;
 import org.testng.Assert;
 import org.testng.TestException;
 import org.testng.annotations.AfterClass;
@@ -103,8 +104,7 @@ public class SchedulerUpdaterTest
 		}
 		finally
 		{
-			scheduler.stop();
-			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
+			stopScheduler(scheduler);
 		}
 	}
 	
@@ -132,15 +132,14 @@ public class SchedulerUpdaterTest
 		finally
 		{
 			scheduler.setStateConfig(new StateConfig(false));
-			
-			scheduler.stop();
-			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
+			stopScheduler(scheduler);
 		}
 	}
 	
 	@Test
-	public void updatedActionsAndRestoreState() throws ClearThException, AutomationException, SchedulerUpdateException, ActionUpdateException, IOException,
-			IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, DataHandlingException
+	public void updatedActionsAndRestoreState() throws ClearThException, AutomationException, SchedulerUpdateException,
+			ActionUpdateException, IOException, IllegalArgumentException, SecurityException, InstantiationException,
+			IllegalAccessException, InvocationTargetException, NoSuchMethodException, DataHandlingException, ExecutorStateException
 	{
 		Scheduler scheduler = createScheduler("matrixUpdateAndRestoreState", matrixUpdateDir.resolve("steps2.cfg"), matrixUpdateDir.resolve("matrices2"));
 		try
@@ -157,8 +156,7 @@ public class SchedulerUpdaterTest
 			scheduler.stop();
 			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 2000);
 			
-			boolean restored = scheduler.restoreState(userName);
-			Assert.assertEquals(restored, true, "State restored");
+			scheduler.restoreState(userName);
 			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
 			
 			assertLastLaunchReport(scheduler, "matrix2.csv", matrixUpdateDir.resolve("matrix2_report.json"));
@@ -166,9 +164,7 @@ public class SchedulerUpdaterTest
 		finally
 		{
 			scheduler.setStateConfig(new StateConfig(false));
-			
-			scheduler.stop();
-			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
+			stopScheduler(scheduler);
 		}
 	}
 	
@@ -251,16 +247,15 @@ public class SchedulerUpdaterTest
 		}
 		finally
 		{
-			scheduler.stop();
-			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
+			stopScheduler(scheduler);
 		}
-		
 		assertLastLaunchReport(scheduler, "pausing_matrix.csv", stepsUpdateDir.resolve("pausing_matrix_report.json"));
 	}
 	
 	@Test
 	public void updateStepsAndRestoreState() throws ClearThException, AutomationException, SchedulerUpdateException, IOException,
-			IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, DataHandlingException
+			IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException, DataHandlingException, ExecutorStateException
 	{
 		//Scheduler uses auto-save state.
 		//After Step1, scheduler is paused and next steps are updated:
@@ -287,8 +282,7 @@ public class SchedulerUpdaterTest
 			scheduler.stop();
 			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 2000);
 			
-			boolean restored = scheduler.restoreState(userName);
-			Assert.assertEquals(restored, true, "State restored");
+			scheduler.restoreState(userName);
 			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 5000);
 			Step currentStep = scheduler.getCurrentStep();
 			Assert.assertEquals(currentStep.getName(), "Step2", "Current step when paused");
@@ -304,14 +298,23 @@ public class SchedulerUpdaterTest
 		finally
 		{
 			scheduler.setStateConfig(new StateConfig(false));
-			
-			scheduler.stop();
-			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
+			stopScheduler(scheduler);
 		}
-		
 		assertLastLaunchReport(scheduler, "multi_step_matrix.csv", stepsUpdateDir.resolve("multi_step_matrix_report.json"));
 	}
 	
+	private void stopScheduler(Scheduler scheduler)
+	{
+		try
+		{
+			scheduler.stop();
+			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 5000);
+		}
+		catch (AutomationException e)
+		{
+			Assert.assertEquals(e.getMessage(), "Scheduler is already stopped");
+		}
+	}
 	
 	private Scheduler createScheduler(String name, Path stepsFile, Path matricesDir) throws ClearThException
 	{

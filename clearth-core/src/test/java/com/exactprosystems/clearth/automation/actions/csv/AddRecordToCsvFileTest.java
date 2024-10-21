@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -65,7 +65,7 @@ public class AddRecordToCsvFileTest
 	}
 
 	@AfterClass
-	public void dispose() throws IOException
+	public void dispose() throws IOException, AutomationException
 	{
 		SchedulersManager sm = ClearThCore.getInstance().getSchedulersManager();
 		Scheduler scheduler = sm.getSchedulerByName(ADMIN, ADMIN);

@@ -167,7 +167,7 @@ public class TestDeleteTempReports
 		}
 	}
 	
-	private Scheduler createScheduler(String cfgFile) throws ClearThException, IOException
+	private Scheduler createScheduler(String cfgFile) throws ClearThException, IOException, AutomationException
 	{
 		Scheduler scheduler = clearThManager.getScheduler(USER, USER);
 		scheduler.clearSteps();

@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.SchedulerData;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.persistence.StateConfig;
 import com.exactprosystems.clearth.automation.report.ModifiableReportsConfig;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
@@ -152,7 +153,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		{
 			selectedScheduler().setWeekendHoliday(weekendHoliday);
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			WebUtils.logAndGrowlException("Could not save changes in 'weekend is holiday' setting", e, getLogger());
 		}
@@ -192,7 +193,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 			selectedScheduler().setBaseTime(baseTime);
 			getLogger().info("set base time to '"+baseTime+"'");
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			WebUtils.logAndGrowlException("Could not save changes in base time", e, getLogger());
 		}
@@ -210,7 +211,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 			selectedScheduler().setBusinessDay(useCurrentDate ? null : new Date());
 			getLogger().info("toggled usage of current date to " + useCurrentDate);
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			WebUtils.logAndGrowlException("Could not save changes in business day", e, getLogger());
 		}
@@ -233,7 +234,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 
 			getLogger().info("toggled usage of base time to "+useCurrentTime);
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			WebUtils.logAndGrowlException("Could not save changes in base time", e, getLogger());
 		}
@@ -265,7 +266,7 @@ public class ConfigurationAutomationBean extends ClearThBean {
 		{
 			selectedScheduler().toggleHoliday(d);
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			WebUtils.logAndGrowlException("Could not save changes in calendar", e, getLogger());
 		}
@@ -287,13 +288,13 @@ public class ConfigurationAutomationBean extends ClearThBean {
 	{
 		if (isCurrentDate())
 			return;
-
+		
 		try
 		{
 			selectedScheduler().setBusinessDay(businessDay);
 			getLogger().info("set business day to '"+businessDay+"'");
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			WebUtils.logAndGrowlException("Could not save changes in business day", e, getLogger());
 		}

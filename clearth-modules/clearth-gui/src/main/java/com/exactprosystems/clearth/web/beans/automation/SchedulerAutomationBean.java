@@ -27,6 +27,7 @@ import com.exactprosystems.clearth.automation.status.StatusLine;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
+import com.exactprosystems.clearth.web.misc.WebUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -147,13 +148,27 @@ public class SchedulerAutomationBean extends ClearThBean {
 
 	public void continueExecution()
 	{
-		selectedScheduler().continueExecution();
-		getLogger().info("Continued execution");
+		try
+		{
+			selectedScheduler().continueExecution();
+			getLogger().info("Continued execution");
+		}
+		catch (AutomationException e)
+		{
+			MessageUtils.addWarningMessage("Warning", e.getMessage());
+		}
 	}
 
 	public void replayStep()
 	{
-		selectedScheduler().replayStep();
+		try
+		{
+			selectedScheduler().replayStep();
+		}
+		catch (AutomationException e)
+		{
+			MessageUtils.addWarningMessage("Warning", e.getMessage());
+		}
 	}
 
 	/* Failover */
@@ -175,18 +190,39 @@ public class SchedulerAutomationBean extends ClearThBean {
 	
 	public void tryAgainMain()
 	{
-		selectedScheduler().tryAgainMain();
+		try
+		{
+			selectedScheduler().tryAgainMain();
+		}
+		catch (AutomationException e)
+		{
+			logAndGrowlWarning(e);
+		}
 	}
 
 	public void tryAgainAlt()
 	{
-		selectedScheduler().tryAgainAlt();
+		try
+		{
+			selectedScheduler().tryAgainAlt();
+		}
+		catch (AutomationException e)
+		{
+			logAndGrowlWarning(e);
+		}
 	}
 	
 	public void restartActionOnFailover()
 	{
 		getLogger().info("Restarting current action due to decision in failover dialog");
-		selectedScheduler().setFailoverRestartAction(true);
+		try
+		{
+			selectedScheduler().setFailoverRestartAction(true);
+		}
+		catch (AutomationException e)
+		{
+			logAndGrowlWarning(e);
+		}
 	}
 	
 	public void skipConnectionFailure(boolean skipAllTheSame)
@@ -194,7 +230,14 @@ public class SchedulerAutomationBean extends ClearThBean {
 		getLogger().info("Skipping current action due to decision in failover dialog");
 		if (skipAllTheSame)
 			selectedScheduler().addConnectionToIgnoreFailuresByRun(getFailoverConnectionName());
-		selectedScheduler().setFailoverSkipAction(true);
+		try
+		{
+			selectedScheduler().setFailoverSkipAction(true);
+		}
+		catch (AutomationException e)
+		{
+			logAndGrowlWarning(e);
+		}
 	}
 	
 	public List<StatusLine> getStatus()
@@ -293,5 +336,10 @@ public class SchedulerAutomationBean extends ClearThBean {
 	public StateConfig getSchedulerStateConfig()
 	{
 		return selectedScheduler().getCurrentStateConfig();
+	}
+	
+	private void logAndGrowlWarning(Exception e)
+	{
+		WebUtils.logAndGrowlWarning("Warning", e, getLogger());
 	}
 }

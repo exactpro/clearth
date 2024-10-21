@@ -19,6 +19,7 @@
 package com.exactprosystems.clearth.web.beans.automation;
 
 import com.exactprosystems.clearth.automation.Scheduler;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateException;
 import com.exactprosystems.clearth.automation.persistence.ExecutorStateInfo;
 import com.exactprosystems.clearth.automation.persistence.StepState;
@@ -183,17 +184,20 @@ public class SavedStateAutomationBean extends ClearThBean {
 
 	public void saveState()
 	{
+		String msg = "Could not save state";
 		try
 		{
-			if (!selectedScheduler().saveState())
-				MessageUtils.addWarningMessage("Could not save state", "Only status of suspended scheduler in single run mode can be saved");
-			else
-				MessageUtils.addInfoMessage("State saved", "You can restore state later when scheduler is stopped");
+			selectedScheduler().saveState();
+			MessageUtils.addInfoMessage("State saved", "You can restore state later when scheduler is stopped");
+		}
+		catch (AutomationException e)
+		{
+			MessageUtils.addWarningMessage(msg, ExceptionUtils.getDetailedMessage(e));
 		}
 		catch (Exception e)
 		{
 			getLogger().error("Error while saving state of '" + selectedScheduler().getName() + "' scheduler", e);
-			MessageUtils.addErrorMessage("Could not save state", ExceptionUtils.getDetailedMessage(e));
+			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
 		}
 	}
 
@@ -217,17 +221,20 @@ public class SavedStateAutomationBean extends ClearThBean {
 
 	public void restoreState()
 	{
+		String msg = "Could not restore state";
 		try
 		{
-			if (!selectedScheduler().restoreState(UserInfoUtils.getUserName()))
-				MessageUtils.addWarningMessage("Could not restore state", "State can only be restored if saved previously and if scheduler is not running");
-			else
-				MessageUtils.addInfoMessage("Scheduler state restored", "Execution continues");
+			selectedScheduler().restoreState(UserInfoUtils.getUserName());
+			MessageUtils.addInfoMessage("Scheduler state restored", "Execution continues");
+		}
+		catch (AutomationException e)
+		{
+			MessageUtils.addWarningMessage(msg, ExceptionUtils.getDetailedMessage(e));
 		}
 		catch (Exception e)
 		{
 			getLogger().error("Error while restoring state of '"+selectedScheduler().getName()+"' scheduler", e);
-			MessageUtils.addErrorMessage("Could not restore state", ExceptionUtils.getDetailedMessage(e));
+			MessageUtils.addErrorMessage(msg, ExceptionUtils.getDetailedMessage(e));
 		}
 	}
 }

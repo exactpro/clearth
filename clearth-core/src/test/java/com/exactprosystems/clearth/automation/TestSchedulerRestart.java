@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -92,8 +93,9 @@ public class TestSchedulerRestart
 	
 	
 	@Test
-	public void testRestart() throws ClearThException, AutomationException, IOException, IllegalArgumentException, SecurityException,
-			InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, DataHandlingException
+	public void testRestart() throws ClearThException, AutomationException, IOException, IllegalArgumentException,
+			SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException, DataHandlingException, ExecutorStateException
 	{
 		Scheduler scheduler = clearThManager.getScheduler(SCHEDULER, ADMIN);
 		scheduler.clearSteps();
@@ -106,8 +108,7 @@ public class TestSchedulerRestart
 		Assert.assertEquals(scheduler.getCurrentStep().getName(), STEP1);
 		Assert.assertTrue(scheduler.isSuspended());
 		
-		boolean stateSaved = scheduler.saveState();
-		Assert.assertTrue(stateSaved);
+		scheduler.saveState();
 		
 		scheduler.stop();
 		ApplicationManager.waitForSchedulerToStop(scheduler, BASE_SLEEP_LENGTH, 1000);
@@ -115,8 +116,7 @@ public class TestSchedulerRestart
 		Assert.assertTrue(scheduler.isStoppedByUser());
 		Assert.assertTrue(scheduler.isInterrupted());
 		
-		boolean restored = scheduler.restoreState(ADMIN);
-		Assert.assertTrue(restored);
+		scheduler.restoreState(ADMIN);
 		
 		ApplicationManager.waitForSchedulerToStop(scheduler, BASE_SLEEP_LENGTH, 1000);
 		
@@ -130,8 +130,9 @@ public class TestSchedulerRestart
 	}
 	
 	@Test(dataProvider = "dataForAutoSave")
-	public void testRestartWithAutoSave(Path dataDir, int expectedActions) throws ClearThException, AutomationException, IOException, IllegalArgumentException, SecurityException,
-			InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, DataHandlingException
+	public void testRestartWithAutoSave(Path dataDir, int expectedActions) throws ClearThException, AutomationException,
+			IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException, DataHandlingException, ExecutorStateException
 	{
 		Scheduler scheduler = clearThManager.getScheduler(SCHEDULER, ADMIN);
 		clearThManager.loadSteps(scheduler, dataDir.resolve(CONFIG_DIR).resolve(CONFIG_FILE).toFile());
@@ -146,8 +147,7 @@ public class TestSchedulerRestart
 			scheduler.stop();
 			ApplicationManager.waitForSchedulerToStop(scheduler, BASE_SLEEP_LENGTH, 1000);
 			
-			boolean restored = scheduler.restoreState(ADMIN);
-			Assert.assertTrue(restored, "State restored after execution interruption");
+			scheduler.restoreState(ADMIN);
 			
 			ApplicationManager.waitForSchedulerToStop(scheduler, BASE_SLEEP_LENGTH, 3000);
 			
@@ -156,9 +156,8 @@ public class TestSchedulerRestart
 					.collect(Collectors.summingInt(s -> s.getExecutionProgress().getDone()));
 			Assert.assertEquals(actualActions, expectedActions);
 			
-			restored = scheduler.restoreState(ADMIN);
 			//After scheduler end the saved state should be removed and, thus, expected to be not restored
-			Assert.assertFalse(restored, "State restored after execution end");
+			Assert.assertThrows(AutomationException.class,  () -> scheduler.restoreState(ADMIN));
 		}
 		finally
 		{
@@ -182,15 +181,13 @@ public class TestSchedulerRestart
 			scheduler.stop();
 			ApplicationManager.waitForSchedulerToStop(scheduler, BASE_SLEEP_LENGTH, 1000);
 			
-			boolean restored = scheduler.restoreState(ADMIN);
-			Assert.assertTrue(restored, "State restored after 1st execution interruption");
+			scheduler.restoreState(ADMIN);
 			
 			ApplicationManager.waitForSchedulerToSuspend(scheduler, BASE_SLEEP_LENGTH, 3000);
 			scheduler.stop();
 			ApplicationManager.waitForSchedulerToStop(scheduler, BASE_SLEEP_LENGTH, 1000);
 			
-			restored = scheduler.restoreState(ADMIN);
-			Assert.assertTrue(restored, "State restored after 2nd execution interruption");
+			scheduler.restoreState(ADMIN);
 			
 			ApplicationManager.waitForSchedulerToStop(scheduler, BASE_SLEEP_LENGTH, 3000);
 			

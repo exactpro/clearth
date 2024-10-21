@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.Scheduler;
 import com.exactprosystems.clearth.automation.Step;
 import com.exactprosystems.clearth.automation.StepData;
 import com.exactprosystems.clearth.automation.StepImpl;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.automation.steps.ParamDescription;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.SettingsException;
@@ -141,11 +142,18 @@ public class AutomationStepsManagement
 	}
 
 
-	public void saveStepsPositions() throws IOException
+	public void saveStepsPositions()
 	{
 		synchronized (selectedScheduler())
 		{
-			selectedScheduler().saveStepsAndInit("Error while saving steps after moving one of them");
+			try
+			{
+				selectedScheduler().saveStepsAndInit("Error while saving steps after moving one of them");
+			}
+			catch (IOException | AutomationException e)
+			{
+				MessageUtils.addErrorMessage("Error", e.getMessage());
+			}
 		}
 	}
 
@@ -184,7 +192,7 @@ public class AutomationStepsManagement
 				}
 			}
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -201,7 +209,7 @@ public class AutomationStepsManagement
 			selectedScheduler().clearSteps();
 			logger.info("cleared steps from '"+selectedScheduler().getName()+"'");
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -264,7 +272,7 @@ public class AutomationStepsManagement
 				}
 			}
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -306,7 +314,7 @@ public class AutomationStepsManagement
 			}
 			selectedScheduler().modifySteps(originalSelectedSteps, selectedSteps);
 		}
-		catch (IOException | SettingsException e)
+		catch (IOException | SettingsException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -324,7 +332,7 @@ public class AutomationStepsManagement
 			}
 			selectedScheduler().modifySteps(originalSelectedSteps, selectedSteps);
 		}
-		catch (IOException | SettingsException e)
+		catch (IOException | SettingsException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -337,7 +345,7 @@ public class AutomationStepsManagement
 		{
 			selectedScheduler().setAskForContinue(askForContinueAll);
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -350,7 +358,7 @@ public class AutomationStepsManagement
 		{
 			selectedScheduler().setAskIfFailed(askIfFailedAll);
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -369,7 +377,7 @@ public class AutomationStepsManagement
 			}
 			selectedScheduler().modifySteps(originalSelectedSteps, selectedSteps);
 		}
-		catch (IOException | SettingsException e)
+		catch (IOException | SettingsException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}
@@ -382,7 +390,7 @@ public class AutomationStepsManagement
 		{
 			selectedScheduler().setExecute(executeAll);
 		}
-		catch (IOException e)
+		catch (IOException | AutomationException e)
 		{
 			MessageUtils.addErrorMessage("Error", e.getMessage());
 		}

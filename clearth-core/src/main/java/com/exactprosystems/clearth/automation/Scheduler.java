@@ -169,7 +169,7 @@ public abstract class Scheduler
 		}
 	}
 	
-	public void saveStepsAndInit(String errorMsg) throws IOException
+	public void saveStepsAndInit(String errorMsg) throws IOException, AutomationException
 	{
 		try
 		{
@@ -182,7 +182,6 @@ public abstract class Scheduler
 			logger.error(errorMsg, e);
 			throw new IOException(errorMsg, e);
 		}
-
 		init();
 	}
 
@@ -247,7 +246,7 @@ public abstract class Scheduler
 		logger.info("New scheduler steps added from " + uploadedConfig.toString());
 	}
 	
-	synchronized public void setExecute(boolean execute) throws IOException
+	synchronized public void setExecute(boolean execute) throws IOException, AutomationException
 	{
 		for (Step step : schedulerData.getSteps())
 			step.setExecute(execute);
@@ -255,19 +254,19 @@ public abstract class Scheduler
 		saveStepsAndInit("Error while saving steps after setting 'Execute' flag");
 	}
 
-	synchronized public void setAskForContinue(boolean askForContinue) throws IOException
+	synchronized public void setAskForContinue(boolean askForContinue) throws IOException, AutomationException
 	{
 		for (Step step : schedulerData.getSteps())
 			step.setAskForContinue(askForContinue);
-
+		
 		saveStepsAndInit("Error while saving steps after setting 'Ask for continue' flag");
 	}
 
-	synchronized public void setAskIfFailed(boolean askIfFailed) throws IOException
+	synchronized public void setAskIfFailed(boolean askIfFailed) throws IOException, AutomationException
 	{
 		for (Step step : schedulerData.getSteps())
 			step.setAskIfFailed(askIfFailed);
-
+		
 		saveStepsAndInit("Error while saving steps after setting 'Ask if failed' flag");
 	}
 
@@ -287,7 +286,7 @@ public abstract class Scheduler
 		saveMatrices();
 	}
 	
-	synchronized public void toggleHoliday(Date hol) throws IOException
+	synchronized public void toggleHoliday(Date hol) throws IOException, AutomationException
 	{
 		Map<String, Boolean> hols = schedulerData.getHolidays();
 		String holString = MatrixFunctions.getHolidayDF().format(hol);
@@ -315,13 +314,13 @@ public abstract class Scheduler
 		init();
 	}
 	
-	synchronized public void setBusinessDay(Date businessDay) throws IOException
+	synchronized public void setBusinessDay(Date businessDay) throws IOException, AutomationException
 	{
 		schedulerData.setBusinessDay(businessDay);
 		init();
 	}
 
-	synchronized public void setBaseTime(Date baseTime) throws IOException
+	synchronized public void setBaseTime(Date baseTime) throws IOException, AutomationException
 	{
 		schedulerData.setBaseTime(baseTime);
 		
@@ -339,7 +338,7 @@ public abstract class Scheduler
 		init();
 	}
 	
-	synchronized public void useCurrentTime() throws IOException
+	synchronized public void useCurrentTime() throws IOException, AutomationException
 	{
 		new File(schedulerData.getBaseTimeName()).delete();
 		try
@@ -354,7 +353,7 @@ public abstract class Scheduler
 		init();
 	}
 	
-	synchronized public void setWeekendHoliday(boolean weekendHoliday) throws IOException
+	synchronized public void setWeekendHoliday(boolean weekendHoliday) throws IOException, AutomationException
 	{
 		schedulerData.setWeekendHoliday(weekendHoliday);
 		
@@ -378,7 +377,7 @@ public abstract class Scheduler
 		return schedulerData.getReportsConfig();
 	}
 	
-	synchronized public void setReportsConfig(ReportsConfig reportsConfig) throws IOException
+	synchronized public void setReportsConfig(ReportsConfig reportsConfig) throws IOException, AutomationException
 	{
 		schedulerData.setReportsConfig(reportsConfig);
 		schedulerData.saveReportsConfig();
@@ -401,7 +400,7 @@ public abstract class Scheduler
 			step.setKind(CoreStepKind.Default.getLabel());
 	}
 	
-	synchronized public void addStep(Step newStep) throws IOException, SettingsException
+	synchronized public void addStep(Step newStep) throws IOException, SettingsException, AutomationException
 	{
 		validateStep(newStep, null);
 		
@@ -425,38 +424,38 @@ public abstract class Scheduler
 		steps.set(stepIndex, newStep);
 	}
 	
-	synchronized public void modifyStep(Step originalStep, Step newStep) throws IOException, SettingsException
+	synchronized public void modifyStep(Step originalStep, Step newStep) throws IOException, SettingsException, AutomationException
 	{
 		doModifyStep(originalStep, newStep);
 		saveStepsAndInit("Error while saving steps after modifying one of them");
 	}
 	
-	synchronized public void modifySteps(List<Step> originalSteps, List<Step> newSteps) throws IOException, SettingsException
+	synchronized public void modifySteps(List<Step> originalSteps, List<Step> newSteps) throws IOException, SettingsException, AutomationException
 	{
 		for (int i = 0; i < newSteps.size(); i++)
 			doModifyStep(originalSteps.get(i), newSteps.get(i));
 		saveStepsAndInit("Error while saving steps after modifying");
 	}
 	
-	synchronized public void removeStep(Step stepToRemove) throws IOException
+	synchronized public void removeStep(Step stepToRemove) throws IOException, AutomationException
 	{
 		schedulerData.getSteps().remove(stepToRemove);
 		saveStepsAndInit("Error while saving steps after removing one of them");
 	}
 	
-	synchronized public void removeSteps(List<Step> stepsToRemove) throws IOException
+	synchronized public void removeSteps(List<Step> stepsToRemove) throws IOException, AutomationException
 	{
 		schedulerData.getSteps().removeAll(stepsToRemove);
 		saveStepsAndInit("Error while saving steps after removing multiple steps");
 	}
 	
-	synchronized public void clearSteps() throws IOException
+	synchronized public void clearSteps() throws IOException, AutomationException
 	{
 		schedulerData.getSteps().clear();
 		saveStepsAndInit("Error while saving steps after removing all of them");
 	}
 	
-	synchronized public void downStep(Step step) throws IOException
+	synchronized public void downStep(Step step) throws IOException, AutomationException
 	{
 		List<Step> steps = schedulerData.getSteps();
 		int index = steps.indexOf(step);
@@ -871,13 +870,12 @@ public abstract class Scheduler
 		return true;
 	}
 
-	public boolean init()
+	public void init() throws AutomationException
 	{
-		if (isRunning())
-			return false;
-		
+		checkNotRunning("The scheduler cannot be initialized while it is running");
 		try
 		{
+			
 			schedulerData.loadSteps(steps, null); //Ignore step warnings
 			schedulerData.loadHolidays(holidays);
 			businessDay = schedulerData.loadBusinessDay();
@@ -890,21 +888,15 @@ public abstract class Scheduler
 		}
 		catch (Exception e)
 		{
-			logger.error("Error while initializing scheduler", e);
-			return false;
+			throw new AutomationException("Error while initializing scheduler", e);
 		}
-		
-		return true;
 	}
 	
 	
 	synchronized public void start(String userName) throws AutomationException
 	{
-		if (isRunning())
-			throw new AutomationException("Scheduler is already running");
-		
-		if (!init())
-			throw new AutomationException("Error while initiating scheduler");
+		checkNotRunning("Scheduler is already running");
+		init();
 		
 		sequentialRun = false;
 		try
@@ -1003,11 +995,8 @@ public abstract class Scheduler
 	
 	synchronized public void startSequential(String userName) throws AutomationException
 	{
-		if (isRunning())
-			throw new AutomationException("Scheduler is already running");
-
-		if (!init())
-			throw new AutomationException("Error while initiating scheduler");
+		checkNotRunning("Scheduler is already running");
+		init();
 		
 		sequentialRun = false;
 		try
@@ -1046,38 +1035,31 @@ public abstract class Scheduler
 		}
 	}
 	
-	synchronized public boolean restoreState(String userName) 
-			throws IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, 
-			InvocationTargetException, NoSuchMethodException, AutomationException, DataHandlingException
+	synchronized public void restoreState(String userName)
+			throws IOException, IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException, AutomationException, DataHandlingException, ExecutorStateException
 	{
-		if (isRunning())
-			return false;
+		checkNotRunning("State cannot be restored: scheduler is running");
 		
-		if (!schedulerData.isStateSaved())  //Checking existence of saved state and not stateInfo==null because state will be restored from state directory, not from stateInfo object
-			return false;
+		//Checking existence of saved state and not stateInfo==null
+		//because state will be restored from state directory, not from stateInfo object
+		if (!schedulerData.isStateSaved())
+			throw new AutomationException("State cannot be restored: no saved state available");
 		
 		sequentialRun = false;
 		status.clearLines();
 		
-		SimpleExecutor simpleExecutor;
-		try
-		{
-			ExecutorStateManager<?> es = getOrCreateStateManager();
-			es.load();
-			
-			File storageRepDir = new File(es.getStateInfo().getReportsInfo().getActionReportsPath());
-			
-			simpleExecutor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
-			simpleExecutor.setRestored(true);
-			simpleExecutor.setStoredActionReports(storageRepDir);
-			if (stateConfig.isAutoSave())
-				simpleExecutor.setStateManager(es);
-			simpleExecutor.setOnFinish((x) -> this.simpleExecutorFinished(x));
-		}
-		catch (Exception e)
-		{
-			throw new AutomationException("Could not restore state", e);
-		}
+		ExecutorStateManager<?> es = getOrCreateStateManager();
+		es.load();
+		
+		File storageRepDir = new File(es.getStateInfo().getReportsInfo().getActionReportsPath());
+		
+		SimpleExecutor simpleExecutor = es.executorFromState(this, executorFactory, businessDay, baseTime, userName);
+		simpleExecutor.setRestored(true);
+		simpleExecutor.setStoredActionReports(storageRepDir);
+		if (stateConfig.isAutoSave())
+			simpleExecutor.setStateManager(es);
+		simpleExecutor.setOnFinish((x) -> this.simpleExecutorFinished(x));
 		
 		steps = simpleExecutor.getSteps();
 		matrices = simpleExecutor.getMatrices();
@@ -1087,14 +1069,11 @@ public abstract class Scheduler
 		initSchedulerOnRestore(simpleExecutor);
 		executor = simpleExecutor;
 		executor.start();
-		
-		return true;
 	}
 	
 	synchronized public void stop() throws AutomationException
 	{
-		if (!isRunning() || isInterrupted())
-			return;
+		checkSchedulerNotStopped();
 		
 		if (!sequentialRun)
 		{
@@ -1137,23 +1116,20 @@ public abstract class Scheduler
 	
 	synchronized public void pause() throws AutomationException
 	{
-		if (!isRunning() || isInterrupted())
-			return;
+		checkSchedulerNotStopped();
 		executor.pauseExecution();
 	}
 	
-	synchronized public void continueExecution()
+	synchronized public void continueExecution() throws AutomationException
 	{
-		if (!isSuspended())
-			return;
+		checkSuspended("Execution is already running");
 		executor.clearLastReportsInfo();
 		executor.continueExecution();
 	}
 	
-	synchronized public void replayStep()
+	synchronized public void replayStep() throws AutomationException
 	{
-		if (!isSuspended())
-			return;
+		checkSuspended("Scheduler is running");
 		executor.replayStep();
 	}
 	
@@ -1167,16 +1143,16 @@ public abstract class Scheduler
 		return executor.isFailover();
 	}
 	
-	public void tryAgainMain()
+	public void tryAgainMain() throws AutomationException
 	{
-		if (isFailover())
-			executor.tryAgainMain();
+		checkFailover();
+		executor.tryAgainMain();
 	}
 	
-	public void tryAgainAlt()
+	public void tryAgainAlt() throws AutomationException
 	{
-		if (isFailover())
-			executor.tryAgainAlt();
+		checkFailover();
+		executor.tryAgainAlt();
 	}
 	
 	public int getFailoverActionType()
@@ -1207,17 +1183,15 @@ public abstract class Scheduler
 		return executor.getFailoverConnectionName();
 	}
 	
-	public void setFailoverRestartAction(boolean needRestart)
+	public void setFailoverRestartAction(boolean needRestart) throws AutomationException
 	{
-		if (!isFailover())
-			return;
+		checkFailover();
 		executor.setFailoverRestartAction(needRestart);
 	}
 	
-	public void setFailoverSkipAction(boolean needSkipAction)
+	public void setFailoverSkipAction(boolean needSkipAction) throws AutomationException
 	{
-		if (!isFailover())
-			return;
+		checkFailover();
 		executor.setFailoverSkipAction(needSkipAction);
 	}
 	
@@ -1235,10 +1209,11 @@ public abstract class Scheduler
 	
 	/* State management routines */
 	
-	synchronized public boolean saveState() throws IOException
+	synchronized public void saveState() throws IOException, AutomationException
 	{
-		if ((!isSuspended()) || sequentialRun)
-			return false;
+		checkSuspended("State cannot be saved for running scheduler");
+		if (sequentialRun)
+			throw new AutomationException("State cannot be saved for sequential run");
 		
 		String repDir = getReportsDir() + "current_state";
 		ReportsInfo repInfo = makeCurrentReports(repDir, false, false);
@@ -1246,19 +1221,10 @@ public abstract class Scheduler
 		File storageRepDir = schedulerData.getRepDir();
 		repInfo.setActionReportsPath(storageRepDir.getAbsolutePath());
 		
-		try
-		{
-			ExecutorStateManager<?> es = getOrCreateStateManager();
-			es.save((SimpleExecutor)executor, repInfo);
-		}
-		catch (Exception e)
-		{
-			throw new IOException("Could not save state", e);
-		}
+		ExecutorStateManager<?> es = getOrCreateStateManager();
+		es.save((SimpleExecutor)executor, repInfo);
 		
 		copyActionReport(storageRepDir);
-		
-		return true;
 	}
 	
 	public StateConfig getStateConfig()
@@ -1266,7 +1232,7 @@ public abstract class Scheduler
 		return schedulerData.getStateConfig();
 	}
 	
-	synchronized public void setStateConfig(StateConfig stateConfig) throws IOException
+	synchronized public void setStateConfig(StateConfig stateConfig) throws IOException, AutomationException
 	{
 		schedulerData.setStateConfig(stateConfig);
 		schedulerData.saveStateConfig();
@@ -1664,5 +1630,30 @@ public abstract class Scheduler
 	public Path getExecutedMatricesPath()
 	{
 		return schedulerData.getExecutedMatricesDirPath();
+	}
+	
+	
+	protected void checkNotRunning(String msg) throws AutomationException
+	{
+		if (isRunning())
+			throw new AutomationException(msg);
+	}
+	
+	protected void checkSchedulerNotStopped() throws AutomationException
+	{
+		if (!isRunning() || isInterrupted())
+			throw new AutomationException("Scheduler is already stopped");
+	}
+	
+	protected void checkSuspended(String msg) throws AutomationException
+	{
+		if (!isSuspended())
+			throw new AutomationException(msg);
+	}
+	
+	protected void checkFailover() throws AutomationException
+	{
+		if (!isFailover())
+			throw new AutomationException("Scheduler is not in failover state");
 	}
 }

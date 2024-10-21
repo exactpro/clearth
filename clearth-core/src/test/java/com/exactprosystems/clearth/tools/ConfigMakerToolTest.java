@@ -21,6 +21,7 @@ package com.exactprosystems.clearth.tools;
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.*;
+import com.exactprosystems.clearth.automation.exceptions.AutomationException;
 import com.exactprosystems.clearth.utils.ClearThException;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.util.Arrays;
@@ -191,7 +192,7 @@ public class ConfigMakerToolTest
 
 	@Test(dataProvider = "config-add-test")
 	public void checkMakeAndAdd(String matrixFileName, String secondMatrixFileName, String[] stepNames, int expectedWarningsCount)
-		throws IOException, ClearThException
+			throws IOException, ClearThException, AutomationException
 	{
 		File destDir = CONFIG_MAKER_TOOL_TEST_OUTPUT_DIR.toFile();
 		Scheduler scheduler = clearThManager.getScheduler("admin", "admin");

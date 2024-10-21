@@ -73,7 +73,7 @@ public class SQLActionTest
 	}
 
 	@AfterClass
-	public static void dispose() throws IOException
+	public static void dispose() throws IOException, AutomationException
 	{
 		SchedulersManager sm = ClearThCore.getInstance().getSchedulersManager();
 		Scheduler scheduler = sm.getSchedulerByName(SCHEDULER_NAME, SCHEDULER_NAME);

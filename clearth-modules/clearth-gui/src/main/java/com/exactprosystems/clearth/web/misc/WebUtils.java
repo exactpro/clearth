@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -119,6 +119,12 @@ public class WebUtils
 	{
 		logger.error(errMsg, e);
 		MessageUtils.addErrorMessage(errMsg, ExceptionUtils.getDetailedMessage(e));
+	}
+	
+	public static void logAndGrowlWarning(String warnMsg, Throwable e, Logger logger)
+	{
+		logger.warn(warnMsg, e);
+		MessageUtils.addWarningMessage(warnMsg, ExceptionUtils.getDetailedMessage(e));
 	}
 	
 	public static String getMimeType(String fileName)

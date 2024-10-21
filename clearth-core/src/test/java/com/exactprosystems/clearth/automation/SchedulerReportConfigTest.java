@@ -20,6 +20,7 @@ package com.exactprosystems.clearth.automation;
 
 import com.exactprosystems.clearth.ApplicationManager;
 import com.exactprosystems.clearth.automation.exceptions.AutomationException;
+import com.exactprosystems.clearth.automation.persistence.ExecutorStateException;
 import com.exactprosystems.clearth.automation.report.ReportsConfig;
 import com.exactprosystems.clearth.data.DataHandlingException;
 import com.exactprosystems.clearth.utils.ClearThException;
@@ -106,8 +107,9 @@ public class SchedulerReportConfigTest
 	}
 	
 	@Test
-	public void testReportsConfigState() throws ClearThException, IOException, AutomationException, 
-			IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, DataHandlingException
+	public void testReportsConfigState() throws ClearThException, IOException, AutomationException,
+			IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException, DataHandlingException, ExecutorStateException
 	{
 		ReportsConfig initialConfig = new ReportsConfig(false, true, true);
 		
