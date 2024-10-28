@@ -28,8 +28,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
+import com.exactpro.th2.common.utils.event.EventBatcher;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import org.apache.commons.io.FileUtils;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,17 +76,35 @@ public class ResultSaver
 			FIELD_STATUS = "Status";
 	
 	private final MessageRouter<EventBatch> router;
-	private final int maxBatchSize;
+	private final ResultSavingConfig config;
 	
 	public ResultSaver(MessageRouter<EventBatch> router, ResultSavingConfig config)
 	{
 		this.router = router;
-		this.maxBatchSize = config.getMaxBatchSize();
+		this.config = config;
 	}
 	
-	public int getMaxBatchSize()
+	private EventBatcher createEventBatcher(ResultSavingConfig config)
 	{
-		return maxBatchSize;
+		int maxBatchSize = config.getMaxBatchSize();
+		long maxBatchSizeInBytes = config.getMaxBatchSizeInBytes();
+		long maxFlushTime = config.getMaxFlushTime();
+		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder()
+				.setNameFormat("event-batcher-%d").build());
+		Function1<EventBatch, Unit> function = batch ->
+		{
+			try
+			{
+				router.sendAll(batch);
+			}
+			catch (IOException e)
+			{
+				logger.error("Failed to store event batch", e);
+			}
+			return Unit.INSTANCE;
+		};
+		
+		return new EventBatcher(maxBatchSizeInBytes, maxBatchSize, maxFlushTime, executorService, function);
 	}
 	
 	public void storeResult(Result result, String name, Th2EventMetadata parentMetadata) throws UnsupportedResultException, TestExecutionHandlingException
@@ -419,29 +442,16 @@ public class ResultSaver
 		return new TestExecutionHandlingException("Could not convert action result", e);
 	}
 	
-	
-	protected EventBatch.Builder storeEventInBatch(com.exactpro.th2.common.grpc.Event event, EventBatch.Builder batch, 
-			com.exactpro.th2.common.grpc.Event batchContainer) throws TestExecutionHandlingException
-	{
-		if (batch == null)
-			batch = EventBatch.newBuilder().setParentEventId(batchContainer.getId());
-		batch.addEvents(event);
-		if (batch.getEventsCount() >= maxBatchSize)
-		{
-			storeProto(batch.build());
-			batch = null;
-		}
-		return batch;
-	}
-	
 	protected void storePlainDetails(Collection<DetailedResult> details, com.exactpro.th2.common.grpc.Event storedContainer) throws TestExecutionHandlingException
 	{
-		EventBatch.Builder rowsBatch = null;
+		if (details.isEmpty())
+			return;
+		
 		Instant start = EventUtils.getTimestamp(storedContainer.getId().getStartTimestamp()),
 				end = EventUtils.getTimestamp(storedContainer.getEndTimestamp());
-		for (DetailedResult dr : details)
+		try (EventBatcher eventBatcher = createEventBatcher(config))
 		{
-			try
+			for (DetailedResult dr : details)
 			{
 				com.exactpro.th2.common.grpc.Event rowEvent = ClearThEvent.fromTo(start, end)
 						.name(dr.getComment())
@@ -449,37 +459,32 @@ public class ResultSaver
 						.status(EventUtils.getStatus(dr.isSuccess()))
 						.bodyData(createComparisonTable(dr.getResultDetails()))
 						.toProto(storedContainer.getId());
-				rowsBatch = storeEventInBatch(rowEvent, rowsBatch, storedContainer);
-			}
-			catch (Exception e)
-			{
-				throw new TestExecutionHandlingException("Error while processing comparison result", e);
+				eventBatcher.onEvent(rowEvent);
 			}
 		}
-		
-		if (rowsBatch != null)
-			storeProto(rowsBatch.build());
+		catch (Exception e)
+		{
+			throw new TestExecutionHandlingException("Error while processing comparison result", e);
+		}
 	}
 	
-	protected void storeDetailsFromFile(CsvDetailedResultReader reader, com.exactpro.th2.common.grpc.Event storedContainer) 
-			throws IOException, TestExecutionHandlingException, Exception
+	protected void storeDetailsFromFile(CsvDetailedResultReader reader, com.exactpro.th2.common.grpc.Event storedContainer) throws Exception
 	{
-		EventBatch.Builder rowsBatch = null;
 		Instant start = EventUtils.getTimestamp(storedContainer.getId().getStartTimestamp()),
 				end = EventUtils.getTimestamp(storedContainer.getEndTimestamp());
-		DetailedResult dr;
-		while ((dr = reader.readNext()) != null)
+		try (EventBatcher eventBatcher = createEventBatcher(config))
 		{
-			com.exactpro.th2.common.grpc.Event rowEvent = ClearThEvent.fromTo(start, end)
-					.name(dr.getComment())
-					.type(TYPE_COMPARISON)
-					.status(EventUtils.getStatus(dr.isSuccess()))
-					.bodyData(createComparisonTable(dr.getResultDetails()))
-					.toProto(storedContainer.getId());
-			rowsBatch = storeEventInBatch(rowEvent, rowsBatch, storedContainer);
+			DetailedResult dr;
+			while ((dr = reader.readNext()) != null)
+			{
+				com.exactpro.th2.common.grpc.Event rowEvent = ClearThEvent.fromTo(start, end)
+						.name(dr.getComment())
+						.type(TYPE_COMPARISON)
+						.status(EventUtils.getStatus(dr.isSuccess()))
+						.bodyData(createComparisonTable(dr.getResultDetails()))
+						.toProto(storedContainer.getId());
+				eventBatcher.onEvent(rowEvent);
+			}
 		}
-		
-		if (rowsBatch != null)
-			storeProto(rowsBatch.build());
 	}
 }

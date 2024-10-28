@@ -89,7 +89,7 @@ public class Th2TestExecutionHandlerTest
 				initStepName = "Initialization",
 				procStepName = "Processing",
 				actionId = "firstAction";
-		StorageConfig config = new StorageConfig(new EventsConfig(scope, 100));
+		StorageConfig config = new StorageConfig(new EventsConfig(scope, 100, 1024, 1000));
 		Instant schedulerStart = Instant.ofEpochSecond(Instant.now().getEpochSecond()),  //It will be converted to Date which lacks nanoseconds and then back to Instant
 				initStepStart,
 				procStepStart,
@@ -169,7 +169,7 @@ public class Th2TestExecutionHandlerTest
 	{
 		CollectingRouter<EventBatch> router = new CollectingRouter<>();
 		
-		StorageConfig config = new StorageConfig(new EventsConfig("default", 100));
+		StorageConfig config = new StorageConfig(new EventsConfig("default", 100,  1024, 1000));
 		String testMatrixName = "test_matrix",
 				anotherMatrixName = "another_matrix",
 				step1Name = "step1",

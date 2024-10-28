@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -67,11 +67,8 @@ public class ResultSaverTest
 	@BeforeClass
 	public void init()
 	{
-		ResultSavingConfig config = new ResultSavingConfig();
-		config.setMaxBatchSize(2);
-		
 		router = new CollectingRouter<>();
-		saver = new ResultSaver(router, config);
+		saver = createResultSaver(2, 1024, 1000);
 		
 		Instant now = Instant.now();
 		Timestamp ts = Timestamp.newBuilder()
@@ -318,7 +315,6 @@ public class ResultSaverTest
 		EventID resultId = resultEvent.getId();
 		
 		Assert.assertEquals(rowBatch1.getEventsCount(), 2, "Event count in batch 1");
-		Assert.assertEquals(rowBatch1.getParentEventId(), resultId, "Parent ID of batch 1");
 		Event passedEvent = rowBatch1.getEvents(0),
 				failedEvent = rowBatch1.getEvents(1);
 		assertEvent(passedEvent, "passed row event", resultId, 
@@ -329,7 +325,6 @@ public class ResultSaverTest
 				getVerificationBody(failed));
 		
 		Assert.assertEquals(rowBatch2.getEventsCount(), 1, "Event count in batch 2");
-		Assert.assertEquals(rowBatch2.getParentEventId(), resultId, "Parent ID of batch 2");
 		Event extraEvent = rowBatch2.getEvents(0);
 		assertEvent(extraEvent, "extra row event", resultId, 
 				extraRow.getComment(), rowType, 
@@ -337,7 +332,31 @@ public class ResultSaverTest
 	}
 	
 	@Test
-	public void containerResultTest() throws UnsupportedResultException, TestExecutionHandlingException
+	public void csvDetailedResultTestMaxSizeInBytes() throws IOException, TestExecutionHandlingException
+	{
+		ResultSaver saver1 = createResultSaver(10, 2000, 1000);
+		ResultDetail[] resultDetails = createResultsDetail();
+		CsvDetailedResult result = createCsvDetailedResult(resultDetails);
+		saver1.storeResult(result, parentMetadata);
+		
+		//Due to ResultSaver configuration, 11 DetailedResults will be split into 2 batches
+		List<EventBatch> allBatches = router.getSent();
+		Assert.assertEquals(allBatches.size(), 3, "Batch count");
+		
+		EventBatch resultBatch = allBatches.get(0);
+		
+		Assert.assertEquals(resultBatch.getEventsCount(), 1, "Event count in result batch");
+		Event resultEvent = resultBatch.getEvents(0);
+		Assert.assertEquals(resultEvent.getType(), "Container", "Type of root event");
+		Assert.assertEquals(resultEvent.getBody().toStringUtf8(), "[]", "Body of root event");
+		
+		EventID resultId = resultEvent.getId();
+		checkBatch(allBatches.get(1), 0, 7, resultId, resultDetails);
+		checkBatch(allBatches.get(2), 7, 4, resultId, resultDetails);
+	}
+	
+	@Test
+	public void containerResultTest() throws TestExecutionHandlingException
 	{
 		String name = "Test container",
 				containerType = "Container",
@@ -397,6 +416,66 @@ public class ResultSaverTest
 				String.format("[{\"data\":\"%s\",\"type\":\"message\"}]", failedResult.getComment()));
 	}
 	
+	
+	private void checkBatch(EventBatch batch, int startIndex, int eventsCount, EventID parentId, ResultDetail[] results)
+	{
+		Assert.assertEquals(batch.getEventsCount(), eventsCount, "Event count in result batch");
+		for (int i = 0; i < eventsCount; i++)
+		{
+			int resultNum = i + startIndex;
+			assertEvent(batch.getEvents(i), "", parentId, "Row " + resultNum,
+					"Comparison", getVerificationBody(results[resultNum]));
+		}
+	}
+	
+	private ResultSaver createResultSaver(int maxSize, long maxSizeInBytes, long maxFlushTime)
+	{
+		ResultSavingConfig config = new ResultSavingConfig();
+		config.setMaxBatchSize(maxSize);
+		config.setMaxBatchSizeInBytes(maxSizeInBytes);
+		config.setMaxFlushTime(maxFlushTime);
+		return new ResultSaver(router, config);
+	}
+	
+	private CsvDetailedResult createCsvDetailedResult(ResultDetail[] results) throws IOException
+	{
+		Path tempPath = Paths.get("testOutput", "resultSaverTest");
+		Files.createDirectories(tempPath);
+		
+		String name = "All rows";
+		
+		CsvDetailedResult r = new CsvDetailedResult(name, tempPath.toFile());
+		r.setValueHandlers(new StringValuesComparator(new ComparisonUtils()), new StringValueParser());
+		r.setMaxDisplayedRowsCount(0);
+		
+		for (int i = 0; i < results.length; i++)
+		{
+			DetailedResult row = new DetailedResult();
+			row.setComment("Row " + i);
+			row.addResultDetail(results[i]);
+			r.addDetail(row);
+		}
+		
+		r.processDetails(tempPath.toFile(), null);
+		return r;
+	}
+	
+	private ResultDetail[] createResultsDetail()
+	{
+		String paramName = "Param1";
+		return new ResultDetail[]{
+				new ResultDetail(paramName, "V1", "V1", true, false),
+				new ResultDetail(paramName, "V2", "Value2", false, false),
+				new ResultDetail(paramName, "", "UnexpectedValue1", false, false),
+				new ResultDetail(paramName, "V3", "Value3", false, false),
+				new ResultDetail(paramName, "", "UnexpectedValue2", false, false),
+				new ResultDetail(paramName, "V4", "V4", true, false),
+				new ResultDetail(paramName, "V5", "V5", true, false),
+				new ResultDetail(paramName, "V6", "V6", true, false),
+				new ResultDetail(paramName, "V10", "V7", false, false),
+				new ResultDetail(paramName, "V7", "V8", false, false),
+				new ResultDetail(paramName, "VV", "V10", false, false) };
+	}
 	
 	private String getStatusText(boolean success)
 	{

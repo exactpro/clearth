@@ -1,6 +1,8 @@
 {
 	"events" : {
 		"scope" : "default",
-		"maxBatchSize" : 100
+		"maxBatchSizeInBytes" : 1048576,
+		"maxBatchSize" : 100,
+		"maxFlushTime" : 1000
 	}
 }

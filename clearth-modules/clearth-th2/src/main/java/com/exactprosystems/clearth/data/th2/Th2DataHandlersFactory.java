@@ -182,6 +182,8 @@ public class Th2DataHandlersFactory implements DataHandlersFactory
 	{
 		ResultSavingConfig config = new ResultSavingConfig();
 		config.setMaxBatchSize(storageConfig.getEvents().getMaxBatchSize());
+		config.setMaxBatchSizeInBytes(storageConfig.getEvents().getMaxBatchSizeInBytes());
+		config.setMaxFlushTime(storageConfig.getEvents().getMaxFlushTime());
 		return new ResultSaver(eventRouter, config);
 	}
 	

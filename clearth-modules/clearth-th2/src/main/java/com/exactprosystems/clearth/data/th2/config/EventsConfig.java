@@ -22,24 +22,29 @@ public class EventsConfig
 {
 	private String scope;
 	private int maxBatchSize = 100;
+	private long maxBatchSizeInBytes = 1048576;
+	private long maxFlushTime = 1000;
 	
 	public EventsConfig()
 	{
 	}
 	
-	public EventsConfig(String scope, int maxBatchSize)
+	public EventsConfig(String scope, int maxBatchSize, long maxBatchSizeInBytes, long maxFlushTime)
 	{
 		this.scope = scope;
 		this.maxBatchSize = maxBatchSize;
+		this.maxBatchSizeInBytes = maxBatchSizeInBytes;
+		this.maxFlushTime = maxFlushTime;
 	}
 	
 	@Override
 	public String toString()
 	{
 		return "[scope = " + scope + 
-				"; maxBatchSize = " + maxBatchSize + "]";
+				"; maxBatchSize = " + maxBatchSize +
+				"; maxBatchSizeInBytes = " + maxBatchSizeInBytes +
+				"; maxFlushTime = " + maxFlushTime + "]";
 	}
-	
 	
 	public String getScope()
 	{
@@ -51,7 +56,6 @@ public class EventsConfig
 		this.scope = scope;
 	}
 	
-	
 	public int getMaxBatchSize()
 	{
 		return maxBatchSize;
@@ -60,5 +64,25 @@ public class EventsConfig
 	public void setMaxBatchSize(int maxBatchSize)
 	{
 		this.maxBatchSize = maxBatchSize;
+	}
+	
+	public long getMaxBatchSizeInBytes()
+	{
+		return maxBatchSizeInBytes;
+	}
+	
+	public void setMaxBatchSizeInBytes(long maxBatchSizeInBytes)
+	{
+		this.maxBatchSizeInBytes = maxBatchSizeInBytes;
+	}
+	
+	public long getMaxFlushTime()
+	{
+		return maxFlushTime;
+	}
+	
+	public void setMaxFlushTime(long maxFlushTime)
+	{
+		this.maxFlushTime = maxFlushTime;
 	}
 }

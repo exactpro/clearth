@@ -21,6 +21,8 @@ package com.exactprosystems.clearth.data.th2.events;
 public class ResultSavingConfig
 {
 	private int maxBatchSize;
+	private long maxBatchSizeInBytes;
+	private long maxFlushTime;
 	
 	public int getMaxBatchSize()
 	{
@@ -30,5 +32,25 @@ public class ResultSavingConfig
 	public void setMaxBatchSize(int maxBatchSize)
 	{
 		this.maxBatchSize = maxBatchSize;
+	}
+	
+	public long getMaxBatchSizeInBytes()
+	{
+		return maxBatchSizeInBytes;
+	}
+	
+	public void setMaxBatchSizeInBytes(long maxBatchSizeInBytes)
+	{
+		this.maxBatchSizeInBytes = maxBatchSizeInBytes;
+	}
+	
+	public long getMaxFlushTime()
+	{
+		return maxFlushTime;
+	}
+	
+	public void setMaxFlushTime(long maxFlushTime)
+	{
+		this.maxFlushTime = maxFlushTime;
 	}
 }
