@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2024 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -111,11 +111,13 @@ public class MessageToMapTest
 				.field("mapWithList_subList_1_Field1", "Value1")
 				.field("mapWithList_subList_2_Field1", "Value100")
 				.field("mapWithList_subList_2_Field2", "Value2")
+				.field("mapWithList_arrayList_1", "AV1")
+				.field("mapWithList_arrayList_2", "AV2")
 				.build();
 		
 		Map<String, Object> map = converter.convert(message);
 		Assert.assertEquals(map.toString(),
-				"{PlainField1=PlainValue12, simpleMap={MapField1=123, MapField2=234}, mapWithList={subList=[{Field1=Value1}, {Field1=Value100, Field2=Value2}]}}",
+				"{PlainField1=PlainValue12, simpleMap={MapField1=123, MapField2=234}, mapWithList={subList=[{Field1=Value1}, {Field1=Value100, Field2=Value2}], arrayList=[AV1, AV2]}}",
 				"Message body");
 	}
 	

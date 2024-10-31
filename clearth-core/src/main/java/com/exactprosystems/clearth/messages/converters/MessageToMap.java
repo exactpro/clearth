@@ -115,8 +115,15 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 		String nextToken = tokens.nextToken();
 		if (NumberUtils.isParsable(nextToken))  //Token is number = it is index in list with sub-messages
 		{
-			List<Map<String, Object>> list = getList(name, dest);
 			int index = getIndex(nextToken, tokens.getContent());
+			if (!tokens.hasNext())  //Path to value ends with index = value should be added to plain list of values
+			{
+				List<String> list = getValuesList(name, dest);
+				insertIntoList(list, index, fieldValue, name);
+				return;
+			}
+			
+			List<Map<String, Object>> list = getList(name, dest);
 			map = getMap(list, index, name);
 		}
 		else
@@ -218,7 +225,7 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 	protected Map<String, Object> getMap(List<Map<String, Object>> list, int index, String listName) throws ConversionException
 	{
 		if (index > list.size())
-			throw new ConversionException(String.format("Not enough elements in list '%s' (%s) to set element %s", listName, list.size(), index));
+			throw smallListSize(listName, list.size(), index);
 		
 		if (index < list.size())
 			return list.get(index);
@@ -227,6 +234,18 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 		list.add(map);
 		return map;
 	}
+	
+	protected void insertIntoList(List<String> list, int index, String value, String listName) throws ConversionException
+	{
+		if (index > list.size())
+			throw smallListSize(listName, list.size(), index);
+		
+		if (index < list.size())
+			list.set(index, value);
+		else
+			list.add(value);
+	}
+	
 	
 	protected List<Map<String, Object>> getList(String name, Map<String, Object> fields) throws ConversionException
 	{
@@ -244,12 +263,33 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 		return (List<Map<String, Object>>) container;
 	}
 	
+	protected List<String> getValuesList(String name, Map<String, Object> fields) throws ConversionException
+	{
+		Object container = fields.get(name);
+		if (container == null)
+		{
+			List<String> list = createValuesList();
+			fields.put(name, list);
+			return list;
+		}
+		
+		if (!(container instanceof List))
+			throw subMessageListReassignsField(name, container);
+		
+		return (List<String>) container;
+	}
+	
 	protected Map<String, Object> createFieldsMap()
 	{
 		return new LinkedHashMap<>();
 	}
 	
 	protected List<Map<String, Object>> createMessagesList()
+	{
+		return new ArrayList<>();
+	}
+	
+	protected List<String> createValuesList()
 	{
 		return new ArrayList<>();
 	}
@@ -271,5 +311,10 @@ public class MessageToMap implements MessageConverter<Map<String, Object>>
 	{
 		String msg = String.format("Invalid list index %s in '%s'", number, value);
 		return cause != null ? new ConversionException(msg, cause) : new ConversionException(msg);
+	}
+	
+	private ConversionException smallListSize(String listName, int listSize, int index)
+	{
+		return new ConversionException(String.format("Not enough elements in list '%s' (%s) to set element %s", listName, listSize, index));
 	}
 }
