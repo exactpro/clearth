@@ -71,8 +71,6 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		if (!startedActions.remove(actionData))
 			return;
 
-		finishedActions.add(actionData);
-		
 		Action action = actionData.getAction();
 		// Need to apply action parameters to MVEL right here because they could be used in further actions.
 		// Setting this params in ActionExecutor on async action status checking could cause calculation exceptions
@@ -89,6 +87,8 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 		{
 			getLogger().error("Could not update finished actions storage", e);
 		}
+		
+		finishedActions.add(actionData);
 	}
 
 	private void refreshState(Action action)
@@ -137,7 +137,7 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 	 */
 	public void addAsyncAction(AsyncActionData actionData) throws InterruptedException
 	{
-		addActionToHystory(actionData);
+		addActionToHistory(actionData);
 		
 		AsyncActionsThread thread = getThreadForAction(actionData.getAction());
 		try
@@ -223,7 +223,7 @@ public class AsyncActionsManager implements ActionMonitor, Closeable
 	
 	//*** History management ***
 	
-	protected void addActionToHystory(AsyncActionData actionData)
+	protected void addActionToHistory(AsyncActionData actionData)
 	{
 		startedActions.add(actionData);
 		
