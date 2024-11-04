@@ -384,6 +384,30 @@ public class AutomationReportsBean extends ClearThBean
 		return getZipReports(false);
 		
 	}
+	
+	public StreamedContent getZipSelectedMatrixReports(XmlSchedulerLaunchInfo reportsInfo)
+	{
+		return getZipSelectedMatrixReports(reportsInfo.getMatricesInfo().get(0), reportsInfo.getReportsPath());
+	}
+	
+	public StreamedContent getZipSelectedMatrixReports(XmlMatrixInfo matrixInfo)
+	{
+		return getZipSelectedMatrixReports(matrixInfo, selectedReportsInfo.getPath());
+	}
+	
+	private StreamedContent getZipSelectedMatrixReports(XmlMatrixInfo matrixInfo, String repPath)
+	{
+		try
+		{
+			File f = new ReportsArchiver().getZipSelectedMatrixReports(matrixInfo, repPath);
+			return WebUtils.downloadFile(f, matrixInfo.getName() + "_reports.zip");
+		}
+		catch (IOException e)
+		{
+			WebUtils.logAndGrowlException("Could not download reports", e, getLogger());
+			return null;
+		}
+	}
 
 	public ReportFilters getReportFilters() {
 		return reportFilters;

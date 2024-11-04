@@ -183,6 +183,7 @@
 											<ui:param name="completeHtmlReport" value="#{reportsConfig == null or reportsConfig.completeHtmlReport}" />
 											<ui:param name="failedHtmlReport" value="#{reportsConfig == null or reportsConfig.failedHtmlReport}" />
 											<ui:param name="completeJsonReport" value="#{reportsConfig == null or reportsConfig.completeJsonReport}" />
+											<ui:param name="isAnyReportEnabled" value="#{completeHtmlReport or failedHtmlReport or completeJsonReport}" />
 											<ui:fragment rendered="#{info.matricesInfo.size()==1}">
 												<ui:fragment rendered="#{completeHtmlReport}">
 													<a href="#{automationReportsBean.getLaunchReportUrl(info)}" target="_blank"><h:outputText value="#{statusLine.value}" style="text-decoration: underline" /></a>
@@ -196,6 +197,12 @@
 												<br/>
 												<ui:fragment rendered="#{completeJsonReport}">
 													<a href="#{automationReportsBean.getLaunchJsonReportUrl(info)}" target="_blank"><h:outputText value="JSON Report" style="text-decoration: underline" /></a>
+													<br/>
+												</ui:fragment>
+												<ui:fragment rendered="#{isAnyReportEnabled}">
+													<p:commandLink value="Download all reports" ajax="false" style="text-decoration: underline" >
+														<p:fileDownload value="#{automationReportsBean.getZipSelectedMatrixReports(info)}" />
+													</p:commandLink>
 													<br/>
 												</ui:fragment>
 												<p:commandLink value="Logs by run" ajax="false" actionListener="#{automationReportsBean.extractReportsInfo(info)}" style="text-decoration: underline" >
@@ -311,6 +318,10 @@
 							<ui:param name="completeJsonReport" value="#{reportsConfig == null or reportsConfig.completeJsonReport}" />
 							<ui:param name="isAllReportsDisabled" value="#{!completeHtmlReport and !failedHtmlReport and !completeJsonReport}" />
 							<ui:fragment rendered="#{launchInfo.matricesInfo!=null and launchInfo.matricesInfo.size()==1}">
+								<p:commandButton icon="ui-icon-arrowthickstop-1-s" ajax="false" >
+									<p:fileDownload value="#{automationReportsBean.getZipSelectedMatrixReports(launchInfo)}" />
+								</p:commandButton>
+									&#160;
 								<ui:fragment rendered="#{completeHtmlReport}">
 									<a href="#{ApplicationBean.appContextPath}/reports/#{launchInfo.reportsPath}/#{launchInfo.matricesInfo.get(0).fileName}/report.html" target="_blank"><h:outputText value="#{launchInfo.matricesInfo.get(0).name}" style="#{!launchInfo.matricesInfo.get(0).successful ? 'color: red;' : ''}" /></a>
 									&#160;
@@ -1224,7 +1235,7 @@
 		</p:confirmDialog>
 		<!-- Reports by matrix dialog -->
 		<p:dialog header="Reports by matrix" widgetVar="reportsDialog"
-				  resizable="false" id="reportsDlg" style="min-width: 500px" width="900" closeOnEscape="true" modal="#{guiBean.modalDialog}">
+				  resizable="false" id="reportsDlg" style="min-width: 500px" width="950" closeOnEscape="true" modal="#{guiBean.modalDialog}">
 			<h:form id="ReportsDialog">
 				<p:remoteCommand name="resetReportsTable" update="ReportsDialog:reps" >
 					<p:resetInput target="ReportsDialog:reps" />
@@ -1233,6 +1244,11 @@
 							 var="matrixInfo" value="#{automationReportsBean.selectedReportsInfo.matrices}" filteredValue="#{automationReportsBean.filteredReportsInfo}"
 							 paginator="true" rows="20" paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}" paginatorPosition="top"
 							 emptyMessage="No reports found with given criteria">
+					<p:column style="width: 35px; text-align: center;">
+						<p:commandButton icon="ui-icon-arrowthickstop-1-s" ajax="false">
+							<p:fileDownload value="#{automationReportsBean.getZipSelectedMatrixReports(matrixInfo)}" />
+						</p:commandButton>
+					</p:column>
 					<p:column headerText="Matrix" filterBy="#{matrixInfo.fileName}" filterFunction="#{automationReportsBean.reportFilters.filterReportsInfoByRegEx}"
 							  style="width: 70%; #{width lt 700 ? 'white-space: nowrap;' : 'width: 700px'}">
 						<f:facet name="filter">

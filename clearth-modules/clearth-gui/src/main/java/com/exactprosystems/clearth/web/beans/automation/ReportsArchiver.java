@@ -23,6 +23,7 @@ import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.ReportsInfo;
 import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
+import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 
 import java.io.BufferedReader;
@@ -31,19 +32,17 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ReportsArchiver {
 
@@ -269,14 +268,33 @@ public class ReportsArchiver {
 	{
 		List<File> filesToZip = new ArrayList<>(filesToAdd);
 		List<String> names = new ArrayList<>(filesToAddNames);
-		
 		getFilesForZipReports(filesToZip, names, getFilteredReports(realtimeSnapshot), reportsInfo);
-		if (filesToZip.size() == 0)
+		return getZipFile(fileName, filesToZip, names);
+	}
+	
+	public File getZipSelectedMatrixReports(XmlMatrixInfo info, String selReportsPath) throws IOException
+	{
+		Path path = Path.of(this.reportsPath, selReportsPath, info.getFileName());
+		if(!Files.isDirectory(path))
+			throw new FileNotFoundException("Reports directory does not exist");
+		
+		List<File> filesToZip;
+		try (Stream<Path> stream = Files.list(path))
+		{
+			filesToZip = stream.map(Path::toFile).collect(Collectors.toList());
+		}
+		String tempZipFile = String.format("%s_%s_%s.zip", UserInfoUtils.getUserName(), info.getFileName(), System.currentTimeMillis());
+		return getZipFile(tempZipFile, filesToZip, Collections.emptyList());
+	}
+	
+	private File getZipFile(String fileName, List<File> filesToZip, List<String> names) throws IOException
+	{
+		if (filesToZip.isEmpty())
 			return null;
 		
-		File result = new File(tempPath, fileName);
-		Files.createDirectories(result.getParentFile().toPath());
-		zipFiles(result, filesToZip, names);
-		return result;
+		File zipFile = new File(tempPath, fileName);
+		Files.createDirectories(zipFile.getParentFile().toPath());
+		zipFiles(zipFile, filesToZip, names);
+		return zipFile;
 	}
 }
