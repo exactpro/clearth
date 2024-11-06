@@ -1,6 +1,7 @@
 dependencies {
-    implementation "org.apache.activemq:activemq-broker:5.18.3"
-    implementation "org.apache.activemq:activemq-kahadb-store:5.18.3"
+    def v = "5.18.3"
+    implementation "org.apache.activemq:activemq-broker:${v}"
+    implementation "org.apache.activemq:activemq-kahadb-store:${v}"
 }
 
 publishing {
@@ -19,6 +20,7 @@ configurations {
     all {
         exclude group: 'org.apache.activemq', module: 'activemq-openwire-legacy'
         exclude group: 'org.apache.activemq.protobuf', module: 'activemq-protobuf'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
     }
 }
 
