@@ -1,0 +1,5 @@
+Comparison name,Comparison result,Row kind,A,B,C
+Row #1,FAILED,EXPECTED,1,2,2
+Row #1,FAILED,ACTUAL,1,2,3
+Row #2,FAILED,EXPECTED,2,3,3
+Row #2,FAILED,ACTUAL,2,3,4

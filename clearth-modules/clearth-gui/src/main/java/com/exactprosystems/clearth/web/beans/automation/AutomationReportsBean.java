@@ -369,7 +369,7 @@ public class AutomationReportsBean extends ClearThBean
 			}
 			
 			File f = new ReportsArchiver().setFilteredData(filteredRTMatrices, filteredReportsInfo)
-					.getZipSelectedReportsWithLogs(shortLog, getSelectedReportsInfo(), UserInfoUtils.getUserName() + "_reports_logs.zip");
+					.getZipSelectedReportsWithLogs(shortLog, getSelectedReportsInfo());
 			return WebUtils.downloadFile(f, "reports_logs.zip");
 		}
 		catch (IOException e)
@@ -419,7 +419,7 @@ public class AutomationReportsBean extends ClearThBean
 		try
 		{
 			File f = new ReportsArchiver().setFilteredData(filteredRTMatrices, filteredReportsInfo)
-					.getZipSelectedReports(realtimeSnapshot, getSelectedReportsInfo(), UserInfoUtils.getUserName() + "_reports.zip");
+					.getZipSelectedReports(realtimeSnapshot, getSelectedReportsInfo());
 			return WebUtils.downloadFile(f, "reports.zip");
 		}
 		catch (IOException e)

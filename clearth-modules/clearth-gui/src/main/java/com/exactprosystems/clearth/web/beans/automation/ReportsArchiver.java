@@ -21,7 +21,6 @@ package com.exactprosystems.clearth.web.beans.automation;
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.Matrix;
 import com.exactprosystems.clearth.automation.ReportsInfo;
-import com.exactprosystems.clearth.automation.report.ActionReportWriter;
 import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
@@ -44,6 +43,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.exactprosystems.clearth.automation.report.ActionReportWriter.*;
+
 public class ReportsArchiver {
 
 	private static final char[] ILLEGAL_CHARACTERS = { '/', '\n', '\r', '\t', '\0', '\f', '`', '?', '*', '\\', '<', '>', '|', '\"', ':' };
@@ -55,6 +56,7 @@ public class ReportsArchiver {
 	private final String reportsPath,
 			tempPath;
 	private final Function<String, String> pathResolver;
+	private final String userName;
 	
 	protected List<Matrix> filteredRTMatrices;
 	protected List<XmlMatrixInfo> filteredReportsInfo;
@@ -65,94 +67,124 @@ public class ReportsArchiver {
 		reportsPath = app.getReportsPath();
 		tempPath = app.getTempDirPath();
 		pathResolver = p -> app.getAppRootRelative(p);
+		userName = UserInfoUtils.getUserName();
 	}
 	
-	public ReportsArchiver(String reportsPath, String tempPath, Function<String, String> pathResolver)
+	public ReportsArchiver(String reportsPath, String tempPath, Function<String, String> pathResolver, String userName)
 	{
 		this.reportsPath = reportsPath;
 		this.tempPath = tempPath;
 		this.pathResolver = pathResolver;
+		this.userName = userName;
 	}
 	
 	
-	public ReportsArchiver setFilteredData(List<Matrix> filteredRTMatrices, List<XmlMatrixInfo> filteredReportsInfo) {
+	public ReportsArchiver setFilteredData(List<Matrix> filteredRTMatrices, List<XmlMatrixInfo> filteredReportsInfo)
+	{
 		this.filteredRTMatrices = filteredRTMatrices;
 		this.filteredReportsInfo = filteredReportsInfo;
 		return this;
 	}
-
-	protected void getFilesForZipReports(List<File> files, List<String> names, Set<String> filteredReports, ReportsInfo reportInfoPath) throws IOException {
-
+	
+	protected void getFilesForZipReports(List<File> files, List<String> names, Set<String> filteredReports,
+			ReportsInfo reportInfoPath) throws IOException
+	{
 		// for paused scheduler
-		File dir = new File(pathResolver.apply(reportInfoPath.getPath()));
-		if (!dir.exists())
+		Path dir = Path.of(pathResolver.apply(reportInfoPath.getPath()));
+		if (!Files.exists(dir))
 		{
 			//for completed scheduler
-			dir = new File(pathResolver.apply(reportsPath + reportInfoPath.getPath()));
-			if(!dir.exists())
+			dir = Path.of(pathResolver.apply(reportsPath + reportInfoPath.getPath()));
+			if(!Files.exists(dir))
 				throw new FileNotFoundException("These reports do not exist");
 		}
 		
-		File[] reports = getReportsDirectories(dir);
-		if (reports == null || reports.length==0)
+		List<Path> reports = getReportsDirectories(dir);
+		if (reports == null || reports.isEmpty())
 			return;
 		
-		//1. Take the first directory and take all files except for HTML and JSON report. These are just media stuff identical for all reports.
-		File[] aux = reports[0].listFiles((dir1, name) -> !name.toLowerCase().endsWith(ActionReportWriter.HTML_SUFFIX) 
-				&& !name.toLowerCase().endsWith(ActionReportWriter.JSON_SUFFIX));
-		if (aux == null)
-			return;
+		Set<String> addedFiles = new HashSet<>();
 		
-		//They will be in the beginning of our ZIP file
-		files.addAll(Arrays.asList(aux));
-		names.addAll(Arrays.asList(new String[aux.length]));
-		
-		//2. For each directory, we need to open its HTML report and extract contents of <title> tag
-		//or open JSON report and extract contents of "matrixName" + "executionStart" + "result" and build title from them
-		for (File repDir : reports)
+		for (Path repDir : reports)
 		{
 			if (!checkFilter(repDir, filteredReports))
 				continue;
 			
-			String title = extractTitle(repDir);
-			title = sanitizeTitle(title, repDir);
+			Path htmlRep = getReportPathIfExists(repDir, HTML_REPORT_NAME),
+					htmlFailedRep = getReportPathIfExists(repDir, HTML_FAILED_REPORT_NAME),
+					jsonRep = getReportPathIfExists(repDir, JSON_REPORT_NAME);
+			String title = sanitizeTitle(extractTitle(htmlRep, htmlFailedRep, jsonRep), repDir.toFile());
 			
-			addFile(new File(repDir, ActionReportWriter.HTML_REPORT_NAME), 
-					title+ActionReportWriter.HTML_SUFFIX,
-					files, names);
-			addFile(new File(repDir, ActionReportWriter.JSON_REPORT_NAME), 
-					title+ActionReportWriter.JSON_SUFFIX,
-					files, names);
+			// Takes all files and directories except for HTML reports, JSON reports and identical files of these reports in the 'repDir' that were taken earlier.
+			try (Stream<Path> stream = Files.list(repDir))
+			{
+				Iterator<Path> pathIterator = stream.iterator();
+				while (pathIterator.hasNext())
+				{
+					Path repFile = pathIterator.next();
+					if (repFile.equals(htmlRep))
+					{
+						addFile(htmlRep.toFile(), String.format("%s%s", title, HTML_SUFFIX), files, names);
+						continue;
+					}
+					if (repFile.equals(htmlFailedRep))
+					{
+						addFile(htmlFailedRep.toFile(), String.format("%s failed report%s", title, HTML_SUFFIX), files, names);
+						continue;
+					}
+					if (repFile.equals(jsonRep))
+					{
+						addFile(jsonRep.toFile(), String.format("%s%s", title, JSON_SUFFIX), files, names);
+						continue;
+					}
+					
+					if (Files.isDirectory(repFile) || addedFiles.add(repFile.getFileName().toString()))
+					{
+						files.add(repFile.toFile());
+						names.add(null);
+					}
+				}
+			}
 		}
 	}
 	
-	private File[] getReportsDirectories(File dir)
+	private List<Path> getReportsDirectories(Path dir) throws IOException
 	{
-		return dir.listFiles(file -> {
-			if (!file.isDirectory())
-				return false;
-			
-			return new File(file, ActionReportWriter.HTML_REPORT_NAME).isFile()
-					|| new File(file, ActionReportWriter.JSON_REPORT_NAME).isFile();
-		});
+		try (Stream<Path> stream = Files.list(dir))
+		{
+			return stream.filter(file -> Files.isDirectory(file)
+							&& (getReportPathIfExists(file, HTML_REPORT_NAME) != null
+									|| getReportPathIfExists(file, HTML_FAILED_REPORT_NAME) != null
+									|| getReportPathIfExists(file, JSON_REPORT_NAME) != null))
+					.collect(Collectors.toList());
+		}
 	}
 	
-	private boolean checkFilter(File reportDir, Set<String> filteredReports)
+	private Path getReportPathIfExists(Path path, String fileName)
+	{
+		Path report = path.resolve(fileName);
+		if (Files.isRegularFile(report))
+			return report;
+		return null;
+	}
+	
+	private boolean checkFilter(Path reportDir, Set<String> filteredReports)
 	{
 		if (filteredReports != null)
-			return filteredReports.contains(reportDir.getName());
+			return filteredReports.contains(reportDir.getFileName().toString());
 		return true;
 	}
 	
-	private String extractTitle(File reportDir) throws IOException
+	private String extractTitle(Path htmlRep, Path htmlFailedRep, Path jsonRep) throws IOException
 	{
-		File report = new File(reportDir, ActionReportWriter.HTML_REPORT_NAME);
-		if (report.isFile())
-			return extractTitleFromHtml(report);
+		if (htmlRep != null)
+			return extractTitleFromHtml(htmlRep.toFile());
 		
-		report = new File(reportDir, ActionReportWriter.JSON_REPORT_NAME);
-		if (report.isFile())
-			return extractTitleFromJson(report);
+		if (htmlFailedRep != null)
+			return extractTitleFromHtml(htmlFailedRep.toFile());
+		
+		if (jsonRep != null)
+			return extractTitleFromJson(jsonRep.toFile());
 		
 		return null;
 	}
@@ -249,18 +281,17 @@ public class ReportsArchiver {
 
 	protected void zipFiles(File result, List<File> filesToZip, List<String> names) throws IOException
 	{
-		//Utils.zipDirectories(result, filesToZip);
 		FileOperationUtils.zipFiles(result, filesToZip, names);
 	}
 
-	public File getZipSelectedReports(boolean realtimeSnapshot, ReportsInfo reportsInfo, String fileName) throws IOException
+	public File getZipSelectedReports(boolean realtimeSnapshot, ReportsInfo reportsInfo) throws IOException
 	{
-		return getZipReports(realtimeSnapshot, reportsInfo, Collections.emptyList(), Collections.emptyList(), fileName);
+		return getZipReports(realtimeSnapshot, reportsInfo, Collections.emptyList(), Collections.emptyList(), "_reports");
 	}
 
-	public File getZipSelectedReportsWithLogs(File shortLog, ReportsInfo reportsInfo, String fileName) throws IOException
+	public File getZipSelectedReportsWithLogs(File shortLog, ReportsInfo reportsInfo) throws IOException
 	{
-		return getZipReports(false, reportsInfo, Collections.singletonList(shortLog), Collections.singletonList(null), fileName);
+		return getZipReports(false, reportsInfo, Collections.singletonList(shortLog), Collections.singletonList(null), "_reports_logs");
 	}
 	
 	
@@ -283,8 +314,7 @@ public class ReportsArchiver {
 		{
 			filesToZip = stream.map(Path::toFile).collect(Collectors.toList());
 		}
-		String tempZipFile = String.format("%s_%s_%s.zip", UserInfoUtils.getUserName(), info.getFileName(), System.currentTimeMillis());
-		return getZipFile(tempZipFile, filesToZip, Collections.emptyList());
+		return getZipFile(info.getFileName(), filesToZip, Collections.emptyList());
 	}
 	
 	private File getZipFile(String fileName, List<File> filesToZip, List<String> names) throws IOException
@@ -292,6 +322,7 @@ public class ReportsArchiver {
 		if (filesToZip.isEmpty())
 			return null;
 		
+		fileName = String.format("%s_%s_%s.zip", userName, fileName, System.currentTimeMillis());
 		File zipFile = new File(tempPath, fileName);
 		Files.createDirectories(zipFile.getParentFile().toPath());
 		zipFiles(zipFile, filesToZip, names);

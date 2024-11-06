@@ -29,7 +29,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -38,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ReportsArchiverTest
 {
@@ -50,7 +50,7 @@ public class ReportsArchiverTest
 	@BeforeClass
 	public void init()
 	{
-		archiver = new ReportsArchiver(null, TEST_OUTPUT.toString(), Function.identity());
+		archiver = new ReportsArchiver(null, TEST_OUTPUT.toString(), Function.identity(), "user");
 	}
 	
 	@DataProvider(name = "reports")
@@ -61,14 +61,14 @@ public class ReportsArchiverTest
 					{createReportsInfo(RES_DIR.resolve("1")), EXPECTED_DIR.resolve("1")},
 					{createReportsInfo(RES_DIR.resolve("2")), EXPECTED_DIR.resolve("2")},
 					{createReportsInfo(RES_DIR.resolve("3")), EXPECTED_DIR.resolve("3")},
+					{createReportsInfo(RES_DIR.resolve("4")), EXPECTED_DIR.resolve("4")}
 				};
 	}
 	
 	@Test(dataProvider = "reports")
-	public void zipSelectedReportsTest(ReportsInfo reportsInfo, Path expectedFilesDir) throws FileNotFoundException, IOException
+	public void zipSelectedReportsTest(ReportsInfo reportsInfo, Path expectedFilesDir) throws IOException
 	{
-		String fileName = new File(reportsInfo.getPath()).getName()+"_reports.zip";
-		File f = archiver.getZipSelectedReports(false, reportsInfo, fileName);
+		File f = archiver.getZipSelectedReports(false, reportsInfo);
 		
 		Path actualFilesDir = TEST_OUTPUT.resolve(FilenameUtils.getBaseName(f.getName()));
 		File actualFilesFolder = actualFilesDir.toFile();
@@ -78,10 +78,10 @@ public class ReportsArchiverTest
 	}
 	
 	@Test
-	public void noReportsTest() throws FileNotFoundException, IOException
+	public void noReportsTest() throws IOException
 	{
 		ReportsInfo ri = createReportsInfo(RES_DIR.resolve("no_reports"));
-		File f = archiver.getZipSelectedReports(false, ri, "no_reports.zip");
+		File f = archiver.getZipSelectedReports(false, ri);
 		
 		Assert.assertNull(f);
 	}
@@ -110,15 +110,23 @@ public class ReportsArchiverTest
 		{
 			Path actFile = actIt.next(),
 					expFile = expIt.next();
-			String actContent = FileUtils.readFileToString(actFile.toFile(), StandardCharsets.UTF_8),
-					expContent = FileUtils.readFileToString(expFile.toFile(), StandardCharsets.UTF_8);
-			Assert.assertEquals(actContent, expContent, expFile.getFileName()+" content");
+			if (Files.isRegularFile(actFile))
+			{
+				String actContent = FileUtils.readFileToString(actFile.toFile(), StandardCharsets.UTF_8),
+						expContent = FileUtils.readFileToString(expFile.toFile(), StandardCharsets.UTF_8);
+				Assert.assertEquals(actContent, expContent, expFile.getFileName() + " content");
+			}
+			else
+				assertDirs(actFile, expFile);
 		}
 	}
 	
 	private List<Path> getFilesList(Path dir) throws IOException
 	{
-		return Files.list(dir).sorted().collect(Collectors.toList());
+		try (Stream<Path> stream = Files.list(dir))
+		{
+			return stream.sorted().collect(Collectors.toList());
+		}
 	}
 	
 	private List<String> getFileNames(List<Path> files)
