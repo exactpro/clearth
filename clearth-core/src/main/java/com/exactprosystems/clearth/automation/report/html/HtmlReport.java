@@ -45,9 +45,9 @@ public class HtmlReport
 	private static final Logger log = LoggerFactory.getLogger(HtmlReport.class);
 	
 	protected static final String pathToResourceFiles;
-	protected static final String[] resourceFiles = {"logo.gif", "show.gif", "hide.gif", "right.gif", "close.gif"};
-	protected static final String APP_LOGO = "app_logo.gif";
-	protected static final String APP_LOGO_NY = "app_logo_ny.gif";
+	public static final String[] resourceFiles = {"logo.gif", "show.gif", "hide.gif", "right.gif", "close.gif"};
+	public static final String APP_LOGO = "app_logo.gif";
+	public static final String APP_LOGO_NY = "app_logo_ny.gif";
 
 	protected String pathToFiles;
 	protected String reportFilePath;
