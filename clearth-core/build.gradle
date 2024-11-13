@@ -68,7 +68,7 @@ dependencies {
 		exclude (group: 'junit', module: 'junit')
 	}
 	api "org.xmlunit:xmlunit-matchers:${xmlunitVersion}"
-	api "com.thoughtworks.xstream:xstream:1.4.20"
+	api "com.thoughtworks.xstream:xstream:1.4.21"
 	api "org.xerial:sqlite-jdbc:3.45.3.0"
 	api "javax.annotation:javax.annotation-api:1.3.2"
 	api "javax.jms:javax.jms-api:2.0.1"
