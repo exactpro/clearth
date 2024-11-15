@@ -114,8 +114,8 @@ subprojects {
 				failOnVersionConflict()
 				
 				def kotlinVersion = '1.8.22'
-				def jacksonVersion = '2.17.2'
-				def nettyVersion = '4.1.113.Final'
+				def jacksonVersion = '2.18.1'
+				def nettyVersion = '4.1.115.Final'
 				def bouncycastleVersion = '1.78.1'
 				def protobufVersion = '3.25.5'
 				
@@ -151,7 +151,7 @@ subprojects {
 						"org.jetbrains.kotlin:kotlin-stdlib-common:${kotlinVersion}",
 						"org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}",
 						'org.jetbrains:annotations:24.1.0',
-						'com.google.guava:guava:33.3.0-jre',
+						'com.google.guava:guava:33.3.1-jre',
 						'com.google.errorprone:error_prone_annotations:2.28.0',
 						'com.squareup.okio:okio:3.8.0',
 						'com.squareup.okhttp3:okhttp:4.12.0',

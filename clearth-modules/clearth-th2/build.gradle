@@ -6,7 +6,7 @@ repositories {
 }
 
 ext {
-	bomVersion = '4.8.0'
+	bomVersion = '4.9.0'
 }
 
 configurations {
