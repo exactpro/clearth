@@ -19,8 +19,8 @@ ext {
 	coreXsdDir = file('clearth-core/xsd')
 	jetty_9_4 = 'jetty9.4'
 	jetty_12 = 'jetty12'
-	jetty_9_4_version = '9.4.55.v20240627'
-	jetty_12_version = '12.0.12'
+	jetty_9_4_version = '9.4.56.v20240826'
+	jetty_12_version = '12.0.16'
 
 	if (!project.hasProperty('cth_version')) {
 		cth_version = '1.0.0-SNAPSHOT'
