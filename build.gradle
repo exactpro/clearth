@@ -141,7 +141,7 @@ subprojects {
 						"com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}",
 						"com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
 						"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}",
-						'org.apache.mina:mina-core:2.1.5',
+						'org.apache.mina:mina-core:2.1.10',
 						"org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}",
 						"org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}",
 						"org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}",
