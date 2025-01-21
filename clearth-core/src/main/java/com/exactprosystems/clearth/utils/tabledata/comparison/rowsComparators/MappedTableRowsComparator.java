@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,12 +33,19 @@ public class MappedTableRowsComparator<A, B> extends TableRowsComparator<A, B>
 		this.dataMapping = dataMapping;
 	}
 	
+	public MappedTableRowsComparator(ValuesComparator<A, B> valuesComparator, boolean failUnexpectedColumns, DataMapping<A> dataMapping)
+	{
+		super(valuesComparator, failUnexpectedColumns);
+		this.dataMapping = dataMapping;
+	}
+	
 	@Override
-	protected boolean checkCurrentColumn(A column, TableRow<A, B> row1, TableRow<A, B> row2, RowComparisonData<A, B> compData)
+	protected boolean checkCurrentColumn(A column, TableRow<A, B> row1, TableRow<A, B> row2,
+			RowComparisonData<A, B> compData, boolean failUnexpectedColumns)
 	{
 		if (dataMapping.isIgnore(column))
 			return false;
 		
-		return super.checkCurrentColumn(column, row1, row2, compData);
+		return super.checkCurrentColumn(column, row1, row2, compData, !dataMapping.isInfo(column) && failUnexpectedColumns);
 	}
 }

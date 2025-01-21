@@ -1,0 +1,13 @@
+//Constants:
+//path=clearth-core/src/test/resources/Action/CompareDataSets/testData/FailUnexpectedColumns
+
+"#ID","#GlobalStep","#Action","#ExpectedFormat","#ActualFormat","#ExpectedSource","#ActualSource","#FailUnexpectedColumns","#invert",#comment
+"id1","Step1","CompareDataSets","CsvFile","CsvFile","@{matrix.path}/file1.csv","@{matrix.path}/file2.csv",,,"Parameters: No mapping file, no info column, no 'fail unexpected column'"
+"id2","Step1","CompareDataSets","CsvFile","CsvFile","@{matrix.path}/file1.csv","@{matrix.path}/file2.csv",true,true,"Parameters: No mapping file, no info column, with 'fail unexpected column'"
+
+
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MappingFileName,"#FailUnexpectedColumns","#invert",#comment
+id3,Step1,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/file1.csv,@{matrix.path}/file2.csv,@{matrix.path}/infoMapping1.xml,,,"Parameters: with mapping file, no info column, no 'fail unexpected column'"
+id4,Step1,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/file1.csv,@{matrix.path}/file2.csv,@{matrix.path}/infoMapping1.xml,true,true,"Parameters: with mapping file, no info column, with 'fail unexpected column'"
+id5,Step1,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/file1.csv,@{matrix.path}/file2.csv,@{matrix.path}/infoMapping2.xml,,,"Parameters: with mapping file, with info column, no 'fail unexpected column'"
+id6,Step1,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/file1.csv,@{matrix.path}/file2.csv,@{matrix.path}/infoMapping2.xml,true,,"Parameters: with mapping file, with info column, with 'fail unexpected column'"

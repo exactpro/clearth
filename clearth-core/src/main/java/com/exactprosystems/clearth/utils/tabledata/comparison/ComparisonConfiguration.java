@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -47,6 +47,7 @@ public class ComparisonConfiguration
 			MAPPING_FILE_NAME = "MappingFileName",
 			CHECK_DUPLICATES = "CheckDuplicates",
 			LIST_FAILED_COLUMNS = "ListFailedColumnsInReport",
+			FAIL_UNEXPECTED_COLUMNS = "FailUnexpectedColumns",
 			PASSED = "Passed",
 			FAILED = "Failed",
 			NOT_FOUND = "NotFound",
@@ -71,7 +72,8 @@ public class ComparisonConfiguration
 	
 	protected boolean checkDuplicates,
 			listFailedColumns,
-			keyValuesInHeader;
+			keyValuesInHeader,
+			failUnexpectedColumns;
 	
 	protected int minPassedRowsToStore,
 			maxPassedRowsToStore,
@@ -113,6 +115,7 @@ public class ComparisonConfiguration
 		checkDuplicates = handler.getBoolean(CHECK_DUPLICATES, false);
 		listFailedColumns = handler.getBoolean(LIST_FAILED_COLUMNS, false);
 		keyValuesInHeader = handler.getBoolean(KEY_VALUES_IN_HEADER, false);
+		failUnexpectedColumns = handler.getBoolean(FAIL_UNEXPECTED_COLUMNS, false);
 		
 		minPassedRowsToStore = handler.getInteger(MIN_PASSED_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT);
 		maxPassedRowsToStore = handler.getInteger(MAX_PASSED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
@@ -238,5 +241,10 @@ public class ComparisonConfiguration
 	public int getMaxExtraRowsToStore()
 	{
 		return maxExtraRowsToStore;
+	}
+	
+	public boolean isFailUnexpectedColumns()
+	{
+		return failUnexpectedColumns;
 	}
 }

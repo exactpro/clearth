@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,12 +33,19 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.
 public class TableRowsComparator<A, B>
 {
 	private final ValuesComparator<A, B> valuesComparator;
+	private boolean failUnexpectedColumns;
 
 	public TableRowsComparator(ValuesComparator<A, B> valuesComparator)
 	{
 		this.valuesComparator = valuesComparator;
 	}
-
+	
+	public TableRowsComparator(ValuesComparator<A, B> valuesComparator, boolean failUnexpectedColumns)
+	{
+		this.valuesComparator = valuesComparator;
+		this.failUnexpectedColumns = failUnexpectedColumns;
+	}
+	
 	/**
 	 * Compares two specified {@link TableRow} objects.
 	 * @param row1 first object of comparison, usually marked as 'expected'.
@@ -53,7 +60,7 @@ public class TableRowsComparator<A, B>
 		{
 			for (A column : commonHeader)
 			{
-				if (checkCurrentColumn(column, row1, row2, compData))
+				if (checkCurrentColumn(column, row1, row2, compData, failUnexpectedColumns))
 					processValuesComparison(column, row1.getValue(column), row2.getValue(column), compData);
 			}
 		}
@@ -78,10 +85,11 @@ public class TableRowsComparator<A, B>
 		return true;
 	}
 	
-	protected boolean checkCurrentColumn(A column, TableRow<A, B> row1, TableRow<A, B> row2, RowComparisonData<A, B> compData)
+	protected boolean checkCurrentColumn(A column, TableRow<A, B> row1, TableRow<A, B> row2,
+			RowComparisonData<A, B> compData, boolean failUnexpectedColumns)
 	{
 		// Check if it's "unexpected" column which should be marked as 'INFO' in comparison results
-		if (!row1.getHeader().containsColumn(column))
+		if (!row1.getHeader().containsColumn(column) && !failUnexpectedColumns)
 		{
 			compData.addInfoComparisonDetail(column, null, row2.getValue(column));
 			return false;

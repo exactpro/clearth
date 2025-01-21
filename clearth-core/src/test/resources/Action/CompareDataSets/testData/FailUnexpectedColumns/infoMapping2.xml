@@ -1,0 +1,6 @@
+<MappingDesc>
+    <field name="A" keyColumn="true"/>
+    <field name="B"/>
+    <field name="C" info="true"/>
+    <field name="D" info="true"/>
+</MappingDesc>

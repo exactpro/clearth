@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -150,9 +150,9 @@ public class CompareDataSets extends Action
 	protected TableRowsComparator<String, String> createTableRowsComparator()
 	{
 		if (compConfig.getDataMapping() != null)
-			return new MappedTableRowsComparator<>(createValuesComparator(), compConfig.getDataMapping());
+			return new MappedTableRowsComparator<>(createValuesComparator(), compConfig.isFailUnexpectedColumns(), compConfig.getDataMapping());
 
-		return new TableRowsComparator<>(createValuesComparator());
+		return new TableRowsComparator<>(createValuesComparator(), compConfig.isFailUnexpectedColumns());
 	}
 
 	protected ValuesComparator<String, String> createValuesComparator()
