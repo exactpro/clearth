@@ -1,0 +1,41 @@
+{
+  "matrixName" : "matrix.csv",
+  "result" : true,
+  "description" : "",
+  "constants" : { },
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "async" : false,
+    "status" : {
+      "passed" : true,
+      "failReason" : "NO",
+      "comments" : null,
+      "actualTimeout" : 0,
+      "waitBeforeAction" : 0
+    },
+    "error" : null,
+    "result" : null,
+    "actionReports" :     [
+    {
+      "@c" : ".ActionReport",
+      "actionId" : "id1",
+      "actionName" : "Sleep",
+      "timeout" : 2000,
+      "async" : true,
+      "payloadFinished" : true,
+      "waitAsyncEnd" : "SCHEDULER",
+      "status" : {
+        "passed" : true,
+        "failReason" : "NO",
+        "comments" : null,
+        "waitBeforeAction" : 0
+      },
+      "inputParams" : { },
+      "specialParams" : { },
+      "subActions" : [ ]
+    }
+    ]
+
+  } ]
+}

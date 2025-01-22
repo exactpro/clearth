@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -394,11 +394,9 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 					stepFinished(step);
 				}
 				
+				waitForAsyncActions();
 				if (!interrupted.get())
-				{
-					waitForAsyncActions();
 					status.addLine(new StringLine("Execution finished"));
-				}
 				else
 					status.addLine(new StringLine("Execution interrupted"));
 			}
