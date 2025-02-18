@@ -7,7 +7,7 @@ buildscript {
 	}
 	dependencies {
 		classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:5.2.3'
-		classpath 'org.owasp:dependency-check-gradle:10.0.2'
+		classpath 'org.owasp:dependency-check-gradle:12.1.0'
 	}
 }
 
@@ -41,6 +41,9 @@ ext {
 	
 	if (!project.hasProperty('checkApiKey')) {
 		checkApiKey = ''
+	}
+	if (!project.hasProperty('dataFeedUrl')) {
+		dataFeedUrl = null
 	}
 	if (!project.hasProperty('knownExploitedVulnerabilitiesUrl')) {
 		knownExploitedVulnerabilitiesUrl = null
@@ -444,9 +447,12 @@ dependencyCheck {
 	suppressionFile = "${projectDir}/dependency-check/suppressions.xml"
 	nvd {
 		apiKey = checkApiKey
+		datafeedUrl = dataFeedUrl
 	}
 	analyzers {
-		knownExploitedURL = knownExploitedVulnerabilitiesUrl
+		kev {
+			url = knownExploitedVulnerabilitiesUrl
+		}
 	}
 }
 

@@ -1,7 +1,7 @@
 plugins {
 	id 'war'
 	id 'org.gretty' version '3.1.1'
-	id 'org.owasp.dependencycheck' version '10.0.2'
+	id 'org.owasp.dependencycheck' version '12.1.0'
 }
 
 ext {
@@ -18,6 +18,9 @@ ext {
 	
 	if (!project.hasProperty('checkApiKey')) {
 		checkApiKey = ''
+	}
+	if (!project.hasProperty('dataFeedUrl')) {
+		dataFeedUrl = null
 	}
 	if (!project.hasProperty('knownExploitedVulnerabilitiesUrl')) {
 		knownExploitedVulnerabilitiesUrl = null
@@ -190,9 +193,12 @@ dependencyCheck {
 	failBuildOnCVSS = 7.6
 	nvd {
 		apiKey = checkApiKey
+		datafeedUrl = dataFeedUrl
 	}
 	analyzers {
-		knownExploitedURL = knownExploitedVulnerabilitiesUrl
+		kev {
+			url = knownExploitedVulnerabilitiesUrl
+		}
 	}
 }
 
