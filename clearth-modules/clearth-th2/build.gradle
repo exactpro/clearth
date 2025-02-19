@@ -6,14 +6,16 @@ repositories {
 }
 
 ext {
-	bomVersion = '4.9.0'
+	bomVersion = '4.10.0'
+	nettyVersion = '4.1.118.Final'
 }
 
 configurations {
 	all {
 		resolutionStrategy {
 			force "com.exactpro.th2:bom:${bomVersion}",
-			      'com.google.j2objc:j2objc-annotations:3.0.0'
+			      'com.google.j2objc:j2objc-annotations:3.0.0',
+			      "io.netty:netty-bom:${nettyVersion}"
 		}
 	}
 }
@@ -36,6 +38,8 @@ dependencies {
 		exclude (group: 'org.apache.logging.log4j')
 		exclude (group: 'org.slf4j')
 	}
+	
+	api "io.netty:netty-bom:${nettyVersion}"
 	
 	api 'org.apache.httpcomponents:fluent-hc:4.5.13'
 	api 'org.apache.httpcomponents:httpclient:4.5.13'
