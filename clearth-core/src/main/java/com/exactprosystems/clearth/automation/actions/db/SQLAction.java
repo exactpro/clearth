@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -70,6 +70,7 @@ public abstract class SQLAction extends Action implements Preparable
 			PARAM_FILE_NAME = "FileName",
 			PARAM_DELIMITER = "Delimiter",
 			PARAM_GENERATE_IF_EMPTY = "GenerateIfEmpty",
+			PARAM_FAIL_IF_EMPTY = "FailIfEmpty",
 			PARAM_USE_QUOTES = "UseQuotes",
 			PARAM_COMPRESS_RESULT = "CompressResult",
 			MAX_DISPLAYED_ROWS_COUNT = "MaxDisplayedRowsCount",
@@ -87,6 +88,7 @@ public abstract class SQLAction extends Action implements Preparable
 	protected String delimiterString;
 	protected boolean saveToFile;
 	protected boolean generateIfEmpty;
+	protected boolean failIfEmpty;
 	protected boolean useQuotes;
 	protected boolean compressResult;
 	protected int maxDisplayedRows;
@@ -127,6 +129,7 @@ public abstract class SQLAction extends Action implements Preparable
 		fileName = handler.getString(PARAM_FILE_NAME);
 		delimiterString = handler.getString(PARAM_DELIMITER, ",");
 		generateIfEmpty = handler.getBoolean(PARAM_GENERATE_IF_EMPTY, false);
+		failIfEmpty = handler.getBoolean(PARAM_FAIL_IF_EMPTY, false);
 		useQuotes = handler.getBoolean(PARAM_USE_QUOTES, false);
 		compressResult = handler.getBoolean(PARAM_COMPRESS_RESULT, false);
 		maxDisplayedRows = handler.getInteger(MAX_DISPLAYED_ROWS_COUNT, 50);
@@ -181,8 +184,13 @@ public abstract class SQLAction extends Action implements Preparable
 	protected Result processQueryResult(ResultSet resultSet, int limit) throws SQLException
 	{
 		boolean hasNext = resultSet.next();
-		if (!hasNext && !generateIfEmpty)
-			return DefaultResult.passed("Query returned empty table data result. Nothing to process");
+		if (!hasNext)
+		{
+			if (failIfEmpty)
+				return DefaultResult.failed("Query returned empty result");
+			if (!generateIfEmpty)
+				return DefaultResult.passed("Query returned empty table data result. Nothing to process");
+		}
 
 		TableResult result = new TableResult("Table rows from result of the query", null, false);
 

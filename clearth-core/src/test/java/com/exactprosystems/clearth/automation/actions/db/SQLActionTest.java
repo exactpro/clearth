@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -107,18 +108,19 @@ public class SQLActionTest
 		connection.check();
 
 		connectionStorage.addConnection(connection);
-
-		String createQuery = "create table " + table + " (id INTEGER PRIMARY KEY, param1 INTEGER, param2 INTEGER)",
-				insertQuery = "insert into " + table + " (id, param1, param2) values (1, 123, 123)";
-
-		try(PreparedStatement prStatement1 = connection.getConnection().prepareStatement(createQuery))
+		
+		String[] queries = {"create table " + table + " (id INTEGER PRIMARY KEY, param1 INTEGER, param2 INTEGER)",
+				"insert into " + table + " (id, param1, param2) values (1, 123, 123)",
+				"create table empty_table (id INTEGER PRIMARY KEY)"};
+		try (Connection con = connection.getConnection())
 		{
-			prStatement1.execute();
+			for (String q : queries)
+			{
+				try (PreparedStatement pstmt = con.prepareStatement(q))
+				{
+					pstmt.execute();
+				}
+			}
 		}
-		try(PreparedStatement prStatement2 = connection.getConnection().prepareStatement(insertQuery))
-		{
-			prStatement2.execute();
-		}
-
 	}
 }

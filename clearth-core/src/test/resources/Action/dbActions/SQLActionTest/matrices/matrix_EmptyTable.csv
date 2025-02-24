@@ -1,0 +1,6 @@
+//Constants:
+//query = select * from empty_table
+#ID,#GlobalStep,#Action,#ConnectionName,#Query
+id1,Step1,SingleSelectSQLAction,con1,@{matrix.query}
+#ID,#GlobalStep,#Action,#ConnectionName,#Query,#FailIfEmpty,#Invert
+id2,Step1,SingleSelectSQLAction,con1,@{matrix.query},y,y
