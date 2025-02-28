@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -222,42 +222,50 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 		return DefaultResult.passed("Both datasets are empty. Nothing to compare.");
 	}
 	
-	protected ContainerResult createComparisonContainerResult(ValuesComparator<A, B> valuesComparator, 
-	                                                          ValueParser<A, B> valueParser)
+	protected ContainerResult createComparisonContainerResult(ValuesComparator<A, B> valuesComparator, ValueParser<A, B> valueParser)
 	{
 		ContainerResult result = CloseableContainerResult.createPlainResult(null);
 		// Creating containers firstly to have them in expected order
-		result.addDetail(createComparisonNestedResult(CONTAINER_PASSED,
-				getMinPassedRowsToStore(), getMaxPassedRowsToStore(), 
-				valuesComparator, valueParser));
 		
-		CsvDetailedResult failedResult = createComparisonNestedResult(CONTAINER_FAILED,
-				getMinFailedRowsToStore(), getMaxFailedRowsToStore(),
-				valuesComparator, valueParser);
+		createAndStoreComparisonNestedResult(result,CONTAINER_PASSED, getMinPassedRowsToStore(), getMaxPassedRowsToStore(), valuesComparator, valueParser);
+		CsvDetailedResult failedResult = createAndStoreComparisonNestedResult(result, CONTAINER_FAILED, getMinFailedRowsToStore(),
+				getMaxFailedRowsToStore(), valuesComparator, valueParser);
 		failedResult.setListFailedColumns(isListFailedColumns());
-		result.addDetail(failedResult);
+		createAndStoreComparisonNestedResult(result, CONTAINER_NOT_FOUND, getMinNotFoundRowsToStore(), getMaxNotFoundRowsToStore(),valuesComparator, valueParser);
+		createAndStoreComparisonNestedResult(result, CONTAINER_EXTRA, getMinExtraRowsToStore(), getMaxExtraRowsToStore(), valuesComparator, valueParser);
 		
-		result.addDetail(createComparisonNestedResult(CONTAINER_NOT_FOUND,
-				getMinNotFoundRowsToStore(), getMaxNotFoundRowsToStore(),
-				valuesComparator, valueParser));
-		result.addDetail(createComparisonNestedResult(CONTAINER_EXTRA,
-				getMinExtraRowsToStore(), getMaxExtraRowsToStore(),
-				valuesComparator, valueParser));
 		return result;
 	}
 	
+	protected CsvDetailedResult createAndStoreComparisonNestedResult(ContainerResult result, String header,
+			int minStoredRowsCount, int maxStoredRowsCount, ValuesComparator<A, B> valuesComparator, ValueParser<A, B> valueParser)
+	{
+		CsvDetailedResult detailedResult = createComparisonNestedResult(header,
+				minStoredRowsCount, maxStoredRowsCount, valuesComparator, valueParser);
+		result.addDetail(detailedResult);
+		storeComparisonNestedResult(header, detailedResult);
+		return detailedResult;
+	}
+	
 	protected CsvDetailedResult createComparisonNestedResult(String header, int minStoredRowsCount, int maxStoredRowsCount,
-	                                                       ValuesComparator<A, B> valuesComparator,
-	                                                       ValueParser<A, B> valueParser)
+			ValuesComparator<A, B> valuesComparator, ValueParser<A, B> valueParser)
 	{
 		CsvDetailedResult result = new CsvDetailedResult(header);
 		result.setMinStoredRowsCount(minStoredRowsCount);
 		result.setMaxStoredRowsCount(maxStoredRowsCount);
 		result.setValueHandlers(valuesComparator, valueParser);
-		comparisonResultDetails.put(header, result);
 		return result;
 	}
 	
+	protected void storeComparisonNestedResult(String header, CsvDetailedResult result)
+	{
+		comparisonResultDetails.put(header, result);
+	}
+	
+	protected CsvDetailedResult getComparisonNestedResultByHeader(String header)
+	{
+		return comparisonResultDetails.get(header);
+	}
 	
 	protected void processCurrentRowResult(ContainerResult result, RowComparisonData<A, B> compData, 
 	                                       TableRow<A, B> currentRow,
@@ -302,13 +310,10 @@ public class ComparisonProcessor<A, B, C extends PrimaryKey>
 	                                      ValueParser<A, B> valueParser)
 	{
 		String nestedName = getResultTypeName(compResultType);
-		CsvDetailedResult nestedResult = comparisonResultDetails.get(nestedName);
+		CsvDetailedResult nestedResult = getComparisonNestedResultByHeader(nestedName);
 		if (nestedResult == null)
-		{
-			result.addDetail(createComparisonNestedResult(nestedName, 
-					DEFAULT_MIN_STORED_ROWS_COUNT, DEFAULT_MAX_STORED_ROWS_COUNT,
-					valuesComparator, valueParser));
-		}
+			nestedResult = createAndStoreComparisonNestedResult(result, nestedName, DEFAULT_MIN_STORED_ROWS_COUNT,
+					DEFAULT_MAX_STORED_ROWS_COUNT, valuesComparator, valueParser);
 		nestedResult.addDetail(rowResult);
 	}
 	
