@@ -118,7 +118,7 @@ subprojects {
 				
 				def kotlinVersion = '1.8.22'
 				def jacksonVersion = '2.18.2'
-				def nettyVersion = '4.1.118.Final'
+				def nettyVersion = '4.1.119.Final'
 				def bouncycastleVersion = '1.78.1'
 				def protobufVersion = '3.25.5'
 				
