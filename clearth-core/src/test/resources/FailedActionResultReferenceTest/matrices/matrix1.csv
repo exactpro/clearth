@@ -1,0 +1,4 @@
+#ID,#GlobalStep,#Action
+id1,Step1,SimpleFailingAction
+#ID,#GlobalStep,#Action,#Expected,#Actual
+id2,Step1,Compare2Values,false,@{id1.action.passed}

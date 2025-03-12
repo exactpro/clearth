@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -49,8 +49,6 @@ public class MvelVariables
 	{
 		for (FailReason failReason : FailReason.values())
 		{
-			if (failReason.equals(FailReason.NO))
-				continue;
 			Map<String, Object> params = new HashMap<>();
 			params.put(PASSED_PARAM, false);
 			params.put(FAIL_REASON_PARAM, failReason.name());

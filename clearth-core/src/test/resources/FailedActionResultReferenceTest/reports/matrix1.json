@@ -1,0 +1,55 @@
+{
+  "version" : "TestRelease",
+  "matrixName" : "matrix1.csv",
+  "userName" : "test",
+  "result" : false,
+  "stepReports" : [{
+    "stepName" : "Step1",
+    "stepKind" : "Default",
+    "status" : {
+      "passed" : false
+    },
+    "actionReports" :     [
+      {
+        "actionId" : "id1",
+        "actionName" : "SimpleFailingAction",
+        "status" : {
+          "passed" : false,
+          "failReason" : "NO"
+        },
+        "result" : {
+          "@c" : ".results.DefaultResult",
+          "success" : false,
+          "failReason" : "NO"
+        }
+      }
+    ,
+      {
+        "actionId" : "id2",
+        "actionName" : "Compare2Values",
+        "status" : {
+          "passed" : true
+        },
+        "inputParams" : {
+          "Expected" : {
+            "value" : "false"
+          },
+          "Actual" : {
+            "value" : "false",
+            "formula" : "@{id1.action.passed}"
+          }
+        },
+        "result" : {
+          "success" : true,
+          "resultDetails" : [ {
+            "param" : "Value",
+            "expected" : "false",
+            "actual" : "false",
+            "identical" : true
+          } ]
+        }
+      }
+    ]
+
+  } ]
+}
