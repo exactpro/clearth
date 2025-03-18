@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,6 +24,7 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.BinaryConverter;
 import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
 import com.exactprosystems.clearth.utils.javaFunction.BiConsumerWithException;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -98,7 +99,7 @@ public abstract class Step implements CsvDataManager
 		parameter = record.get(StepParams.PARAMETER.getValue());
 		setComment(record.get(StepParams.COMMENT.getValue()));
 		String waitNextD = record.get(StepParams.WAIT_NEXT_DAY.getValue());
-		waitNextDay = !waitNextD.isEmpty() && !waitNextD.equals("0");
+		waitNextDay = BinaryConverter.getBooleanFromString(waitNextD);
 	}
 
 	protected abstract Logger getLogger();

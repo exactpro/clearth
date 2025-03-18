@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -66,6 +66,17 @@ public class SchedulerDataTest
 			clearThManager.dispose();
 	}
 
+	@Test
+	public void testLoadIncorrectStepsFromCsvFile() throws Exception
+	{
+		String stepCfg = resDir.resolve(Paths.get("configs", "config_with_empty.cfg")).toString();
+		List<Step> steps = new ArrayList<>();
+
+		SchedulerData.loadSteps(stepCfg, steps, new DefaultStepFactory(), new ArrayList<>());
+		assertEquals(steps.size(), 1);
+		assertEquals(steps.get(0).getName(), "m");
+	}
+	
 	@Test
 	public void testLoadStepsAndReadFromCsvFile() throws Exception
 	{

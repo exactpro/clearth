@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,6 +18,8 @@
 
 package com.exactprosystems.clearth.utils;
 
+import org.apache.commons.lang.StringUtils;
+
 public class BinaryConverter
 {
 	public static String getBinaryStringFromBoolean(boolean value)
@@ -27,6 +29,6 @@ public class BinaryConverter
 
 	public static boolean getBooleanFromString(String value)
 	{
-		return !value.isEmpty() && !value.equals("0");
+		return !StringUtils.isEmpty(value) && !value.equals("0");
 	}
 }
