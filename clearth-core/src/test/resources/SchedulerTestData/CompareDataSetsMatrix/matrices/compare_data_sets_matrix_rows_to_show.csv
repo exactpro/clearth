@@ -1,0 +1,4 @@
+//Constants:
+//path=clearth-core/src/test/resources/SchedulerTestData/CompareDataSetsMatrix/testData_rows_to_show
+#ID,#Globalstep,#Action,#ExpectedFormat,#ActualFormat,#ExpectedSource,#ActualSource,#MaxPassedRowsToShow,#MaxFailedRowsToShow,#MaxNotFoundRowsToShow,#MaxExtraRowsToShow,#KeyColumns,#Invert,#MinPassedRowsInReport,#MinFailedRowsInReport,#MinNotFoundRowsInReport,#MinExtraRowsInReport
+id1,Step1,CompareDataSets,CsvFile,CsvFile,@{matrix.path}/rows_expected.csv,@{matrix.path}/rows_actual.csv,1,2,3,4,header,true,10,10,10,10

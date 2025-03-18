@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,6 +27,7 @@ import com.exactprosystems.clearth.automation.report.results.resultReaders.CsvDe
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.exactprosystems.clearth.utils.Utils;
+import com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor;
 import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.ValuesComparator;
 import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -49,7 +50,7 @@ public class CsvDetailedResult extends Result implements AutoCloseable, Serializ
 	public static final String COLUMN_COMPARISON_NAME = "Comparison name",
 			COLUMN_COMPARISON_RESULT = "Comparison result", COLUMN_ROW_KIND = "Row kind";
 	public static final String PASSED = "PASSED", FAILED = "FAILED", EXPECTED = "EXPECTED", ACTUAL = "ACTUAL";
-	protected int maxDisplayedRowsCount = 50,
+	protected int maxDisplayedRowsCount = ComparisonProcessor.DEFAULT_MAX_ROWS_TO_SHOW_COUNT,
 			minStoredRowsCount = -1,
 			maxStoredRowsCount = -1,
 			storedRowsCount = 0,

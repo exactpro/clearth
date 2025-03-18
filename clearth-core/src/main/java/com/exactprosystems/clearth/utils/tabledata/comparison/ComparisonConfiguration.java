@@ -36,11 +36,13 @@ import java.util.Set;
 
 import static com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor.DEFAULT_MIN_STORED_ROWS_COUNT;
 import static com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor.DEFAULT_MAX_STORED_ROWS_COUNT;
+import static com.exactprosystems.clearth.utils.tabledata.comparison.ComparisonProcessor.DEFAULT_MAX_ROWS_TO_SHOW_COUNT;
 
 public class ComparisonConfiguration
 {
 	private static final String MIN_ROWS_TO_STORE_TEMPLATE = "Min%sRowsInReport",
-			MAX_ROWS_TO_STORE_TEMPLATE = "Max%sRowsInReport";
+			MAX_ROWS_TO_STORE_TEMPLATE = "Max%sRowsInReport",
+			MAX_ROWS_TO_SHOW_TEMPLATE = "Max%sRowsToShow";
 	public static final String KEY_COLUMNS = "KeyColumns",
 			KEY_VALUES_IN_HEADER = "KeyValuesInHeader",
 			NUMERIC_COLUMNS = "NumericColumns",
@@ -55,15 +57,19 @@ public class ComparisonConfiguration
 			
 			MIN_PASSED_ROWS_TO_STORE = String.format(MIN_ROWS_TO_STORE_TEMPLATE, PASSED),
 			MAX_PASSED_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, PASSED),
+			MAX_PASSED_ROWS_TO_SHOW = String.format(MAX_ROWS_TO_SHOW_TEMPLATE, PASSED),
 			
 			MIN_FAILED_ROWS_TO_STORE = String.format(MIN_ROWS_TO_STORE_TEMPLATE, FAILED),
 			MAX_FAILED_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, FAILED),
+			MAX_FAILED_ROWS_TO_SHOW = String.format(MAX_ROWS_TO_SHOW_TEMPLATE, FAILED),
 			
 			MIN_NOT_FOUND_ROWS_TO_STORE = String.format(MIN_ROWS_TO_STORE_TEMPLATE, NOT_FOUND),
 			MAX_NOT_FOUND_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, NOT_FOUND),
+			MAX_NOT_FOUND_ROWS_TO_SHOW = String.format(MAX_ROWS_TO_SHOW_TEMPLATE, NOT_FOUND),
 			
 			MIN_EXTRA_ROWS_TO_STORE = String.format(MIN_ROWS_TO_STORE_TEMPLATE, EXTRA),
-			MAX_EXTRA_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, EXTRA);
+			MAX_EXTRA_ROWS_TO_STORE = String.format(MAX_ROWS_TO_STORE_TEMPLATE, EXTRA),
+			MAX_EXTRA_ROWS_TO_SHOW = String.format(MAX_ROWS_TO_SHOW_TEMPLATE, EXTRA);
 	
 	protected final IValueTransformer bdValueTransformer;
 	protected Set<String> keyColumns;
@@ -75,17 +81,10 @@ public class ComparisonConfiguration
 			keyValuesInHeader,
 			failUnexpectedColumns;
 	
-	protected int minPassedRowsToStore,
-			maxPassedRowsToStore,
-			
-			minFailedRowsToStore,
-			maxFailedRowsToStore,
-			
-			minNotFoundRowsToStore,
-			maxNotFoundRowsToStore,
-			
-			minExtraRowsToStore,
-			maxExtraRowsToStore;
+	protected ComparisonRowsConfiguration passedRowsConfig,
+			failedRowsConfig,
+			notFoundRowsConfig,
+			extraRowsConfig;
 	
 	public ComparisonConfiguration(Map<String, String> parameters, IValueTransformer bdValueTransformer) throws ParametersException
 	{
@@ -117,17 +116,21 @@ public class ComparisonConfiguration
 		keyValuesInHeader = handler.getBoolean(KEY_VALUES_IN_HEADER, false);
 		failUnexpectedColumns = handler.getBoolean(FAIL_UNEXPECTED_COLUMNS, false);
 		
-		minPassedRowsToStore = handler.getInteger(MIN_PASSED_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT);
-		maxPassedRowsToStore = handler.getInteger(MAX_PASSED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+		passedRowsConfig = new ComparisonRowsConfiguration(handler.getInteger(MIN_PASSED_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_PASSED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_PASSED_ROWS_TO_SHOW, DEFAULT_MAX_ROWS_TO_SHOW_COUNT));
 		
-		minFailedRowsToStore = handler.getInteger(MIN_FAILED_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT);
-		maxFailedRowsToStore = handler.getInteger(MAX_FAILED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+		failedRowsConfig = new ComparisonRowsConfiguration(handler.getInteger(MIN_FAILED_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_FAILED_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_FAILED_ROWS_TO_SHOW, DEFAULT_MAX_ROWS_TO_SHOW_COUNT));
 		
-		minNotFoundRowsToStore = handler.getInteger(MIN_NOT_FOUND_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT);
-		maxNotFoundRowsToStore = handler.getInteger(MAX_NOT_FOUND_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+		notFoundRowsConfig = new ComparisonRowsConfiguration(handler.getInteger(MIN_NOT_FOUND_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_NOT_FOUND_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_NOT_FOUND_ROWS_TO_SHOW, DEFAULT_MAX_ROWS_TO_SHOW_COUNT));
 		
-		minExtraRowsToStore = handler.getInteger(MIN_EXTRA_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT);
-		maxExtraRowsToStore = handler.getInteger(MAX_EXTRA_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT);
+		extraRowsConfig = new ComparisonRowsConfiguration(handler.getInteger(MIN_EXTRA_ROWS_TO_STORE, DEFAULT_MIN_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_EXTRA_ROWS_TO_STORE, DEFAULT_MAX_STORED_ROWS_COUNT),
+				handler.getInteger(MAX_EXTRA_ROWS_TO_SHOW, DEFAULT_MAX_ROWS_TO_SHOW_COUNT));
 	}
 
 	protected DataMapping<String> getDataMapping(File file)
@@ -203,45 +206,27 @@ public class ComparisonConfiguration
 		return listFailedColumns;
 	}
 	
-	public int getMinPassedRowsToStore()
+	
+	public ComparisonRowsConfiguration getPassedRowsConfig()
 	{
-		return minPassedRowsToStore;
+		return passedRowsConfig;
 	}
 	
-	public int getMaxPassedRowsToStore()
+	public ComparisonRowsConfiguration getFailedRowsConfig()
 	{
-		return maxPassedRowsToStore;
+		return failedRowsConfig;
 	}
 	
-	public int getMinFailedRowsToStore()
+	public ComparisonRowsConfiguration getNotFoundRowsConfig()
 	{
-		return minFailedRowsToStore;
+		return notFoundRowsConfig;
 	}
 	
-	public int getMaxFailedRowsToStore()
+	public ComparisonRowsConfiguration getExtraRowsConfig()
 	{
-		return maxFailedRowsToStore;
+		return extraRowsConfig;
 	}
 	
-	public int getMinNotFoundRowsToStore()
-	{
-		return minNotFoundRowsToStore;
-	}
-	
-	public int getMaxNotFoundRowsToStore()
-	{
-		return maxNotFoundRowsToStore;
-	}
-	
-	public int getMinExtraRowsToStore()
-	{
-		return minExtraRowsToStore;
-	}
-	
-	public int getMaxExtraRowsToStore()
-	{
-		return maxExtraRowsToStore;
-	}
 	
 	public boolean isFailUnexpectedColumns()
 	{
