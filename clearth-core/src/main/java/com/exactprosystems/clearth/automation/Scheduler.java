@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -1073,7 +1073,7 @@ public abstract class Scheduler
 	
 	synchronized public void stop() throws AutomationException
 	{
-		checkSchedulerNotStopped();
+		checkSchedulerNotStopped("Scheduler is already stopped");
 		
 		if (!sequentialRun)
 		{
@@ -1116,12 +1116,13 @@ public abstract class Scheduler
 	
 	synchronized public void pause() throws AutomationException
 	{
-		checkSchedulerNotStopped();
+		checkSchedulerNotStopped("Scheduler is not running");
 		executor.pauseExecution();
 	}
 	
 	synchronized public void continueExecution() throws AutomationException
 	{
+		checkSchedulerNotStopped("Scheduler is not running");
 		checkSuspended("Execution is already running");
 		executor.clearLastReportsInfo();
 		executor.continueExecution();
@@ -1639,10 +1640,10 @@ public abstract class Scheduler
 			throw new AutomationException(msg);
 	}
 	
-	protected void checkSchedulerNotStopped() throws AutomationException
+	protected void checkSchedulerNotStopped(String msg) throws AutomationException
 	{
 		if (!isRunning() || isInterrupted())
-			throw new AutomationException("Scheduler is already stopped");
+			throw new AutomationException(msg);
 	}
 	
 	protected void checkSuspended(String msg) throws AutomationException
