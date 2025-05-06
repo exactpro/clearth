@@ -62,9 +62,12 @@
 			<h:form id="SchedulersMenu" style="float: left;">
 				<div style="float: left; margin: 6px 10px;">Scheduler to use:</div>
 				<p:selectOneMenu value="#{automationBean.scheduler}" style="width:125px">
-					<p:ajax update=":Container :AutomationMenu :suspendedDlg :connectionFailureDlg"/>
+					<p:ajax update=":Container :AutomationMenu :suspendedDlg :connectionFailureDlg :SchedulersMenu"/>
 					<f:selectItems value="#{automationBean.schedulersMenu}"/>
 				</p:selectOneMenu>
+				<p:commandButton style="margin-left: 2px" icon="ui-icon-trash" update=":RemoveSchedulerConfirmDlg"
+						rendered="#{automationBean.ableToRemoveScheduler}" disabled="#{automationBean.isNotRemovableScheduler()}"
+						oncomplete="PF('removeSchedulerConfirmDialog').show();" />
 			</h:form>
 			<h:form id="NewSchedulerForm" style="float: right; margin-left: 1em;">
 				<p:commandButton value="New scheduler" icon="ui-icon-plusthick" rendered="#{automationBean.ableToCreateNewScheduler}"
@@ -893,7 +896,7 @@
 
 					<f:facet name="footer">
 						<p:outputPanel layout="block" style="text-align:right">
-							<p:commandButton value="Create" update=":SchedulersMenu :Growl"
+							<p:commandButton value="Create" update=":SchedulersMenu :Container :Growl"
 											 actionListener="#{automationBean.saveNewScheduler}"
 											 oncomplete="if (args.canClose) PF('newSchedulerDialog').hide();"
 											 icon="ui-icon ui-icon-check" />
@@ -1016,6 +1019,20 @@
 				</h:panelGrid>
 			</h:form>
 		</p:dialog>
+
+		<!-- Remove scheduler confirm dialog -->
+		<p:confirmDialog id="RemoveSchedulerConfirmDlg" header="Scheduler removal"
+						 message="Are you sure you want to remove scheduler '#{automationBean.scheduler}'?"
+						 width="350" severity="alert" widgetVar="removeSchedulerConfirmDialog" closeOnEscape="true" modal="#{guiBean.modalDialog}">
+			<h:form id="RemoveSchedulerConfirmDialog">
+				<p:commandButton value="Yes" update=":SchedulersMenu :Container :Growl"
+								 actionListener="#{automationBean.removeScheduler()}"
+								 oncomplete="PF('removeSchedulerConfirmDialog').hide();" />
+				<p:commandButton value="No"
+								 onclick="PF('removeSchedulerConfirmDialog').hide();"
+								 type="button" />
+			</h:form>
+		</p:confirmDialog>
 
 		<!-- Remove steps confirm dialog -->
 		<p:confirmDialog id="RemoveStepsConfirmDlg" header="#{automationConfigBean.steps.oneStepSelected ? 'Step removal' : 'Steps removal'}"

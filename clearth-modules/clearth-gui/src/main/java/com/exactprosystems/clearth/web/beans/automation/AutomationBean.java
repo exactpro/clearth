@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,7 +24,6 @@ import com.exactprosystems.clearth.automation.SchedulersManager;
 import com.exactprosystems.clearth.automation.StartAtType;
 import com.exactprosystems.clearth.utils.SettingsException;
 import com.exactprosystems.clearth.web.beans.ClearThBean;
-import com.exactprosystems.clearth.web.beans.ClearThCoreApplicationBean;
 import com.exactprosystems.clearth.web.misc.MessageUtils;
 import com.exactprosystems.clearth.web.misc.SchedulerEntry;
 import com.exactprosystems.clearth.web.misc.UserInfoUtils;
@@ -34,6 +33,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.exactprosystems.clearth.automation.SchedulersManager.COMMON_SCHEDULERS_KEY;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class AutomationBean extends ClearThBean
@@ -89,14 +90,55 @@ public class AutomationBean extends ClearThBean
 		return UserInfoUtils.isAdmin() || (UserInfoUtils.isPowerUser() && isUserSchedulersAllowed());
 	}
 	
+	public boolean isAbleToRemoveScheduler()
+	{
+		return UserInfoUtils.isAdmin() || UserInfoUtils.isPowerUser() && isUserSchedulersAllowed()
+				&& selectedScheduler.getForUser().equals(UserInfoUtils.getUserName());
+	}
+	
 	public boolean isUserSchedulersAllowed()
 	{
 		return ClearThCore.getInstance().isUserSchedulersAllowed();
 	}
 	
+	public boolean isNotRemovableScheduler()
+	{
+		return selectedScheduler == schedulersManager.getCommonSchedulers().get(0)
+				|| selectedScheduler == getDefaultScheduler();
+	}
+	
 	public void createNewScheduler()
 	{
 		newSchedulerEntry = new SchedulerEntry(UserInfoUtils.isAdmin(), UserInfoUtils.isPowerUser() ? UserInfoUtils.getUserName() : "", "");
+	}
+	
+	public void removeScheduler()
+	{
+		String msg = "Cannot remove scheduler";
+		if (!isAbleToRemoveScheduler())
+		{
+			MessageUtils.addErrorMessage(msg, "You are not allowed to remove schedulers");
+			return;
+		}
+		if (isNotRemovableScheduler())
+		{
+			MessageUtils.addErrorMessage(msg, "Scheduler is not removable");
+			return;
+		}
+		try
+		{
+			String name = selectedScheduler.getName();
+			schedulersManager.removeScheduler(selectedScheduler);
+			getLogger().info("removed scheduler '{}'", name);
+			
+			selectedScheduler = getDefaultScheduler();
+			schedulersMenu = createSchedulersMenu();
+			MessageUtils.addInfoMessage(String.format("Scheduler '%s' has been removed", name), " Scheduler files are kept on backend");
+		}
+		catch (Exception e)
+		{
+			MessageUtils.addErrorMessage(msg, e.getMessage());
+		}
 	}
 	
 	public void saveNewScheduler()
@@ -110,10 +152,16 @@ public class AutomationBean extends ClearThBean
 		
 		try
 		{
-			schedulersManager.addScheduler(newSchedulerEntry.isCommon() ? SchedulersManager.COMMON_SCHEDULERS_KEY : newSchedulerEntry.getForUser(), 
+			String forUser = newSchedulerEntry.getForUser();
+			Scheduler scheduler = schedulersManager.addScheduler(newSchedulerEntry.isCommon() ? COMMON_SCHEDULERS_KEY : forUser,
 					newSchedulerEntry.getName());
+			getLogger().info("created scheduler '{}'", scheduler.getName());
+			
+			if (forUser.equals(UserInfoUtils.getUserName()) || newSchedulerEntry.isCommon())
+				selectedScheduler = scheduler;
 			schedulersMenu = createSchedulersMenu();
 			WebUtils.addCanCloseCallback(true);
+			MessageUtils.addInfoMessage("Success", "Scheduler '"+scheduler.getName()+"' has been created");
 		}
 		catch (SettingsException e)
 		{
@@ -121,7 +169,7 @@ public class AutomationBean extends ClearThBean
 		}
 		catch (Exception e)
 		{
-			String errorMsg = "Could not init new user scheduler";
+			String errorMsg = "Could not init new scheduler";
 			getLogger().error(errorMsg, e);
 			MessageUtils.addErrorMessage("Error", errorMsg);
 		}

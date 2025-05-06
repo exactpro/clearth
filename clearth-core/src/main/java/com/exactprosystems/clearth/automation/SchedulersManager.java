@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 
 import javax.xml.bind.JAXBException;
 
+import com.exactprosystems.clearth.automation.exceptions.SchedulerUpdateException;
 import com.exactprosystems.clearth.utils.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -122,6 +123,20 @@ public class SchedulersManager
 	public Scheduler addDefaultUserScheduler(String userName) throws SettingsException, Exception
 	{
 		return addScheduler(userName, !isCommonSchedulerExists(userName) ? userName : userName + PERSONAL_TAG);
+	}
+	
+	public void removeScheduler(Scheduler scheduler) throws IOException, SettingsException, SchedulerUpdateException
+	{
+		synchronized (schedulers)
+		{
+			if (scheduler.isRunning())
+				throw new SchedulerUpdateException("Scheduler is currently running");
+			
+			if (schedulers.get(scheduler.getForUser()).remove(scheduler))
+				updateConfig();
+			else
+				throw new SettingsException("Scheduler to remove does not exist");
+		}
 	}
 	
 	protected void validateScheduler(String schedulerName, String forUser) throws SettingsException
