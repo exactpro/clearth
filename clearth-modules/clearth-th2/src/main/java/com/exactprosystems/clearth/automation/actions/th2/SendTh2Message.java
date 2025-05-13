@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -62,7 +62,7 @@ public class SendTh2Message extends Action implements Preparable
 			PARAM_ROUTER_ATTRIBUTES = "RouterAttributes",
 			PARAM_CREATE_CHECKPOINT = "CreateCheckpoint",
 			PARAM_CHECKPOINT_DESC = "CheckpointDesc",
-			CONTEXT_ROUTER = "Th2MessageRouter";
+			CONTEXT_MESSAGE_ROUTER = "Th2MessageRouter";
 	
 	private static final Set<String> SERVICE_PARAMS = Set.of(PARAM_SESSION_ALIAS,
 			PARAM_SESSION_GROUP, PARAM_BOOK, PARAM_ROUTER_ATTRIBUTES,
@@ -169,13 +169,16 @@ public class SendTh2Message extends Action implements Preparable
 	
 	protected MessageRouter<GroupBatch> getRouter(GlobalContext globalContext, Th2DataHandlersFactory th2Factory)
 	{
-		MessageRouter<GroupBatch> router = globalContext.getCloseableContext(CONTEXT_ROUTER);
-		if (router == null)
+		synchronized (globalContext)
 		{
-			router = th2Factory.createGroupBatchRouter();
-			globalContext.setCloseableContext(CONTEXT_ROUTER, router);
+			MessageRouter<GroupBatch> router = globalContext.getCloseableContext(CONTEXT_MESSAGE_ROUTER);
+			if (router == null)
+			{
+				router = th2Factory.createGroupBatchRouter();
+				globalContext.setCloseableContext(CONTEXT_MESSAGE_ROUTER, router);
+			}
+			return router;
 		}
-		return router;
 	}
 	
 	

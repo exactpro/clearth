@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,38 +28,44 @@ import com.exactprosystems.clearth.data.th2.Th2DataHandlersFactory;
 
 public class Check1Utils
 {
-	public static final String CONTEXT_ROUTER = "Th2GrpcRouter",
+	public static final String CONTEXT_GRPC_ROUTER = "Th2GrpcRouter",
 			CONTEXT_SERVICE = "Th2Check1Service";
 	
 	public static Check1Service getService(GlobalContext globalContext, Th2DataHandlersFactory th2Factory)
 	{
-		Check1Service service = globalContext.getLoadedContext(CONTEXT_SERVICE);
-		if (service != null)
-			return service;
-		
-		try
+		synchronized (globalContext)
 		{
-			//Router is not closed here. It is stored in GlobalContext for re-use by other actions and will be closed when Scheduler finishes execution
-			GrpcRouter router = getRouter(globalContext, th2Factory);
-			service = router.getService(Check1Service.class);
-			globalContext.setLoadedContext(CONTEXT_SERVICE, service);
-			return service;
-		}
-		catch (Exception e)
-		{
-			throw ResultException.failed("Could not get Check1 service", e);
+			Check1Service service = globalContext.getLoadedContext(CONTEXT_SERVICE);
+			if (service != null)
+				return service;
+			
+			try
+			{
+				//Router is not closed here. It is stored in GlobalContext for re-use by other actions and will be closed when Scheduler finishes execution
+				GrpcRouter router = getRouter(globalContext, th2Factory);
+				service = router.getService(Check1Service.class);
+				globalContext.setLoadedContext(CONTEXT_SERVICE, service);
+				return service;
+			}
+			catch (Exception e)
+			{
+				throw ResultException.failed("Could not get Check1 service", e);
+			}
 		}
 	}
 	
 	public static GrpcRouter getRouter(GlobalContext globalContext, Th2DataHandlersFactory th2Factory)
 	{
-		GrpcRouter router = globalContext.getCloseableContext(CONTEXT_ROUTER);
-		if (router == null)
+		synchronized (globalContext)
 		{
-			router = th2Factory.createGrpcRouter();
-			globalContext.setCloseableContext(CONTEXT_ROUTER, router);
+			GrpcRouter router = globalContext.getCloseableContext(CONTEXT_GRPC_ROUTER);
+			if (router == null)
+			{
+				router = th2Factory.createGrpcRouter();
+				globalContext.setCloseableContext(CONTEXT_GRPC_ROUTER, router);
+			}
+			return router;
 		}
-		return router;
 	}
 	
 	public static String getCheckpointName(String actionId)

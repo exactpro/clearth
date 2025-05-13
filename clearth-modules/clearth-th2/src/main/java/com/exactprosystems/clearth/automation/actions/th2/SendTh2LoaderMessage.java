@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -113,19 +113,22 @@ public class SendTh2LoaderMessage extends Action
 	
 	protected CloseableHttpClient getHttpClient(GlobalContext gc, Th2LoaderConnection loaderCon)
 	{
-		try
+		synchronized (gc)
 		{
-			CloseableHttpClient result = gc.getCloseableContext(CONTEXT_LOADER_CLIENT);
-			if (result == null)
+			try
 			{
-				result = createHttpClient(loaderCon);
-				gc.setCloseableContext(CONTEXT_LOADER_CLIENT, result);
+				CloseableHttpClient result = gc.getCloseableContext(CONTEXT_LOADER_CLIENT);
+				if (result == null)
+				{
+					result = createHttpClient(loaderCon);
+					gc.setCloseableContext(CONTEXT_LOADER_CLIENT, result);
+				}
+				return result;
 			}
-			return result;
-		}
-		catch (Exception e)
-		{
-			throw ResultException.failed("Error while preparing HTTP client", e);
+			catch (Exception e)
+			{
+				throw ResultException.failed("Error while preparing HTTP client", e);
+			}
 		}
 	}
 	
