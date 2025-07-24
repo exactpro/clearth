@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -45,7 +45,7 @@ import com.exactprosystems.clearth.utils.tabledata.typing.reader.TypedCsvDataRea
 import com.exactprosystems.clearth.utils.tabledata.typing.reader.TypedDbDataReader;
 import com.exactprosystems.clearth.utils.tabledata.typing.writer.TypedCsvDataWriter;
 import com.exactprosystems.clearth.utils.tabledata.typing.writer.TypedDbDataWriter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;

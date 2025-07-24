@@ -38,7 +38,7 @@ import com.exactprosystems.clearth.utils.tabledata.comparison.valuesComparators.
 import com.exactprosystems.clearth.utils.tabledata.converters.ValueParser;
 import com.exactprosystems.clearth.utils.tabledata.primarykeys.PrimaryKey;
 import com.exactprosystems.clearth.utils.tabledata.rowMatchers.TableRowMatcher;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

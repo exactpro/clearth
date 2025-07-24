@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,7 +27,7 @@ import com.exactprosystems.clearth.web.misc.SchedulerInfoExportStats;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.StreamedContent;
 
 import java.io.File;
@@ -37,7 +37,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class SchedulerInfoExportBean extends ClearThBean

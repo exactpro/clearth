@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,7 @@
 
 package com.exactprosystems.clearth.connectivity.json;
 
-import org.apache.commons.lang.ObjectUtils;
+import java.util.Objects;
 
 public class JsonBooleanField extends JsonField<Boolean>
 {
@@ -45,7 +45,7 @@ public class JsonBooleanField extends JsonField<Boolean>
 			return true;
 		if (!(object instanceof JsonBooleanField))
 			return false;
-		return ObjectUtils.equals(value, ((JsonBooleanField) object).getValue());
+		return Objects.equals(value, ((JsonBooleanField) object).getValue());
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -18,7 +18,7 @@
 
 package com.exactprosystems.clearth.utils.scripts;
 
-import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

@@ -24,7 +24,6 @@ import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.BinaryConverter;
 import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriter;
 import com.exactprosystems.clearth.utils.javaFunction.BiConsumerWithException;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 import java.io.IOException;

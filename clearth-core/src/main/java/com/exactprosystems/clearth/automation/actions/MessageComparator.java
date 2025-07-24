@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,7 +25,6 @@ import static com.exactprosystems.clearth.connectivity.iface.ClearThMessage.SUBM
 import static com.exactprosystems.clearth.connectivity.iface.ClearThMessage.MSGTYPE;
 import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,7 +32,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.exactprosystems.clearth.ClearThCore;
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
@@ -141,7 +140,7 @@ public class MessageComparator<T extends ClearThMessage<T>>
 	protected boolean fieldsEqual(String name, T expectedMessage, T actualMessage) throws ParametersException
 	{
 		String expectedValue = expectedMessage.getField(name);
-		if (isEmpty(expectedValue))
+		if (StringUtils.isEmpty(expectedValue))
 			return true;
 		
 		String actualValue = actualMessage.getField(name);;
@@ -189,7 +188,7 @@ public class MessageComparator<T extends ClearThMessage<T>>
 	protected ResultDetail compareFields(String name, T expectedMessage, T actualMessage)
 	{
 		String expectedValue = expectedMessage.getField(name);
-		if (isEmpty(expectedValue))
+		if (StringUtils.isEmpty(expectedValue))
 			return null;
 		
 		String actualValue = actualMessage.getField(name);

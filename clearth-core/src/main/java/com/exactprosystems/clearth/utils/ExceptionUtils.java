@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -19,8 +19,8 @@
 package com.exactprosystems.clearth.utils;
 
 import static com.exactprosystems.clearth.utils.Utils.EOL;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.exception.ExceptionUtils.getThrowableList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getThrowableList;
 
 import java.util.List;
 

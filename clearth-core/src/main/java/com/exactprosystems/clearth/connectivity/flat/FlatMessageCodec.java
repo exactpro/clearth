@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,8 +27,7 @@ import static com.exactprosystems.clearth.connectivity.iface.ClearThMessage.MSGT
 
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,7 +152,7 @@ public class FlatMessageCodec implements ICodec {
 	@Override
 	public ClearThMessage<?> decode(String encodedMessage, String messageType) throws DecodeException
 	{
-		logger.debug("Trying to decode Flat message:{}{}", SystemUtils.LINE_SEPARATOR, encodedMessage);
+		logger.debug("Trying to decode Flat message:{}{}", System.lineSeparator(), encodedMessage);
 
 		FlatMessageDesc messageDesc = null;
 

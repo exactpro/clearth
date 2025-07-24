@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,7 +33,7 @@ import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,7 +152,7 @@ public class SchedulerInfoExporter
 		if (CollectionUtils.isNotEmpty(stepData))
 		{
 			for (StepData infoData : stepData)
-				stepsData.add(new SchedulerStepData(infoData, StringEscapeUtils.escapeHtml(infoData.getName())));
+				stepsData.add(new SchedulerStepData(infoData, StringEscapeUtils.escapeHtml4(infoData.getName())));
 		}
 		return stepsData;
 	}

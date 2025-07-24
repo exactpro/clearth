@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,7 +21,6 @@ package com.exactprosystems.clearth.connectivity.iface;
 import com.exactprosystems.clearth.utils.LineBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.apache.commons.lang.ObjectUtils;
 
 import java.util.*;
 
@@ -326,7 +325,7 @@ public abstract class ClearThMessage<T extends ClearThMessage<T>>
 
 		for (String fieldName : this.getFieldNames())
 		{
-			if (!ObjectUtils.equals(this.getFieldObject(fieldName), message.getFieldObject(fieldName)))
+			if (!Objects.equals(this.getFieldObject(fieldName), message.getFieldObject(fieldName)))
 				return false;
 		}
 		

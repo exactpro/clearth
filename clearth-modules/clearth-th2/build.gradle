@@ -37,6 +37,8 @@ dependencies {
 		exclude (group: 'org.slf4j')
 	}
 	
+	api 'com.google.code.gson:gson:2.13.1'
+	
 	api 'org.apache.httpcomponents:fluent-hc:4.5.13'
 	api 'org.apache.httpcomponents:httpclient:4.5.13'
 	api 'org.apache.httpcomponents:httpcore:4.4.13'

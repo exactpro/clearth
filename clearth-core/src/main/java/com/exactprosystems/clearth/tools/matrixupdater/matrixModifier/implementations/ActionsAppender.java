@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -27,7 +27,7 @@ import com.exactprosystems.clearth.tools.matrixupdater.model.Row;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.Change;
 import com.exactprosystems.clearth.tools.matrixupdater.settings.Update;
 import com.exactprosystems.clearth.utils.tabledata.TableHeader;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Path;
 import java.util.*;

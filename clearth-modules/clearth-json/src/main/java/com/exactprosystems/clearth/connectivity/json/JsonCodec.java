@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -32,9 +32,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.*;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +145,7 @@ public class JsonCodec implements ICodec
 			String logMsg = "Trying to decode JSON message";
 			if (messageType != null)
 				logMsg += ", defined type '"+messageType+"'";
-			logger.trace(logMsg+":"+SystemUtils.LINE_SEPARATOR+encodedMessage);
+			logger.trace(logMsg+":"+System.lineSeparator()+encodedMessage);
 		}
 		
 		JsonNode root = readTree(encodedMessage);
@@ -402,7 +401,7 @@ public class JsonCodec implements ICodec
 		}
 		
 		String encodedMessage = encodeMessage(message, messageDesc);
-		logger.trace("Encoded message:{}{}", SystemUtils.LINE_SEPARATOR, encodedMessage);
+		logger.trace("Encoded message:{}{}", System.lineSeparator(), encodedMessage);
 		return encodedMessage;
 	}
 	
@@ -607,7 +606,7 @@ public class JsonCodec implements ICodec
 	
 	protected JsonNode valueToNumberNode(String value)
 	{
-		if (NumberUtils.isNumber(value))
+		if (NumberUtils.isCreatable(value))
 		{
 			try
 			{

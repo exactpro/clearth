@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,7 +21,7 @@ package com.exactprosystems.clearth.connectivity.validation;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,6 @@ import java.util.Enumeration;
 import java.util.List;
 
 import static com.exactprosystems.clearth.ClearThCore.getInstance;
-import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
  * Rule to check that there are no started connections
@@ -95,7 +94,7 @@ abstract public class AbstractReadQNotReadByOthersRule
 	protected boolean hostsEquals(String hostnameToCheck, String anotherHostname)
 	{
 		// Don't compare invalid settings.
-		if (isBlank(hostnameToCheck) || isBlank(anotherHostname))
+		if (StringUtils.isBlank(hostnameToCheck) || StringUtils.isBlank(anotherHostname))
 			return false;
 		
 		if (StringUtils.equals(hostnameToCheck, anotherHostname))

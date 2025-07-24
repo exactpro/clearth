@@ -27,17 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.xml.bind.JAXBException;
-
 import com.exactprosystems.clearth.automation.exceptions.SchedulerUpdateException;
 import com.exactprosystems.clearth.utils.*;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.exactprosystems.clearth.ClearThCore;
-import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 
 public class SchedulersManager
 {
@@ -82,32 +79,6 @@ public class SchedulersManager
 		
 		if (schedulers.size() == 0)
 			throw new Exception("No schedulers defined in file '" + cfgFile.getAbsolutePath() + "'");
-	}
-	
-	private void moveDirIfNeeded(String sourceDirPath, String targetDirPath) throws IOException
-	{
-		File source = new File(sourceDirPath), target = new File(targetDirPath);
-		if (source.isDirectory() && !new File(target, source.getName()).isDirectory())
-			FileUtils.moveDirectoryToDirectory(source, target, true);
-	}
-	
-	private void packDirIfNeeded(String sourceDirPath, String packDirName, boolean checkSource) throws IOException
-	{
-		File source = new File(sourceDirPath);
-		if ((!checkSource || source.isDirectory()) && !new File(source.getParent() + File.separator + packDirName, source.getName()).isDirectory())
-		{
-			File target = new File(source.getParent(), packDirName + "temp_" + System.currentTimeMillis());
-			FileUtils.moveDirectoryToDirectory(source, target, true);
-			target.renameTo(new File(source.getParent(), packDirName));
-		}
-	}
-	
-	private void updateLaunchesInfo(Scheduler scheduler) throws JAXBException, ClearThException
-	{
-		for (XmlSchedulerLaunchInfo launch : scheduler.getSchedulerData().getLaunches().getLaunchesInfo())
-				launch.setReportsPath(scheduler.getForUser() + "/" + launch.getReportsPath());
-
-		scheduler.getSchedulerData().saveLaunches();
 	}
 	
 	

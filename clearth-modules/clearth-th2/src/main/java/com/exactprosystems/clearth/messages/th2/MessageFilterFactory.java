@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -34,7 +34,7 @@ import com.exactprosystems.clearth.messages.RgKeyFieldNames;
 import com.exactprosystems.clearth.messages.converters.ConversionException;
 import com.exactprosystems.clearth.messages.converters.MessageToMap;
 import com.exactprosystems.clearth.utils.ComparisonUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import static com.exactpro.th2.common.grpc.FilterOperation.*;
 import static com.exactprosystems.clearth.utils.ComparisonUtils.*;

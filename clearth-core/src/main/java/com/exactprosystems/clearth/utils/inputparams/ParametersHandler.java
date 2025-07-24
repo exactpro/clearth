@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2020 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,8 +28,8 @@ import com.exactprosystems.clearth.connectivity.db.DbConnection;
 import com.exactprosystems.clearth.utils.CommaBuilder;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
 import com.exactprosystems.clearth.utils.Pair;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 import static com.exactprosystems.clearth.utils.ClearThEnumUtils.enumToTextValues;
 import static com.exactprosystems.clearth.utils.ClearThEnumUtils.valueOfIgnoreCase;
 import static java.util.Collections.addAll;
-import static org.apache.commons.lang.StringUtils.*;
+
 /**
  * Use case:
  * 
@@ -302,9 +302,9 @@ public class ParametersHandler
 	private void findAndSplit(Collection<String> collection, String name, String delimiter, boolean required)
 	{
 		String value = getString(name, required);
-		if (isNotEmpty(value))
+		if (StringUtils.isNotEmpty(value))
 		{
-			String[] values = split(value, delimiter);
+			String[] values = StringUtils.split(value, delimiter);
 			for (int index = 0; index < values.length; index++)
 			{
 				values[index] = StringUtils.trim(values[index]);
@@ -316,7 +316,7 @@ public class ParametersHandler
 	private void findAndSplit(Collection<String> collection, String name, Pattern delimiter, boolean required)
 	{
 		String value = getString(name, required);
-		if (isNotEmpty(value))
+		if (StringUtils.isNotEmpty(value))
 		{
 			String[] values = delimiter.split(value);
 			for (int index = 0; index < values.length; index++)
@@ -861,7 +861,7 @@ public class ParametersHandler
 		if (StringUtils.isEmpty(value))
 			return defaultValue;
 		
-		if (NumberUtils.isNumber(value))
+		if (NumberUtils.isCreatable(value))
 		{
 			try
 			{
@@ -986,7 +986,7 @@ public class ParametersHandler
 	private <E extends Enum<E>> E getEnum(String name, Class<E> enumClass, E defaultValue, boolean required) 
 	{
 		String enumStringValue = params.get(name);
-		if (isEmpty(enumStringValue))
+		if (StringUtils.isEmpty(enumStringValue))
 		{
 			if (required)
 			{

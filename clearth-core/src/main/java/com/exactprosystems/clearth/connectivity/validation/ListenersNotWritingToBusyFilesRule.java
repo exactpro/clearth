@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,7 +24,7 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.listeners.ClearThMessageCollector;
 import com.exactprosystems.clearth.utils.KeyValueUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,7 +34,6 @@ import static com.exactprosystems.clearth.ClearThCore.getInstance;
 import static com.exactprosystems.clearth.connectivity.ListenerType.listenerTypeByLabel;
 import static com.exactprosystems.clearth.utils.CollectionUtils.join;
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Rule to check that there are no started connections with listeners
@@ -58,7 +57,7 @@ public class ListenersNotWritingToBusyFilesRule implements ClearThConnectionVali
 		List<ClearThMessageConnection> anotherMsgConnections = getAllStartedMsgConnections();
 		
 		String conflicts = checkListenersWritingToSameFiles(msgConnectionToCheck, anotherMsgConnections);
-		if (isNotEmpty(conflicts))
+		if (StringUtils.isNotEmpty(conflicts))
 			return format("Can't start connection '%s' - \n%s", connectionToCheck.getName(), conflicts);
 		else 
 			return null;

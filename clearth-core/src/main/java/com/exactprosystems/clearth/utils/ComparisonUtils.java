@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,9 +23,9 @@ import com.exactprosystems.clearth.automation.functions.SpecialDataModel;
 import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.automation.report.results.DetailedResult;
 import com.exactprosystems.clearth.automation.report.results.complex.ComparisonRow;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 
 import static com.exactprosystems.clearth.utils.ParametersUtils.*;
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.*;
 
 public class ComparisonUtils
 {
@@ -536,7 +536,7 @@ public class ComparisonUtils
 			}
 			else if (IS_NUMBER.equals(trimmedExpectedValue))
 			{
-				return NumberUtils.isNumber(actualValue);
+				return NumberUtils.isCreatable(actualValue);
 			}
 			else if (IS_FLOAT.equals(trimmedExpectedValue))
 			{

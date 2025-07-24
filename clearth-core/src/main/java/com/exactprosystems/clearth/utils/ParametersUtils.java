@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,8 +22,8 @@ import static com.exactprosystems.clearth.utils.ComparisonUtils.INTEGER_PATTERN;
 
 import java.math.BigDecimal;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import com.exactprosystems.clearth.automation.exceptions.ParametersException;
 
@@ -95,7 +95,7 @@ public class ParametersUtils {
 	 */
 	public static boolean isNumberWithoutQualifier(String value)
 	{
-		return NumberUtils.isNumber(value) && Character.isDigit(value.charAt(value.length() - 1));
+		return NumberUtils.isCreatable(value) && Character.isDigit(value.charAt(value.length() - 1));
 	}
 
 	public static void checkNumberOfParams(String function, String[] params, int minNumberOfParam, int maxNumberOfParam) throws ParametersException

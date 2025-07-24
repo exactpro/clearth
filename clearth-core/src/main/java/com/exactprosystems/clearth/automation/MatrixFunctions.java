@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -25,8 +25,8 @@ import com.exactprosystems.clearth.automation.functions.MethodDataModel;
 import com.exactprosystems.clearth.automation.report.FailReason;
 import com.exactprosystems.clearth.automation.report.Result;
 import com.exactprosystems.clearth.utils.*;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.PropertyAccessException;
@@ -1176,7 +1176,7 @@ public class MatrixFunctions
 
 	protected String getAbsValue(String a) throws NumberFormatException
 	{
-		if (NumberUtils.isNumber(a))
+		if (NumberUtils.isCreatable(a))
 			return StringUtils.removeStart(a, "-");
 		
 		throw new NumberFormatException("Value '"+a+"' is not a number");

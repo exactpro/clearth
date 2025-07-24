@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,7 +26,7 @@ import com.exactprosystems.clearth.utils.Pair;
 import com.exactprosystems.clearth.utils.Utils;
 import com.exactprosystems.clearth.xmldata.XmlExcludedParamsList;
 import com.exactprosystems.clearth.xmldata.XmlMessageConverterConfig;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;

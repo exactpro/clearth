@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,8 +29,8 @@ import com.exactprosystems.clearth.utils.LineBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,7 +173,7 @@ public class JsonMessageValidator
 	                                 List<MessageValidationError> errors,
 	                                 MultiValuedMap errorsInRg)
 	{
-		if (!NumberUtils.isNumber(value))
+		if (!NumberUtils.isCreatable(value))
 			appendError(new FormatError(getFieldName(fieldDesc), value, "Number"),
 					inSubMsg, rgKey, errors, errorsInRg);
 		else 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,7 +24,7 @@ import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThMessageConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThRunnableConnection;
 import com.exactprosystems.clearth.connectivity.db.DbConnection;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.text.ParseException;
@@ -36,7 +36,6 @@ import java.util.Map;
 
 import static com.exactprosystems.clearth.utils.ClearThEnumUtils.enumToTextValues;
 import static com.exactprosystems.clearth.utils.ClearThEnumUtils.valueOfIgnoreCase;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class InputParamsUtils
 {
@@ -52,7 +51,7 @@ public class InputParamsUtils
 	public static String getRequiredString(Map<String, String> inputParams, String key) throws ResultException
 	{
 		String value = inputParams.get(key);
-		if (isEmpty(value))
+		if (StringUtils.isEmpty(value))
 			throw ResultException.failed(String.format(ERROR_PARAM_MISSING, key));
 		return value;
 	}
@@ -60,7 +59,7 @@ public class InputParamsUtils
 	public static String getStringOrDefault(Map<String, String> inputParams, String key, String defaultValue)
 	{
 		String value = inputParams.get(key);
-		if (isEmpty(value))
+		if (StringUtils.isEmpty(value))
 			return defaultValue;
 		return value;
 	}
@@ -106,7 +105,7 @@ public class InputParamsUtils
 	public static int getIntOrDefault(Map<String, String> inputParams, String key, int defaultValue) throws ResultException
 	{
 		String value = inputParams.get(key);
-		if (isEmpty(value))
+		if (StringUtils.isEmpty(value))
 			return defaultValue;
 		return parseInt(key, value);
 	}
@@ -133,7 +132,7 @@ public class InputParamsUtils
 	public static double getDoubleOrDefault(Map<String, String> inputParams, String key, double defaultValue) throws ResultException
 	{
 		String value = inputParams.get(key);
-		if (isEmpty(value))
+		if (StringUtils.isEmpty(value))
 			return defaultValue;
 		return parseDouble(key, value);
 	}
@@ -160,7 +159,7 @@ public class InputParamsUtils
 	public static long getLongOrDefault(Map<String, String> inputParams, String key, long defaultValue) throws ResultException
 	{
 		String value = inputParams.get(key);
-		if (isEmpty(value))
+		if (StringUtils.isEmpty(value))
 			return defaultValue;
 		return parseLong(key, value);
 	}
@@ -224,7 +223,7 @@ public class InputParamsUtils
 	public static String getFilePathOrDefault(Map<String, String> inputParams, String key, String defaultValue) 
 	{
 		String fileName = inputParams.get(key);
-		if (isEmpty(fileName)) 
+		if (StringUtils.isEmpty(fileName)) 
 			fileName = defaultValue != null ? defaultValue : "";
 		return ClearThCore.rootRelative(fileName);
 	}
@@ -270,7 +269,7 @@ public class InputParamsUtils
 												boolean required) throws ResultException 
 	{
 		String enumStringValue = inputParams.get(key);
-		if (isEmpty(enumStringValue))
+		if (StringUtils.isEmpty(enumStringValue))
 		{
 			if (required)
 				throw ResultException.failed(String.format(ERROR_PARAM_MISSING, key));

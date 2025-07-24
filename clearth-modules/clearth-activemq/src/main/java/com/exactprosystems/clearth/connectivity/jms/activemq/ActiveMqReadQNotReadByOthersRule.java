@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,7 +21,7 @@ package com.exactprosystems.clearth.connectivity.jms.activemq;
 import com.exactprosystems.clearth.connectivity.connections.ClearThConnection;
 import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
 import com.exactprosystems.clearth.connectivity.validation.AbstractReadQNotReadByOthersRule;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class ActiveMqReadQNotReadByOthersRule extends AbstractReadQNotReadByOthersRule
 {

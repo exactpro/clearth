@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -31,7 +31,7 @@ import com.exactprosystems.clearth.utils.FileOperationUtils;
 import com.exactprosystems.clearth.utils.Utils;
 import freemarker.template.TemplateException;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -241,7 +241,7 @@ public class HtmlReport
 	 */
 	public String htmlValidName(String name)
 	{
-		return StringEscapeUtils.escapeHtml(name);
+		return StringEscapeUtils.escapeHtml4(name);
 	}
 
 	protected ReportStatus createStepStatus(Step step, Matrix matrix)

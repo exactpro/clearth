@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -28,14 +28,13 @@ import com.exactprosystems.clearth.connectivity.iface.ICodec;
 import com.exactprosystems.clearth.connectivity.json.*;
 import com.exactprosystems.clearth.messages.*;
 import com.exactprosystems.clearth.utils.inputparams.InputParamsHandler;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Set;
 
 import static com.exactprosystems.clearth.connectivity.Dictionary.msgDescWithTypeNotFoundError;
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class ReceiveJsonMessage extends ReceiveMessageAction<ClearThJsonMessage>
 {
@@ -131,7 +130,7 @@ public class ReceiveJsonMessage extends ReceiveMessageAction<ClearThJsonMessage>
 		RgKeyFieldNames keys = null;
 		for (JsonKeyDesc keyDesc : messageDesc.getKey())
 		{
-			if (isEmpty(keyDesc.getForSubMsg()))
+			if (StringUtils.isEmpty(keyDesc.getForSubMsg()))
 				continue;
 			
 			if (keys == null)

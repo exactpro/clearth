@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -32,7 +32,7 @@ import com.exactprosystems.clearth.connectivity.validation.DefaultConnectionStar
 import com.exactprosystems.clearth.data.DataHandlersFactory;
 import com.exactprosystems.clearth.utils.NameValidator;
 import com.exactprosystems.clearth.utils.SettingsException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,6 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isBlank;
 
 public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 {
@@ -640,7 +639,7 @@ public class DefaultClearThConnectionStorage implements ClearThConnectionStorage
 
 	protected void validateName(String connectionName) throws SettingsException
 	{
-		if (isBlank(connectionName))
+		if (StringUtils.isBlank(connectionName))
 			throw new SettingsException("Connection name cannot be empty.");
 		ClearThConnection connection = getConnection(connectionName);
 		if (connection != null)

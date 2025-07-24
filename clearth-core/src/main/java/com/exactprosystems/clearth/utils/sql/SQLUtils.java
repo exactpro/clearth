@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -26,8 +26,8 @@ import com.exactprosystems.clearth.utils.sql.conversion.DBFieldMappingReader;
 import com.exactprosystems.clearth.utils.tabledata.StringTableData;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbConvertedDataReader;
 import com.exactprosystems.clearth.utils.tabledata.readers.DbDataReader;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +40,6 @@ import java.net.ConnectException;
 import java.sql.*;
 import java.util.*;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
-/**
- * Created by alexey.karpukhin on 7/27/15.
- */
 public class SQLUtils
 {
 	private static final Logger log = LoggerFactory.getLogger(SQLUtils.class);
@@ -358,7 +353,7 @@ public class SQLUtils
 	
 	public static boolean tableExists(Connection connection, String tableName) throws SQLException
 	{
-		if (isEmpty(tableName))
+		if (StringUtils.isEmpty(tableName))
 			return false;
 		
 		DatabaseMetaData metaData = connection.getMetaData();

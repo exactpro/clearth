@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -24,15 +24,13 @@ import com.exactprosystems.clearth.automation.report.ResultDetail;
 import com.exactprosystems.clearth.connectivity.json.ClearThJsonMessage;
 import com.exactprosystems.clearth.connectivity.json.JsonField;
 import com.exactprosystems.clearth.connectivity.json.JsonNumericField;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class JsonMessageComparator extends MessageComparator<ClearThJsonMessage>
 {
@@ -48,7 +46,7 @@ public class JsonMessageComparator extends MessageComparator<ClearThJsonMessage>
 	protected boolean fieldsEqual(String name, ClearThJsonMessage expectedMessage, ClearThJsonMessage actualMessage) throws ParametersException
 	{
 		String expectedValue = expectedMessage.getField(name);
-		if (isEmpty(expectedValue))
+		if (StringUtils.isEmpty(expectedValue))
 			return true;
 		
 		return compareFieldValues(name, expectedMessage, actualMessage);
@@ -58,7 +56,7 @@ public class JsonMessageComparator extends MessageComparator<ClearThJsonMessage>
 	protected ResultDetail compareFields(String name, ClearThJsonMessage expectedMessage, ClearThJsonMessage actualMessage)
 	{
 		String expectedValue = expectedMessage.getField(name);
-		if (isEmpty(expectedValue))
+		if (StringUtils.isEmpty(expectedValue))
 			return null;
 		
 		String actualValue = actualMessage.getField(name);

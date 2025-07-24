@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *  
@@ -38,7 +38,7 @@ import java.time.Instant;
 import java.util.Hashtable;
 
 import static com.exactprosystems.clearth.connectivity.MQExceptionUtils.isConnectionBroken;
-import static org.apache.commons.lang.StringUtils.isWhitespace;
+import static org.apache.commons.lang3.StringUtils.isWhitespace;
 
 public abstract class BasicIbmMqClient extends BasicClearThClient
 {

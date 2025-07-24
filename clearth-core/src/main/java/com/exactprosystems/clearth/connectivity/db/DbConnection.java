@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *  
@@ -24,7 +24,7 @@ import com.exactprosystems.clearth.connectivity.connections.BasicClearThConnecti
 import com.exactprosystems.clearth.connectivity.connections.ClearThCheckableConnection;
 import com.exactprosystems.clearth.connectivity.connections.SettingsClass;
 import com.exactprosystems.clearth.utils.SettingsException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

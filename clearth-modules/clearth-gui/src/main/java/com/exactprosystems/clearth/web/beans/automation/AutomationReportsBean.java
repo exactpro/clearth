@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -35,7 +35,7 @@ import com.exactprosystems.clearth.web.misc.WebUtils;
 import com.exactprosystems.clearth.xmldata.XmlMatrixInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.StreamedContent;
 
@@ -55,7 +55,7 @@ import java.util.Set;
 
 import static com.exactprosystems.clearth.automation.async.AsyncActionsManager.DEFAULT_ASYNC_THREAD_NAME;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class AutomationReportsBean extends ClearThBean

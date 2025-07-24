@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2009-2023 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -23,9 +23,7 @@ import com.exactprosystems.clearth.connectivity.ibmmq.BasicIbmMqClient;
 import com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnection;
 import com.exactprosystems.clearth.connectivity.ibmmq.IbmMqConnectionSettings;
 import com.exactprosystems.clearth.connectivity.mq.ClearThBasicMqConnectionSettings;
-import org.apache.commons.lang.StringUtils;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
+import org.apache.commons.lang3.StringUtils;
 
 public class IbmMqReadQNotReadByOthersRule extends AbstractReadQNotReadByOthersRule
 {
@@ -54,6 +52,6 @@ public class IbmMqReadQNotReadByOthersRule extends AbstractReadQNotReadByOthersR
 	
 	private String getHostname(ClearThBasicMqConnectionSettings settings)
 	{
-		return isBlank(settings.getHostname()) ? BasicIbmMqClient.DEFAULT_HOST : settings.getHostname();
+		return StringUtils.isBlank(settings.getHostname()) ? BasicIbmMqClient.DEFAULT_HOST : settings.getHostname();
 	}
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -22,9 +22,7 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +32,6 @@ import java.util.Map;
 
 public class ConversionSettings
 {
-	private static final Logger log = LoggerFactory.getLogger(ConversionSettings.class);
 	// Mapping list representation in Map, created to avoid cycle searching in list
 	private final Map<String, DBFieldMapping> mappingsByDBField; 	// map by db field name
 	private final Map<String, DBFieldMapping> mappingsByTableField;	// map by table field name

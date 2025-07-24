@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2022 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -29,17 +29,15 @@ import com.exactprosystems.clearth.web.misc.UserInfoUtils;
 import com.exactprosystems.clearth.web.misc.WebUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
-import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.List;
 
 import static java.lang.String.format;
-
 
 public class ConfigMakerToolBean extends ClearThBean
 {

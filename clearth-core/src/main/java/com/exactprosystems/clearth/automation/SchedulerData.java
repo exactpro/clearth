@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -33,7 +33,7 @@ import com.exactprosystems.clearth.utils.csv.writers.ClearThCsvWriterConfig;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunches;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
@@ -50,7 +50,6 @@ import java.util.*;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public abstract class SchedulerData
 {
@@ -697,7 +696,7 @@ public abstract class SchedulerData
 				String link = reader.contains(LINK) ? reader.get(LINK) : "";
 				String type = reader.contains(TYPE) ? reader.get(TYPE) : "";
 				String autoReload = reader.get(AUTO_RELOAD);
-				Boolean isAutoReload = !isEmpty(autoReload) && Boolean.parseBoolean(autoReload);
+				Boolean isAutoReload = !StringUtils.isEmpty(autoReload) && Boolean.parseBoolean(autoReload);
 
 				String name = reader.get(NAME);
 				if (StringUtils.isEmpty(name))

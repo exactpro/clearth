@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2019 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -21,7 +21,7 @@ package com.exactprosystems.clearth.connectivity.flat;
 import com.exactprosystems.clearth.connectivity.Dictionary;
 import com.exactprosystems.clearth.utils.DictionaryLoadException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Reader;
 import java.util.LinkedHashMap;
