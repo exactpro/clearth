@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2024 Exactpro Systems Limited
+ * Copyright 2009-2025 Exactpro Systems Limited
  * https://www.exactpro.com
  * Build Software to Test Software
  *
@@ -171,6 +171,7 @@ public class SchedulerUpdater
 				logger.debug("Updating startup fields: Execute={}, Start at={}, Kind={}",
 						step.isExecute(), step.getStartAt(), step.getKind());
 				existingStep.setExecute(step.isExecute());
+				existingStep.refreshExecutableFlag();
 				existingStep.setStartAt(step.getStartAt());
 				existingStep.setKind(step.getKind());
 			}

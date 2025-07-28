@@ -222,17 +222,18 @@ public class SchedulerUpdaterTest
 		{
 			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 2000);
 			
-			List<String> originalSteps = getStepNames(scheduler.getSteps());
+			List<Step> originalSteps = scheduler.getSteps();
+			List<String> originalStepNames = getStepNames(originalSteps);
 			
 			SchedulerUpdater updater = new SchedulerUpdater(scheduler);
 			updater.updateSteps(List.of(
-					createStepData("Step1", true, true, false),     //"Ask for continue" = true
-					createStepData("Step2", false, false, false),   //Execute = false
-					createStepData("Step3", true, false, false),    //"Ask for continue" = false
-					createStepData("Step4", true, false, true)));   //"Ask if failed" = true
+					createStepData("Step1", true, true, false, originalSteps.get(0).getStartAt()),     //"Ask for continue" = true
+					createStepData("Step2", false, false, false, originalSteps.get(1).getStartAt()),   //Execute = false
+					createStepData("Step3", true, false, false, originalSteps.get(2).getStartAt()),    //"Ask for continue" = false
+					createStepData("Step4", true, false, true, originalSteps.get(3).getStartAt())));   //"Ask if failed" = true
 			
 			List<String> newSteps = getStepNames(scheduler.getSteps());
-			Assert.assertEquals(newSteps, originalSteps, "Steps list");  //Updater should not remove nor add any steps
+			Assert.assertEquals(newSteps, originalStepNames, "Steps list");  //Updater should not remove nor add any steps
 			
 			scheduler.continueExecution();
 			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 2000);

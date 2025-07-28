@@ -606,13 +606,18 @@ public abstract class Step implements CsvDataManager
 	{
 		actions.clear();
 	}
-
+	
+	public void refreshExecutableFlag()
+	{
+		executable = stepData.isExecute() && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
+	}
+	
 	public void setActions(List<Action> actions)
 	{
 		clearActions();
 		this.actions.addAll(actions);
 		asyncActions.clear();
-		executable = stepData.isExecute() && !actions.isEmpty() && actions.stream().anyMatch(Action::isExecutable);
+		refreshExecutableFlag();
 		async = false;
 		
 		if (actionsIterator != null)
