@@ -1,5 +1,5 @@
 dependencies {
-    def v = "5.19.0"
+    def v = "5.19.2"
 	implementation "org.apache.activemq:activemq-broker:${v}"
     implementation "org.apache.activemq:activemq-kahadb-store:${v}"
 }

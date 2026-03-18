@@ -32,6 +32,7 @@ import com.exactprosystems.clearth.utils.inputparams.InputParamsUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,7 +149,7 @@ public class MacroAction extends Action implements Preparable
 	
 	public List<NestedAction> getNestedActions()
 	{
-		return naGenerator.getNestedActions();
+		return naGenerator != null ? naGenerator.getNestedActions() : Collections.emptyList();
 	}
 	
 	public String getNestedActionsReportFilePath()
