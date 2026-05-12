@@ -7,7 +7,7 @@ buildscript {
 	}
 	dependencies {
 		classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:5.2.3'
-		classpath 'org.owasp:dependency-check-gradle:12.2.0'
+		classpath 'org.owasp:dependency-check-gradle:12.2.2'
 	}
 }
 
@@ -119,8 +119,8 @@ subprojects {
 				def slf4jVersion = '2.0.17'
 				def log4jVersion = '2.22.1'
 				def kotlinVersion = '1.8.22'
-				def jacksonVersion = '2.18.2'
-				def nettyVersion = '4.2.10.Final'
+				def jacksonVersion = '2.20.1'
+				def nettyVersion = '4.2.12.Final'
 				def protobufVersion = '3.25.5'
 				
 				//common dependenices are written explicilty to force modules use correct and expected versions
@@ -141,9 +141,10 @@ subprojects {
 						"org.apache.logging.log4j:log4j-api:${log4jVersion}",
 						"org.apache.logging.log4j:log4j-jcl:${log4jVersion}",
 						"org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}",
+
 						"com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
 						"com.fasterxml.jackson:jackson-bom:${jacksonVersion}",
-						"com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}",
+						"com.fasterxml.jackson.core:jackson-annotations:2.20",
 						"com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
 						"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}",
 						
@@ -157,7 +158,6 @@ subprojects {
 						'com.squareup.okio:okio:3.8.0',
 						'com.squareup.okhttp3:okhttp:4.12.0',
 						'com.squareup.okhttp3:logging-interceptor:4.12.0',
-						'com.exactpro.th2:grpc-common:4.5.0',
 						'com.google.code.gson:gson:2.13.1',
 						'org.checkerframework:checker-qual:3.43.0',
 						"com.google.protobuf:protobuf-java-util:${protobufVersion}",
@@ -173,9 +173,10 @@ subprojects {
 						"io.netty:netty-buffer:${nettyVersion}",
 						"io.netty:netty-transport:${nettyVersion}",
 						"io.netty:netty-codec:${nettyVersion}",
-						"io.netty:netty-codec-socks:${nettyVersion}"
+						"io.netty:netty-codec-socks:${nettyVersion}",
+						"io.netty:netty-resolver-dns:${nettyVersion}",
+						"org.apache.mina:mina-core:2.2.7"
 
-						
 				cacheChangingModulesFor 0, 'seconds'
 			}
 			
