@@ -175,7 +175,8 @@ subprojects {
 						"io.netty:netty-codec:${nettyVersion}",
 						"io.netty:netty-codec-socks:${nettyVersion}",
 						"io.netty:netty-resolver-dns:${nettyVersion}",
-						"org.apache.mina:mina-core:2.2.7"
+						"org.apache.mina:mina-core:2.2.7",
+						"com.beust:jcommander:1.82"
 
 				cacheChangingModulesFor 0, 'seconds'
 			}
