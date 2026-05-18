@@ -120,7 +120,7 @@ subprojects {
 				def log4jVersion = '2.22.1'
 				def kotlinVersion = '1.8.22'
 				def jacksonVersion = '2.20.1'
-				def nettyVersion = '4.2.12.Final'
+				def nettyVersion = '4.2.13.Final'
 				def protobufVersion = '3.25.5'
 				
 				//common dependenices are written explicilty to force modules use correct and expected versions
@@ -177,6 +177,13 @@ subprojects {
 						"io.netty:netty-resolver-dns:${nettyVersion}",
 						"org.apache.mina:mina-core:2.2.7",
 						"com.beust:jcommander:1.82"
+
+				eachDependency {
+					DependencyResolveDetails details ->
+					if (details.requested.group == 'io.netty') {
+						details.useVersion nettyVersion
+					}
+				}
 
 				cacheChangingModulesFor 0, 'seconds'
 			}
