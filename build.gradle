@@ -119,7 +119,7 @@ subprojects {
 				def slf4jVersion = '2.0.17'
 				def log4jVersion = '2.22.1'
 				def kotlinVersion = '1.8.22'
-				def jacksonVersion = '2.20.1'
+				def jacksonVersion = '3.2.1'
 				def nettyVersion = '4.2.13.Final'
 				def protobufVersion = '3.25.5'
 				
@@ -142,11 +142,11 @@ subprojects {
 						"org.apache.logging.log4j:log4j-jcl:${log4jVersion}",
 						"org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}",
 
-						"com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
-						"com.fasterxml.jackson:jackson-bom:${jacksonVersion}",
-						"com.fasterxml.jackson.core:jackson-annotations:2.20",
-						"com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
-						"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}",
+						"tools.jackson.core:jackson-databind:${jacksonVersion}",
+						"tools.jackson.core:jackson-bom:${jacksonVersion}",
+						"com.fasterxml.jackson.core:jackson-annotations:2.22",
+						"tools.jackson.core:jackson-core:${jacksonVersion}",
+						"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1",
 						
 						"org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}",
 						"org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}",
@@ -176,7 +176,14 @@ subprojects {
 						"io.netty:netty-codec-socks:${nettyVersion}",
 						"io.netty:netty-resolver-dns:${nettyVersion}",
 						"org.apache.mina:mina-core:2.2.7",
-						"com.beust:jcommander:1.82"
+						"com.beust:jcommander:1.82",
+						"com.fasterxml.jackson.core:jackson-databind:2.22.1",
+						"com.fasterxml.jackson.core:jackson-core:2.22.1",
+						"com.fasterxml.jackson.core:jackson-annotations:2.22",
+						"com.fasterxml.jackson:jackson-bom:2.22.1",
+						"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1",
+						"com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.22.1",
+						"com.fasterxml.jackson.module:jackson-module-kotlin:2.22.1"
 
 				eachDependency {
 					DependencyResolveDetails details ->
@@ -228,6 +235,16 @@ subprojects {
 
 		if (project.getParent().getName() == 'clearth-modules')
 			implementation project(':clearth-core')
+
+		dependencies {
+			constraints {
+				implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+				implementation("com.fasterxml.jackson.core:jackson-core:2.22.1")
+				implementation("com.fasterxml.jackson.core:jackson-annotations:2.22.1")
+				implementation("com.fasterxml.jackson:jackson-bom:2.22.1")
+				implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
+			}
+		}
 	}
 
 	task createDir {

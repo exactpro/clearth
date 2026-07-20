@@ -1,7 +1,16 @@
 dependencies {
-    def v = "5.19.6"
+    def v = "5.19.8"
 	implementation "org.apache.activemq:activemq-broker:${v}"
     implementation "org.apache.activemq:activemq-kahadb-store:${v}"
+
+    constraints {
+        implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1") {
+            because "align all transitive Jackson databind usages, e.g. activemq"
+        }
+        implementation("com.fasterxml.jackson:jackson-bom:2.22.1") {
+            because "align all transitive jackson-bom usages, e.g. activemq"
+        }
+    }
 }
 
 publishing {
