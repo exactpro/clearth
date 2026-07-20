@@ -43,7 +43,8 @@ dependencies {
 	def xmlunitVersion = '2.10.0'
 	def slf4jVersion = '2.0.17'
 	def log4jVersion = '2.22.1'
-	
+
+
 	api "commons-beanutils:commons-beanutils:1.11.0"
 	api "commons-codec:commons-codec:1.18.0"
 	api "commons-fileupload:commons-fileupload:1.6.0"
