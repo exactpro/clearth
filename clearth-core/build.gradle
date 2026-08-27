@@ -42,7 +42,7 @@ dependencies {
 	def poiVersion = '5.4.1'
 	def xmlunitVersion = '2.10.0'
 	def slf4jVersion = '2.0.17'
-	def log4jVersion = '2.22.1'
+	def log4jVersion = '2.25.5'
 	
 	api "commons-beanutils:commons-beanutils:1.11.0"
 	api "commons-codec:commons-codec:1.18.0"
@@ -56,18 +56,14 @@ dependencies {
 	api "org.apache.commons:commons-text:1.13.0"
 	api "org.apache.commons:commons-compress:1.27.1"
 	
-	//Newest versions of Log4J don't print logs to console on Jetty 9.4
-	//Excluding org.apache.logging.log4j to use older version 2.22.1
-	api ("org.apache.poi:poi:${poiVersion}") {
-		exclude (group: 'org.apache.logging.log4j', module: 'log4j-api')
-	}
-	api ("org.apache.poi:poi-ooxml:${poiVersion}") {
-		exclude (group: 'org.apache.logging.log4j', module: 'log4j-api')
-	}
-	api ("org.apache.poi:poi-ooxml-lite:${poiVersion}") {
-		exclude (group: 'org.apache.logging.log4j', module: 'log4j-api')
-	}
+	api "org.apache.poi:poi:${poiVersion}"
+	api "org.apache.poi:poi-ooxml:${poiVersion}"
+	api "org.apache.poi:poi-ooxml-lite:${poiVersion}"
 	api "org.freemarker:freemarker:2.3.30"
+	//Unused: no code here imports tools.jackson.* - all actual usage is still
+	//com.fasterxml.jackson.databind (jackson-databind:2.22.1, see root constraints).
+	//This Jackson 3 jar is Java 17 bytecode; harmless while unreferenced (never classloaded),
+	//but remove once confirmed nothing needs it, since it forces JDK 17 on any consumer that does load it.
 	api "tools.jackson.core:jackson-databind:3.2.1"
 	api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1"
 	api "javax.xml.bind:jaxb-api:2.3.0"

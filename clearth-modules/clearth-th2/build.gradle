@@ -21,8 +21,12 @@ configurations {
 					"io.grpc:grpc-protobuf:1.80.0",
 					"io.grpc:grpc-services:1.80.0",
 					'com.exactpro.th2:grpc-common:4.7.5',
-					"io.vertx:vertx-core:4.5.24",
-					"io.vertx:vertx-auth-common:4.5.24",
+					"io.vertx:vertx-core:4.5.32",
+					"io.vertx:vertx-auth-common:4.5.32",
+					"io.vertx:vertx-web-client:4.5.32",
+					"io.vertx:vertx-web-common:4.5.32",
+					"io.vertx:vertx-uri-template:4.5.32",
+					"io.vertx:vertx-auth-oauth2:4.5.32",
 					"io.github.oshai:kotlin-logging:7.0.12",
 					"com.rabbitmq:amqp-client:5.29.0",
 					'com.google.j2objc:j2objc-annotations:3.0.0'
@@ -55,7 +59,7 @@ dependencies {
 	api 'org.apache.httpcomponents:httpclient:4.5.13'
 	api 'org.apache.httpcomponents.core5:httpcore5:5.4.3'
 	
-	def log4jVersion = '2.22.1'
+	def log4jVersion = '2.25.5'
 	testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 	testImplementation "org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}"
 	testImplementation "org.apache.logging.log4j:log4j-jcl:${log4jVersion}"

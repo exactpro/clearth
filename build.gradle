@@ -117,10 +117,10 @@ subprojects {
 				failOnVersionConflict()
 				
 				def slf4jVersion = '2.0.17'
-				def log4jVersion = '2.22.1'
+				def log4jVersion = '2.25.5'
 				def kotlinVersion = '1.8.22'
 				def jacksonVersion = '3.2.1'
-				def nettyVersion = '4.2.13.Final'
+				def nettyVersion = '4.2.17.Final'
 				def protobufVersion = '3.25.5'
 				
 				//common dependenices are written explicilty to force modules use correct and expected versions
@@ -141,6 +141,7 @@ subprojects {
 						"org.apache.logging.log4j:log4j-api:${log4jVersion}",
 						"org.apache.logging.log4j:log4j-jcl:${log4jVersion}",
 						"org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}",
+						"org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}",
 
 						"tools.jackson.core:jackson-databind:${jacksonVersion}",
 						"tools.jackson.core:jackson-bom:${jacksonVersion}",
@@ -187,7 +188,8 @@ subprojects {
 
 				eachDependency {
 					DependencyResolveDetails details ->
-					if (details.requested.group == 'io.netty') {
+					// netty-tcnative-* is a separate project with its own 2.0.x versioning; netty-bom picks the matching one
+					if (details.requested.group == 'io.netty' && !details.requested.name.startsWith('netty-tcnative')) {
 						details.useVersion nettyVersion
 					}
 				}
@@ -240,7 +242,7 @@ subprojects {
 			constraints {
 				implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
 				implementation("com.fasterxml.jackson.core:jackson-core:2.22.1")
-				implementation("com.fasterxml.jackson.core:jackson-annotations:2.22.1")
+				implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
 				implementation("com.fasterxml.jackson:jackson-bom:2.22.1")
 				implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
 			}
