@@ -601,6 +601,18 @@ public abstract class Step implements CsvDataManager
 		asyncActions.clear();
 		executable = async = false;
 	}
+
+	/**
+	 * Releases the reference to the last executed action. Must be called only after the run has ended:
+	 * while the scheduler is running or suspended, currentAction is used by SchedulerUpdater
+	 * to update matrices and steps from the point execution stopped at.
+	 * Without this cleanup the last action of each step pins its whole Matrix
+	 * (actions, MVEL variables) in memory after the run.
+	 */
+	public void clearCurrentAction()
+	{
+		currentAction = null;
+	}
 	
 	public void clearSyncActions()
 	{

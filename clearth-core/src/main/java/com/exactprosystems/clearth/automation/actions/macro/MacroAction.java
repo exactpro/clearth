@@ -73,6 +73,15 @@ public class MacroAction extends Action implements Preparable
 			return DefaultResult.failed("Error occurred while working with nested actions.", e);
 		}
 	}
+
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		// runs after the action's report has been written (Step calls dispose() post-report),
+		// so releasing the generator here frees the nested matrices without losing report data
+		naGenerator = null;
+	}
 	
 	
 	protected void initMacroAction(StepContext stepContext, GlobalContext globalContext)

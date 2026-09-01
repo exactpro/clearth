@@ -528,7 +528,10 @@ public abstract class SimpleExecutor extends Thread implements IExecutor
 	
 	protected void clearSteps()
 	{
-		steps.forEach(Step::clearActions);
+		steps.forEach(step -> {
+			step.clearActions();
+			step.clearCurrentAction();
+		});
 	}
 	
 	
