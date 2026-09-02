@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chart</title>
+    <style>
+{css}
+        .ct-series-a .ct-line {
+            stroke: #008fa5;
+            stroke-width: 3px;
+        }
+        
+        .ct-series-a .ct-point {
+            stroke: #00000000;
+            stroke-width: 6px;
+        }
+                
+        .ct-series-b .ct-line {
+            stroke: #1f63d1;
+            stroke-width: 3px;
+        }
+        
+        .ct-series-b .ct-point {
+            stroke: #00000000;
+            stroke-width: 6px;  
+        }
+        
+        .ct-series-c .ct-line {
+            stroke: #e07b00;
+            stroke-width: 3px;W
+        }
+                
+        .ct-series-c .ct-point {
+            stroke: #00000000;
+            stroke-width: 6px;
+        }
+        
+        .ct-series-d .ct-line {
+            stroke: #dd2400;
+            stroke-width: 3px;
+        }
+                
+        .ct-series-d .ct-point {
+            stroke: #00000000;
+            stroke-width: 6px;
+        }
+        
+        .ct-series-e .ct-line {
+            stroke: #202526;
+            stroke-width: 3px;
+            stroke-dasharray: 5px;
+            animation: dashoffset 1s linear infinite;
+        }
+                
+        .ct-series-e .ct-point {
+            stroke: #00000000;
+            stroke-width: 6px;
+        }
+                
+        @keyframes dashoffset {
+            0% {
+                stroke-dashoffset: 0
+            }
+        
+            100% {
+                stroke-dashoffset: -20px
+            }
+        }    
+                
+        .ct-legend {
+            position: relative;
+            z-index: 10;
+            top: 0%;
+            left: 85%;
+            list-style-type:none;
+            padding: 10px;
+        
+        }
+        
+        .ct-series-0 {
+            padding:1px;
+        }
+        
+        .ct-series-1 {
+            padding:1px;
+        }
+        
+        .ct-series-2 {
+            padding:1px;
+        }
+        
+        .ct-series-3 {
+            padding:1px;
+        }
+        
+        .ct-series-4 {
+            padding:1px;
+        }
+        
+        .ct-series-0:before {
+            background-color:#008fa5;
+        }
+        
+        .ct-series-1:before {
+            background-color:#1f63d1;
+        }
+        
+        .ct-series-2:before {
+            background-color:#e07b00;
+        }
+        
+        .ct-series-3:before {
+            background-color:#dd2400;
+        }
+        
+        .ct-series-4:before{
+            background-color:#202526;
+        }
+        
+        .ct-legend li:before {
+            width: 12px;
+            height: 12px;
+            position: absolute;
+            left: -10px;
+            content: '';
+            border: 3px solid transparent;
+            border-radius: 2px;
+        }
+        
+        .ct-zoom-rect {
+            fill: rgba(200, 100, 100, 0.1);
+            stroke: red;
+        }
+        
+        .chartist-tooltip {
+            position: absolute;
+            display: inline-block;
+            opacity: 0;
+            min-width: 5em;
+            padding: .5em;
+            background: #c9dfee;
+            color: #453D3F;
+            font-family: Oxygen,Helvetica,Arial,sans-serif;
+            font-weight: 700;
+            text-align: center;
+            pointer-events: none;
+            z-index: 1;
+            -webkit-transition: opacity .2s linear;
+            -moz-transition: opacity .2s linear;
+            -o-transition: opacity .2s linear;
+            transition: opacity .2s linear; }
+            .chartist-tooltip:before {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            margin-left: -15px;
+            border: 15px solid transparent;
+            border-top-color: #c9dfee; 
+        }
+        
+        .chartist-tooltip.tooltip-show {
+            opacity: 1; 
+        }
+                    
+        .ct-area, .ct-line {
+            pointer-events: none; 
+        }
+        </style>
+</head>
+<body>
+    <div class="ct-chart ct-perfect-fourth" style="position:absolute; height:90%; width:98%; overflow:hidden"></div>
+    <div style="justify-content:center; position:absolute; top:90%; left:50%;">
+        <button style="background-color:#545859;
+                       color:white;
+                       width: 100px; 
+                       height:50px; 
+                       border:none; 
+                       border-radius:4px;"
+                id="button" type="button">RESET ZOOM</button>
+    </div>
+
+    <script>
+        function handleTimeChange(selection) {
+            model.divider = selection;
+            drawChart(model);
+        }
+    </script>
+    <div>
+        <select style="position:absolute; top: 90%; left:44%; width:70px; height:50px; margin: 0 5px;"
+                         onchange="handleTimeChange(this.value)">
+            <option value="1">1 sec</option>
+            <option value="5">5 sec</option>
+            <option value="30">30 sec</option>
+            <option value="60">1 min</option>
+            <option value="300">5 min</option>
+            <option value="600">10 min</option>
+        </select>
+    </div>
+</body>
+</html>
+<script>
+{data}
+{chartist}
+{zoom}
+{legend}
+{tooltip}
+{model}
+    let model = new ChartModel(data.datasets, data.labels);
+    let datasets = model.datasets;                    
+    let generatedLegend = datasets.map(item => item.displayName);
+    
+    console.log(model.datasets);
+    
+    var chart = drawChart(model);
+     
+    function drawChart(model)
+    {
+        return new Chartist.Line(
+          ".ct-chart",
+          {
+            labels: model.labels,
+            series: model.generateSeries()
+          },
+          {
+            lineSmooth: false,
+            axisX: {
+              type: Chartist.AutoScaleAxis,
+              onlyInteger: true,
+              high: model.labels.length,
+              low: 0,
+              scaleMinSpace: 40,
+              labelInterpolationFnc: (value, index) => {
+                return model.labels[value];
+              }
+            },
+            axisY: {
+              high: model.getMax() + model.getMax()/8,
+              type: Chartist.AutoScaleAxis,
+              onlyInteger: true
+            },
+            plugins: [
+              Chartist.plugins.zoom({
+                onZoom: onZoom
+              }),
+              Chartist.plugins.legend({
+                legendNames: generatedLegend,
+                position: "bottom"
+              }),
+              Chartist.plugins.tooltip({
+                anchorToPoint: true,
+                appendToBody: true,
+                transformTooltipTextFnc: value => {
+                  let strArr = value.split(",");
+                  return model.labels[strArr[0]] + ", " + strArr[1];
+                }
+              })
+            ]
+          }
+        );
+    };
+    
+    var resetFnc;
+    function onZoom(chart, reset) {
+      resetFnc = reset;
+    }
+    
+    var btn = document.getElementById('button');
+    btn.addEventListener('click', function() {
+      console.log(resetFnc);
+      resetFnc && resetFnc();
+    });
+</script>

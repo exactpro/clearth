@@ -1,0 +1,124 @@
+.ct-series-a .ct-line {
+    stroke: #545859;
+    stroke-width: 3px;
+}
+
+.ct-series-a .ct-point {
+    stroke: #545859;
+    stroke-width: 6px;
+}
+
+.ct-series-b .ct-line {
+    stroke: #a7c1d3;
+    stroke-width: 3px;
+}
+
+.ct-series-b .ct-point {
+    stroke: #a7c1d3;
+    stroke-width: 6px;
+}
+
+.ct-series-c .ct-line {
+    stroke: #00749f;
+    stroke-width: 3px;
+}
+
+.ct-series-c .ct-point {
+    stroke: #00749f;
+    stroke-width: 6px;
+}
+
+.ct-legend {
+    width: 200px;
+    position: relative;
+    z-index: 10;
+    top: 0%;
+    left: 85%;
+    list-style-type:none;
+    padding: 10px;
+}
+
+.ct-legend li:before {
+    width: 12px;
+    height: 12px;
+    position: absolute;
+    left: -10px;
+    content: '';
+    border: 3px solid transparent;
+    border-radius: 2px;
+}
+
+.ct-legend li.inactive:before {
+     background: transparent;
+}
+
+.ct-series-0 {
+    padding: 1px;
+}
+
+.ct-series-1 {
+    padding: 1px;
+}
+
+.ct-series-2 {
+    padding: 1px;
+}
+
+.ct-legend .ct-series-0:before {
+     background-color: #545859;
+     border-color: #545859;
+}
+
+.ct-legend .ct-series-1:before {
+     background-color: #a7c1d3;
+     border-color: #a7c1d3;
+}
+
+.ct-legend .ct-series-2:before {
+     background-color: #00749f;
+     border-color: #00749f;
+}
+
+.ct-zoom-rect {
+    fill: rgba(200, 100, 100, 0.1);
+    stroke: red;
+}
+
+.chartist-tooltip {
+    position: absolute;
+    display: inline-block;
+    opacity: 0;
+    min-width: 5em;
+    padding: .5em;
+    background: #c9dfee;
+    color: #453D3F;
+    font-family: Oxygen,Helvetica,Arial,sans-serif;
+    font-weight: 700;
+    text-align: center;
+    pointer-events: none;
+    z-index: 1;
+    -webkit-transition: opacity .2s linear;
+    -moz-transition: opacity .2s linear;
+    -o-transition: opacity .2s linear;
+    transition: opacity .2s linear;
+}
+
+.chartist-tooltip:before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    margin-left: -15px;
+    border: 15px solid transparent;
+    border-top-color: #c9dfee;
+}
+
+.chartist-tooltip.tooltip-show {
+    opacity: 1;
+}
+
+.ct-area, .ct-line {
+    pointer-events: none;
+}

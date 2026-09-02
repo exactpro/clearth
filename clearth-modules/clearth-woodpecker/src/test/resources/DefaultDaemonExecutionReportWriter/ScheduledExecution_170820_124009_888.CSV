@@ -1,0 +1,17 @@
+Start time,17/08/2020 12:40:09
+End time,17/08/2020 12:45:50
+Execution mode,Scheduled
+Rate/duration unit,MINUTES
+Schedule,600/1 900/1 1200/1 1500/1 1800/1
+Priority mode,Loading
+Min batch size,1
+Max batch size,1
+Use strict min batch size,false
+Total sent operations,6000
+Total sent messages,14000
+SendA operations,1000
+SendA messages,1000
+SendB operations,3000
+SendB messages,9000
+SendC operations,2000
+SendC messages,4000

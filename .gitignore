@@ -14,6 +14,7 @@ clearth-modules/clearth-activemq/build/
 clearth-modules/clearth-rh/build/
 clearth-modules/clearth-th2/build/
 clearth-modules/clearth-fix/build/
+clearth-modules/clearth-woodpecker/build/
 /.project
 /.settings/org.eclipse.buildship.core.prefs
 /clearth-modules/.classpath
@@ -49,6 +50,9 @@ clearth-modules/clearth-fix/build/
 /clearth-modules/clearth-fix/.classpath
 /clearth-modules/clearth-fix/.project
 /clearth-modules/clearth-fix/.settings/org.eclipse.buildship.core.prefs
+/clearth-modules/clearth-woodpecker/.classpath
+/clearth-modules/clearth-woodpecker/.project
+/clearth-modules/clearth-woodpecker/.settings/org.eclipse.buildship.core.prefs
 /clearth-core/value_generator_test.txt
 testOutput
 temp
@@ -62,9 +66,12 @@ temp
 /clearth-modules/clearth-rh/bin
 /clearth-modules/clearth-th2/bin
 /clearth-modules/clearth-fix/bin
+/clearth-modules/clearth-woodpecker/bin
 /clearth-core/test-output
 /connections/
 /clearth-modules/clearth-gui/test-output
 /clearth-modules/clearth-json/test-output
 /clearth-modules/clearth-rh/test-output
 /clearth-modules/clearth-th2/test-output
+/clearth-modules/clearth-woodpecker/test-output
+/clearth-modules/clearth-woodpecker/testOutput

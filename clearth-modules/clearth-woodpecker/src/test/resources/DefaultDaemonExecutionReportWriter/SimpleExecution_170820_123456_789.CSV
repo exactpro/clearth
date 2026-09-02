@@ -1,0 +1,16 @@
+Start time,17/08/2020 12:34:56
+End time,17/08/2020 12:39:50
+Execution mode,Simple
+Rate unit,SECONDS
+Rate,600
+Min batch size,5
+Max batch size,10
+Use strict min batch size,true
+Total sent operations,54956
+Total sent messages,66237
+SendA operations,8009
+SendA messages,8009
+SendB operations,12901
+SendB messages,24182
+SendC operations,34046
+SendC messages,34046

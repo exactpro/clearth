@@ -1,0 +1,621 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:p="http://primefaces.org/ui"
+		template="../../templates/restricted.xhtml"
+		xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:outputScript library="js" name="jquery-1.6.2.js" target="head" />
+	<h:outputScript library="js" name="inner.js" target="head" />
+
+	<ui:define name="title">Woodpecker</ui:define>
+
+	<ui:define name="content">
+
+		<link rel="stylesheet" type="text/css" href="#{request.contextPath}/css/chartist.min.css" />
+		<link rel="stylesheet" type="text/css" href="#{request.contextPath}/css/chartist.css" />
+		<script type="text/javascript" src="#{request.contextPath}/js/chartist.min.js"></script>
+		<script type="text/javascript" src="#{request.contextPath}/js/chartist-plugin-legend.min.js"></script>
+		<script type="text/javascript" src="#{request.contextPath}/js/chartist-plugin-tooltip.min.js"></script>
+		<script type="text/javascript" src="#{request.contextPath}/js/chartist-plugin-zoom.min.js"></script>
+		<script type="text/javascript" src="#{request.contextPath}/js/chart-model.js"></script>
+
+		<script>
+			function handleTimeChange(selection, chartName) {
+				charts[chartName].divider = selection;
+			}
+		</script>
+		
+		<p:importEnum type="java.util.concurrent.TimeUnit" var="TimeUnit"/>
+
+		<label class="pageTitle">Woodpecker</label>
+		<p:commandButton update="WoodpeckerMenu WoodpeckerForm" icon="ui-icon-refresh"
+						 action="#{woodpeckerBean.updateWoodpecker()}">
+		</p:commandButton>
+		<p:commandButton update="WoodpeckerMenu WoodpeckerForm" icon = "ui-icon-stop"
+				action="#{woodpeckerBean.stopAllDaemons()}"
+				onclick="return confirm('This action will stop all running daemons. Are you sure?')">
+		</p:commandButton>
+		<h:form>
+			<p:selectOneMenu value="#{woodpeckerBean.selectedScheduler}">
+				<f:selectItem itemLabel="&lt;Select a scheduler&gt;" itemValue="" noSelectionOption="false"/>
+				<f:selectItems value="#{woodpeckerBean.schedulers}"/>
+				<p:ajax event="change"/>
+			</p:selectOneMenu>
+		</h:form>
+		<h:form id="WoodpeckerMenu">
+			<p:selectOneButton value="#{woodpeckerBean.activeTab}">
+				<p:ajax update=":Container :WoodpeckerMenu"/>
+
+				<f:selectItem itemLabel="All daemons" itemValue="0"/>
+				<f:selectItem itemLabel="Visualisation" itemValue="100"/>
+			</p:selectOneButton>
+		</h:form>
+
+		<p:outputPanel id="Container">
+
+			<!-- All daemons -->
+			<p:outputPanel rendered="#{woodpeckerBean.activeTab==0}">
+				<br/>
+				<h:form id="MessageForm">
+					<p:poll interval="2" update=":Growl" process="@this" listener="#{woodpeckerBean.getMessagesForUI()}"/>
+				</h:form>
+				
+				<p:importEnum type="com.exactprosystems.clearth.woodpecker.configuration.settings.ExecutionMode" 
+						var="ExecutionMode" allSuffix="ALL"/>
+				<h:form id="WoodpeckerForm">
+					<p:accordionPanel id="DaemonsPanels" multiple="true" activeIndex="0}"
+							styleClass="wDaemonsAccordion">
+						<p:ajax event="tabChange" listener="#{woodpeckerBean.onTabChanged}"/>
+						<p:ajax event="tabClose" listener="#{woodpeckerBean.onTabClosed}"/>
+
+						<c:forEach var="i" begin="0" end="#{woodpeckerBean.daemonPools.size()-1}">
+							<p:tab title="#{woodpeckerBean.getDaemonPool(i).type}">
+								<h:form id="DoNotDeleteMe_#{i}"/>
+								<c:forEach var="instanceName" items="#{woodpeckerBean.getDaemonInstancesNames(i)}">
+									<p:panel id="daemonPanel#{i}_#{instanceName}" styleClass="wReplicaTab">
+										<p:toolbar id="controlButtons_#{i}_#{instanceName}" style="padding: 0px; border: 0px">
+											<f:facet name="left">
+												<p:commandButton update="WoodpeckerForm :Growl" icon="ui-icon-play"
+														action="#{woodpeckerBean.startDaemon(i,instanceName)}"
+														rendered="#{!woodpeckerBean.isDaemonRunning(i,instanceName)}"
+														style="background: green"
+														process="@this">
+												</p:commandButton>
+												<p:commandButton update="WoodpeckerForm :Growl" icon="ui-icon-stop"
+														action="#{woodpeckerBean.stopDaemon(i,instanceName)}"
+														rendered="#{woodpeckerBean.isDaemonRunning(i,instanceName)}"
+														style="background: red"
+														process="@this">
+												</p:commandButton>
+												<p:spacer width="5" height="1"/>
+												<h:outputText value="#{instanceName}"/>
+											</f:facet>
+										</p:toolbar>
+
+										<ui:param name="unitName" value="#{woodpeckerBean.getPluralUnitName(i,instanceName)}"/>
+										<ui:param name="capitalizedUnitName" value="#{woodpeckerBean.getCapitalizedPluralUnitName(i,instanceName)}"/>
+
+										<div class="ui-grid">
+											<div class="ui-grid-row">
+												<div class="ui-grid-col-6">
+
+													<h:form id="Daemon#{i}Settings_#{instanceName}">
+														<p:outputPanel id="settingsTable">
+
+															<ui:param name="settings"
+																	value="#{woodpeckerBean.getDaemonSettings(i,instanceName)}"/>
+															<ui:param name="execMode"
+																	value="#{settings.executionMode}"/>
+
+															<div class="wReplicaSettings">
+																<div class="ui-grid">
+																	<div class="ui-grid-row">
+																		<div class="ui-grid-col-3">
+																			<h:outputText for="modeSelector" value="Mode:"
+																					style="font-weight: bold;"/>
+																		</div>
+																		<div class="ui-grid-col-4">
+																			<p:selectOneRadio id="modeSelector"
+																					value="#{settings.executionMode}">
+																				<f:selectItems
+																						value="#{ExecutionMode.ALL}"/>
+																				<p:ajax event="change"
+																						listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"
+																						update=":Growl settingsTable"/>
+																			</p:selectOneRadio>
+																		</div>
+																	</div>
+																</div>
+																<p:outputPanel rendered="#{execMode == 'Simple'}">
+																	<div class="ui-grid">
+																		<div class="ui-grid-row">
+																			<div class="ui-grid-col-3">
+																				<h:outputText for="rateEditor"
+																						value="Rate (in #{unitName}):"
+																						style="font-weight: bold;"/>
+																			</div>
+																			<div class="ui-grid-col-4">
+																				<p:inplace id="rateEditor" editor="true">
+																					<p:ajax event="save"
+																							listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"
+																							update="rateError"/>
+																					<p:ajax event="cancel"
+																							update="rateError"/>
+																					<ui:param name="rateBoundsMessage" value="Rate must be an integer number from 1 to 1 000 000."/>
+																					<p:inputText id="rate"
+																							value="#{settings.rate}"
+																							required="true"
+																							requiredMessage="Rate is required."
+																							validatorMessage="#{rateBoundsMessage}"
+																							converterMessage="#{rateBoundsMessage}">
+																						<f:validateLongRange minimum="0"
+																								maximum="1000000"/>
+																					</p:inputText>
+																				</p:inplace>
+																			</div>
+																			<div class="ui-grid-col-6">
+																				<p:message for="rate" id="rateError"/>
+																			</div>
+																		</div>
+																	</div>
+																</p:outputPanel>
+																<p:outputPanel rendered="#{execMode == 'Scheduled'}">
+																	<div class="ui-grid">
+																		<div class="ui-grid-row">
+																			<div class="ui-grid-col-3">
+																				<h:outputText for="scheduleEditor"
+																						value="Schedule (rate/duration):"
+																						style="font-weight: bold;"/>
+																			</div>
+																			<div class="ui-grid-col-4">
+																				<p:inplace id="scheduleEditor" editor="true"
+																						emptyLabel="rate/duration rate/duration ...">
+																					<p:ajax event="save"
+																							listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"
+																							update="scheduleError"/>
+																					<p:ajax event="cancel"
+																							update="scheduleError"/>
+																					<p:inputTextarea id="schedule"
+																							value="#{settings.textSchedule}"
+																							rows="1" cols="20"
+																							required="true"
+																							requiredMessage="Schedule is required.">
+																					</p:inputTextarea>
+																				</p:inplace>
+																			</div>
+																			<div class="ui-grid-col-6">
+																				<p:message for="schedule"
+																						id="scheduleError"/>
+																			</div>
+																		</div>
+																	</div>
+																</p:outputPanel>
+																<div class="ui-grid">
+																	<div class="ui-grid-row">
+																		<div class="ui-grid-col-3">
+																			<h:outputText for="rateUnitSelector" value="#{execMode == 'Scheduled' ? 'Rate/duration' : 'Rate'} unit:"
+																					style="font-weight: bold;"/>
+																		</div>
+																		<div class="ui-grid-col-4">
+																			<p:selectOneRadio id="rateUnitSelector"
+																					value="#{settings.rateUnit}">
+																				<f:selectItem itemLabel="Seconds" itemValue="#{TimeUnit.SECONDS}"/>
+																				<f:selectItem itemLabel="Minutes" itemValue="#{TimeUnit.MINUTES}"/>
+																				<p:ajax event="change"
+																						listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"
+																						update=":Growl settingsTable"/>
+																			</p:selectOneRadio>
+																		</div>
+																	</div>
+																</div>
+																<p:importEnum type="com.exactprosystems.clearth.woodpecker.configuration.settings.loading.PriorityMode" 
+																		var="PriorityMode" allSuffix="ALL"/>
+																<p:outputPanel rendered="#{execMode == 'Scheduled'}">
+																	<div class="ui-grid">
+																		<div class="ui-grid-row">
+																			<div class="ui-grid-col-3">
+																				<h:outputText for="priorityModeEditor"
+																						value="Priority:"
+																						style="font-weight: bold;"/>
+																			</div>
+																			<div class="ui-grid-col-4">
+																				<p:inplace id="priorityModeEditor"
+																						editor="true">
+																					<p:selectOneRadio
+																							id="priorityModeSelector"
+																							value="#{settings.priorityMode}">
+																						<f:selectItems
+																								value="#{PriorityMode.ALL}"/>
+																						<p:ajax event="change"
+																								listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"/>
+																					</p:selectOneRadio>
+																				</p:inplace>
+																			</div>
+																		</div>
+																	</div>
+																</p:outputPanel>
+																<p:outputPanel rendered="#{woodpeckerBean.isMessageSettingsAvailable(settings)}">
+																	<div class="ui-grid">
+																		<div class="ui-grid-row">
+																			<div class="ui-grid-col-3">
+																				<h:outputText for="minBatchSizeEditor"
+																						value="Minimum batch size:"
+																						style="font-weight: bold;"/>
+																			</div>
+																			<div class="ui-grid-col-4">
+																				<p:inplace id="minBatchSizeEditor"
+																						editor="true">
+																					<p:ajax event="save"
+																							listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"
+																							update="minBatchSizeError"/>
+																					<p:ajax event="cancel"
+																							update="minBatchSizeError"/>
+																					<ui:param name="minSizeBoundsMessage" value="Minimum batch size must be an integer number from 1 to 1000."/>
+																					<p:inputText id="minBatchSize"
+																							value="#{settings.minBatchSize}"
+																							required="true"
+																							requiredMessage="Minimum batch size is required."
+																							validatorMessage="#{minSizeBoundsMessage}"
+																							converterMessage="#{minSizeBoundsMessage}">
+																						<f:validateLongRange minimum="1"
+																								maximum="1000"/>
+																					</p:inputText>
+																				</p:inplace>
+																			</div>
+																			<div class="ui-grid-col-6">
+																				<p:message for="minBatchSize"
+																						id="minBatchSizeError"/>
+																			</div>
+																		</div>
+																	</div>
+																	<div class="ui-grid">
+																		<div class="ui-grid-row">
+																			<div class="ui-grid-col-3">
+																				<h:outputText for="maxBatchSizeEditor"
+																						value="Maximum batch size:"
+																						style="font-weight: bold;"/>
+																			</div>
+																			<div class="ui-grid-col-4">
+																				<p:inplace id="maxBatchSizeEditor"
+																						editor="true">
+																					<p:ajax event="save"
+																							listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"
+																							update="maxBatchSizeError"/>
+																					<p:ajax event="cancel"
+																							update="maxBatchSizeError"/>
+																					<ui:param name="maxSizeBoundsMessage" value="Maximum batch size must be an integer number from 1 to 1000."/>
+																					<p:inputText id="maxBatchSize"
+																							 value="#{settings.maxBatchSize}"
+																							 required="true"
+																							 requiredMessage="Maximum batch size is required."
+																							 validatorMessage="#{maxSizeBoundsMessage}"
+																							 converterMessage="#{maxSizeBoundsMessage}">
+																						<f:validateLongRange minimum="1"
+																								maximum="1000"/>
+																					</p:inputText>
+																				</p:inplace>
+																			</div>
+																			<div class="ui-grid-col-6">
+																				<p:message for="maxBatchSize"
+																						id="maxBatchSizeError"/>
+																			</div>
+																		</div>
+																	</div>
+																	<p:selectBooleanCheckbox value="#{settings.useStrictMinBatchSize}" itemLabel="Strict minimum batch size">
+																		<p:ajax listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"/>
+																	</p:selectBooleanCheckbox>
+																	<p:selectBooleanCheckbox value="#{settings.preciseDelay}" itemLabel="Precise delay">
+																		<p:ajax listener="#{woodpeckerBean.saveDaemonSettings(i,instanceName)}"/>
+																	</p:selectBooleanCheckbox>
+																</p:outputPanel>
+															</div>
+														</p:outputPanel>
+													</h:form>
+												</div>
+												<div class="ui-grid-col-6">
+													<h:form id="Daemon#{i}_#{instanceName}">
+														<p:poll interval="1"
+																update="Daemon#{i}_#{instanceName}, :WoodpeckerForm:DaemonsPanels:controlButtons_#{i}_#{instanceName}"
+																autoStart="#{woodpeckerBean.isDaemonRunning(i,instanceName)}"
+																stop="#{!woodpeckerBean.isDaemonRunning(i,instanceName)}">
+														</p:poll>
+
+														<h:panelGrid columns="2" cellpadding="7">
+															<ui:param name="started" value="#{woodpeckerBean.getDaemonStartTime(i,instanceName)}"/>
+															<ui:param name="ended" value="#{woodpeckerBean.getDaemonEndTime(i,instanceName)}"/>
+
+															<h:outputText value="Started daemon:"
+																	rendered="#{started != null}"
+																	style="font-weight: bold;"/>
+															<h:outputText value="#{started}"
+																	rendered="#{started != null}">
+															</h:outputText>
+
+															<h:outputText value="Ended daemon:"
+																	rendered="#{ended != null}"
+																	style="font-weight: bold;"/>
+															<h:outputText value="#{ended}"
+																	rendered="#{ended != null}">
+															</h:outputText>
+														</h:panelGrid>
+
+														<h:form id="Daemon#{i}_#{instanceName}_statistics"
+																rendered="#{woodpeckerBean.isLoadingStatisticsAvailable(i,instanceName)}">
+															<ui:param name="statistics"
+																	value="#{woodpeckerBean.getLoadingStatistics(i,instanceName)}"/>
+															
+															<p:outputPanel rendered="#{woodpeckerBean.isMessageLoadingStatistics(statistics)}">
+																<ui:param name="showStatisticsByOperations"
+																		value="#{woodpeckerBean.showStatisticsByOperations(i,instanceName)}"/>
+	
+																<p:dataTable value="#{statistics.operationNames}" var="operationName" style="width:800px">
+																	<p:column headerText="Operation">
+																		<h:outputText value="#{operationName}"/>
+																	</p:column>
+	
+																	<p:column headerText="Sent messages">
+																		<h:outputText
+																				value="#{statistics.getTotalSentMessagesByOperationName(operationName)}"/>
+																	</p:column>
+	
+																	<p:column headerText="Sent #{unitName}" rendered="#{showStatisticsByOperations}">
+																		<h:outputText value="#{statistics.getTotalSentOperationsByName(operationName)}"/>
+																	</p:column>
+																</p:dataTable>
+																<h:panelGrid columns="2">
+																	<h:panelGrid columns="2" cellpadding="7">
+																		<h:outputText value="Total sent messages" style="font-weight: bold;"/>
+																		<h:outputText value="#{statistics.totalSentMessages}"/>
+	
+																		<h:outputText value="Actual messages per minute: " style="font-weight: bold;"/>
+																		<h:outputText value="#{statistics.msgsRateInMinute}">
+																			<f:convertNumber maxFractionDigits="2"/>
+																		</h:outputText>
+	
+																		<h:outputText value="Actual messages per second: " style="font-weight: bold;"/>
+																		<h:outputText value="#{statistics.msgsRateInSecond}">
+																			<f:convertNumber maxFractionDigits="2"/>
+																		</h:outputText>
+																	</h:panelGrid>
+																	<h:panelGrid columns="2" cellpadding="7" rendered="#{showStatisticsByOperations}">
+																		<h:outputText value="Total sent #{unitName}" style="font-weight: bold;"/>
+																		<h:outputText value="#{statistics.totalSentOperations}"/>
+	
+																		<h:outputText value="Actual #{unitName} per minute: " style="font-weight: bold;"/>
+																		<h:outputText value="#{statistics.opsRateInMinute}">
+																			<f:convertNumber maxFractionDigits="2"/>
+																		</h:outputText>
+	
+																		<h:outputText value="Actual #{unitName} per second: " style="font-weight: bold;"/>
+																		<h:outputText value="#{statistics.opsRateInSecond}">
+																			<f:convertNumber maxFractionDigits="2"/>
+																		</h:outputText>
+																	</h:panelGrid>
+																</h:panelGrid>
+															</p:outputPanel>
+															<p:outputPanel rendered="#{woodpeckerBean.isActionLoadingStatistics(statistics)}">
+																<p:dataTable value="#{statistics.actionsNames}" var="actionName" style="width:800px">
+																	<p:column headerText="Action">
+																		<h:outputText value="#{actionName}"/>
+																	</p:column>
+
+																	<p:column headerText="Count">
+																		<h:outputText value="#{statistics.getTotalActionsByName(actionName)}"/>
+																	</p:column>
+																</p:dataTable>
+																<h:panelGrid columns="2" cellpadding="7">
+																	<h:outputText value="Total actions" style="font-weight: bold;"/>
+																	<h:outputText value="#{statistics.totalActionsCount}"/>
+
+																	<h:outputText value="Actual actions per minute: " style="font-weight: bold;"/>
+																	<h:outputText value="#{statistics.rateInMinute}">
+																		<f:convertNumber maxFractionDigits="2"/>
+																	</h:outputText>
+
+																	<h:outputText value="Actual actions per second: " style="font-weight: bold;"/>
+																	<h:outputText value="#{statistics.rateInSecond}">
+																		<f:convertNumber maxFractionDigits="2"/>
+																	</h:outputText>
+																</h:panelGrid>
+															</p:outputPanel>
+														</h:form>
+													</h:form>
+												</div>
+											</div>
+										</div>
+									</p:panel>
+								</c:forEach>
+							</p:tab>
+						</c:forEach>
+					</p:accordionPanel>
+				</h:form>
+			</p:outputPanel>
+			
+			
+			<script>
+				var charts = {};
+				var pausedCharts = new Set();
+				
+				function initCharts(json) {
+					if (json) {
+						json.forEach(inputChart => {
+							charts[inputChart.name] = new ChartModel(inputChart.datasets, inputChart.labels);
+						});
+					}
+					drawCharts();
+				}
+				
+				async function updateCharts(json) {
+					await parseFullJson(json);
+					drawCharts();
+				}
+				
+				function parseFullJson(json) {
+					if (json) {
+						json.forEach(inputChart => {
+							if (!charts[inputChart.name])
+								charts[inputChart.name] = new ChartModel(inputChart.datasets, inputChart.labels);
+							else {
+								let chart = charts[inputChart.name];
+								Object.keys(inputChart.datasets).forEach(datasetName => {
+									let inputPoints = inputChart.datasets[datasetName].points;
+									if (inputPoints &amp;&amp; !datasetName.includes("LoadingSchedule"))
+										chart.datasets[datasetName].points = chart.datasets[datasetName].points.concat(inputPoints);
+								});
+								chart.labels = inputChart.labels;
+							}
+						});
+					}
+				}
+				
+				function drawCharts() {
+					Object.keys(charts).forEach(chartName => {
+						if (!pausedCharts.has(chartName))
+							drawChart(chartName);
+					});
+				}
+				
+				function drawChart(chartName) {
+					if (!document.querySelector("#" + chartName))
+						return;
+					
+					let model = charts[chartName];
+					let datasets = model.datasets;
+					
+					let generatedLegend = [];
+					Object.keys(datasets).forEach(datasetName => {
+						generatedLegend.push(datasets[datasetName].displayName);
+					});
+					
+					var chart = new Chartist.Line("#" + chartName,
+						{
+							labels: model.labels,
+							series: model.generateSeries()
+						},
+						{
+							lineSmooth: false,
+							axisX: {
+								type: Chartist.AutoScaleAxis,
+								onlyInteger: true,
+								high: model.labels.length,
+								low: 0,
+								scaleMinSpace: 40,
+								labelInterpolationFnc: (value, index) => {
+									return model.labels[value];
+								},
+							},
+							axisY: {
+								referenceValue: 0,
+								high: model.getMax() + model.getMax()/8,
+								type: Chartist.AutoScaleAxis,
+								onlyInteger: true
+							},
+							plugins: [
+								Chartist.plugins.zoom({
+									onZoom: onZoom
+								}),
+								Chartist.plugins.legend({
+									legendNames: generatedLegend,
+									position: "bottom"
+								}),
+								Chartist.plugins.tooltip({
+									anchorToPoint: true,
+									appendToBody: true,
+									transformTooltipTextFnc: (value) => {
+										let strArr = value.split(",");
+										return model.labels[strArr[0]] + ", " + strArr[1];
+									}
+								})
+							]
+						}
+					)
+				}
+				
+				var resetFnc;
+				function onZoom(chart, reset) {
+					resetFnc = reset;
+				}
+				
+				function togglePause(state, chartName) {
+					let continueBtn = $("." + chartName + "_continue");
+					let pauseBtn = $("." + chartName + "_pause");
+					let pauseStatus = $("." + chartName + "_status");
+					
+					if (state) {
+						pausedCharts.delete(chartName);
+						continueBtn.hide();
+						pauseBtn.show();
+						pauseStatus.hide();
+					} else {
+						pausedCharts.add(chartName);
+						continueBtn.show();
+						pauseBtn.hide();
+						pauseStatus.show();
+					}
+				}
+			</script>
+			
+			<p:outputPanel rendered="#{woodpeckerBean.activeTab==100}" id="Visualisation">
+				<h:form id="VisualisationForm">
+					<script>
+						initCharts(#{woodpeckerBean.initCharts()});
+					</script>
+					
+					<p:panel widgetVar="chartsUpdate" style="border: none; width: 0; height: 0;">
+						<script>
+							updateCharts(#{woodpeckerBean.getChartsJson()});
+						</script>
+					</p:panel>
+					<p:poll interval="1" update="@widgetVar(chartsUpdate)" />
+					
+					<ui:repeat value="#{woodpeckerBean.lineCharts}" var="chart">
+						<div class="ct-chart-container" style="height: 400px; margin: 10px; padding: 5px 10px 140px; box-shadow: 0px 2px 4px #c6c7c7;">
+							<div style="text-align: center; font-weight: bold; font-size: 12px;">
+								#{chart.daemonName}
+							</div>
+							<p:commandButton value="Download" style="float: right;" ajax="false">
+								<p:fileDownload value="#{woodpeckerBean.saveChartData(chart.daemonName)}" />
+							</p:commandButton>
+							<div class="ct-chart" id="#{chart.daemonNameWOSpaces}" style="height: 100%;"></div>
+							<div style="display: flex; margin-left: 20px; margin-top: 10px;">
+								<div>
+									<p:outputLabel for="@next" value="Frequency:" />
+									<p:selectOneMenu style="width: 40px; margin: 0 5px;" onchange="handleTimeChange(this.value, '#{chart.daemonNameWOSpaces}')">
+										<f:selectItem itemLabel="1 sec" itemValue="1" />
+										<f:selectItem itemLabel="5 sec" itemValue="5" />
+										<f:selectItem itemLabel="10 sec" itemValue="10" />
+										<f:selectItem itemLabel="30 sec" itemValue="30" />
+										<f:selectItem itemLabel="1 min" itemValue="60" />
+										<f:selectItem itemLabel="5 min" itemValue="300" />
+										<f:selectItem itemLabel="10 min" itemValue="600" />
+									</p:selectOneMenu>
+									
+									<p:outputLabel for="@next" value="Format:" />
+									<p:importEnum type="com.exactprosystems.clearth.woodpecker.utils.charts.TimeLabelFormat" var="LabelFormat" />
+									<p:selectOneMenu value="#{chart.labelFormat}" style="width: 60px; margin: 0 5px;">
+										<f:selectItem itemLabel="Absolute" itemValue="#{LabelFormat.ABSOLUTE}" />
+										<f:selectItem itemLabel="Relative" itemValue="#{LabelFormat.RELATIVE}" />
+									</p:selectOneMenu>
+									
+									<p:commandButton value="Reset zoom and Continue" styleClass="#{chart.daemonNameWOSpaces}_continue"
+											onclick="togglePause(true, '#{chart.daemonNameWOSpaces}');" />
+									<p:commandButton value="Pause" styleClass="#{chart.daemonNameWOSpaces}_pause"
+											onclick="togglePause(false, '#{chart.daemonNameWOSpaces}');" />
+								</div>
+								<div style="margin-left: 15%; height: 18px; width: 120px; padding: 5px; text-align: center;
+										background-color: #d15353; color: white;" class="#{chart.daemonNameWOSpaces}_status">
+									UPDATE PAUSED
+								</div>
+							</div>
+						</div>
+						<script>
+							togglePause(true, '#{chart.daemonNameWOSpaces}');
+						</script>
+					</ui:repeat>
+				</h:form>
+			</p:outputPanel>
+		</p:outputPanel>
+
+	</ui:define>
+</ui:composition>

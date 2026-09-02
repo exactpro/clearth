@@ -1,0 +1,73 @@
+/******************************************************************************
+ * Copyright 2009-2023 Exactpro Systems Limited
+ * https://www.exactpro.com
+ * Build Software to Test Software
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.exactprosystems.clearth.woodpecker.configuration.start;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyList;
+
+@XmlAccessorType(XmlAccessType.NONE)
+public class MessageSendersBlockDesc
+{
+	@XmlElement(name = "sender")
+	private List<MessageSenderDesc> senders;
+	
+	public List<MessageSenderDesc> getSenders()
+	{
+		return senders;
+	}
+	
+	public List<MessageSenderDesc> getEnabledSenders()
+	{
+		return filter(getSenders());
+	}
+	
+	public Set<String> getOperationNames()
+	{
+		Set<String> operationNames = new LinkedHashSet<>();
+		getEnabledSenders().stream()
+				.map(MessageSenderDesc::getOperationName)
+				.forEach(operationNames::add);
+		return operationNames;
+	}
+	
+	
+	protected void setSenders(List<MessageSenderDesc> senders)  //Needed for unmarshaller
+	{
+		this.senders = senders;
+	}
+	
+	
+	private List<MessageSenderDesc> filter(List<MessageSenderDesc> senders)
+	{
+		if (senders == null)
+			return emptyList();
+		if (senders.isEmpty())
+			return senders;
+		
+		return senders.stream()
+				.filter(d -> d.isEnabled() && (d.getPart() > 0))
+				.collect(Collectors.toList());
+	}
+}

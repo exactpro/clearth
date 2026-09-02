@@ -1,0 +1,7 @@
+
+<!--Woodpecker bean-->
+	<managed-bean>
+		<managed-bean-name>woodpeckerBean</managed-bean-name>
+		<managed-bean-class>com.exactprosystems.clearth.web.beans.woodpecker.WoodpeckerBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>

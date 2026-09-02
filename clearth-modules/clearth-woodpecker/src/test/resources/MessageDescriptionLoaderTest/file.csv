@@ -1,0 +1,5 @@
+MsgType,PositionRequest
+PositionType,0
+Currency,"@{tableValueByRowNum('positions', 1, 'Currency')}"
+DerivativeInstrument,"@{tableValueByRowNum('positions', 1, 'DerivativeInstrument')}"
+CreationTimestamp,"@{format(time(0), 'yyyy-MM-dd HH:mm:ss.SSS')}"

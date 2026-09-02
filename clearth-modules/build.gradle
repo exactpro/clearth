@@ -78,6 +78,48 @@ def putFile(fileName, source, destination) {
     }
 }
 
+def putDir(dirName, source, destination) {
+    def copiedDir = "${destination}/${dirName}"
+    def destDir = new File(copiedDir).getParentFile()
+    destDir.mkdirs()
+    copy {
+        from ("${source}/${dirName}")
+        into copiedDir
+    }
+    println("- Directory copied to project: ${copiedDir}")
+}
+
+def putConfig(clearthDir, configName, configType, configPath, configValue, insertPattern) {
+    ant.replaceregexp(file: "${clearthDir}/${configPath}", match: insertPattern, replace: "${configValue}\n${insertPattern}")
+    println("- ${configName} ${configType} config added to project's ${configType} config file: ${clearthDir}/${configPath}")
+}
+
+def putFacesConfig(facesConfigValue, facesConfigName, clearthDir) {
+    putConfig(clearthDir, facesConfigName, "faces", "src/main/webapp/WEB-INF/faces-config.xml", facesConfigValue, "</faces-config>")
+}
+
+def putMenuItem(clearthDir, itemName, itemValue) {
+    def insertPattern = "\t\t\t\t</ul>"
+    def templateFile = "${clearthDir}/src/main/webapp/templates/restricted.xhtml"
+    ant.replaceregexp(file: templateFile, match: insertPattern, replace: "${itemValue}\n${insertPattern}")
+    println("- ${itemName} menu item added to project's GUI template: ${templateFile}")
+}
+
+def putCode(targetFile, code, findRegex, desc) {
+    ant.replaceregexp(file: targetFile, match: findRegex, replace: code)
+    println("- ${desc} code added to ${targetFile}")
+}
+
+def getSourceDir(clearthDir) {
+    def sourceDir = undef
+    file(clearthDir).traverse(type: groovy.io.FileType.FILES, nameFilter: { it == 'Application.java' }) { appFile ->
+        sourceDir = appFile.path.replace('Application.java', '')
+    }
+    if (sourceDir == undef)
+        throw new GradleException("Unable to find Java source directory in project")
+    return sourceDir
+}
+
 def getClearThCfg(clearthDir) {
     File cfg = new File("${clearthDir}/cfg/clearth.cfg")
     if (!cfg.exists())

@@ -1,0 +1,56 @@
+dependencies {
+	api project(':clearth-modules:clearth-gui')
+	testImplementation 'org.testng:testng:6.14.3'
+}
+
+publishing {
+	publications {
+		woodpecker(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-woodpecker'
+			version = "${version}"
+
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications(publishing.publications.woodpecker)
+}
+
+ext {
+	moduleName = 'Woodpecker'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-woodpecker'
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+}
+
+task installModule {
+	doLast {
+		def installation = "${projectDir}/installation"
+		def projectWeb = "${projectDir}/web"
+		def clearthWeb = "${clearthDir}/src/main/webapp"
+
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+						{
+							def applicationFile = "${getSourceDir(clearthDir)}/Application.java"
+
+							def importCode = "import com.exactprosystems.clearth.utils.ClearThException;\n" + file("${installation}/import.java").text
+							putCode(applicationFile, importCode, "import com.exactprosystems.clearth.utils.ClearThException;", "Woodpecker imports")
+
+							def initCode = "protected void initOtherEntities(Object... otherEntities) throws Exception\n\t{\n" + file("${installation}/init.java").text
+							putCode(applicationFile, initCode, "protected void initOtherEntities\\(Object... otherEntities\\) throws Exception\\R\t\\{", "Woodpecker initialization")
+						},
+						{ putMenuItem(clearthDir, moduleName, file("${installation}/menuItem.xhtml").text) },
+						{ putFacesConfig(file("${installation}/faces-config.xml").text, "woodpeckerBean", clearthDir) },
+						{ putFile("woodpecker.xhtml", "${projectWeb}/ui/restricted", "${clearthWeb}/ui/restricted") },
+						{ putDir("css", projectWeb, clearthWeb) },
+						{ putDir("js", projectWeb, clearthWeb) },
+						{ putDir("chart", "${projectDir}/cfg/templates", "${clearthDir}/cfg/templates") },
+						{ putFile("daemons.xml", installation, "${clearthDir}/cfg/woodpecker") }
+				]
+		)
+	}
+}
