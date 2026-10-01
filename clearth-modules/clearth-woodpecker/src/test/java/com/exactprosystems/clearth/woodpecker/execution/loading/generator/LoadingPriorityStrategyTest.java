@@ -185,7 +185,7 @@ public class LoadingPriorityStrategyTest
 		{
 			otherCounts[i - 1] = countsInPeriod[i];
 		}
-		when(generator.calculateCountInPeriod(anyLong(), anyInt(), anyObject()))
+		when(generator.calculateCountInPeriod(anyLong(), anyInt(), any()))
 				.thenReturn(countsInPeriod[0], otherCounts);
 		
 		Long[] otherTicks = new Long[ticks.length - 1];
@@ -193,7 +193,7 @@ public class LoadingPriorityStrategyTest
 		{
 			otherTicks[i - 1] = ticks[i];
 		}
-		when(generator.calculateTick(anyDouble(), anyObject()))
+		when(generator.calculateTick(anyDouble(), any()))
 				.thenReturn(ticks[0], otherTicks);
 		
 		return generator;

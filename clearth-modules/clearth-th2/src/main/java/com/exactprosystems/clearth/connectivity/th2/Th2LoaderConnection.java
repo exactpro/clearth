@@ -28,25 +28,27 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.LaxRedirectStrategy;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.cookie.StandardCookieSpec;
+import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
+import org.apache.hc.client5.http.impl.LaxRedirectStrategy;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
 
 import com.exactprosystems.clearth.connectivity.ConnectivityException;
 import com.exactprosystems.clearth.connectivity.connections.BasicClearThConnection;
 import com.exactprosystems.clearth.connectivity.connections.ClearThCheckableConnection;
 import com.exactprosystems.clearth.connectivity.connections.SettingsClass;
 import com.exactprosystems.clearth.utils.SettingsException;
+import org.apache.hc.core5.util.TimeValue;
 
 @XmlRootElement(name="Th2LoaderConnection")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -80,17 +82,22 @@ public class Th2LoaderConnection extends BasicClearThConnection implements Clear
 		HttpClientBuilder builder = HttpClients.custom();
 		builder.useSystemProperties();
 		builder.setRedirectStrategy(new LaxRedirectStrategy());
-		builder.setRetryHandler(new DefaultHttpRequestRetryHandler(3, true));
+		builder.setRetryStrategy(new DefaultHttpRequestRetryStrategy(3, TimeValue.ofSeconds(1)));
 		
 		//For HTTPS
-		SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
-		HostnameVerifier verifier = new DefaultHostnameVerifier();
-		SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(sslContext, verifier);
-		builder.setSSLSocketFactory(sslConnectionFactory);
-		
+		SSLContext sslContext = SSLContextBuilder.create()
+				.loadTrustMaterial(new TrustSelfSignedStrategy())
+				.build();
+
+		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+				.setTlsSocketStrategy(new DefaultClientTlsStrategy(sslContext))
+				.build();
+
+		builder.setConnectionManager(connectionManager);
+
 		//Default request configuration
 		builder.setDefaultRequestConfig(RequestConfig.custom()
-				.setCookieSpec(CookieSpecs.DEFAULT)
+				.setCookieSpec(StandardCookieSpec.RELAXED)
 				.setCircularRedirectsAllowed(true)
 				.setRedirectsEnabled(true)
 				.build());

@@ -1,7 +1,7 @@
 plugins {
 	id 'war'
 	id 'org.gretty' version '3.1.1'
-	id 'org.owasp.dependencycheck' version '12.1.0'
+	id 'org.owasp.dependencycheck' version '12.2.2'
 }
 
 ext {
@@ -191,6 +191,7 @@ dependencyCheck {
 		'grettyNoSpringBoot', 'grettySpringLoaded', 'gretty']
 	format = 'ALL'
 	failBuildOnCVSS = 7.6
+	suppressionFile = "${projectDir}/dependency-check/suppressions.xml"
 	nvd {
 		apiKey = checkApiKey
 		datafeedUrl = dataFeedUrl

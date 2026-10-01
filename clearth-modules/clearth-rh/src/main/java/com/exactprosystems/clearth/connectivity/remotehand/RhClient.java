@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,17 +81,16 @@ public abstract class RhClient implements AutoCloseable
 		}
 	}
 	
-	protected abstract RhResponse sendLogon() throws IOException;
-	protected abstract RhResponse sendScript(String script) throws IOException;
-	protected abstract RhResponse queryStatus() throws IOException;
-	protected abstract RhResponse downloadFile(String type, String id) throws IOException;
-	protected abstract RhResponse sendLogout() throws IOException;
+	protected abstract RhResponse sendLogon() throws IOException, ParseException;
+	protected abstract RhResponse sendScript(String script) throws IOException, ParseException;
+	protected abstract RhResponse queryStatus() throws IOException, ParseException;
+	protected abstract RhResponse downloadFile(String type, String id) throws IOException, ParseException;
+	protected abstract RhResponse sendLogout() throws IOException, ParseException;
 	protected abstract void disposeResources() throws Exception;
-	public abstract RhResponse sendFile(File f, String path) throws IOException;
+	public abstract RhResponse sendFile(File f, String path) throws IOException, ParseException;
 	
 	
-	public void logon() throws IOException, RhException
-	{
+	public void logon() throws IOException, RhException, ParseException {
 		RhResponse response = sendLogon();
 		if (isNotSuccess(response))
 			throw new RhException("Could not login to RemoteHand: %s", response.getDataString());
@@ -109,8 +109,7 @@ public abstract class RhClient implements AutoCloseable
 			sessionId = responseMsg;
 	}
 	
-	public void logout() throws IOException
-	{
+	public void logout() throws IOException, ParseException {
 		if (sessionId == null)
 			return;
 		
@@ -122,8 +121,7 @@ public abstract class RhClient implements AutoCloseable
 		usedBrowser = null;
 	}
 	
-	public String send(String message, boolean needToReconnect) throws IOException, RhException
-	{
+	public String send(String message, boolean needToReconnect) throws IOException, RhException, ParseException {
 		if (needToReconnect)
 		{
 			logout();
@@ -152,14 +150,12 @@ public abstract class RhClient implements AutoCloseable
 		return result;
 	}
 	
-	public String send(String message) throws IOException, RhException
-	{
+	public String send(String message) throws IOException, RhException, ParseException {
 		return send(message, false);
 	}
 	
 	
-	public RhScriptResult get() throws RhException, IOException
-	{
+	public RhScriptResult get() throws RhException, IOException, ParseException {
 		RhResponse response = queryStatus();
 		String rawResult = response.getDataString();
 		logger.trace("Getting resource. Received response: '{}'", rawResult);
@@ -177,8 +173,7 @@ public abstract class RhClient implements AutoCloseable
 		}
 	}
 	
-	public RhScriptResult waitAndGet(int seconds) throws RhException, IOException
-	{
+	public RhScriptResult waitAndGet(int seconds) throws RhException, IOException, ParseException {
 		Stopwatch sw = Stopwatch.createAndStart(seconds * 1000);
 		do
 		{
@@ -218,20 +213,17 @@ public abstract class RhClient implements AutoCloseable
 	}
 	
 	public RhScriptResult executeScript(Path scriptFile, Map<String, String> arguments, int waitInSeconds, Path templatesDirectory)
-			throws RhException, IOException
-	{
+            throws RhException, IOException, ParseException {
 		String script = RhUtils.getScriptFromFile(scriptFile);
 		return executeScript(script, arguments, waitInSeconds, templatesDirectory);
 	}
 	
-	public RhScriptResult executeScript(Path scriptFile, Map<String, String> arguments, int waitInSeconds) throws RhException, IOException
-	{
+	public RhScriptResult executeScript(Path scriptFile, Map<String, String> arguments, int waitInSeconds) throws RhException, IOException, ParseException {
 		return executeScript(scriptFile, arguments, waitInSeconds, null);
 	}
 	
 	public RhScriptResult executeScript(String script, Map<String, String> arguments, int waitInSeconds, Path templatesDirectory)
-			throws RhException, IOException
-	{
+            throws RhException, IOException, ParseException {
 		String processedScript = processScript(script, templatesDirectory);
 		String compiledScript = compileScript(processedScript, arguments);
 		logger.debug("Compiled script:{}{}", Utils.EOL, compiledScript);
@@ -241,19 +233,16 @@ public abstract class RhClient implements AutoCloseable
 		return waitAndGet(waitInSeconds);
 	}
 	
-	public RhScriptResult executeScriptFromString(String script, Map<String, String> arguments, int waitInSeconds) throws RhException, IOException
-	{
+	public RhScriptResult executeScriptFromString(String script, Map<String, String> arguments, int waitInSeconds) throws RhException, IOException, ParseException {
 		return executeScript(script, arguments, waitInSeconds, null);
 	}
 	
 	
-	public byte[] downloadScreenshot(String screenshotId) throws RhException, IOException
-	{
+	public byte[] downloadScreenshot(String screenshotId) throws RhException, IOException, ParseException {
 		return downloadFileFromRh("screenshot", screenshotId);
 	}
 	
-	public byte[] downloadDownloadedFile(String filePath) throws RhException, IOException
-	{
+	public byte[] downloadDownloadedFile(String filePath) throws RhException, IOException, ParseException {
 		return downloadFileFromRh("downloaded", filePath);
 	}
 	
@@ -282,8 +271,7 @@ public abstract class RhClient implements AutoCloseable
 		return mapper;
 	}
 	
-	protected byte[] downloadFileFromRh(String type, String id) throws RhException, IOException
-	{
+	protected byte[] downloadFileFromRh(String type, String id) throws RhException, IOException, ParseException {
 		RhResponse response = downloadFile(type, id);
 		if (isNotSuccess(response))
 		{

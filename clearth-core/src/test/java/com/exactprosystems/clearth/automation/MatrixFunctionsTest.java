@@ -29,6 +29,7 @@ import com.exactprosystems.clearth.utils.javaFunction.FunctionWithException;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.core.Is;
 import org.mvel2.PropertyAccessException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -1796,13 +1797,15 @@ public class MatrixFunctionsTest extends BasicTestNgTest
 	}
 
 	@Test(dataProvider = "randomFunctionData")
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	public void checkRandomFunction(Object min, Object max, BigDecimal... values)
 	{
 		MatrixFunctions matrixFunctions = getMatrixFunctionsForCalcExp();
 		Number randomResult1 = matrixFunctions.random(min,max);
 
-		List<Matcher<? extends Number>> matchers = Arrays.stream(values).map(v -> (is(v))).collect(Collectors.toList());
-
+		List matchers = Arrays.stream(values)
+				.map(Is::is)
+				.collect(Collectors.toList());
 		MatcherAssert.assertThat(randomResult1, anyOf(matchers));
 
 	}

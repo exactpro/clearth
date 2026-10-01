@@ -26,20 +26,21 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.core5.net.URIBuilder;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 
 import com.exactprosystems.clearth.connectivity.remotehand.RhClient;
 import com.exactprosystems.clearth.connectivity.remotehand.RhException;
@@ -89,14 +90,12 @@ public class HttpRhClient extends RhClient
 	
 	
 	@Override
-	protected RhResponse sendLogon() throws IOException
-	{
+	protected RhResponse sendLogon() throws IOException, ParseException {
 		return executeRequest(new HttpGet(baseUrl + "login"));
 	}
 	
 	@Override
-	protected RhResponse sendScript(String script) throws IOException
-	{
+	protected RhResponse sendScript(String script) throws IOException, ParseException {
 		HttpPost post = new HttpPost(sessionUrl);
 		post.setEntity(new StringEntity(script, StandardCharsets.UTF_8));
 		
@@ -104,14 +103,12 @@ public class HttpRhClient extends RhClient
 	}
 	
 	@Override
-	protected RhResponse queryStatus() throws IOException
-	{
+	protected RhResponse queryStatus() throws IOException, ParseException {
 		return executeRequest(new HttpGet(sessionUrl));
 	}
 	
 	@Override
-	protected RhResponse downloadFile(String type, String id) throws IOException
-	{
+	protected RhResponse downloadFile(String type, String id) throws IOException, ParseException {
 		try
 		{
 			URIBuilder builder = new URIBuilder(baseUrl + "download")
@@ -126,8 +123,7 @@ public class HttpRhClient extends RhClient
 	}
 	
 	@Override
-	protected RhResponse sendLogout() throws IOException
-	{
+	protected RhResponse sendLogout() throws IOException, ParseException {
 		return convertResponse(httpClient.execute(new HttpDelete(sessionUrl)));
 	}
 	
@@ -138,15 +134,13 @@ public class HttpRhClient extends RhClient
 	}
 	
 	@Override
-	public void logon() throws IOException, RhException
-	{
+	public void logon() throws IOException, RhException, ParseException {
 		super.logon();
 		this.sessionUrl = baseUrl + sessionId;
 	}
 	
 	@Override
-	public RhResponse sendFile(File f, String path) throws IOException
-	{
+	public RhResponse sendFile(File f, String path) throws IOException, ParseException {
 		HttpPost post = new HttpPost(sessionUrl);
 		post.addHeader("Transfer-filename", path);
 		post.setEntity(new FileEntity(f, ContentType.APPLICATION_OCTET_STREAM));
@@ -154,9 +148,9 @@ public class HttpRhClient extends RhClient
 	}
 	
 	
-	private RhResponse convertResponse(HttpResponse response) throws ParseException, IOException
+	private RhResponse convertResponse(ClassicHttpResponse response) throws ParseException, IOException
 	{
-		Header[] headers = response.getAllHeaders();
+		Header[] headers = response.getHeaders();
 		boolean byteArrayContent = false;
 		for (Header h : headers)
 		{
@@ -172,19 +166,18 @@ public class HttpRhClient extends RhClient
 			HttpEntity entity = response.getEntity();
 			byte[] bytes = EntityUtils.toByteArray(entity);
 			EntityUtils.consume(entity);
-			return new RhResponse(response.getStatusLine().getStatusCode(), bytes);
+			return new RhResponse(response.getCode(), bytes);
 		}
 		else
 		{
 			HttpEntity entity = response.getEntity();
 			String result = EntityUtils.toString(entity);
 			EntityUtils.consume(entity);
-			return new RhResponse(response.getStatusLine().getStatusCode(), result);
+			return new RhResponse(response.getCode(), result);
 		}
 	}
 	
-	private RhResponse executeRequest(HttpUriRequest request) throws IOException
-	{
+	private RhResponse executeRequest(HttpUriRequest request) throws IOException, ParseException {
 		return convertResponse(httpClient.execute(request));
 	}
 }

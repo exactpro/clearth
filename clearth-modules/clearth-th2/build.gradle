@@ -55,11 +55,11 @@ dependencies {
 	
 	api 'com.google.code.gson:gson:2.13.1'
 	
-	api 'org.apache.httpcomponents:fluent-hc:4.5.13'
-	api 'org.apache.httpcomponents:httpclient:4.5.13'
+	api 'org.apache.httpcomponents.client5:httpclient5-fluent:5.6.4'
+	api 'org.apache.httpcomponents.client5:httpclient5:5.6.4'
 	api 'org.apache.httpcomponents.core5:httpcore5:5.4.3'
 	
-	def log4jVersion = '2.25.5'
+	def log4jVersion = '2.26.1'
 	testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 	testImplementation "org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}"
 	testImplementation "org.apache.logging.log4j:log4j-jcl:${log4jVersion}"

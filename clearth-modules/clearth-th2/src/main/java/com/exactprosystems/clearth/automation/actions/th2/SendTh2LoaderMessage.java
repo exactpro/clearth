@@ -26,12 +26,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
 import com.exactprosystems.clearth.messages.SimpleClearThMessageFactory;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import 	org.apache.hc.core5.http.io.entity.EntityUtils;
 
 import com.exactprosystems.clearth.automation.Action;
 import com.exactprosystems.clearth.automation.GlobalContext;
@@ -140,7 +140,7 @@ public class SendTh2LoaderMessage extends Action
 			try (CloseableHttpResponse response = client.execute(request))
 			{
 				HttpEntity entity = response.getEntity();
-				int responseCode = response.getStatusLine().getStatusCode();
+				int responseCode = response.getCode();
 				String responseText = entity != null ? EntityUtils.toString(entity) : "";
 				
 				DefaultResult result = new DefaultResult();

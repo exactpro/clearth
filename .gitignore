@@ -75,3 +75,6 @@ temp
 /clearth-modules/clearth-th2/test-output
 /clearth-modules/clearth-woodpecker/test-output
 /clearth-modules/clearth-woodpecker/testOutput
+
+# local-only dependency-check overrides (keyless NVD runs)
+dc-local.gradle

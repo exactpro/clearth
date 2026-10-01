@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+	OWASP dependency-check suppressions for ClearTH.
+
+	Rules for entries added here:
+	  * Never set an "until" date. Expired rules are dropped at parse time with only an INFO
+	    log and cannot be caught by failBuildOnUnusedSuppressionRule, so they go silently inert.
+	  * Key on <packageUrl> (regex), not <sha1>. A sha1 stops matching the moment the
+	    dependency is bumped, which silently disables the suppression.
+	  * Record in <notes> who owns the dependency and why the finding is not actionable.
+-->
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 	<suppress until="2026-12-31">
 		<notes><![CDATA[

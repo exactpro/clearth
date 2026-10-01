@@ -26,7 +26,8 @@ import java.util.*;
 
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,19 +48,16 @@ public class RhUtils
 	private static final int DICT_RESPONSE_TIMEOUT = 120, // 2 min
 			SHUTDOWN_SCRIPT_RESPONSE_TIMEOUT = 120; // 2 min
 	
-	public static RhClient createRhConnection(String host) throws IOException, RhException
-	{
+	public static RhClient createRhConnection(String host) throws IOException, RhException, ParseException {
 		return createRhConnection(host, null, null);
 	}
 	
-	public static RhClient createRhConnection(String host, Path pathToDictionary) throws IOException, RhException
-	{
+	public static RhClient createRhConnection(String host, Path pathToDictionary) throws IOException, RhException, ParseException {
 		return createRhConnection(host, pathToDictionary, null);
 	}
 	
 	public static RhClient createRhConnection(String host, Path pathToDictionary, Path pathToShutdownScript)
-			throws IOException, RhException
-	{
+            throws IOException, RhException, ParseException {
 		logger.trace("Establishing connection with RemoteHand at '{}'...", host);
 		RhClient client = new HttpRhClient(HttpClientBuilder.create().build(), host);
 		try
@@ -74,14 +72,12 @@ public class RhUtils
 		}
 	}
 	
-	public static RhClient createTcpRhConnection(TcpRhAcceptor acceptor, Path pathToDictionary) throws IOException, RhException
-	{
+	public static RhClient createTcpRhConnection(TcpRhAcceptor acceptor, Path pathToDictionary) throws IOException, RhException, ParseException {
 		return createTcpRhConnection(acceptor, pathToDictionary, null);
 	}
 	
 	public static RhClient createTcpRhConnection(TcpRhAcceptor acceptor, Path pathToDictionary, Path pathToShutdownScript)
-			throws IOException, RhException
-	{
+            throws IOException, RhException, ParseException {
 		TcpRhConnectionHandler handler = acceptor.getConnectionHandler();
 		if (handler == null || !handler.isActive())
 			throw new RhException("RemoteHand is not connected");
@@ -122,7 +118,7 @@ public class RhUtils
 			rhClient.send(script);
 			rhClient.waitAndGet(responseTimeout);
 		}
-		catch (IOException e)
+		catch (IOException | ParseException e)
 		{
 			String msg = "Error occurred while sending script to RemoteHand";
 			logger.error(msg, e);
@@ -161,8 +157,7 @@ public class RhUtils
 	
 	
 	private static void loginToRh(RhClient client, Path pathToDictionary, Path pathToShutdownScript)
-			throws IOException, RhException
-	{
+            throws IOException, RhException, ParseException {
 		client.logon();
 		logger.trace("Connection with RemoteHand established, session '{}'", client.getSessionId());
 		

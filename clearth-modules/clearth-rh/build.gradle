@@ -1,11 +1,10 @@
 dependencies {
-	api 'org.apache.httpcomponents:fluent-hc:4.5.14'
-	api 'org.apache.httpcomponents:httpclient:4.5.14'
-	api 'org.apache.httpcomponents:httpclient-cache:4.5.14'
-	api 'org.apache.httpcomponents:httpclient-win:4.5.14'
+	api 'org.apache.httpcomponents.client5:httpclient5-fluent:5.6.4'
+	api 'org.apache.httpcomponents.client5:httpclient5:5.6.4'
+	api 'org.apache.httpcomponents.client5:httpclient5-cache:5.6.4'
+	api 'org.apache.httpcomponents.client5:httpclient5-win:5.2.3'
 	api 'org.apache.httpcomponents.core5:httpcore5:5.4.3'
-	api 'org.apache.httpcomponents:httpmime:4.5.14'
-	api 'io.netty:netty-all:4.2.17.Final'
+	api 'io.netty:netty-all:4.2.18.Final'
 }
 
 publishing {

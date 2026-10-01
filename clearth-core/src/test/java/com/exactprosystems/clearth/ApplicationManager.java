@@ -31,8 +31,6 @@ import com.exactprosystems.clearth.utils.ClearThException;
 import com.exactprosystems.clearth.utils.Stopwatch;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.mockito.Matchers;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +53,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 public class ApplicationManager
@@ -293,10 +290,11 @@ public class ApplicationManager
 		when(dc.getCTHVersion()).thenReturn(testRelease);
 		doAnswer((Answer<Void>) invocation ->
 		{
-			Whitebox.setInternalState(dc, "appRoot", APP_ROOT);
+			Field field = DeploymentConfig.class.getDeclaredField("appRoot");
+			field.setAccessible(true);
+			field.set(dc, APP_ROOT);
 			return null;
 		}).when(dc).configureAppRoot();
-
 		return dc;
 	}
 
@@ -322,7 +320,7 @@ public class ApplicationManager
 				File dst = new File(core.getRootRelative(core.getRealTimeReportPath()));
 				FileUtils.copyDirectory(src, dst);
 				return null;
-			}).when(core).initOtherEntities(Matchers.<Object>anyVararg());
+			}).when(core).initOtherEntities();
 		}
 		catch (Exception e)
 		{
@@ -494,7 +492,7 @@ class TestingExecutor extends DefaultSimpleExecutor
 	protected StepImpl createStepImpl(String stepKind, String stepParameter)
 	{
 		StepImpl testStepImpl = spy(StepImpl.class);
-		when(testStepImpl.execute(anyMapOf(Matrix.class, StepContext.class),any(GlobalContext.class)))
+		when(testStepImpl.execute(anyMap(), any(GlobalContext.class)))
 				.thenReturn(DefaultResult.passed("Passed"));
 
 		return testStepImpl;
