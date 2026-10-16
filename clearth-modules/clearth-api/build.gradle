@@ -1,0 +1,46 @@
+dependencies {
+	api 'org.glassfish.jersey.containers:jersey-container-servlet:2.36'
+	api 'org.glassfish.jersey.media:jersey-media-multipart:2.36'
+	api 'org.glassfish.jersey.media:jersey-media-jaxb:2.36'
+	api 'org.glassfish.jersey.inject:jersey-hk2:2.36'
+}
+
+configurations.all {
+	resolutionStrategy {
+		force 'org.glassfish.hk2:hk2-utils:2.6.1'
+		force 'org.glassfish.hk2.external:aopalliance-repackaged:2.6.1'
+	}
+}
+
+publishing {
+	publications {
+		api(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-api'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications(publishing.publications.api)
+}
+
+ext {
+	moduleName = 'API'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-api'
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+}
+
+task installModule {
+	doLast {
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+						{ putWebConfig(file("${projectDir}/installation/web.xml").text, "RestService", clearthDir) }
+				]
+		)
+	}
+}

@@ -1,0 +1,14 @@
+init start
+ind,0
+link,0
+init end
+
+
+start
+init start
+csv,"#{csvFile,data.csv}"
+init end
+
+#Id,#GlobalStep,#Action,#ExpectedValue,#ActualValue
+"#{saveThisN,ids1,id#{ind,++}}",Step1,Compare2Values,"#{addZeros(#{csv,exp1},3)}","#{addZeros(#{csv,act1},3)}_#{append(ids1,'A',5)}"
+end

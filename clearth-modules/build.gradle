@@ -5,6 +5,8 @@ import java.util.concurrent.Callable
 ext {
     cthImpl = 'implementation "com.exactprosystems.clearth:clearth-core'
     installationFiles = "${projectDir}/installation"
+
+    toolsDir = "/src/main/webapp/ui/restricted/tools/"
 }
 
 def checkCthDir(clearthDir) {
@@ -237,4 +239,131 @@ def installConTypeModule(clearThDir, moduleName, moduleImpl, type) {
     installModule(clearThDir, moduleName, moduleImpl, [
             { addConnectionTypeToCfg(type, clearThDir) }
     ])
+}
+def putWebConfig(webConfigValue, webConfigName, clearthDir) {
+    putConfig(clearthDir, webConfigName, "web", "src/main/webapp/WEB-INF/web.xml", webConfigValue, "</web-app>")
+}
+
+def putToolPanel(toolPanelValue, toolName, clearthDir) {
+    putConfig(clearthDir, toolName, "tool panel", "src/main/webapp/ui/restricted/tools.xhtml", toolPanelValue, "\t\t</p:outputPanel>\r\n\t</ui:define>\r\n</ui:composition>")
+}
+
+def putCustomActions(clearthDir, actions) {
+    def mappingPath = "${clearthDir}/cfg/actionsmapping.cfg"
+    def mapping = file(mappingPath)
+    if (mapping.readLines().findAll({x -> x =~ /^actions=/ }).isEmpty()) {
+        def sourceDir = getSourceDir(clearthDir)
+        def sourcePackage = getSourcePackage(new File("${sourceDir}/Application.java"), false, false, false)
+        def actionPackage = sourcePackage.substring(8, sourcePackage.length() - 1) + ".automation.actions"
+        println("- Project 'actionsmapping.cfg' file does not contain definition for '%actions%' package, those references would be replaced with exact value: ${actionPackage}")
+        mapping.append("\n" + actions.replaceAll("%actions%", actionPackage))
+    } else {
+        mapping.append("\n${actions}")
+    }
+    println("- Actions added to project's actions mapping: ${mappingPath}")
+}
+
+def putToolInList(toolsManagerClass, toolName, toolListIndex) {
+    ant.replaceregexp(file: "${toolsManagerClass}", match: "super.createToolsList\\(\\);",
+            replace: "super.createToolsList();\n\t\tresult.add(new ToolInfo(${toolListIndex}, \"${toolName}\"));")
+    println("- ${toolName} tool added to project's tool list with index=${toolListIndex} to tools manager class: ${toolsManagerClass}")
+}
+
+def putCodeInClass(classFilePath, codeValue) {
+    ant.replaceregexp(file: "${classFilePath}", match: "}(?!.*})", replace: "\n${codeValue}\n}", flags: "s")
+    println("- Code lines written into the project file: ${classFilePath}")
+}
+
+def putImportsIfMissing(classFilePath, String... imports) {
+    def classFile = file(classFilePath)
+    imports.each {
+        def importValue = "import ${it};"
+        if (!classFile.text.contains(importValue)) {
+            ant.replaceregexp(file: "${classFilePath}", match: "import", replace: "${importValue}\nimport")
+            println("- Import statements written into the project file '${classFilePath}': ${importValue}")
+        }
+    }
+}
+
+def getSourcePackage(appFile, withPackageKeyword, withSemicolon, withCopyright) {
+    def result = ""
+    def line
+    appFile.withReader { reader ->
+        while ((line = reader.readLine()) != null) {
+            if (line.toString().startsWith("package ")) {
+                result = result + line
+                break
+            } else if (withCopyright) {
+                result = result + line + "\n"
+            }
+        }
+    }
+    if (result == "")
+        throw new GradleException("Unable to find Java source package in project")
+    return result.substring(withPackageKeyword ? 0 : 8, withSemicolon ? result.length() : result.length() - 1)
+}
+
+def addClassFiles(clearthDir, sourceRelativeDestDir, copyFromPath) {
+    def sourceDir = getSourceDir(clearthDir)
+    def destDir = "${sourceDir}/${sourceRelativeDestDir}"
+    copy {
+        from(copyFromPath)
+        into(destDir)
+    }
+
+    def sourcePackage = getSourcePackage(new File("${sourceDir}/Application.java"), true, true, true)
+    def destPackage = sourcePackage.substring(0, sourcePackage.length() - 1) + "." + sourceRelativeDestDir.replace("/", ".") + ";"
+    ant.replaceregexp(match: "^package", replace: "${destPackage}") {
+        fileset(dir: "${destDir}")
+    }
+    def classes = []
+    new File(copyFromPath).eachFile {
+        classes.add(it.name) 
+    }
+    println("- Classes added to project's package '${sourceRelativeDestDir}': ${classes}")
+}
+
+def addToToolsManager(clearthDir, toolName, toolListIndex) {
+    def sourceDir = getSourceDir(clearthDir)
+    def sourcePackage = getSourcePackage(new File("${sourceDir}/Application.java"), false, false, false)
+    def applicationPath = sourceDir + "/Application.java"
+    if (file(applicationPath).readLines().findAll({x -> x =~ /createToolsManager\(\)\s*($|\{)/ }).isEmpty()) {
+        addClassFiles(clearthDir, "tools", "${installationFiles}/classes")
+
+        def createToolsManagerMethod = file("${installationFiles}/code/Application_createToolsManager.java").text
+        putCodeInClass(applicationPath, createToolsManagerMethod)
+        putImportsIfMissing(applicationPath,
+                "java.io.File",
+                "com.exactprosystems.clearth.tools.ToolsManager",
+                "${sourcePackage}.tools.EXAMPLE_ToolsManager")
+        def toolsManager = "${sourceDir}tools/EXAMPLE_ToolsManager.java"
+        println("- Example tools manager class added to project: ${toolsManager}")
+        putToolInList(toolsManager, toolName, toolListIndex)
+    } else {
+        println("- This project already contains a custom tools manager class, please put 'new ToolInfo(${toolListIndex}, \"${toolName}\")' into tools list in project tools manager")
+    }
+}
+
+def addToolFile(clearthDir, moduleProjectDir, toolFile) {
+    copy {
+        from("${moduleProjectDir}${toolsDir}${toolFile}")
+        into("${clearthDir}${toolsDir}")
+    }
+    println("- New tool files added to project: ${clearthDir}${toolsDir}${toolFile}")
+}
+
+def addTool(clearthDir, moduleProjectDir, toolName, toolListIndex, toolFile, toolBeanName, facesConfig) {
+    def toolPanel = file("${moduleProjectDir}/installation/tools.xhtml").text
+
+    addToToolsManager(clearthDir, toolName, toolListIndex)
+    addToolFile(clearthDir, moduleProjectDir, toolFile)
+    putFacesConfig(facesConfig, toolBeanName, clearthDir)
+    putToolPanel(toolPanel, toolName, clearthDir)
+
+    println("- ${toolName} tool added to project")
+}
+
+def addTool(clearthDir, moduleProjectDir, toolName, toolListIndex, toolFile, toolBeanName) {
+    def facesConfig = file("${moduleProjectDir}/installation/faces-config.xml").text
+    addTool(clearthDir, moduleProjectDir, toolName, toolListIndex, toolFile, toolBeanName, facesConfig)
 }

@@ -1,0 +1,38 @@
+dependencies {
+	api project(":clearth-modules:clearth-gui")
+	api project(":clearth-modules:clearth-api")
+}
+
+publishing {
+	publications {
+		mm(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-matrixmaker'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications(publishing.publications.mm)
+}
+
+ext {
+	moduleName = 'Matrix maker'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-matrixmaker'
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+	toolIndex = 44
+}
+
+task installModule {
+	doLast {
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+						{ addTool(clearthDir, projectDir, moduleName, toolIndex, "matrixmaker.xhtml", "mmToolBean") }
+				]
+		)
+	}
+}

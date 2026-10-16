@@ -1,0 +1,144 @@
+<ui:composition xmlns="http://www.w3c.org/1999/xhtml"
+				xmlns:ui="http://java.sun.com/jsf/facelets"
+				xmlns:h="http://java.sun.com/jsf/html"
+				xmlns:f="http://java.sun.com/jsf/core"
+				xmlns:p="http://primefaces.org/ui"
+				xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+		<br />
+		Use this tool to generate matrix or a set of matrices.<br />
+		<br />
+		<p:outputPanel style="width: 48%; float: left;">
+			<h:form id="MMDataUpload" enctype="multipart/form-data">
+				<h:outputText value="Upload matrix template and data files to be used while generating a matrix" style="font-weight: bold;" />
+				<br />
+				<br />
+				<h:outputText value="Templates:"/>
+				<p:fileUpload listener="#{mmToolBean.handleMatrixPatternUpload}" allowTypes="/(\.|\/)(csv|CSV)$/" mode="advanced" multiple="true"
+						chooseIcon="ui-icon-plusthick" uploadIcon="ui-icon-arrowreturnthick-1-n" cancelIcon="ui-icon-cancel"
+						update=":MMDataUpload:Generate :MMDataFiles :Growl" />
+				<br />
+				<h:outputText value="Data files:"/>
+				<p:fileUpload listener="#{mmToolBean.handleFileUpload}" allowTypes="/(\.|\/)(csv|CSV)$/" mode="advanced" multiple="true"
+						chooseIcon="ui-icon-plusthick" uploadIcon="ui-icon-arrowreturnthick-1-n" cancelIcon="ui-icon-cancel"
+						update=":MMDataUpload:Generate :MMDataFiles :Growl" />
+				<br />
+				<p:selectBooleanCheckbox id="renameMatrices1" itemLabel="Rename matrices with long names" ajax="true" value="#{mmToolBean.renameMatrices}" 
+						immediate="true" update=":MMDataUpload:Generate :MMDataFiles">
+					<p:ajax update=":MMDataUpload:Generate" />
+				</p:selectBooleanCheckbox>
+				<br />
+				<br />
+				<p:outputPanel id="Generate">
+					<p:commandButton style="margin-right:10px;" value="Generate matrix"
+							ajax="false"
+							icon="ui-icon-arrowthick-1-s"  
+							disabled="#{mmToolBean.uploadedFileNames.size() == 0 or mmToolBean.matrixPatternNames.size() == 0}">
+						<p:fileDownload value="#{mmToolBean.generatedMatrix}" />
+					</p:commandButton>
+				</p:outputPanel>
+			</h:form>
+			<br />
+			<br />
+			<br />
+			<h:form id="MMDataFiles">
+				<h:outputText rendered="#{mmToolBean.matrixPatternNames.size() != 0}" value="Uploaded templates:" style="font-weight: bold"/>
+				<br />
+				<ui:repeat value="#{mmToolBean.matrixPatternNames}" var="matrixPatternName">
+					<p:commandLink title="Remove template" update=":MMDataUpload:Generate :MMDataFiles" action="#{mmToolBean.removeMatrixPattern(matrixPatternName)}">
+						<h:graphicImage value="/images/delete-icon.png" alt="Remove template" style="vertical-align: middle; margin-right: 5px" />
+					</p:commandLink>
+					<h:outputText value="#{matrixPatternName}"/>
+					<br />
+					<br />
+				</ui:repeat>
+				<br />	
+				<h:outputText rendered="#{mmToolBean.uploadedFileNames.size() != 0}" value="Uploaded data files:" style="font-weight: bold"/>
+				<br />
+				<ui:repeat value="#{mmToolBean.uploadedFileNames}" var="uploadedFileName">
+					<p:commandLink title="Remove data file" update=":MMDataUpload:Generate :MMDataFiles" action="#{mmToolBean.removeFile(uploadedFileName)}">
+						<h:graphicImage value="/images/delete-icon.png" alt="Remove data file" style="vertical-align: middle; margin-right: 5px" />
+					</p:commandLink>
+					<h:outputText value="#{uploadedFileName}"/>
+					<br />
+					<br />
+				</ui:repeat>
+			</h:form>
+		</p:outputPanel>
+		
+		<p:outputPanel style="width: 48%; float: right;">
+			<h:form id="MMMappings" enctype="multipart/form-data">
+				<h:outputText value="Upload template/data mapping to generate a set of matrices" style="font-weight: bold;" />
+				<br />
+				<br />
+				<h:outputText value="Template/data mappings:"/>
+				<p:fileUpload listener="#{mmToolBean.handleConfigUpload}" allowTypes="/(\.|\/)(csv|CSV)$/" mode="advanced" multiple="true"
+						chooseIcon="ui-icon-plusthick" uploadIcon="ui-icon-arrowreturnthick-1-n" cancelIcon="ui-icon-cancel"
+						update=":MMMappings :MMMappingsFiles :Growl" disabled="#{mmToolBean.renameMatrices}"/>
+				<br />
+				<p:selectBooleanCheckbox id="RandomScenarios" itemLabel="Random scenarios" ajax="true" value="#{mmToolBean.mmRandomScenarios}" immediate="true" update=":MMDataUpload:Generate" />
+				<br />
+				<br />
+				<p:selectBooleanCheckbox id="renameMatrices2" itemLabel="Rename matrices with long names" ajax="true" value="#{mmToolBean.renameMatrices}" immediate="true" update=":MMDataUpload:Generate">
+					<!-- <p:ajax update="MMMappings" /> -->
+				</p:selectBooleanCheckbox>
+				<br />
+				<br />
+				<!-- <p:commandButton value="Generate matrices" 
+						ajax="false" 
+						onclick="PrimeFaces.monitorDownload(start, stop);" 
+						icon="ui-icon-arrowthick-1-s"  
+						disabled="#{mmToolBean.configNames.size() == 0}">
+					<p:fileDownload value="#{mmToolBean.zipGeneratedMatrices}" />
+				</p:commandButton> -->
+				<p:outputPanel id="MMDataUploadGBControls">
+					<p:commandButton value="Generate matrices" ajax="true" action="#{mmToolBean.startTool}"
+									 onclick="PF('matrixGeneratorWaiter').start();" icon="ui-icon-arrowthick-1-s"
+									 disabled="#{mmToolBean.configNames.isEmpty() || mmToolBean.toolRunning}" />
+					<p:commandButton value="Cancel generation" ajax="false" actionListener="#{mmToolBean.stopTool}"
+									 action="tools?faces-redirect=true"
+									 icon="ui-icon-closethick" disabled="#{!mmToolBean.toolRunning}" />
+					&#160;
+					<h:outputText id="generatedMatrixCount" value="#{mmToolBean.generatedMatrixCount}" />
+					<br />
+					<p:commandLink value="Download matrices" ajax="false" style="text-decoration: underline" rendered="#{mmToolBean.hasResult()}" >
+						<p:fileDownload value="#{mmToolBean.generatedMatricesArchive}" />
+					</p:commandLink>
+				</p:outputPanel>
+				<p:poll widgetVar="matrixGeneratorWaiter" autoStart="#{mmToolBean.toolRunning}"
+						stop="#{!mmToolBean.toolRunning}"
+						interval="1"
+						update="MMDataUploadGBControls Growl" />
+			</h:form>
+			<br />
+			<br />
+			<br />
+			<h:form id="MMMappingsFiles">
+				<h:outputText rendered="#{mmToolBean.configNames.size() != 0}" value="Uploaded template/data mappings:" style="font-weight: bold"/>
+				<br />
+				<ui:repeat value="#{mmToolBean.configNames}" var="configName">
+					<p:commandLink title="Remove template/data mapping" update=":MMMappings :MMMappingsFiles" action="#{mmToolBean.removeConfig(configName)}">
+						<h:graphicImage value="/images/delete-icon.png" alt="Remove template/data mapping" style="vertical-align: middle; margin-right: 5px" />
+					</p:commandLink>
+					<h:outputText value="#{configName}"/>
+					<br />
+					<br />
+				</ui:repeat>
+			</h:form>
+		</p:outputPanel>
+			
+		<h:form>
+			<script type="text/javascript">
+				function start() {
+					PF('statusDialog').show();
+				}
+				 
+				function stop() {
+					PF('statusDialog').hide();
+				}
+			</script>
+			<p:dialog modal="true" widgetVar="statusDialog" header="Status" draggable="false" closable="false" resizable="false">
+				<p:graphicImage value="/images/ajaxloadingbar.gif" />
+			</p:dialog>
+		</h:form>
+</ui:composition>

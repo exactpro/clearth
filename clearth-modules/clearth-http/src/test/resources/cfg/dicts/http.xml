@@ -1,0 +1,248 @@
+<HttpDictionaryDesc>
+    <requestDesc type="SimpleRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="RequestId" requestName="request-id" required="true"/>
+            <parameter name="StartTime" requestName="start-time" required="true"/>
+            <parameter name="EndTime" requestName="end-time" required="true"/>
+            <parameter name="Instrument" requestName="instrument" required="true"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="DownloadRequest">
+        <url>some-request</url>
+        <method>GET</method>
+    </requestDesc>
+    <!--  defaultValue checks  -->
+    <requestDesc type="DefaultPathParamsRequest">
+        <url>application</url>
+        <method>GET</method>
+        <pathParameters>
+            <parameter name="InputParam" defaultValue="ignore_me"/>
+            <parameter name="SimpleParam" defaultValue="EUR"/>
+            <parameter name="FunctionParam" defaultValue="@{uuid()}"/>
+            <parameter name="InputRefParam" defaultValue="@{InputParam}"/>
+            <parameter name="DefaultRefParam" defaultValue="@{SimpleParam}"/>
+        </pathParameters>
+    </requestDesc>
+    <requestDesc type="DefaultQueryParamsRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="InputParam" requestName="input" defaultValue="ignore_me"/>
+            <parameter name="SimpleParam" requestName="simple" defaultValue="EUR"/>
+            <parameter name="FunctionParam" requestName="function" defaultValue="@{uuid()}"/>
+            <parameter name="InputRefParam" requestName="input-ref" defaultValue="@{InputParam}"/>
+            <parameter name="DefaultRefParam" requestName="def-ref" defaultValue="@{SimpleParam}"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="DefaultValueErrorsRequest">
+        <url>errors</url>
+        <method>GET</method>
+        <pathParameters>
+            <parameter name="MissedPathParam"/>
+            <parameter name="NullPathParam" defaultValue="@{MissedPathParam}"/>
+        </pathParameters>
+        <queryParameters>
+            <parameter name="MissedRequiredQueryParam" required="true"/>
+            <parameter name="MissedOptionalQueryParam" required="false"/>
+            <parameter name="NullQueryParam" defaultValue="@{MissedOptionalQueryParam}"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="ErrorInDefaultValueExpressionRequest">
+        <url>errors</url>
+        <method>GET</method>
+        <pathParameters>
+            <parameter name="ErrorParam" defaultValue="@{format(time(0), 'abcdefg')}"/>
+        </pathParameters>
+    </requestDesc>
+    <!--  required expression checks  -->
+    <requestDesc type="RequiredExpressionsRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="MissedOptionalParamA" requestName="missed-optional-a" required="false"/>
+            <parameter name="MissedOptionalParamB" requestName="missed-optional-b"/>
+            <parameter name="RequiredParam" requestName="required" required="true"/>
+            <parameter name="ConditionallyRequiredParam" requestName="conditionally-required" 
+                       required="@{MissedOptionalParamA == empty}"/>
+            <parameter name="ConditionallyOptionalParam" requestName="conditionally-optional"
+                       required="@{MissedOptionalParamB != empty}"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="MissedRequiredParamsRequest">
+        <url>geterrors</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="InputParam" requestName="input"/>
+            <parameter name="RequiredParam" requestName="required" required="true"/>
+            <parameter name="OptionalParam" requestName="optional"/>
+            <parameter name="ConditionallyRequiredParam" requestName="conditionally-required" 
+                       required="@{InputParam == 'yes'}"/>
+            <parameter name="ConditionallyOptionalParam" requestName="conditionally-optional"
+                       required="@{InputParam == 'no'}"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="RequiredNotBooleanErrorRequest">
+        <url>errors</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="RequiredNotBoolean" requestName="error" required="no"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="RequiredExpNotBooleanErrorRequest">
+        <url>errors</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="InputParam" requestName="input"/>
+            <parameter name="RequiredNotBoolean" requestName="error" required="@{InputParam}"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="ErrorInRequiredExpressionRequest">
+        <url>errors</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="ErrorParam" requestName="input-ref" required="@{format(time(0), 'abcdefg')}"/>
+        </queryParameters>
+    </requestDesc>
+    <!--  rules for parameters checks  -->
+    <requestDesc type="TextParametersValidationRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <pathParameters>
+            <parameter name="TextPathParam" type="text"/>
+            <parameter name="PossibleValuePathParam" possibleValues="yes, no"/>
+        </pathParameters>
+        <queryParameters>
+            <parameter name="TextQueryParam" requestName="text-param"/>
+            <parameter name="PossibleValueQueryParam" requestName="possible-value-param" type="text" possibleValues="RCO, PCO, NIL"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="IntegerParametersValidationRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <pathParameters>
+            <parameter name="SimpleParam" type="integer"/>
+            <parameter name="MinValueParam" type="integer" minValue="45"/>
+        </pathParameters>
+        <queryParameters>
+            <parameter name="MaxValueParam" requestName="max-value-param" type="integer" maxValue="900"/>
+            <parameter name="InRangeParam" requestName="in-range-param" type="integer" minValue="-100" maxValue="100"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="DecimalParametersValidationRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <pathParameters>
+            <parameter name="SimpleParam" type="decimal"/>
+        </pathParameters>
+        <queryParameters>
+            <parameter name="PrecisionParam" requestName="precision-param" type="decimal" precision="3"/>
+            <parameter name="InRangeParam" requestName="in-range-param" type="decimal" precision="2"
+                       minValue="0.0" maxValue="1000.0"/>
+        </queryParameters>
+    </requestDesc>
+    <requestDesc type="TimestampParametersValidationRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <pathParameters>
+            <parameter name="DateParam" type="timestamp" format="yy-MM-dd"/>
+        </pathParameters>
+        <queryParameters>
+            <parameter name="TimeParam" requestName="time-param" type="timestamp" format="HH:mm:ss"/>
+        </queryParameters>
+    </requestDesc>
+    <!-- headers checks -->
+    <requestDesc type="MissedRequiredHeaderRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <headers>
+            <header name="ContentTypeHeader" requestName="Content-Type"/>
+            <header name="MissedRequiredHeader" requestName="Missed Required Header" required="true"/>
+        </headers>
+    </requestDesc>
+    <requestDesc type="CheckHeadersRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <headers>
+            <header name="MissedOptionalHeader"/>
+            <header name="OptionalHeader"/>
+            <header name="HeaderWithRequestName" requestName="Request-Name"/>
+            <header name="ContentTypeHeader" requestName="Content-Type"/>
+            <header name="RequiredHeader" required="true"/>
+        </headers>
+    </requestDesc>
+    <requestDesc type="DefaultValueRequiredHeaderRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <headers>
+            <header name="DefaultValueHeader" value="123"/>
+            <header name="DefaultValueRequiredHeader" value="ABC" requestName="Default Value Required Header" required="true"/>
+        </headers>
+    </requestDesc>
+    <requestDesc type="NullRequestParametersRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <headers>
+            <header name="Content-Type" value="application/xml"/>
+        </headers>
+    </requestDesc>
+    <!-- body parameters checks -->
+    <requestDesc type="CheckBodyParametersRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <bodyParameters>
+            <parameter name="RequiredParameter" required="true"/>
+            <parameter name="ParameterWithRequestName" requestName="Request-name"/>
+            <parameter name="OptionalParameter"/>
+            <parameter name="MissedOptionalParameter"/>
+        </bodyParameters>
+    </requestDesc>
+    <requestDesc type="BodyAndBodyParametersRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <body type="XML" msgType="XML"/>
+        <bodyParameters>
+            <parameter name="RequestId" requestName="request-id" required="true"/>
+        </bodyParameters>
+    </requestDesc>
+    <requestDesc type="CheckXmlBodyRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <body type="XML" msgType="XML" codec="Xml"/>
+    </requestDesc>
+    <requestDesc type="DefaultValueRequiredBodyParameterRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <bodyParameters>
+            <parameter name="DefaultValueParameter" defaultValue="123"/>
+            <parameter name="DefaultValueRequiredParameter" defaultValue="ABC" requestName="Default-Value-Required-Body-Parameter" required="true"/>
+        </bodyParameters>
+    </requestDesc>
+    <requestDesc type="DifferentValueTypesBodyParametersRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <bodyParameters>
+            <parameter name="RequestId" requestName="request-id" required="true"/>
+            <parameter name="StartTime" requestName="start-time" required="true"/>
+            <parameter name="EndTime" requestName="end-time" required="true"/>
+            <parameter name="Instrument" requestName="instrument" required="true"/>
+        </bodyParameters>
+    </requestDesc>
+    <requestDesc type="MissedRequiredBodyParameterRequest">
+        <url>some-request</url>
+        <method>POST</method>
+        <bodyParameters>
+            <parameter name="MissedRequiredBodyParameter" required="true"/>
+        </bodyParameters>
+    </requestDesc>
+    <!-- duplicate query parameters checks -->
+    <requestDesc type="DuplicateQueryParamsRequest">
+        <url>some-request</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="InputParam" requestName="input" delimiter =","/>
+            <parameter name="InputRefParam" requestName="input-ref" defaultValue="@{InputParam}" delimiter =","/>
+        </queryParameters>
+    </requestDesc>
+</HttpDictionaryDesc>

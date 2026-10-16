@@ -1,0 +1,10 @@
+#id,#GlobalStep,#action,#Param1
+id1,Step0,SetStatic,123
+#id,#GlobalStep,#action,#Param2
+id2,Step0,SetStatic,y,@{id1.Param1}_4
+#Id,#GlobalStep,#Action,#ExpectedValue,#ActualValue
+idX_1,Step1,Compare2Values,1,2
+#Id,#GlobalStep,#Action,#Execute,#ExpectedValue,#ActualValue
+idX_2,Step1,Compare2Values,@{idX_1.action.passed == false},100,200
+#Id,#GlobalStep,#Action,#Execute,#ExpectedValue,#ActualValue
+idX_3,Step1,Compare2Values,true,@{0+id1.Param1+'_4'},@{0+id2.Param1}

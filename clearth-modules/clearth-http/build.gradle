@@ -1,0 +1,85 @@
+dependencies {
+	api "org.apache.httpcomponents:fluent-hc:4.5.14"
+	api "org.apache.httpcomponents:httpclient:4.5.14"
+	api "org.apache.httpcomponents.core5:httpcore5:5.4.3"
+	api "org.apache.httpcomponents:httpclient-cache:4.5.14"
+	api "org.apache.httpcomponents:httpclient-win:4.5.14"
+	api "org.apache.httpcomponents:httpmime:4.5.14"
+	api 'net.java.dev.jna:jna:4.5.2'
+	api 'net.java.dev.jna:jna-platform:4.5.2'
+	testImplementation ("org.wiremock:wiremock:3.13.0"){
+		exclude group: 'org.eclipse.jetty', module: 'jetty-alpn-java-client'
+		exclude group: 'org.eclipse.jetty', module: 'jetty-alpn-java-server'
+	}
+	testImplementation platform('com.fasterxml.jackson:jackson-bom:2.22.1')
+}
+
+configurations.all {
+	resolutionStrategy {
+		force 'org.apache.httpcomponents.core5:httpcore5:5.4.3'
+		force 'org.apache.httpcomponents.core5:httpcore5-h2:5.4.3'
+		force 'com.fasterxml.jackson.core:jackson-core:2.22.1'
+		force 'com.fasterxml.jackson.core:jackson-databind:2.22.1'
+		force 'com.fasterxml.jackson:jackson-bom:2.22.1'
+		force 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.1'
+		force 'org.apache.httpcomponents:httpcore:4.4.16'
+		force 'commons-fileupload:commons-fileupload:1.6.0'
+	}
+}
+
+generateJavaFromXsd {
+	inputs.file file("${xsdDir}/http.xsd")
+
+	outputs.files fileTree("${genJavaDir}/com/exactprosystems/clearth/connectivity/http").include('*.java')
+
+	doLast {
+		ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
+
+
+		ant.xjc(schema: "${xsdDir}/http.xsd",
+				destdir: "${genJavaDir}", package: 'com.exactprosystems.clearth.connectivity.http',
+				removeOldOutput: 'yes')
+				{
+					produces(dir: "${genJavaDir}/com/exactprosystems/clearth/connectivity/http", includes: '*')
+				}
+	}
+}
+
+publishing {
+	publications {
+		http(MavenPublication) {
+			groupId = "${group}"
+			artifactId = 'clearth-http'
+			version = "${version}"
+			
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications(publishing.publications.http)
+}
+
+ext {
+	moduleName = 'HTTP'
+	moduleImpl = 'com.exactprosystems.clearth:clearth-http'
+	moduleDict = "http.xml"
+	if (!project.hasProperty('clearthDir'))
+		clearthDir = undef
+}
+
+task installModule {
+	doLast {
+		def installation = "${projectDir}/installation"
+
+		installModule(clearthDir, moduleName, moduleImpl,
+				[
+						{ putCodec(file("${installation}/codec.xml").text, moduleName, clearthDir) },
+						{ putDictionary(moduleDict, "${installation}/dicts/${moduleDict}", clearthDir) },
+						{ putCustomActions(clearthDir, file("${installation}/actions.cfg").text) },
+						{ addClassFiles(clearthDir, "automation/actions/http", "${installation}/classes") }
+				]
+		)
+	}
+}

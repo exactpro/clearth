@@ -1,0 +1,7 @@
+
+<!--MatrixMaker Tool bean-->
+    <managed-bean>
+        <managed-bean-name>mmToolBean</managed-bean-name>
+        <managed-bean-class>com.exactprosystems.clearth.web.beans.tools.MatrixMakerToolBean</managed-bean-class>
+        <managed-bean-scope>session</managed-bean-scope>
+    </managed-bean>

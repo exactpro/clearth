@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTf-8" standalone="yes"?>
+<HttpDictionaryDesc>
+    <!--
+    Here you can add JSON message descriptions, for example:
+    
+    <requestDesc type="ExampleRequestGET">
+        <url>example/url/get</url>
+        <method>GET</method>
+        <queryParameters>
+            <parameter name="RequestId" requestName="requestId" required="true" type="text"/>
+            <parameter name="RequestFields" requestName="requestFields" required="false" type="text"/>
+        </queryParameters>
+    </requestDesc>
+    
+    <requestDesc type="ExampleRequestPOST">
+        <url>example/url/post</url>
+        <method>POST</method>
+        <queryParameters>
+            <parameter name="RequestId" requestName="requestId" required="true" type="text"/>
+            <parameter name="RequestFields" requestName="requestFields" required="false" type="text"/>
+            <parameter name="RequestDefaultField" required="true" type="text" defaultValue="defaultValue"/>
+        </queryParameters>
+    </requestDesc>
+    -->
+</HttpDictionaryDesc>

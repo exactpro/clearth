@@ -15,6 +15,9 @@ clearth-modules/clearth-rh/build/
 clearth-modules/clearth-th2/build/
 clearth-modules/clearth-fix/build/
 clearth-modules/clearth-woodpecker/build/
+clearth-modules/clearth-api/build/
+clearth-modules/clearth-http/build/
+clearth-modules/clearth-matrixmaker/build/
 /.project
 /.settings/org.eclipse.buildship.core.prefs
 /clearth-modules/.classpath
@@ -53,6 +56,15 @@ clearth-modules/clearth-woodpecker/build/
 /clearth-modules/clearth-woodpecker/.classpath
 /clearth-modules/clearth-woodpecker/.project
 /clearth-modules/clearth-woodpecker/.settings/org.eclipse.buildship.core.prefs
+/clearth-modules/clearth-api/.classpath
+/clearth-modules/clearth-api/.project
+/clearth-modules/clearth-api/.settings/org.eclipse.buildship.core.prefs
+/clearth-modules/clearth-http/.classpath
+/clearth-modules/clearth-http/.project
+/clearth-modules/clearth-http/.settings/org.eclipse.buildship.core.prefs
+/clearth-modules/clearth-matrixmaker/.classpath
+/clearth-modules/clearth-matrixmaker/.project
+/clearth-modules/clearth-matrixmaker/.settings/org.eclipse.buildship.core.prefs
 /clearth-core/value_generator_test.txt
 testOutput
 temp
@@ -67,6 +79,9 @@ temp
 /clearth-modules/clearth-th2/bin
 /clearth-modules/clearth-fix/bin
 /clearth-modules/clearth-woodpecker/bin
+/clearth-modules/clearth-api/bin
+/clearth-modules/clearth-http/bin
+/clearth-modules/clearth-matrixmaker/bin
 /clearth-core/test-output
 /connections/
 /clearth-modules/clearth-gui/test-output
@@ -74,7 +89,10 @@ temp
 /clearth-modules/clearth-rh/test-output
 /clearth-modules/clearth-th2/test-output
 /clearth-modules/clearth-woodpecker/test-output
-/clearth-modules/clearth-woodpecker/testOutput
+/clearth-modules/clearth-woodpecker/testOutput/clearth-modules/clearth-matrixmaker/test-output
+/clearth-modules/clearth-matrixmaker/testOutput
+/clearth-modules/clearth-matrixmaker/GeneratedMatrices/
+
 
 # local-only dependency-check overrides (keyless NVD runs)
 dc-local.gradle

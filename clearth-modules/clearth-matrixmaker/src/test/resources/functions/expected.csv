@@ -1,0 +1,2 @@
+#Id,#GlobalStep,#Action,#ExpectedValue,#ActualValue
+id1,Step1,Compare2Values,10.000,20.000_id1AA

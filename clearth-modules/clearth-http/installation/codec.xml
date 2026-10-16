@@ -1,0 +1,5 @@
+    <CodecConfig>
+        <Name>Http</Name>
+        <DictionaryFile>http.xml</DictionaryFile>
+        <Dictionary>com.exactprosystems.clearth.connectivity.http.HttpDictionary</Dictionary>
+    </CodecConfig>
