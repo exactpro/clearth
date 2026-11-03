@@ -44,6 +44,9 @@ import com.exactprosystems.clearth.xmldata.XmlSchedulerLaunchInfo;
 public class AsyncActionsTest
 {
 	private static final Path TEST_DATA = USER_DIR.resolve("src/test/resources/Async");
+	//Upper bound for polling waits, not an expected duration: waits end as soon as the state is reached.
+	//It is generous so that slow build agents (e.g. report generation on stop) don't cause random failures
+	private static final int WAIT_TIMEOUT = 10000;
 	
 	private ApplicationManager appManager;
 	
@@ -73,19 +76,19 @@ public class AsyncActionsTest
 		//2nd step has long asynchronous action that is awaited at the end of 3rd step
 		try
 		{
-			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 1000);
+			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, WAIT_TIMEOUT);
 			Assert.assertFalse(scheduler.getSteps().get(1).isAsync(), "Async status of 2nd step before its start");
 			
 			scheduler.continueExecution();
-			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 1000);
+			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, WAIT_TIMEOUT);
 			Assert.assertTrue(scheduler.getSteps().get(1).isAsync(), "Async status of 2nd step after its start");
 			
 			scheduler.continueExecution();
-			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 5000);
+			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, WAIT_TIMEOUT);
 			Assert.assertFalse(scheduler.getSteps().get(1).isAsync(), "Async status of 2nd step after finish of 3rd step");
 			
 			scheduler.continueExecution();
-			ApplicationManager.waitForSchedulerToStop(scheduler, 100, 1000);
+			ApplicationManager.waitForSchedulerToStop(scheduler, 100, WAIT_TIMEOUT);
 		}
 		catch (Exception e)
 		{
@@ -109,15 +112,15 @@ public class AsyncActionsTest
 		//Async action should finish after scheduler suspension
 		try
 		{
-			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, 1000);
-			waitAsyncActionsFinish(scheduler.getSteps().get(0), 100, 3000);
+			ApplicationManager.waitForSchedulerToSuspend(scheduler, 100, WAIT_TIMEOUT);
+			waitAsyncActionsFinish(scheduler.getSteps().get(0), 100, WAIT_TIMEOUT);
 		}
 		finally
 		{
 			scheduler.stop();
 		}
 		
-		ApplicationManager.waitForSchedulerToStop(scheduler, 100, 1000);
+		ApplicationManager.waitForSchedulerToStop(scheduler, 100, WAIT_TIMEOUT);
 		
 		XmlSchedulerLaunchInfo launchInfo = scheduler.getSchedulerData().getLaunches().getLaunchesInfo().get(0);
 		String matrixName = launchInfo.getMatricesInfo().get(0).getName();
